@@ -68,6 +68,17 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;paddin
 .fl{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;gap:4px;font-size:11px;opacity:.75}
 .fl canvas{width:54px;height:54px;border-radius:10px;border:2px solid transparent;background:#222}
 .fl.on{opacity:1}.fl.on canvas{border-color:#ffd60a}
+#micro{display:none;flex-direction:column;gap:8px;padding:0 14px 8px}
+#micro.show{display:flex}
+#microBtns{display:flex;justify-content:center;gap:8px;flex-wrap:wrap}
+#microBtns button{background:rgba(255,255,255,.12);border-radius:16px;padding:6px 12px;font-size:12px;font-weight:600}
+#microBtns button.on{background:#ffd60a;color:#000}
+#microBtns button[hidden]{display:none}
+#focusRow{display:none;align-items:center;gap:8px;font-size:12px}
+#focusRow.show{display:flex}
+#focusRow input{flex:1;accent-color:#ffd60a}
+#frozen{position:absolute;top:42px;right:10px;background:#0a84ff;padding:3px 10px;border-radius:8px;font-size:12px;font-weight:700;display:none}
+#frozen.show{display:block}
 #modes{display:flex;justify-content:center;gap:22px;margin-bottom:12px;font-size:14px;font-weight:600}
 #modes button{opacity:.6;padding:4px 2px}
 #modes button.on{opacity:1;color:#ffd60a}
@@ -139,6 +150,7 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;paddin
       <div id="rec">● 00:00</div>
       <div id="zoomLbl">1.0×</div>
       <div id="expo"><span>☀︎</span><input type="range" id="expoRange" min="-2" max="2" step="0.1" value="0"><span id="expoVal">0</span></div>
+      <div id="frozen">❄︎ مجمّد</div>
       <div id="flashFx"></div>
     </div>
     <div id="msg"><div id="msgText"></div><button id="msgBtn">تشغيل الكاميرا</button></div>
@@ -146,9 +158,19 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;paddin
 
   <div id="bottom">
     <div id="filters"></div>
+    <div id="micro">
+      <div id="microBtns">
+        <button id="mLens">🔍 العدسة</button>
+        <button id="mLight">💡 إضاءة</button>
+        <button id="mSharp">✦ حدّة</button>
+        <button id="mFreeze">❄︎ تجميد</button>
+      </div>
+      <div id="focusRow"><span>قريب</span><input type="range" id="focusRange" min="0" max="1" step="0.001"><span>بعيد</span></div>
+    </div>
     <div id="zoomRow"></div>
     <div id="modes">
       <button data-m="qr">باركود</button>
+      <button data-m="micro">مجهر</button>
       <button data-m="photo" class="on">صورة</button>
       <button data-m="video">فيديو</button>
     </div>
@@ -235,7 +257,7 @@ $('#gridBtn').innerHTML = ICON.grid; $('#filterBtn').innerHTML = ICON.filter;
 $('#switchBtn').innerHTML = ICON.sw; $('#pauseBtn').innerHTML = ICON.pause;
 
 /* ---------- settings (persisted) ---------- */
-const DEF = {full:true,night:false,burst:1,level:false,stamp:false,mirror:true,hires:false,audio:true,sound:true,quality:0.92,grid:false,timer:0,ratio:'full',filter:0,facing:'environment',flash:'off',mode:'photo'};
+const DEF = {full:true,night:false,burst:1,level:false,stamp:false,mirror:true,hires:false,audio:true,sound:true,quality:0.92,grid:false,timer:0,ratio:'full',filter:0,facing:'environment',flash:'off',mode:'photo',sharp:true,microLight:false,deviceId:null};
 let S = {...DEF};
 try { Object.assign(S, JSON.parse(localStorage.getItem('camPro') || '{}')); } catch(e){}
 const save = () => { try { localStorage.setItem('camPro', JSON.stringify(S)); } catch(e){} };
@@ -288,7 +310,11 @@ const ctxFilterOK = (()=>{ try{ const c=document.createElement('canvas').getCont
 /* ---------- camera state ---------- */
 let stream=null, track=null, caps={}, imageCapture=null, photoCaps=null, audioStream=null;
 let hw={zoom:null, torch:false, expo:null, focus:false};
-let zoom=1, swExpo=0, cams=[], busy=false, starting=false;
+let zoom=1, swExpo=0, cams=[], busy=false, starting=false, frozen=false, hwZApplied=null;
+const isMicro = () => S.mode==='micro';
+// split total zoom into hardware part + extra digital part
+function hwZ(){ return hw.zoom ? Math.min(hw.zoom.max, Math.max(hw.zoom.min, zoom)) : 1; }
+function digZ(){ return zoom / hwZ(); }
 
 const isFront = () => S.facing==='user';
 const mirrored = () => isFront();
@@ -298,9 +324,17 @@ async function startCamera(){
   hideMsg();
   try{
     if(stream) stream.getVideoTracks().forEach(t=>t.stop());
-    const hi=S.hires;
-    const c={video:{facingMode:{ideal:S.facing}, width:{ideal:hi?3840:1920}, height:{ideal:hi?2160:1080}, frameRate:{ideal:30}}, audio:false};
-    stream = await navigator.mediaDevices.getUserMedia(c);
+    const hi=S.hires || S.mode==='micro';
+    const base={width:{ideal:hi?3840:1920}, height:{ideal:hi?2160:1080}, frameRate:{ideal:30}};
+    const useId = S.deviceId && !isFront();
+    try{
+      stream = await navigator.mediaDevices.getUserMedia({video:{...base, ...(useId?{deviceId:{exact:S.deviceId}}:{facingMode:{ideal:S.facing}})}, audio:false});
+    }catch(e){
+      if(!useId) throw e;
+      S.deviceId=null; save();
+      stream = await navigator.mediaDevices.getUserMedia({video:{...base, facingMode:{ideal:S.facing}}, audio:false});
+    }
+    frozen=false; $('#frozen').classList.remove('show');
     video.srcObject = stream;
     await video.play().catch(()=>{});
     track = stream.getVideoTracks()[0];
@@ -317,7 +351,9 @@ async function startCamera(){
     $('#switchBtn').style.visibility = cams.length>1 ? 'visible':'hidden';
     track.addEventListener('ended',()=>{ if(!document.hidden) startCamera(); });
     if(S.flash==='torch') setTorch(true);
+    hwZApplied=null;
     buildZoomRow(); applyZoom(); updatePreview(); layout(); updateFlashBtn();
+    if(S.mode==='micro') enterMicro(); else updateMicroUI();
   }catch(err){
     console.error(err);
     let t='ما قدرت أشغّل الكاميرا.';
@@ -350,8 +386,9 @@ $('#ratioBtn').onclick=()=>{ const i=RATIOS.findIndex(x=>x.k===S.ratio); S.ratio
 
 /* ---------- preview ---------- */
 function updatePreview(){
-  video.style.filter = cssOf(opsNow());
-  const dz = hw.zoom ? 1 : zoom;
+  const f = cssOf(opsNow());
+  video.style.filter = (isMicro() && S.sharp) ? ((f==='none'?'':f+' ')+'contrast(1.12)') : f;
+  const dz = digZ();
   video.style.transform = `${mirrored()?'scaleX(-1) ':''}scale(${dz})`;
   $('#grid').classList.toggle('show', S.grid);
   $('#gridBtn').classList.toggle('on', S.grid);
@@ -362,19 +399,27 @@ function updatePreview(){
 }
 
 /* ---------- zoom ---------- */
-function zoomRange(){ return hw.zoom ? {min:hw.zoom.min, max:Math.min(hw.zoom.max,10)} : {min:1, max:8}; }
+function zoomRange(){
+  const min = hw.zoom ? hw.zoom.min : 1;
+  const hmax = hw.zoom ? hw.zoom.max : 1;
+  const max = isMicro() ? Math.max(20, Math.min(hmax,30)) : Math.max(8, Math.min(hmax,10));
+  return {min, max};
+}
 function buildZoomRow(){
   const {min,max}=zoomRange(), row=$('#zoomRow'); row.innerHTML='';
-  const opts=[]; if(min<1) opts.push(+min.toFixed(1)); [1,2,4,8].forEach(v=>{ if(v>=min && v<=max) opts.push(v); });
+  const opts=[]; if(min<1) opts.push(+min.toFixed(1)); (isMicro()?[1,2,5,10,20]:[1,2,4,8]).forEach(v=>{ if(v>=min && v<=max) opts.push(v); });
   opts.forEach(v=>{ const b=document.createElement('button'); b.textContent=(v<1?v:v)+'×'; b.dataset.z=v; b.onclick=()=>setZoom(v); row.appendChild(b); });
 }
 function setZoom(z){ const {min,max}=zoomRange(); zoom=Math.min(max,Math.max(min,z)); applyZoom(); }
 let zoomPending=false;
+function pushHwZoom(){
+  if(!hw.zoom || !track || zoomPending) return;
+  const z=hwZ(); if(hwZApplied!==null && Math.abs(z-hwZApplied)<0.01) return;
+  zoomPending=true; hwZApplied=z;
+  track.applyConstraints({advanced:[{zoom:z}]}).catch(()=>{}).finally(()=>{ zoomPending=false; if(Math.abs(hwZ()-hwZApplied)>=0.01) pushHwZoom(); });
+}
 function applyZoom(){
-  if(hw.zoom && track && !zoomPending){
-    zoomPending=true;
-    track.applyConstraints({advanced:[{zoom}]}).catch(()=>{}).finally(()=>{ zoomPending=false; });
-  }
+  pushHwZoom();
   updatePreview();
   document.querySelectorAll('#zoomRow button').forEach(b=>b.classList.toggle('on', Math.abs(+b.dataset.z-zoom)<0.05));
   const zl=$('#zoomLbl'); zl.textContent=zoom.toFixed(1)+'×'; zl.classList.add('show'); clearTimeout(zl._t); zl._t=setTimeout(()=>zl.classList.remove('show'),1200);
@@ -442,7 +487,7 @@ $('#flashBtn').onclick=()=>{
 $('#gridBtn').onclick=()=>{ S.grid=!S.grid; save(); updatePreview(); };
 $('#timerBtn').onclick=()=>{ const o=[0,3,10]; S.timer=o[(o.indexOf(S.timer)+1)%3]; save(); updatePreview(); toast(S.timer?`مؤقت ${S.timer} ثواني`:'بدون مؤقت'); };
 $('#filterBtn').onclick=()=>{ $('#filters').classList.toggle('show'); if($('#filters').classList.contains('show')) drawFilterThumbs(); };
-$('#switchBtn').onclick=()=>{ if(recorder) return; S.facing = isFront()?'environment':'user'; save(); startCamera(); };
+$('#switchBtn').onclick=()=>{ if(recorder) return; S.facing = isFront()?'environment':'user'; S.deviceId=null; save(); startCamera(); };
 
 /* filter strip */
 (function buildFilters(){
@@ -461,13 +506,79 @@ function drawFilterThumbs(){
 }
 
 /* ---------- modes ---------- */
+function backCams(){
+  const b=cams.filter(c=>!/front|user|أمام/i.test(c.label));
+  return b.length?b:cams;
+}
+function updateMicroUI(){
+  $('#micro').classList.toggle('show', isMicro());
+  const bc=backCams();
+  $('#mLens').hidden = bc.length<2 || isFront();
+  const idx = Math.max(0, bc.findIndex(c=>c.deviceId===(S.deviceId||(track&&track.getSettings?track.getSettings().deviceId:''))));
+  $('#mLens').textContent = `🔍 العدسة ${idx+1}/${bc.length}`;
+  $('#mLight').hidden = !hw.torch;
+  $('#mLight').classList.toggle('on', S.microLight);
+  $('#mSharp').classList.toggle('on', S.sharp);
+  $('#mFreeze').classList.toggle('on', frozen);
+  $('#focusRow').classList.toggle('show', isMicro() && !!caps.focusDistance);
+}
+function enterMicro(){
+  if(!track) return;
+  if(caps.focusDistance){
+    const fr=$('#focusRange'); fr.min=caps.focusDistance.min; fr.max=Math.min(caps.focusDistance.max, caps.focusDistance.min+2); fr.step=caps.focusDistance.step||0.01;
+    fr.value=caps.focusDistance.min;
+    // start in continuous so it locks on what's in front; slider switches to manual
+    if(caps.focusMode && caps.focusMode.includes('continuous')) track.applyConstraints({advanced:[{focusMode:'continuous'}]}).catch(()=>{});
+  }
+  if(S.microLight && hw.torch) setTorch(true);
+  updateMicroUI();
+}
+function leaveMicro(){
+  if(frozen) toggleFreeze();
+  if(hw.torch) setTorch(S.flash==='torch');
+  if(caps.focusMode && caps.focusMode.includes('continuous')) track && track.applyConstraints({advanced:[{focusMode:'continuous'}]}).catch(()=>{});
+}
+$('#focusRange').addEventListener('input',e=>{
+  if(!track) return;
+  track.applyConstraints({advanced:[{focusMode:'manual', focusDistance:+e.target.value}]}).catch(()=>{});
+});
+['touchstart','touchmove','touchend'].forEach(ev=>$('#micro').addEventListener(ev,e=>e.stopPropagation(),{passive:true}));
+$('#mLight').onclick=()=>{ S.microLight=!S.microLight; save(); setTorch(S.microLight); updateMicroUI(); };
+$('#mSharp').onclick=()=>{ S.sharp=!S.sharp; save(); updatePreview(); updateMicroUI(); };
+function toggleFreeze(){
+  frozen=!frozen;
+  if(frozen) video.pause(); else video.play().catch(()=>{});
+  $('#frozen').classList.toggle('show',frozen);
+  updateMicroUI();
+}
+$('#mFreeze').onclick=toggleFreeze;
+$('#mLens').onclick=()=>{
+  if(recorder) return;
+  const bc=backCams(); if(bc.length<2) return;
+  const curId = S.deviceId || (track.getSettings?track.getSettings().deviceId:'');
+  const i=bc.findIndex(c=>c.deviceId===curId);
+  const next=bc[(i+1)%bc.length];
+  S.deviceId=next.deviceId; save();
+  toast(`العدسة ${(i+1)%bc.length+1} من ${bc.length}`);
+  startCamera();
+};
+
 function setMode(m){
   if(recorder) return;
+  const was=S.mode;
+  if(was==='micro' && m!=='micro') leaveMicro();
   S.mode=m; save();
   document.querySelectorAll('#modes button').forEach(b=>b.classList.toggle('on',b.dataset.m===m));
   const sh=$('#shutter'); sh.className = m==='video'?'video':m==='qr'?'qr':'';
   $('#qrBox').style.display = m==='qr'?'block':'none';
-  $('#filterBtn').style.visibility = m==='photo'?'visible':'hidden';
+  $('#filterBtn').style.visibility = (m==='photo'||m==='micro')?'visible':'hidden';
+  if(track && (was==='micro')!==(m==='micro')){
+    if(!S.hires) startCamera();          // micro uses 4K stream; restart switches resolution
+    else { buildZoomRow(); setZoom(zoom); if(m==='micro') enterMicro(); }
+  }
+  if(was!==m && track){ buildZoomRow(); setZoom(zoom); }
+  updateMicroUI(); updatePreview();
+  if(m==='micro' && was!=='micro') toast('قرّب الجوال من الشي وحرّك شريط التركيز',2500);
   $('#timerBtn').style.visibility = m==='qr'?'hidden':'visible';
   if(m!=='photo') $('#filters').classList.remove('show');
   if(m==='qr') startQR(); else stopQR();
@@ -476,7 +587,7 @@ document.querySelectorAll('#modes button').forEach(b=>b.onclick=()=>setMode(b.da
 // swipe on stage to change mode
 let swX=null;
 $('#bottom').addEventListener('touchstart',e=>{ swX=e.touches[0].clientX; },{passive:true});
-$('#bottom').addEventListener('touchend',e=>{ if(swX==null) return; const dx=e.changedTouches[0].clientX-swX; swX=null; if(Math.abs(dx)<60 || $('#filters').contains(e.target)) return; const ms=['qr','photo','video']; let i=ms.indexOf(S.mode)+(dx>0?1:-1); i=Math.max(0,Math.min(2,i)); setMode(ms[i]); });
+$('#bottom').addEventListener('touchend',e=>{ if(swX==null) return; const dx=e.changedTouches[0].clientX-swX; swX=null; if(Math.abs(dx)<60 || $('#filters').contains(e.target)) return; const ms=['qr','micro','photo','video']; let i=ms.indexOf(S.mode)+(dx>0?1:-1); i=Math.max(0,Math.min(3,i)); setMode(ms[i]); });
 
 /* ---------- sound / haptics ---------- */
 let actx=null;
@@ -494,7 +605,7 @@ function flashFx(){ const f=$('#flashFx'); f.style.transition='none'; f.style.op
 
 /* ---------- capture ---------- */
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
-const nextFrame=()=>new Promise(r=>{ if(video.requestVideoFrameCallback) video.requestVideoFrameCallback(()=>r()); else setTimeout(r,34); });
+const nextFrame=()=>new Promise(r=>{ if(frozen) return r(); const t=setTimeout(r,120); if(video.requestVideoFrameCallback) video.requestVideoFrameCallback(()=>{clearTimeout(t);r();}); });
 
 async function countdown(n){
   const c=$('#count');
@@ -522,7 +633,7 @@ async function nightStack(n=8){
 async function getSource(allowFull){
   let src=null, sw=0, sh=0, usedFlash=false;
   const wantFlash = S.flash==='on';
-  if(allowFull && S.full && imageCapture && !S.night){
+  if(allowFull && S.full && imageCapture && !S.night && !frozen && !isMicro()){
     try{
       const opts={};
       if(wantFlash && photoCaps && photoCaps.fillLightMode && photoCaps.fillLightMode.includes('flash')){ opts.fillLightMode='flash'; usedFlash=true; }
@@ -534,7 +645,7 @@ async function getSource(allowFull){
   if(!src){
     let torchOn=false;
     if(wantFlash && !usedFlash && hw.torch){ await setTorch(true); torchOn=true; await sleep(600); }
-    if(S.night){ toast('ثبّت الجوال…',1500); src=await nightStack(); }
+    if(S.night && !frozen){ toast('ثبّت الجوال…',1500); src=await nightStack(); }
     else { await nextFrame(); src=video; }
     sw=src.videoWidth||src.width; sh=src.videoHeight||src.height;
     if(torchOn) setTorch(false);
@@ -546,11 +657,14 @@ function render({src,sw,sh}){
   const R = frame.clientWidth/frame.clientHeight;
   let cw=sw, ch=sh;
   if(sw/sh > R) cw=sh*R; else ch=sw/R;
-  const dz = hw.zoom ? 1 : zoom;
+  const dz = digZ();
   cw/=dz; ch/=dz;
   const cx=(sw-cw)/2, cy=(sh-ch)/2;
-  const c=document.createElement('canvas'); c.width=Math.round(cw); c.height=Math.round(ch);
-  const x=c.getContext('2d',{willReadFrequently:!ctxFilterOK});
+  // in micro mode, upscale small digital crops so details stay viewable, then sharpen
+  const up = isMicro() ? Math.min(6, Math.max(1, 2000/Math.max(cw,ch))) : 1;
+  const c=document.createElement('canvas'); c.width=Math.round(cw*up); c.height=Math.round(ch*up);
+  const x=c.getContext('2d',{willReadFrequently:true});
+  x.imageSmoothingEnabled=true; x.imageSmoothingQuality='high';
   const ops=opsNow();
   x.save();
   const mirror = isFront() && S.mirror;
@@ -559,6 +673,7 @@ function render({src,sw,sh}){
   x.drawImage(src,cx,cy,cw,ch,0,0,c.width,c.height);
   x.restore();
   if(!ctxFilterOK) applyOpsPixels(x,c.width,c.height,ops);
+  if(isMicro() && S.sharp) sharpen(x,c.width,c.height, up>1.5?0.9:0.6);
   if(S.stamp){
     const d=new Date(), p=n=>String(n).padStart(2,'0');
     const t=`${d.getFullYear()}/${p(d.getMonth()+1)}/${p(d.getDate())}  ${p(d.getHours())}:${p(d.getMinutes())}`;
@@ -568,6 +683,20 @@ function render({src,sw,sh}){
     x.fillText(t,c.width-fs*.8,c.height-fs*.6);
   }
   return c;
+}
+
+function sharpen(ctx,w,h,a){
+  const img=ctx.getImageData(0,0,w,h), s=img.data, o=new Uint8ClampedArray(s), row=w*4;
+  for(let y=1;y<h-1;y++){
+    for(let xx=1;xx<w-1;xx++){
+      const i=y*row+xx*4;
+      for(let k=0;k<3;k++){
+        const p=s[i+k];
+        o[i+k]=p + a*(4*p - s[i-4+k] - s[i+4+k] - s[i-row+k] - s[i+row+k]);
+      }
+    }
+  }
+  img.data.set(o); ctx.putImageData(img,0,0);
 }
 
 const toBlob=(c,type,q)=>new Promise(r=>c.toBlob(r,type,q));
@@ -816,7 +945,7 @@ let wl=null;
 async function keepAwake(){ try{ if('wakeLock' in navigator && !document.hidden) wl=await navigator.wakeLock.request('screen'); }catch(e){} }
 document.addEventListener('visibilitychange',()=>{
   if(document.hidden){ if(recorder && recorder.state!=='inactive') recorder.stop(); }
-  else { keepAwake(); if(!track || track.readyState==='ended') startCamera(); else if(S.flash==='torch') setTorch(true); }
+  else { keepAwake(); if(!track || track.readyState==='ended') startCamera(); else if(S.flash==='torch' || (isMicro()&&S.microLight)) setTorch(true); }
 });
 
 /* ---------- init ---------- */
