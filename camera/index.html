@@ -76,7 +76,11 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;paddin
 #microBtns button[hidden]{display:none}
 #focusRow{display:none;align-items:center;gap:8px;font-size:12px}
 #focusRow.show{display:flex}
-#focusRow input{flex:1;accent-color:#ffd60a}
+#focusRow input{flex:1;accent-color:#ffd60a;height:28px}
+#focusRow button{width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.14);font-size:18px;font-weight:700;flex:0 0 auto}
+#focusRow #fAuto{width:auto;border-radius:17px;padding:0 10px;font-size:12px}
+#focusRow #fAuto.on{background:#ffd60a;color:#000}
+#fVal{min-width:46px;text-align:center;direction:ltr;font-variant-numeric:tabular-nums;opacity:.8}
 #frozen{position:absolute;top:42px;right:10px;background:#0a84ff;padding:3px 10px;border-radius:8px;font-size:12px;font-weight:700;display:none}
 #frozen.show{display:block}
 #modes{display:flex;justify-content:center;gap:22px;margin-bottom:12px;font-size:14px;font-weight:600}
@@ -165,7 +169,7 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;paddin
         <button id="mSharp">✦ حدّة</button>
         <button id="mFreeze">❄︎ تجميد</button>
       </div>
-      <div id="focusRow"><span>قريب</span><input type="range" id="focusRange" min="0" max="1" step="0.001"><span>بعيد</span></div>
+      <div id="focusRow"><button id="fAuto" class="on">تلقائي</button><button id="fNear" aria-label="أقرب">−</button><input type="range" id="focusRange" min="0" max="1000" step="1" value="0"><button id="fFar" aria-label="أبعد">+</button><span id="fVal">—</span></div>
     </div>
     <div id="zoomRow"></div>
     <div id="modes">
@@ -525,8 +529,7 @@ function updateMicroUI(){
 function enterMicro(){
   if(!track) return;
   if(caps.focusDistance){
-    const fr=$('#focusRange'); fr.min=caps.focusDistance.min; fr.max=Math.min(caps.focusDistance.max, caps.focusDistance.min+2); fr.step=caps.focusDistance.step||0.01;
-    fr.value=caps.focusDistance.min;
+    $('#focusRange').value=0; $('#fVal').textContent='—'; $('#fAuto').classList.add('on');
     // start in continuous so it locks on what's in front; slider switches to manual
     if(caps.focusMode && caps.focusMode.includes('continuous')) track.applyConstraints({advanced:[{focusMode:'continuous'}]}).catch(()=>{});
   }
@@ -538,10 +541,43 @@ function leaveMicro(){
   if(hw.torch) setTorch(S.flash==='torch');
   if(caps.focusMode && caps.focusMode.includes('continuous')) track && track.applyConstraints({advanced:[{focusMode:'continuous'}]}).catch(()=>{});
 }
-$('#focusRange').addEventListener('input',e=>{
+// slider 0..1000 mapped on a log scale across the lens's FULL focus range,
+// so close distances get fine control and far distances are still reachable
+function focusBounds(){
+  const fd=caps.focusDistance||{min:0.05,max:10};
+  const lo=Math.max(fd.min||0, 0.01);
+  let hi=fd.max; if(!isFinite(hi) || hi>1000) hi=1000; if(hi<=lo) hi=lo*10;
+  return {lo,hi};
+}
+function sliderToDist(v){ const {lo,hi}=focusBounds(); return Math.exp(Math.log(lo)+(Math.log(hi)-Math.log(lo))*(v/1000)); }
+function fmtDist(d){ return d<1 ? (d*100).toFixed(d<0.1?1:0)+' سم' : d<100 ? d.toFixed(1)+' م' : '∞'; }
+let focusPending=false, focusWanted=null;
+function sendFocus(){
+  if(!track || focusPending || focusWanted===null) return;
+  const d=focusWanted; focusWanted=null; focusPending=true;
+  track.applyConstraints({advanced:[{focusMode:'manual', focusDistance:d}]}).catch(()=>{}).finally(()=>{ focusPending=false; sendFocus(); });
+}
+function setFocusSlider(v){
+  v=Math.max(0,Math.min(1000,v)); $('#focusRange').value=v;
+  const d=sliderToDist(v); $('#fVal').textContent=fmtDist(d);
+  $('#fAuto').classList.remove('on');
+  focusWanted=d; sendFocus();
+}
+$('#focusRange').addEventListener('input',e=>setFocusSlider(+e.target.value));
+function holdRepeat(btn,delta){
+  let t=null, iv=null;
+  const stop=()=>{ clearTimeout(t); clearInterval(iv); };
+  btn.addEventListener('pointerdown',e=>{ e.preventDefault(); setFocusSlider(+$('#focusRange').value+delta); t=setTimeout(()=>{ iv=setInterval(()=>setFocusSlider(+$('#focusRange').value+delta),60); },350); });
+  ['pointerup','pointerleave','pointercancel'].forEach(ev=>btn.addEventListener(ev,stop));
+}
+holdRepeat($('#fNear'),-4); holdRepeat($('#fFar'),4);
+$('#fAuto').onclick=()=>{
   if(!track) return;
-  track.applyConstraints({advanced:[{focusMode:'manual', focusDistance:+e.target.value}]}).catch(()=>{});
-});
+  const m = caps.focusMode && caps.focusMode.includes('continuous') ? 'continuous' : (caps.focusMode && caps.focusMode[0]);
+  if(m) track.applyConstraints({advanced:[{focusMode:m}]}).catch(()=>{});
+  $('#fAuto').classList.add('on'); $('#fVal').textContent='—';
+  toast('تركيز تلقائي');
+};
 ['touchstart','touchmove','touchend'].forEach(ev=>$('#micro').addEventListener(ev,e=>e.stopPropagation(),{passive:true}));
 $('#mLight').onclick=()=>{ S.microLight=!S.microLight; save(); setTorch(S.microLight); updateMicroUI(); };
 $('#mSharp').onclick=()=>{ S.sharp=!S.sharp; save(); updatePreview(); updateMicroUI(); };
