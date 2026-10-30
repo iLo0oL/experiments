@@ -1,0 +1,2191 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<meta name="theme-color" content="#0f0f0f">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="تيوبي">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>تيوبي</title>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0f0f0f;--panel:#212121;--panel2:#272727;--hover:#3a3a3a;--input:#121212;--text:#f1f1f1;--muted:#aaa;--red:#ff0033;--line:#303030;--banner:linear-gradient(135deg,#2a0d14,#1a1a2e);--shadow:rgba(0,0,0,.5)}
+body.light{--bg:#fff;--panel:#fff;--panel2:#f2f2f2;--hover:#e5e5e5;--input:#fff;--text:#0f0f0f;--muted:#606060;--line:#ddd;--banner:linear-gradient(135deg,#ffe8ec,#eef0ff);--shadow:rgba(0,0,0,.15)}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{overflow-x:hidden}
+body{font-family:'Tajawal',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding-bottom:env(safe-area-inset-bottom)}
+button{font-family:inherit;cursor:pointer;border:none;color:inherit;background:none}
+input,select{font-family:inherit}
+a{color:#3ea6ff}
+/* header */
+header{position:sticky;top:0;z-index:30;display:flex;align-items:center;gap:10px;padding:10px 16px;padding-top:max(10px,env(safe-area-inset-top));background:var(--bg);border-bottom:1px solid var(--line)}
+.logo{display:flex;align-items:center;gap:6px;font-weight:800;font-size:22px;cursor:pointer;white-space:nowrap}
+.logo .ic{width:34px;height:24px;background:var(--red);border-radius:7px;display:grid;place-items:center}
+.logo .ic:after{content:"";border-style:solid;border-width:6px 10px 6px 0;border-color:transparent #fff transparent transparent}
+.sbox{flex:1;max-width:620px;margin:0 auto;position:relative;min-width:0}
+.search{display:flex}
+.search input{flex:1;background:var(--input);border:1px solid var(--line);border-left:none;color:var(--text);padding:9px 16px;border-radius:0 40px 40px 0;font-size:15px;outline:none;min-width:0}
+.search input:focus{border-color:#1c62b9}
+.search button{background:var(--panel2);border:1px solid var(--line);padding:0 18px;border-radius:40px 0 0 40px}
+.sugg{position:absolute;top:calc(100% + 4px);left:0;right:0;background:var(--panel);border:1px solid var(--line);border-radius:12px;box-shadow:0 8px 24px var(--shadow);padding:6px 0;display:none;z-index:40;max-height:60vh;overflow:auto}
+.sugg.open{display:block}
+.sugg div{padding:9px 16px;cursor:pointer;display:flex;gap:10px;align-items:center;font-size:15px}
+.sugg div:hover,.sugg div.act{background:var(--panel2)}
+.sugg small{color:var(--muted);margin-right:auto;font-size:12px}
+.nav-wide{display:flex;gap:6px}
+.btn{background:var(--panel2);padding:9px 16px;border-radius:40px;font-weight:700;font-size:14px;display:inline-flex;align-items:center;gap:6px;white-space:nowrap;text-decoration:none;color:var(--text)}
+.btn:hover{background:var(--hover)}
+.btn.primary{background:var(--text);color:var(--bg)}
+.btn.red{background:var(--red);color:#fff}
+.btn.on{color:#3ea6ff}
+.btn.sub{background:var(--text);color:var(--bg)}
+.btn.sub.on{background:var(--panel2);color:var(--text)}
+.btn.bg{background:linear-gradient(135deg,#ff0033,#c2185b);color:#fff}
+.btn.sm{padding:6px 12px;font-size:13px}
+.ibtn{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;font-size:18px;flex-shrink:0}
+.ibtn:hover{background:var(--panel2)}
+/* chips */
+.chips{display:flex;gap:10px;padding:12px 16px;overflow-x:auto;scrollbar-width:none;position:sticky;top:61px;background:var(--bg);z-index:10}
+.chips::-webkit-scrollbar{display:none}
+.chip{background:var(--panel2);padding:7px 14px;border-radius:9px;font-size:14px;white-space:nowrap;font-weight:500}
+.chip.on{background:var(--text);color:var(--bg)}
+main{padding:4px 16px 40px}
+/* cards */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:28px 16px}
+.row{display:flex;gap:14px;overflow-x:auto;padding-bottom:6px;scrollbar-width:thin}
+.row .card{width:260px;flex-shrink:0}
+.card{cursor:pointer;position:relative}
+.thumb{position:relative;height:0;padding-top:56.25%;border-radius:12px;overflow:hidden;background:var(--panel2)}
+.thumb img{position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;display:block;transition:transform .2s}
+.card:hover .thumb img{transform:scale(1.04)}
+.dur{position:absolute;bottom:6px;left:6px;background:rgba(0,0,0,.85);color:#fff;font-size:12px;padding:2px 5px;border-radius:4px;font-weight:700;direction:ltr}
+.pbar{position:absolute;bottom:0;left:0;right:0;height:4px;background:rgba(255,255,255,.35)}
+.pbar i{display:block;height:100%;background:var(--red);margin-left:auto}
+.qadd{position:absolute;top:6px;left:6px;background:rgba(0,0,0,.8);color:#fff;border-radius:6px;padding:3px 8px;font-size:12px;font-weight:700;opacity:0;transition:.15s}
+.card:hover .qadd{opacity:1}
+@media(hover:none){.qadd{opacity:.9}}
+.meta{display:flex;gap:12px;margin-top:12px}
+.avatar{width:36px;height:36px;border-radius:50%;flex-shrink:0;display:grid;place-items:center;font-weight:800;font-size:15px;color:#fff;overflow:hidden}
+.avatar img{width:100%;height:100%;object-fit:cover}
+.meta h3,.side h3{font-weight:700;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.meta h3{font-size:16px}
+.meta p,.side p{color:var(--muted);font-size:14px;margin-top:3px}
+.chl:hover{color:var(--text)}
+.empty{text-align:center;color:var(--muted);padding:50px 10px;font-size:17px;line-height:1.9}
+.ptitle{font-size:21px;font-weight:800;margin:18px 0 14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.banner{background:var(--banner);border:1px solid var(--line);border-radius:14px;padding:16px;margin:10px 0 18px;line-height:1.9}
+.banner b{font-size:17px}
+.paste{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.paste input{flex:1;min-width:180px;background:var(--input);border:1px solid var(--line);color:var(--text);padding:10px 14px;border-radius:40px;font-size:15px;outline:none;direction:ltr;text-align:right}
+.loading{text-align:center;padding:40px;color:var(--muted)}
+.spin{width:28px;height:28px;border:3px solid var(--line);border-top-color:var(--red);border-radius:50%;animation:sp 0.8s linear infinite;margin:0 auto}
+@keyframes sp{to{transform:rotate(360deg)}}
+.more{display:block;margin:28px auto 0}
+.filters{display:flex;gap:8px;flex-wrap:wrap;margin:-4px 0 18px}
+.filters select{background:var(--panel2);color:var(--text);border:none;border-radius:20px;padding:7px 12px;font-size:14px;font-weight:500;outline:none}
+/* watch */
+.watch{display:grid;grid-template-columns:1fr 400px;gap:24px;max-width:1700px;margin:0 auto;padding-top:16px}
+@media(max-width:1000px){.watch{grid-template-columns:1fr}}
+.watch>*{min-width:0}
+.player{position:relative;background:#000;border-radius:12px;overflow:hidden;height:0;padding-top:56.25%}
+.player.full{position:fixed;top:0;left:0;right:0;bottom:0;z-index:100;border-radius:0;padding-top:0;height:100vh}
+.osd{position:absolute;left:0;right:0;bottom:0;padding:40px 30px 24px;background:linear-gradient(transparent,rgba(0,0,0,.85));color:#fff;opacity:0;transition:opacity .3s;pointer-events:none;z-index:3}
+.osd.show{opacity:1}
+.osd b{font-size:22px;display:block;margin-bottom:10px}
+.osd .ob{direction:ltr;height:6px;background:rgba(255,255,255,.3);border-radius:3px;margin-top:8px}
+.osd .ob i{display:block;height:100%;background:var(--red);border-radius:3px}
+.osd .ot{display:flex;justify-content:space-between;direction:ltr;font-size:16px}
+.osd .hint{font-size:14px;opacity:.8;margin-top:8px}
+.player iframe,.player #ytp{position:absolute;top:0;left:0;right:0;bottom:0;width:100%;height:100%;border:0}
+.vload{position:absolute;top:0;left:0;right:0;bottom:0;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#ddd;font-size:15px;background:#000}
+.vload .spin{margin-bottom:12px}
+.nvid{position:absolute;top:0;left:0;width:100%;height:100%;background:#000}
+.wtitle{font-size:20px;font-weight:800;margin:14px 0 10px;line-height:1.4}
+.wrow{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.chrow{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.chrow .cn{cursor:pointer}
+.chrow small{display:block;color:var(--muted)}
+.actions{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
+.actions::-webkit-scrollbar{display:none}
+.desc{background:var(--panel2);border-radius:12px;padding:12px;margin-top:14px;font-size:14px;line-height:1.7;white-space:pre-wrap;word-break:break-word;max-height:130px;overflow:hidden;cursor:pointer}
+.desc.open{max-height:none}
+.desc b{display:block;margin-bottom:4px}
+.comments h2{font-size:18px;margin:22px 0 14px}
+.cform{display:flex;gap:12px;margin-bottom:22px;align-items:center}
+.cform input{flex:1;min-width:0;background:none;border:none;border-bottom:1px solid var(--line);color:var(--text);padding:8px 2px;font-size:15px;outline:none}
+.cmt{display:flex;gap:12px;margin-bottom:18px}
+.cmt img{width:36px;height:36px;border-radius:50%;flex-shrink:0;background:var(--panel2)}
+.cmt b{font-size:13px}
+.cmt b small{color:var(--muted);font-weight:400;margin-right:6px}
+.cmt p{font-size:14px;margin-top:3px;line-height:1.6;word-break:break-word;white-space:pre-wrap}
+.side .card{display:flex;gap:8px;margin-bottom:12px}
+.side .thumb{width:168px;flex-shrink:0;border-radius:8px}
+.side h3{font-size:14px}
+.side p{font-size:12px}
+.qbox{border:1px solid var(--line);border-radius:12px;margin-bottom:16px;overflow:hidden}
+.qhead{display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--panel2);font-weight:700}
+.qhead .sp{flex:1}
+.qitem{display:flex;gap:8px;align-items:center;padding:6px 10px;cursor:pointer}
+.qitem:hover{background:var(--panel2)}
+.qitem img{width:80px;height:45px;object-fit:cover;border-radius:6px}
+.qitem span{flex:1;font-size:13px;font-weight:500;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.switch{position:relative;width:38px;height:22px;background:#666;border-radius:20px;transition:.2s;flex-shrink:0;cursor:pointer}
+.switch:after{content:"";position:absolute;top:3px;right:3px;width:16px;height:16px;border-radius:50%;background:#fff;transition:.2s}
+.switch.on{background:#3ea6ff}
+.switch.on:after{right:19px}
+/* channel */
+.chban{height:140px;border-radius:14px;background:var(--banner) center/cover;margin-top:14px}
+.chhead{display:flex;align-items:center;gap:16px;margin:16px 0 8px;flex-wrap:wrap}
+.chhead .avatar{width:72px;height:72px;font-size:28px}
+.chhead h1{font-size:24px}
+.chhead small{color:var(--muted);display:block}
+.subchips{display:flex;gap:8px;overflow-x:auto;padding-bottom:6px;margin-bottom:10px;scrollbar-width:none}
+.subchips button{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:12px;width:72px;flex-shrink:0}
+.subchips .avatar{width:52px;height:52px;font-size:20px}
+.subchips span{width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* shorts */
+.shorts{height:calc(100vh - 62px);height:calc(100dvh - 62px);overflow-y:scroll;scroll-snap-type:y mandatory;scrollbar-width:none}
+.shorts::-webkit-scrollbar{display:none}
+.short{height:100%;scroll-snap-align:start;scroll-snap-stop:always;display:flex;justify-content:center;align-items:center;padding:8px 0}
+.sbox9{position:relative;height:100%;width:calc((100vh - 140px)*0.5625);max-width:100%;background:#000;border-radius:14px;overflow:hidden}
+.sbox9 img{width:100%;height:100%;object-fit:cover;opacity:.75}
+.sbox9 iframe{position:absolute;top:0;left:0;right:0;bottom:0;width:100%;height:100%;border:0}
+.sinfo{position:absolute;bottom:0;left:0;right:0;padding:60px 14px 16px;background:linear-gradient(transparent,rgba(0,0,0,.85));color:#fff;pointer-events:none}
+.sinfo b{display:block;font-size:15px;line-height:1.4}
+.sinfo small{opacity:.8}
+.sact{position:absolute;left:10px;bottom:90px;display:flex;flex-direction:column;gap:12px;z-index:2}
+.sact button{width:46px;height:46px;border-radius:50%;background:rgba(0,0,0,.55);color:#fff;font-size:20px}
+.splay{position:absolute;top:0;left:0;right:0;bottom:0;display:grid;place-items:center;font-size:54px;color:#fff;text-shadow:0 2px 12px #000}
+/* mini player */
+.mini{position:fixed;bottom:0;left:0;right:0;z-index:45;background:var(--panel);border-top:1px solid var(--line);display:none;align-items:center;gap:6px;padding:8px 10px;box-shadow:0 -4px 16px var(--shadow)}
+.mini.open{display:flex}
+.mini img{width:64px;height:36px;object-fit:cover;border-radius:6px;cursor:pointer;background:var(--panel2)}
+.mini .mt{flex:1;min-width:0;cursor:pointer}
+.mini .mt b{display:block;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mini .mt small{color:var(--muted);font-size:12px;white-space:nowrap}
+.mini .mb{height:4px;background:var(--line);position:absolute;top:-1px;left:0;right:0;cursor:pointer}
+.mini .mb i{display:block;height:100%;background:var(--red);width:0;margin-left:auto}
+.mini .ibtn{width:38px;height:38px;font-size:18px}
+/* bottom nav (mobile) */
+.bnav{display:none;position:fixed;bottom:0;left:0;right:0;z-index:44;background:var(--bg);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom)}
+.bnav button{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:7px 0 6px;font-size:11px;color:var(--muted)}
+.bnav button b{font-size:20px;font-weight:400;line-height:1}
+.bnav button.on{color:var(--text)}
+/* modals */
+.modal{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.6);display:none;place-items:center;z-index:60;padding:16px}
+.modal.open{display:grid}
+.box{background:var(--panel);border-radius:14px;width:100%;max-width:520px;padding:20px;line-height:1.8;max-height:88vh;overflow:auto}
+.box h2{font-size:19px;margin-bottom:10px}
+.box h3{font-size:15px;margin:14px 0 6px}
+.box ol{padding-right:20px;font-size:14px;color:var(--muted);margin-bottom:10px}
+.box input[type=text]{width:100%;background:var(--input);border:1px solid var(--line);color:var(--text);border-radius:8px;padding:10px;font-size:15px;outline:none;direction:ltr}
+.box .acts{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap}
+.setrow{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)}
+.setrow span{flex:1}
+.setrow small{display:block;color:var(--muted);font-size:12px;line-height:1.5}
+.opts{display:grid;gap:8px}
+.opts button{background:var(--panel2);padding:12px;border-radius:10px;font-weight:700;font-size:15px;text-align:right}
+.opts button:hover{background:var(--hover)}
+details summary{cursor:pointer;color:#3ea6ff;font-size:14px}
+.toast{position:fixed;bottom:84px;right:50%;transform:translateX(50%);background:var(--text);color:var(--bg);padding:10px 18px;border-radius:8px;font-weight:700;opacity:0;transition:.3s;z-index:70;pointer-events:none;max-width:90vw;text-align:center}
+.toast.show{opacity:1}
+body.has-mini main{padding-bottom:80px}
+@media(max-width:820px){
+  .nav-wide{display:none}
+  .bnav{display:flex}
+  body main{padding-bottom:90px}
+  body.has-mini main{padding-bottom:150px}
+  .mini{bottom:calc(56px + env(safe-area-inset-bottom))}
+  .shorts{height:calc(100vh - 118px);height:calc(100dvh - 62px - 56px - env(safe-area-inset-bottom))}
+  .toast{bottom:140px}
+}
+@media(max-width:640px){
+  header{gap:6px;padding-left:10px;padding-right:10px}
+  .logo .t{display:none}
+  .side .thumb{width:140px}
+  .chips{top:59px}
+  .search button{padding:0 14px}
+}
+/* ---------- TV mode ---------- */
+body.tv{zoom:1.5}
+body.tv .bnav{display:none!important}
+body.tv .nav-wide{display:flex!important}
+body.tv .mini{bottom:0!important}
+body.tv .player.full{zoom:.6667;height:100vh}
+body.tv .player.full .osd{zoom:1.5}
+body.tv .shorts{height:calc(100vh / 1.5 - 62px)}
+body.tv .sbox9{width:calc((100vh / 1.5 - 80px)*0.5625)}
+body.tv :focus{outline:4px solid #3ea6ff;outline-offset:3px}
+body.tv .card:focus{outline:none}
+body.tv .card:focus .thumb{box-shadow:0 0 0 4px #3ea6ff}
+body.tv .card:focus h3{color:#3ea6ff}
+body.tv .player:focus{outline:4px solid #3ea6ff}
+body.tv .player iframe,body.tv .player #ytp{pointer-events:none}
+body.tv .qadd{display:none}
+body.tv .grid{grid-template-columns:repeat(auto-fill,minmax(240px,1fr))}
+body.tv .actions>*,body.tv .chrow>*,body.tv .chips>*,body.tv header>*,body.tv .nav-wide>*,body.tv .meta>*,body.tv .filters>*,body.tv .wrow>*,body.tv .chhead>*{margin-left:8px}
+.tvonly{display:none}
+body.tv .tvonly{display:inline-flex}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo" onclick="go('home')"><div class="ic"></div><span class="t">تيوبي</span></div>
+  <div class="sbox">
+    <form class="search" onsubmit="event.preventDefault();doSearch()" autocomplete="off">
+      <input id="q" placeholder="ابحث أو الصق رابط يوتيوب" enterkeyhint="search">
+      <button type="submit" aria-label="بحث">🔍</button>
+    </form>
+    <div class="sugg" id="sugg"></div>
+  </div>
+  <div class="nav-wide">
+    <button class="btn" onclick="go('shorts')">⚡ Shorts</button>
+    <button class="btn" onclick="go('subs')">🔔 الاشتراكات</button>
+    <button class="btn" onclick="go('library')">📚 مكتبتي</button>
+  </div>
+  <button class="ibtn" onclick="openSettings()" title="الإعدادات">⚙️</button>
+</header>
+
+<div id="app"></div>
+
+<nav class="bnav" id="bnav">
+  <button data-r="home" onclick="go('home')"><b>🏠</b>الرئيسية</button>
+  <button data-r="shorts" onclick="go('shorts')"><b>⚡</b>Shorts</button>
+  <button data-r="subs" onclick="go('subs')"><b>🔔</b>الاشتراكات</button>
+  <button data-r="library" onclick="go('library')"><b>📚</b>مكتبتي</button>
+</nav>
+
+<div class="mini" id="mini"><div class="mb" id="miniTrack"><i id="miniBar"></i></div>
+  <img id="miniImg" alt="" onclick="backToVideo()">
+  <div class="mt" onclick="backToVideo()"><b id="miniT"></b><small id="miniS"></small></div>
+  <button class="ibtn" onclick="openSleep()" title="مؤقت النوم" id="miniSleep">⏲</button>
+  <button class="ibtn" id="miniPP" onclick="toggleA()">⏸</button>
+  <button class="ibtn" onclick="playNext(true)" title="التالي">⏭</button>
+  <button class="ibtn" onclick="stopA()" title="إغلاق">✕</button>
+</div>
+<audio id="aud" preload="none"></audio>
+
+<div class="modal" id="setModal" onclick="if(event.target===this)closeM('setModal')">
+  <div class="box">
+    <h2>⚙️ الإعدادات</h2>
+    <div class="setrow"><span>الوضع الفاتح<small>بدّل بين الداكن والفاتح</small></span><div class="switch" id="swTheme" onclick="toggleTheme()"></div></div>
+    <div class="setrow"><span>وضع التلفزيون<small>واجهة كبيرة وتنقّل بأسهم الريموت</small></span><div class="switch" id="swTv" onclick="toggleTv()"></div></div>
+    <div class="setrow"><span>بدون إعلانات<small>يشغّل الفيديو بمشغّل تيوبي. لو ما زبط مقطع، يرجع لمشغّل يوتيوب تلقائي</small></span><div class="switch" id="swNoads" onclick="toggleNoads()"></div></div>
+    <div class="setrow"><span>التشغيل التلقائي<small>يشغّل المقطع التالي إذا خلص الحالي</small></span><div class="switch" id="swAuto" onclick="toggleAuto()"></div></div>
+    <div class="setrow"><span>تجهيز الصوت مسبقًا<small>يخلي التحويل للخلفية فوري (يستهلك بيانات أكثر بشوي)</small></span><div class="switch" id="swPre" onclick="togglePre()"></div></div>
+    <div class="setrow" id="installRow"><span>تثبيت التطبيق<small id="installHint">أضف تيوبي للشاشة الرئيسية</small></span><button class="btn sm red" onclick="installApp()">📲 تثبيت</button></div>
+    <h3>🔑 مفتاح YouTube API (اختياري)</h3>
+    <p style="font-size:13px;color:var(--muted)">التطبيق يشتغل بدونه، بس المفتاح يخلي البحث والرئيسية أسرع وأثبت.</p>
+    <input type="text" id="keyIn" placeholder="AIza..." autocomplete="off">
+    <details style="margin-top:8px"><summary>كيف أجيب المفتاح؟</summary>
+      <ol>
+        <li>افتح <a href="https://console.cloud.google.com/apis/library/youtube.googleapis.com" target="_blank" rel="noopener">Google Cloud Console</a> وسجّل بحساب قوقل.</li>
+        <li>أنشئ مشروع جديد، ثم اضغط <b>Enable</b> على YouTube Data API v3.</li>
+        <li>من <b>Credentials</b> اختر <b>Create credentials ← API key</b> وانسخه.</li>
+      </ol></details>
+    <div class="acts">
+      <button class="btn red" onclick="saveKey()">حفظ</button>
+      <button class="btn" onclick="closeM('setModal')">إغلاق</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="sleepModal" onclick="if(event.target===this)closeM('sleepModal')">
+  <div class="box">
+    <h2>⏲ مؤقت النوم</h2>
+    <p id="sleepNow" style="color:var(--muted);font-size:14px;margin-bottom:10px"></p>
+    <div class="opts">
+      <button onclick="setSleep(15)">15 دقيقة</button>
+      <button onclick="setSleep(30)">30 دقيقة</button>
+      <button onclick="setSleep(45)">45 دقيقة</button>
+      <button onclick="setSleep(60)">ساعة</button>
+      <button onclick="setSleep('eov')">نهاية المقطع الحالي</button>
+      <button onclick="setSleep(0)" style="color:var(--red)">إيقاف المؤقت</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="iosModal" onclick="if(event.target===this)closeM('iosModal')">
+  <div class="box">
+    <h2>📲 تثبيت تيوبي</h2>
+    <ol style="color:var(--text);font-size:15px">
+      <li><b>آيفون (Safari):</b> اضغط زر المشاركة ⬆️ تحت، ثم «إضافة إلى الشاشة الرئيسية».</li>
+      <li><b>أندرويد (Chrome):</b> اضغط ⋮ فوق، ثم «تثبيت التطبيق» أو «إضافة إلى الشاشة الرئيسية».</li>
+    </ol>
+    <div class="acts"><button class="btn" onclick="closeM('iosModal')">تمام</button></div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const LS = { get(k, d) {
+  try {
+    const v = localStorage.getItem("tby_" + k);
+    return v ? JSON.parse(v) : d;
+  } catch (e) {
+    return d;
+  }
+}, set(k, v) {
+  try {
+    localStorage.setItem("tby_" + k, JSON.stringify(v));
+  } catch (e) {
+  }
+} };
+let KEY = LS.get("key", "");
+const st = { saved: LS.get("saved", []), hist: LS.get("hist", []), likes: LS.get("likes", {}), subs: LS.get("subs", []), my: LS.get("my", {}), cache: LS.get("cache", {}), pos: LS.get("pos", {}), queue: LS.get("queue", []), recentQ: LS.get("recentQ", []) };
+const prefs = Object.assign({ light: false, auto: true, pre: true, noads: true }, LS.get("prefs", {}));
+let saveT;
+const save = () => {
+  clearTimeout(saveT);
+  saveT = setTimeout(() => ["saved", "hist", "likes", "subs", "my", "cache", "pos", "queue", "recentQ"].forEach((k) => LS.set(k, st[k])), 150);
+};
+const savePrefs = () => LS.set("prefs", prefs);
+const app = document.getElementById("app");
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s != null ? s : "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+const jsq = (s) => esc(String(s != null ? s : "").replace(/\\/g, "\\\\").replace(/'/g, "\\'"));
+const unesc = (s) => {
+  const t = document.createElement("textarea");
+  t.innerHTML = s || "";
+  return t.value;
+};
+const num = (n) => {
+  if (n == null || n === "" || isNaN(+n)) return "";
+  n = +n;
+  const f = (x) => String(Math.round(x * 10) / 10);
+  return n >= 1e9 ? f(n / 1e9) + " مليار" : n >= 1e6 ? f(n / 1e6) + " مليون" : n >= 1e3 ? f(n / 1e3) + " ألف" : String(n);
+};
+const secDur = (s) => {
+  s = Math.floor(+s || 0);
+  if (!s) return "";
+  const h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60);
+  return (h ? h + ":" + String(m).padStart(2, "0") : m) + ":" + String(s % 60).padStart(2, "0");
+};
+const fmtT = (s) => secDur(s) || "0:00";
+function isoSec(s) {
+  if (!s) return 0;
+  const m = s.match(/P(?:(\d+)D)?T?(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
+  return m ? (+m[1] || 0) * 86400 + (+m[2] || 0) * 3600 + (+m[3] || 0) * 60 + (+m[4] || 0) : 0;
+}
+function ago(d) {
+  if (!d) return "";
+  const s = (Date.now() - new Date(d)) / 1e3;
+  if (isNaN(s)) return "";
+  const u = [[31536e3, "سنة", "سنتين", "سنوات"], [2592e3, "شهر", "شهرين", "أشهر"], [604800, "أسبوع", "أسبوعين", "أسابيع"], [86400, "يوم", "يومين", "أيام"], [3600, "ساعة", "ساعتين", "ساعات"], [60, "دقيقة", "دقيقتين", "دقائق"]];
+  for (const [x, a, b, c] of u) {
+    const n = Math.floor(s / x);
+    if (n >= 1) return "قبل " + (n === 1 ? a : n === 2 ? b : n <= 10 ? n + " " + c : n + " " + a);
+  }
+  return "الآن";
+}
+const colorOf = (n) => {
+  let h = 0;
+  for (const c of String(n || "")) h = (h * 31 + c.charCodeAt(0)) % 360;
+  return `hsl(${h},55%,45%)`;
+};
+const av = (n, img) => `<div class="avatar" style="background:${colorOf(n)}">${img ? `<img src="${esc(img)}" alt="" onerror="this.remove()">` : ""}${img ? "" : esc((n || "؟").trim()[0] || "؟")}</div>`;
+function toast(t) {
+  const e = $("toast");
+  e.textContent = t;
+  e.classList.add("show");
+  clearTimeout(e._t);
+  e._t = setTimeout(() => e.classList.remove("show"), 2400);
+}
+function ytId(s) {
+  s = (s || "").trim();
+  if (/^[\w-]{11}$/.test(s)) return s;
+  const m = s.match(/(?:youtu\.be\/|[?&]v=|\/embed\/|\/shorts\/|\/live\/|\/v\/)([\w-]{11})/);
+  return m ? m[1] : null;
+}
+const thumb = (id) => `https://i.ytimg.com/vi/${id}/hqdefault.jpg`;
+const spinner = '<div class="loading"><div class="spin"></div></div>';
+const linkify = (s) => s.replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" rel="noopener">$1</a>');
+function remember(v) {
+  var _a;
+  if (!v || !v.id) return v;
+  const o = st.cache[v.id] || {};
+  st.cache[v.id] = { id: v.id, title: v.title || o.title, channel: v.channel || o.channel, channelId: v.channelId || o.channelId, date: v.date || o.date, sec: v.sec || o.sec, views: (_a = v.views) != null ? _a : o.views };
+  return v;
+}
+function trimCache() {
+  const keep = /* @__PURE__ */ new Set([...st.saved, ...st.hist, ...st.queue]);
+  const ks = Object.keys(st.cache);
+  if (ks.length > 400) ks.slice(0, ks.length - 250).forEach((k) => {
+    if (!keep.has(k)) delete st.cache[k];
+  });
+}
+async function yt(path, params) {
+  const u = new URL("https://www.googleapis.com/youtube/v3/" + path);
+  Object.entries({ ...params, key: KEY }).forEach(([k, v]) => v !== void 0 && v !== "" && u.searchParams.set(k, v));
+  const j = await (await fetch(u)).json();
+  if (j.error) {
+    const m = j.error.message || "";
+    throw new Error(/quota/i.test(m) ? "quota" : /API key|invalid/i.test(m) ? "badkey" : m);
+  }
+  return j;
+}
+function ytNorm(it) {
+  const s = it.snippet || {}, c = it.contentDetails || {}, x = it.statistics || {};
+  return remember({ id: typeof it.id === "string" ? it.id : it.id.videoId || c.videoId, title: unesc(s.title), channel: unesc(s.channelTitle), channelId: s.channelId, date: s.publishedAt, desc: s.description || "", sec: isoSec(c.duration), live: s.liveBroadcastContent === "live", views: x.viewCount, likes: x.likeCount, comments: x.commentCount });
+}
+async function ytDetails(ids) {
+  ids = ids.filter(Boolean);
+  if (!ids.length) return [];
+  const j = await yt("videos", { part: "snippet,contentDetails,statistics", id: ids.slice(0, 50).join(",") });
+  const out = j.items.map(ytNorm);
+  return ids.map((i) => out.find((o) => o.id === i)).filter(Boolean);
+}
+let INV = null;
+const INV_FALLBACK = ["https://inv.nadeko.net", "https://yewtu.be", "https://invidious.nerdvpn.de", "https://id.420129.xyz", "https://invidious.f5.si", "https://iv.melmac.space", "https://invidious.privacyredirect.com"];
+async function invList() {
+  if (INV) return INV;
+  let l = [];
+  try {
+    const c = new AbortController();
+    setTimeout(() => c.abort(), 5e3);
+    const j = await (await fetch("https://api.invidious.io/instances.json?sort_by=health", { signal: c.signal })).json();
+    l = j.filter((x) => x[1].type === "https" && x[1].api !== false && x[1].cors !== false).map((x) => x[1].uri);
+  } catch (e) {
+  }
+  INV = [.../* @__PURE__ */ new Set([...l.slice(0, 10), ...INV_FALLBACK])];
+  return INV;
+}
+async function inv(path, ok = (j) => Array.isArray(j) ? j.length > 0 : !!j && !j.error) {
+  const list = await invList();
+  const good = LS.get("inv", "");
+  const order = good ? [good, ...list.filter((x) => x !== good)] : list;
+  for (const base of order.slice(0, 7)) {
+    try {
+      const c = new AbortController();
+      const t = setTimeout(() => c.abort(), 7e3);
+      const r = await fetch(base + "/api/v1/" + path, { signal: c.signal });
+      clearTimeout(t);
+      if (!r.ok) continue;
+      const j = await r.json();
+      if (ok(j)) {
+        LS.set("inv", base);
+        return j;
+      }
+    } catch (e) {
+    }
+  }
+  throw new Error("net");
+}
+function invNorm(x) {
+  var _a;
+  return remember({ id: x.videoId, title: x.title, channel: x.author, channelId: x.authorId, date: x.published ? new Date(x.published * 1e3).toISOString() : "", sec: x.lengthSeconds || 0, live: !!x.liveNow, views: (_a = x.viewCount) != null ? _a : null, likes: x.likeCount, desc: x.description || "" });
+}
+const vidsOf = (j) => (Array.isArray(j) ? j : j.videos || j.latestVideos || []).filter((x) => x.videoId && (!x.type || x.type === "video" || x.type === "shortVideo"));
+const errMsg = (e) => e.message === "quota" ? "انتهت حصة المفتاح اليومية" : e.message === "badkey" ? "مفتاح API غير صحيح، عدّله من ⚙️" : "ما قدرت أوصل لمصدر المقاطع الحين. تأكد من الإنترنت أو جرّب بعد شوي، وإذا تكرر أضف مفتاح API من ⚙️";
+async function both(withKey, free) {
+  if (KEY) {
+    try {
+      return await withKey();
+    } catch (e) {
+      if (e.message === "badkey") throw e;
+    }
+  }
+  return await free();
+}
+const CATS = [{ n: "الرائج", k: "", i: "" }, { n: "موسيقى", k: "10", i: "music" }, { n: "ألعاب", k: "20", i: "gaming" }, { n: "رياضة", k: "17", q: "رياضة" }, { n: "ترفيه", k: "24", q: "ترفيه" }, { n: "تعليم", k: "27", q: "تعليم" }, { n: "علوم وتقنية", k: "28", q: "تقنية" }, { n: "أخبار", k: "25", q: "أخبار" }, { n: "كوميديا", k: "23", q: "كوميدي" }, { n: "أفلام", k: "", i: "movies" }, { n: "طبخ", k: "", q: "طبخ" }];
+const src = {
+  async popular(c) {
+    return both(
+      async () => {
+        if (!c.k && c.n !== "الرائج") return src.search(c.q || c.n, {}).then((r) => r.list);
+        const p = { part: "snippet,contentDetails,statistics", chart: "mostPopular", regionCode: "SA", maxResults: 30 };
+        if (c.k) p.videoCategoryId = c.k;
+        return (await yt("videos", p)).items.map(ytNorm);
+      },
+      async () => {
+        if (c.q) return (await src.search(c.q, {})).list;
+        let j;
+        try {
+          j = await inv("trending?region=SA" + (c.i ? "&type=" + c.i : ""));
+        } catch (e) {
+          j = await inv("popular");
+        }
+        return vidsOf(j).map(invNorm);
+      }
+    );
+  },
+  async search(q, f, page) {
+    f = f || {};
+    page = page || 1;
+    return both(
+      async () => {
+        const p = { part: "snippet", q, type: "video", maxResults: 24, regionCode: "SA", relevanceLanguage: "ar", order: f.sort === "date" ? "date" : f.sort === "views" ? "viewCount" : "relevance", videoDuration: f.dur || "any" };
+        if (f.date) {
+          const d = { today: 1, week: 7, month: 30, year: 365 }[f.date];
+          p.publishedAfter = new Date(Date.now() - d * 864e5).toISOString();
+        }
+        if (page > 1 && src._tok) p.pageToken = src._tok;
+        const j = await yt("search", p);
+        src._tok = j.nextPageToken;
+        return { list: await ytDetails(j.items.map((i) => i.id.videoId)), more: !!j.nextPageToken };
+      },
+      async () => {
+        let p = "search?type=video&q=" + encodeURIComponent(q) + "&page=" + page;
+        if (f.dur) p += "&duration=" + f.dur;
+        if (f.date) p += "&date=" + f.date;
+        if (f.sort) {
+          const s = f.sort === "date" ? "upload_date" : "view_count";
+          p += "&sort=" + s + "&sort_by=" + s;
+        }
+        const j = await inv(p, (j2) => Array.isArray(j2));
+        const l = vidsOf(j).map(invNorm);
+        return { list: l, more: l.length > 0 };
+      }
+    );
+  },
+  async video(id) {
+    var _a, _b;
+    let v = null, related = [], comments = null;
+    if (KEY) {
+      try {
+        v = (await ytDetails([id]))[0];
+      } catch (e) {
+      }
+    }
+    try {
+      const j = await inv("videos/" + id, (j2) => j2 && j2.title);
+      const iv = invNorm({ ...j, videoId: id });
+      v = v ? { ...iv, ...v, authorImg: (_a = (j.authorThumbnails || []).slice(-1)[0]) == null ? void 0 : _a.url, subs: j.subCountText } : { ...iv, authorImg: (_b = (j.authorThumbnails || []).slice(-1)[0]) == null ? void 0 : _b.url, subs: j.subCountText };
+      related = (j.recommendedVideos || []).filter((x) => x.videoId).map((x) => {
+        var _a2;
+        return invNorm({ ...x, viewCount: (_a2 = x.viewCount) != null ? _a2 : null });
+      });
+    } catch (e) {
+    }
+    if (!v) {
+      try {
+        const r = await fetch("https://noembed.com/embed?url=" + encodeURIComponent("https://www.youtube.com/watch?v=" + id));
+        const j = await r.json();
+        if (j.title) v = remember({ id, title: j.title, channel: j.author_name });
+      } catch (e) {
+      }
+    }
+    if (!related.length) related = await pipedRelated(id);
+    if (!related.length && v && v.title) {
+      try {
+        related = (await src.search(v.title.split(/\s+/).slice(0, 5).join(" "), {})).list.filter((x) => x.id !== id);
+      } catch (e) {
+      }
+    }
+    if (!related.length && v && v.channelId) {
+      try {
+        related = (await src.channel(v.channelId)).list.filter((x) => x.id !== id);
+      } catch (e) {
+      }
+    }
+    return { v: v || st.cache[id] || { id, title: "مقطع يوتيوب", channel: "" }, related };
+  },
+  async comments(id) {
+    return both(
+      async () => (await yt("commentThreads", { part: "snippet", videoId: id, maxResults: 30, order: "relevance", textFormat: "plainText" })).items.map((t) => {
+        const c = t.snippet.topLevelComment.snippet;
+        return { n: c.authorDisplayName, img: c.authorProfileImageUrl, t: c.textDisplay, d: c.publishedAt, l: c.likeCount };
+      }),
+      async () => ((await inv("comments/" + id, (j) => j && Array.isArray(j.comments))).comments || []).map((c) => {
+        var _a;
+        return { n: c.author, img: (_a = (c.authorThumbnails || []).slice(-1)[0]) == null ? void 0 : _a.url, t: c.content, d: c.published ? new Date(c.published * 1e3) : "", l: c.likeCount };
+      })
+    );
+  },
+  async channel(cid) {
+    return both(
+      async () => {
+        var _a, _b, _c, _d;
+        const ch = (await yt("channels", { part: "snippet,statistics,contentDetails,brandingSettings", id: cid })).items[0];
+        if (!ch) throw new Error("nf");
+        const up = ch.contentDetails.relatedPlaylists.uploads;
+        const pl = await yt("playlistItems", { part: "contentDetails", playlistId: up, maxResults: 30 });
+        return { name: ch.snippet.title, img: (_b = (_a = ch.snippet.thumbnails) == null ? void 0 : _a.default) == null ? void 0 : _b.url, banner: (_d = (_c = ch.brandingSettings) == null ? void 0 : _c.image) == null ? void 0 : _d.bannerExternalUrl, subs: num(ch.statistics.subscriberCount), desc: ch.snippet.description, list: await ytDetails(pl.items.map((i) => i.contentDetails.videoId)) };
+      },
+      async () => {
+        var _a, _b;
+        const info = await inv("channels/" + cid, (j) => j && j.author);
+        let list = [];
+        try {
+          list = vidsOf(await inv("channels/" + cid + "/videos", (j) => vidsOf(j).length > 0));
+        } catch (e) {
+          list = vidsOf(info);
+        }
+        return { name: info.author, img: (_a = (info.authorThumbnails || []).slice(-1)[0]) == null ? void 0 : _a.url, banner: (_b = (info.authorBanners || [])[0]) == null ? void 0 : _b.url, subs: num(info.subCount), desc: info.description, list: list.map(invNorm) };
+      }
+    );
+  },
+  async suggest(q) {
+    try {
+      const d = await jsonp("https://suggestqueries.google.com/complete/search?client=youtube&ds=yt&hl=ar&q=" + encodeURIComponent(q));
+      return (d[1] || []).map((x) => Array.isArray(x) ? x[0] : x).slice(0, 8);
+    } catch (e) {
+    }
+    try {
+      const j = await inv("search/suggestions?q=" + encodeURIComponent(q), (j2) => j2 && j2.suggestions);
+      return j.suggestions.slice(0, 8).map(unesc);
+    } catch (e) {
+      return [];
+    }
+  },
+  async shorts(page) {
+    const qs = ["#shorts", "shorts عربي", "#shorts السعودية", "#shorts مضحك", "#shorts رياضة", "#shorts طبخ"];
+    const q = qs[(page - 1) % qs.length];
+    const r = await src.search(q, { dur: "short" }, Math.ceil(page / qs.length));
+    return r.list;
+  }
+};
+async function pipedRelated(id) {
+  for (const p of PIPED.slice(0, 3)) {
+    try {
+      const c = new AbortController();
+      setTimeout(() => c.abort(), 6e3);
+      const j = await (await fetch(p + "/streams/" + id, { signal: c.signal })).json();
+      const l = (j.relatedStreams || []).filter((x) => x.url && (!x.type || x.type === "stream")).map((x) => {
+        const m = x.url.match(/v=([\w-]{11})/);
+        return m ? remember({ id: m[1], title: x.title, channel: x.uploaderName, channelId: (x.uploaderUrl || "").split("/").pop(), sec: x.duration > 0 ? x.duration : 0, views: x.views > 0 ? x.views : null, date: x.uploaded > 0 ? new Date(x.uploaded).toISOString() : "" }) : null;
+      }).filter(Boolean);
+      if (l.length) return l;
+    } catch (e) {
+    }
+  }
+  return [];
+}
+function jsonp(url) {
+  return new Promise((res, rej) => {
+    const cb = "jp" + Math.random().toString(36).slice(2);
+    const s = document.createElement("script");
+    const t = setTimeout(() => done(rej), 3500);
+    function done(f, d) {
+      clearTimeout(t);
+      delete window[cb];
+      s.remove();
+      f(d);
+    }
+    window[cb] = (d) => done(res, d);
+    s.onerror = () => done(rej);
+    s.src = url + "&callback=" + cb;
+    document.head.appendChild(s);
+  });
+}
+function card(v, side) {
+  const line = [v.views != null && v.views !== "" ? num(v.views) + " مشاهدة" : "", ago(v.date)].filter(Boolean).join(" • ");
+  const p = st.pos[v.id];
+  const pct = p && p[1] ? Math.min(100, p[0] / p[1] * 100) : 0;
+  const th = `<div class="thumb"><img loading="lazy" src="${thumb(v.id)}" alt="">${v.live ? '<span class="dur" style="background:#cc0000">مباشر</span>' : v.sec ? `<span class="dur">${secDur(v.sec)}</span>` : ""}${pct > 2 ? `<div class="pbar"><i style="width:${pct}%"></i></div>` : ""}<button class="qadd" onclick="event.stopPropagation();addQ('${v.id}')">＋ قائمة</button></div>`;
+  const ch = `<p class="chl" onclick="event.stopPropagation();openChannel('${jsq(v.channelId || "")}','${jsq(v.channel)}')">${esc(v.channel)}</p>`;
+  return `<div class="card" tabindex="0" onclick="go('watch','${v.id}')">${th}${side ? `<div style="min-width:0"><h3>${esc(v.title)}</h3>${ch}<p>${line}</p></div>` : `<div class="meta">${av(v.channel)}<div style="min-width:0"><h3>${esc(v.title)}</h3>${ch}<p>${line}</p></div></div>`}</div>`;
+}
+const grid = (l) => `<div class="grid">${l.map((v) => card(v)).join("")}</div>`;
+const rowList = (l) => `<div class="row">${l.map((v) => card(v)).join("")}</div>`;
+function openChannel(cid, name) {
+  if (cid) go("channel", cid);
+  else if (name) {
+    $("q").value = name;
+    doSearch();
+  }
+}
+let route = { name: "home" }, token = 0, cat = 0;
+function go(name, id, extra) {
+  if (name !== "watch") leaveWatch();
+  route = Object.assign({ name, id }, extra || {});
+  if (name !== "search") $("q").value = "";
+  closeSugg();
+  pushR();
+  render();
+  window.scrollTo(0, 0);
+}
+function pushR() {
+  try {
+    history.pushState({ r: route }, "");
+  } catch (e) {
+  }
+}
+function closeOverlays() {
+  const m = document.querySelector(".modal.open");
+  if (m) {
+    m.classList.remove("open");
+    return true;
+  }
+  const pl = document.querySelector(".player.full");
+  if (pl) {
+    setFull(false);
+    return true;
+  }
+  if (suggEl.classList.contains("open")) {
+    closeSugg();
+    return true;
+  }
+  return false;
+}
+let popAt = 0;
+window.addEventListener("popstate", (e) => {
+  popAt = Date.now();
+  if (closeOverlays()) {
+    pushR();
+    return;
+  }
+  const r = e.state && e.state.r;
+  if (!r) return;
+  if (r.name !== "watch") leaveWatch();
+  route = r;
+  if (r.name === "search") $("q").value = r.q || "";
+  render();
+  window.scrollTo(0, 0);
+});
+function render() {
+  document.querySelectorAll(".bnav button").forEach((b) => b.classList.toggle("on", b.dataset.r === route.name));
+  const r = route;
+  if (r.name !== "shorts") stopShorts();
+  if (r.name === "watch") renderWatch(r.id, r.start);
+  else if (r.name === "search") renderSearch();
+  else if (r.name === "library") renderLibrary();
+  else if (r.name === "channel") renderChannel(r.id);
+  else if (r.name === "subs") renderSubs();
+  else if (r.name === "shorts") renderShorts();
+  else renderHome();
+}
+const chipsHTML = () => `<div class="chips">${CATS.map((c, i) => `<button class="chip ${i === cat ? "on" : ""}" onclick="cat=${i};go('home')">${c.n}</button>`).join("")}</div>`;
+async function renderHome() {
+  const my = ++token;
+  const cont = st.hist.filter((id) => {
+    const p = st.pos[id];
+    return p && p[0] > 15 && (!p[1] || p[0] < p[1] - 15);
+  }).slice(0, 12).map((id) => st.cache[id]).filter(Boolean);
+  const first = !LS.get("seenIntro", false);
+  app.innerHTML = chipsHTML() + `<main>${first ? `<div class="banner"><b>👋 أهلاً في تيوبي</b><br>ابحث أو الصق رابط أي مقطع. اضغط 🎧 تحت المقطع عشان يكمّل بالخلفية، و«＋ قائمة» عشان تضيفه لقائمة التشغيل.<div class="paste"><input id="pasteIn" placeholder="https://youtu.be/..."><button class="btn red" onclick="playPaste()">▶ تشغيل</button><button class="btn" onclick="LS.set('seenIntro',true);this.closest('.banner').remove()">فهمت</button></div></div>` : ""}
+    ${cont.length && cat === 0 ? `<div class="ptitle">▶️ تابع المشاهدة</div>${rowList(cont)}` : ""}
+    ${cat === 0 ? '<div class="ptitle">🔥 الرائج</div>' : ""}<div id="feed">${spinner}</div></main>`;
+  try {
+    const l = await src.popular(CATS[cat]);
+    if (my !== token) return;
+    trimCache();
+    save();
+    $("feed").innerHTML = l.length ? grid(l) : '<div class="empty">ما فيه مقاطع حاليًا</div>';
+  } catch (e) {
+    if (my === token) $("feed").innerHTML = `<div class="empty">⚠️ ${errMsg(e)}<br><br><button class="btn" onclick="render()">🔄 إعادة المحاولة</button></div>`;
+  }
+}
+function playPaste() {
+  const id = ytId($("pasteIn").value);
+  id ? go("watch", id) : toast("الرابط غير صحيح");
+}
+function doSearch(q) {
+  q = (q != null ? q : $("q").value).trim();
+  if (!q) return;
+  $("q").value = q;
+  closeSugg();
+  $("q").blur();
+  const id = ytId(q);
+  if (id && (q.length === 11 || /youtu/.test(q))) {
+    go("watch", id);
+    return;
+  }
+  st.recentQ = [q, ...st.recentQ.filter((x) => x !== q)].slice(0, 10);
+  save();
+  leaveWatch();
+  route = { name: "search", q, f: route.name === "search" ? route.f : {}, page: 1 };
+  pushR();
+  render();
+  window.scrollTo(0, 0);
+}
+function filtersHTML(f) {
+  const sel = (k, opts) => `<select onchange="route.f.${k}=this.value;route.page=1;render()">${opts.map(([v, t]) => `<option value="${v}" ${f[k] === v || !f[k] && !v ? "selected" : ""}>${t}</option>`).join("")}</select>`;
+  return `<div class="filters">${sel("dur", [["", "⏱ أي مدة"], ["short", "قصير (أقل من 4 د)"], ["medium", "متوسط (4-20 د)"], ["long", "طويل (أكثر من 20 د)"]])}${sel("date", [["", "📅 أي وقت"], ["today", "اليوم"], ["week", "هذا الأسبوع"], ["month", "هذا الشهر"], ["year", "هذه السنة"]])}${sel("sort", [["", "↕ الأنسب"], ["date", "الأحدث"], ["views", "الأكثر مشاهدة"]])}</div>`;
+}
+async function renderSearch(more) {
+  var _a, _b, _c;
+  const my = ++token;
+  const r = route;
+  r.f = r.f || {};
+  if (!more) app.innerHTML = `<main><div class="ptitle">نتائج: "${esc(r.q)}"</div>${filtersHTML(r.f)}<div id="res">${spinner}</div></main>`;
+  try {
+    const { list, more: has } = await src.search(r.q, r.f, r.page);
+    if (my !== token) return;
+    save();
+    const res = $("res");
+    (_a = $("moreBtn")) == null ? void 0 : _a.remove();
+    if (!more) res.innerHTML = list.length ? grid(list) : '<div class="empty">لا توجد نتائج</div>';
+    else (_b = res.querySelector(".grid")) == null ? void 0 : _b.insertAdjacentHTML("beforeend", list.map((v) => card(v)).join(""));
+    if (has && list.length) res.insertAdjacentHTML("afterend", `<button id="moreBtn" class="btn more" onclick="this.textContent='...';route.page++;renderSearch(true)">عرض المزيد</button>`);
+  } catch (e) {
+    if (my === token) {
+      if (more) (_c = $("moreBtn")) == null ? void 0 : _c.remove();
+      else $("res").innerHTML = `<div class="empty">⚠️ ${errMsg(e)}<br><br><button class="btn" onclick="render()">🔄 إعادة المحاولة</button></div>`;
+    }
+  }
+}
+let suggT, suggIdx = -1;
+const qIn = $("q"), suggEl = $("sugg");
+function showSugg(items, recent) {
+  suggIdx = -1;
+  if (!items.length) {
+    closeSugg();
+    return;
+  }
+  suggEl.innerHTML = items.map((s) => `<div data-q="${esc(s)}">${recent ? "🕘" : "🔍"} ${esc(s)}${recent ? `<small onclick="event.stopPropagation();delRecent('${jsq(s)}')">✕</small>` : ""}</div>`).join("");
+  suggEl.classList.add("open");
+}
+function closeSugg() {
+  suggEl.classList.remove("open");
+}
+function delRecent(s) {
+  st.recentQ = st.recentQ.filter((x) => x !== s);
+  save();
+  showSugg(st.recentQ, true);
+}
+qIn.addEventListener("input", () => {
+  clearTimeout(suggT);
+  const q = qIn.value.trim();
+  if (!q) {
+    showSugg(st.recentQ, true);
+    return;
+  }
+  if (ytId(q) && /youtu|^[\w-]{11}$/.test(q)) {
+    closeSugg();
+    return;
+  }
+  suggT = setTimeout(async () => {
+    const l = await src.suggest(q);
+    if (qIn.value.trim() === q && document.activeElement === qIn) showSugg(l);
+  }, 180);
+});
+qIn.addEventListener("focus", () => {
+  if (!qIn.value.trim()) showSugg(st.recentQ, true);
+});
+qIn.addEventListener("keydown", (e) => {
+  const it = [...suggEl.children];
+  if (!suggEl.classList.contains("open") || !it.length) return;
+  if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+    e.preventDefault();
+    suggIdx = (suggIdx + (e.key === "ArrowDown" ? 1 : -1) + it.length) % it.length;
+    it.forEach((x, i) => x.classList.toggle("act", i === suggIdx));
+    qIn.value = it[suggIdx].dataset.q;
+  } else if (e.key === "Escape") closeSugg();
+});
+suggEl.addEventListener("mousedown", (e) => {
+  const d = e.target.closest("[data-q]");
+  if (d && e.target.tagName !== "SMALL") {
+    e.preventDefault();
+    doSearch(d.dataset.q);
+  }
+});
+document.addEventListener("click", (e) => {
+  if (!e.target.closest(".sbox")) closeSugg();
+});
+function renderLibrary() {
+  ++token;
+  const s = st.saved.map((i) => st.cache[i] || { id: i, title: "مقطع", channel: "" });
+  const h = st.hist.map((i) => st.cache[i]).filter(Boolean);
+  const q = st.queue.map((i) => st.cache[i] || { id: i, title: "مقطع", channel: "" });
+  app.innerHTML = `<main>
+  <div class="ptitle">🎵 قائمة التشغيل (${q.length}) ${q.length ? `<button class="btn sm red" onclick="playQueue()">▶ تشغيل</button><button class="btn sm bg" onclick="playQueue(true)">🎧 بالخلفية</button><button class="btn sm" onclick="st.queue=[];save();renderLibrary()">مسح</button>` : ""}</div>
+  ${q.length ? rowList(q) : '<div class="empty" style="padding:20px">اضغط «＋ قائمة» على أي مقطع عشان تضيفه هنا</div>'}
+  <div class="ptitle">💾 المحفوظة (${s.length})</div>${s.length ? grid(s) : '<div class="empty" style="padding:20px">اضغط «حفظ» تحت أي مقطع عشان يظهر هنا</div>'}
+  <div class="ptitle">🕘 السجل ${h.length ? '<button class="btn sm" onclick="st.hist=[];st.pos={};save();renderLibrary()">مسح السجل</button>' : ""}</div>${h.length ? grid(h.slice(0, 40)) : '<div class="empty" style="padding:20px">ما شاهدت شي بعد</div>'}
+  </main>`;
+}
+async function renderChannel(cid) {
+  const my = ++token;
+  app.innerHTML = `<main>${spinner}</main>`;
+  try {
+    const c = await src.channel(cid);
+    if (my !== token) return;
+    save();
+    const sub = st.subs.some((x) => x.id === cid);
+    app.innerHTML = `<main>${c.banner ? `<div class="chban" style="background-image:url('${esc(c.banner)}')"></div>` : ""}
+    <div class="chhead">${av(c.name, c.img)}<div style="flex:1;min-width:0"><h1>${esc(c.name)}</h1><small>${c.subs ? c.subs + " مشترك • " : ""}${c.list.length} مقطع حديث</small></div>
+    <button class="btn sub ${sub ? "on" : ""}" id="chSub" onclick="toggleSubC('${jsq(cid)}','${jsq(c.name)}','${jsq(c.img || "")}')">${sub ? "✓ مشترك" : "اشتراك"}</button>
+    ${c.list.length ? `<button class="btn" onclick="queueAll()">＋ الكل للقائمة</button>` : ""}</div>
+    ${c.desc ? `<div class="desc" onclick="this.classList.toggle('open')" style="margin-bottom:18px">${linkify(esc(c.desc))}</div>` : ""}
+    ${c.list.length ? grid(c.list) : '<div class="empty">ما فيه مقاطع</div>'}</main>`;
+    window._chList = c.list;
+  } catch (e) {
+    if (my === token) app.innerHTML = `<main><div class="empty">⚠️ ${errMsg(e)}<br><br><button class="btn" onclick="render()">🔄 إعادة المحاولة</button></div></main>`;
+  }
+}
+function queueAll() {
+  (window._chList || []).forEach((v) => {
+    if (!st.queue.includes(v.id)) st.queue.push(v.id);
+  });
+  save();
+  toast("انضافت " + (window._chList || []).length + " مقاطع للقائمة");
+}
+function toggleSubC(id, n, img) {
+  const i = st.subs.findIndex((c) => c.id === id || !c.id && c.n === n);
+  if (i >= 0) {
+    st.subs.splice(i, 1);
+    toast("تم إلغاء الاشتراك");
+  } else {
+    st.subs.push({ id, n, img });
+    toast("اشتركت في " + n + " 🔔");
+  }
+  save();
+  const b = $("chSub");
+  if (b) {
+    const on = i < 0;
+    b.classList.toggle("on", on);
+    b.textContent = on ? "✓ مشترك" : "اشتراك";
+  }
+}
+async function renderSubs() {
+  const my = ++token;
+  if (!st.subs.length) {
+    app.innerHTML = `<main><div class="ptitle">🔔 الاشتراكات</div><div class="empty">ما اشتركت في أي قناة بعد.<br>افتح أي قناة واضغط «اشتراك»، وتطلع لك آخر مقاطعها هنا.</div></main>`;
+    return;
+  }
+  app.innerHTML = `<main><div class="ptitle">🔔 الاشتراكات</div><div class="subchips">${st.subs.map((c) => `<button onclick="openChannel('${jsq(c.id || "")}','${jsq(c.n)}')">${av(c.n, c.img)}<span>${esc(c.n)}</span></button>`).join("")}</div><div class="ptitle" style="font-size:18px">آخر المقاطع</div><div id="feed">${spinner}</div></main>`;
+  const res = await Promise.all(st.subs.filter((c) => c.id).slice(0, 20).map((c) => src.channel(c.id).then((r) => {
+    const s = st.subs.find((x) => x.id === c.id);
+    if (s && r.img && !s.img) s.img = r.img;
+    return r.list.slice(0, 8);
+  }).catch(() => [])));
+  if (my !== token) return;
+  save();
+  const l = [].concat.apply([], res).sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
+  $("feed").innerHTML = l.length ? grid(l.slice(0, 60)) : `<div class="empty">⚠️ ${errMsg(new Error("net"))}<br><br><button class="btn" onclick="render()">🔄 إعادة المحاولة</button></div>`;
+}
+let ytp = null, W = null, posTimer = null;
+const ytReady = new Promise((r) => {
+  window.onYouTubeIframeAPIReady = r;
+});
+(function() {
+  const sc = document.createElement("script");
+  sc.src = "https://www.youtube.com/iframe_api";
+  document.head.appendChild(sc);
+})();
+function destroyYT() {
+  try {
+    PL && PL.destroy();
+  } catch (e) {
+  }
+  PL = null;
+  ytp = null;
+}
+let PL = null;
+function onEnded() {
+  if (!W) return;
+  delete st.pos[W.id];
+  save();
+  if (SLEEP.eov) {
+    fireSleep();
+    return;
+  }
+  playNext(false);
+}
+function onPlaying() {
+  if (prefs.pre && !prefs.tv && W && (!PRE || PRE.id !== W.id)) prepAudio(W.id);
+}
+function leaveWatch() {
+  destroyYT();
+  clearInterval(posTimer);
+  W = null;
+}
+const ytState = () => {
+  try {
+    return PL ? PL.state() : -1;
+  } catch (e) {
+    return -1;
+  }
+};
+const ytTime = () => {
+  try {
+    return PL ? PL.time() || 0 : 0;
+  } catch (e) {
+    return 0;
+  }
+};
+const ytDur = () => {
+  try {
+    return PL ? PL.dur() || 0 : 0;
+  } catch (e) {
+    return 0;
+  }
+};
+function savePos(id, t, d) {
+  if (!id || !(t > 0)) return;
+  if (d && t > d - 10) {
+    delete st.pos[id];
+  } else st.pos[id] = [Math.floor(t), Math.floor(d || 0)];
+  const ks = Object.keys(st.pos);
+  if (ks.length > 300) ks.slice(0, 50).forEach((k) => delete st.pos[k]);
+  save();
+}
+function resumeAt(id) {
+  const p = st.pos[id];
+  return p && p[0] > 10 && (!p[1] || p[0] < p[1] - 15) ? p[0] : 0;
+}
+async function renderWatch(id, start) {
+  const my = ++token;
+  if (A.id) stopA();
+  destroyYT();
+  clearInterval(posTimer);
+  if (start == null) start = resumeAt(id);
+  st.hist = [id, ...st.hist.filter((x) => x !== id)].slice(0, 80);
+  save();
+  W = { id, v: st.cache[id] || { id, title: "", channel: "" }, related: [] };
+  const origin = location.protocol.startsWith("http") ? "&origin=" + encodeURIComponent(location.origin) : "";
+  app.innerHTML = `<main><div class="watch"><div>
+    <div class="player${prefs.tv && route.full !== false ? " full" : ""}" tabindex="0" onclick="if(prefs.tv)playerOk()"><div id="ytp"></div><div class="osd" id="osd"></div></div>
+    <div id="info"></div>
+    <div class="comments" id="cm"></div>
+  </div><div class="side"><div id="qpanel"></div><div id="rel">${spinner}</div></div></div></main>`;
+  paintInfo();
+  paintQueue();
+  if (prefs.noads && !route.yt) mountNative(id, my, start, origin);
+  else mountPlayer(id, my, start, origin);
+  if (prefs.tv) setTimeout(() => {
+    const pl = document.querySelector(".player");
+    pl && pl.focus({ preventScroll: true });
+    showOsd();
+  }, 300);
+  if (start > 10) toast("▶️ كمّلت من " + fmtT(start));
+  posTimer = setInterval(() => {
+    if (W && ytState() === 1) {
+      savePos(W.id, ytTime(), ytDur());
+      if (prefs.pre && !prefs.tv && (!PRE || PRE.id !== W.id)) prepAudio(W.id);
+    }
+    checkSleepEov();
+  }, 5e3);
+  const r = await src.video(id);
+  if (my !== token) return;
+  if (!W || W.id !== id) {
+    if (A.id === id && !A.related.length) {
+      A.related = r.related;
+      A.v = Object.assign({}, A.v, r.v);
+      showMini(A.v);
+      setMedia(A.v);
+    }
+    return;
+  }
+  W.v = { ...W.v, ...r.v };
+  W.related = r.related;
+  save();
+  paintInfo();
+  $("rel").innerHTML = r.related.length ? r.related.map((x) => card(x, true)).join("") : "";
+  paintQueue();
+  loadComments(id, my);
+}
+function mountPlayer(id, my, start, origin) {
+  let done = false;
+  const fb = setTimeout(() => {
+    if (done || my !== token) return;
+    done = true;
+    const el = $("ytp");
+    if (el) el.outerHTML = `<iframe src="https://www.youtube.com/embed/${id}?autoplay=1&rel=0&playsinline=1&start=${Math.floor(start)}${origin}" allow="autoplay; encrypted-media; picture-in-picture; web-share; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>`;
+  }, 7e3);
+  ytReady.then(() => {
+    if (done || my !== token) return;
+    done = true;
+    clearTimeout(fb);
+    const y = ytp = new YT.Player("ytp", { videoId: id, playerVars: { autoplay: 1, rel: 0, playsinline: 1, start: Math.floor(start) }, events: {
+      onReady: (e) => {
+        try {
+          e.target.playVideo();
+        } catch (_) {
+        }
+      },
+      onStateChange: (e) => {
+        if (e.data === 1) onPlaying();
+        if (e.data === 0) onEnded();
+      }
+    } });
+    PL = { kind: "yt", state: () => y.getPlayerState ? y.getPlayerState() : -1, time: () => y.getCurrentTime ? y.getCurrentTime() : 0, dur: () => y.getDuration ? y.getDuration() : 0, play: () => y.playVideo(), pause: () => y.pauseVideo(), seek: (t) => y.seekTo(t, true), destroy: () => y.destroy() };
+    if (W) paintInfo();
+  });
+}
+let HLSLIB = null;
+function loadHls() {
+  if (window.Hls) return Promise.resolve(window.Hls);
+  if (HLSLIB) return HLSLIB;
+  HLSLIB = new Promise((res) => {
+    const sc = document.createElement("script");
+    sc.src = "https://cdn.jsdelivr.net/npm/hls.js@1/dist/hls.min.js";
+    sc.onload = () => res(window.Hls || null);
+    sc.onerror = () => {
+      HLSLIB = null;
+      res(null);
+    };
+    document.head.appendChild(sc);
+    setTimeout(() => res(window.Hls || null), 8e3);
+  });
+  return HLSLIB;
+}
+async function fetchJ(url, ms) {
+  const c = new AbortController();
+  const t = setTimeout(() => c.abort(), ms || 7e3);
+  try {
+    const r = await fetch(url, { signal: c.signal });
+    return r.ok ? await r.json() : null;
+  } finally {
+    clearTimeout(t);
+  }
+}
+async function videoSources(id) {
+  const insts = await invList();
+  const good = LS.get("inv", "");
+  const order = good ? [good].concat(insts.filter((x) => x !== good)) : insts;
+  let pj = null;
+  const pip = async () => {
+    if (pj !== null) return pj;
+    pj = false;
+    for (const p of PIPED.slice(0, 3)) {
+      try {
+        const j = await fetchJ(p + "/streams/" + id, 6e3);
+        if (j && (j.hls || (j.videoStreams || []).length)) {
+          pj = j;
+          break;
+        }
+      } catch (e) {
+      }
+    }
+    return pj;
+  };
+  const iv = (b, itag, k, q, ms) => async () => b ? { k, type: "file", url: b + "/latest_version?id=" + id + "&itag=" + itag + "&local=true", q, ms } : null;
+  const L = {
+    hls: async () => {
+      const j = await pip();
+      return j && j.hls ? { k: "hls", type: "hls", url: j.hls, q: "HD", ms: 12e3 } : null;
+    },
+    inv22: iv(order[0], 22, "inv22", "720p", 6e3),
+    inv18: iv(order[0], 18, "inv18", "360p"),
+    pipmux: async () => {
+      const j = await pip();
+      const m = j && (j.videoStreams || []).filter((x) => !x.videoOnly && x.url).sort((a, b) => (parseInt(b.quality) || 0) - (parseInt(a.quality) || 0))[0];
+      return m ? { k: "pipmux", type: "file", url: m.url, q: m.quality } : null;
+    },
+    inv18b: iv(order[1], 18, "inv18b", "360p"),
+    inv18c: iv(order[2], 18, "inv18c", "360p")
+  };
+  let keys = ["hls", "inv22", "inv18", "pipmux", "inv18b", "inv18c"];
+  const g = LS.get("vsrc", "");
+  if (g && keys.indexOf(g) >= 0) keys = [g].concat(keys.filter((k) => k !== g));
+  return keys.map((k) => L[k]);
+}
+function tryVideo(v, src_) {
+  return new Promise(async (res) => {
+    let done = false, hls = null;
+    const fin = (ok) => {
+      if (done) return;
+      done = true;
+      clearTimeout(t);
+      v.oncanplay = v.onerror = null;
+      if (!ok) {
+        if (hls) {
+          try {
+            hls.destroy();
+          } catch (e) {
+          }
+          hls = null;
+        }
+        v.removeAttribute("src");
+        try {
+          v.load();
+        } catch (e) {
+        }
+      }
+      res(ok ? { hls } : null);
+    };
+    const t = setTimeout(() => fin(false), src_.ms || 1e4);
+    v.oncanplay = () => fin(true);
+    v.onerror = () => fin(false);
+    if (src_.type === "hls") {
+      if (v.canPlayType("application/vnd.apple.mpegurl")) {
+        v.src = src_.url;
+        return;
+      }
+      const H = await loadHls();
+      if (done) return;
+      if (!H || !H.isSupported()) {
+        fin(false);
+        return;
+      }
+      hls = new H({ maxBufferLength: 30 });
+      hls.on(H.Events.ERROR, (e, d) => {
+        if (d && d.fatal) fin(false);
+      });
+      hls.loadSource(src_.url);
+      hls.attachMedia(v);
+    } else {
+      v.src = src_.url;
+      v.load();
+    }
+  });
+}
+async function mountNative(id, my, start, origin) {
+  const box = $("ytp");
+  if (!box) return;
+  box.innerHTML = '<div class="vload"><div class="spin"></div><div>جاري تجهيز الفيديو بدون إعلانات...</div></div>';
+  const v = document.createElement("video");
+  v.controls = true;
+  v.playsInline = true;
+  v.setAttribute("playsinline", "");
+  v.preload = "auto";
+  v.className = "nvid";
+  const alive = () => my === token && W && W.id === id;
+  for (const f of await videoSources(id)) {
+    if (!alive()) return;
+    let sv = null;
+    try {
+      sv = await f();
+    } catch (e) {
+    }
+    if (!sv || !alive()) continue;
+    const r = await tryVideo(v, sv);
+    if (!alive()) {
+      if (r && r.hls) r.hls.destroy();
+      v.removeAttribute("src");
+      return;
+    }
+    if (!r) continue;
+    LS.set("vsrc", sv.k);
+    LS.set("nafail", 0);
+    box.innerHTML = "";
+    box.appendChild(v);
+    const hls = r.hls;
+    PL = {
+      kind: "native",
+      q: sv.q,
+      state: () => v.ended ? 0 : v.paused ? 2 : 1,
+      time: () => v.currentTime,
+      dur: () => isFinite(v.duration) ? v.duration : 0,
+      play: () => {
+        v.play().catch(() => {
+        });
+      },
+      pause: () => v.pause(),
+      seek: (t) => {
+        v.currentTime = t;
+      },
+      destroy: () => {
+        v.pause();
+        if (hls) {
+          try {
+            hls.destroy();
+          } catch (e) {
+          }
+        }
+        v.removeAttribute("src");
+        try {
+          v.load();
+        } catch (e) {
+        }
+      }
+    };
+    v.addEventListener("playing", onPlaying);
+    v.addEventListener("ended", onEnded);
+    if (start > 1) {
+      try {
+        v.currentTime = start;
+      } catch (e) {
+      }
+    }
+    v.play().catch(() => {
+      v.muted = true;
+      v.play().catch(() => {
+      });
+      toast("اضغط 🔊 عشان يطلع الصوت");
+    });
+    paintInfo();
+    return;
+  }
+  if (!alive()) return;
+  const nf_ = LS.get("nafail", 0) + 1;
+  LS.set("nafail", nf_);
+  if (nf_ >= 3) {
+    prefs.noads = false;
+    savePrefs();
+    LS.set("nafail", 0);
+    toast("المصادر المجانية محجوبة حاليًا، فرجّعت مشغّل يوتيوب. تقدر تفعّل «بدون إعلانات» من ⚙️ وتجرّب بعدين");
+  } else toast("ما لقيت نسخة بدون إعلانات لهذا المقطع، شغّلته بمشغّل يوتيوب");
+  box.innerHTML = "";
+  mountPlayer(id, my, start, origin);
+}
+function switchPlayer(toYT) {
+  if (!W) return;
+  const t = ytTime();
+  route = Object.assign({}, route, { start: t, yt: toYT });
+  try {
+    history.replaceState({ r: route }, "");
+  } catch (e) {
+  }
+  render();
+}
+function paintInfo() {
+  if (!W) return;
+  const v = W.v, id = W.id;
+  const lk = st.likes[id] || 0, saved = st.saved.includes(id), sub = st.subs.some((c) => v.channelId && c.id === v.channelId || c.n === v.channel), inQ = st.queue.includes(id);
+  $("info").innerHTML = `<h1 class="wtitle">${esc(v.title)}</h1>
+  <div class="chrow"><div class="cn" onclick="openChannel('${jsq(v.channelId || "")}','${jsq(v.channel)}')">${av(v.channel, v.authorImg)}</div><div class="cn" style="flex:1;min-width:0" onclick="openChannel('${jsq(v.channelId || "")}','${jsq(v.channel)}')"><b>${esc(v.channel)}</b><small>${esc(v.subs || "")}</small></div>
+    ${v.channel ? `<button class="btn sub ${sub ? "on" : ""}" onclick="toggleSubW()">${sub ? "✓ مشترك" : "اشتراك"}</button>` : ""}</div>
+  <div class="actions">
+    <button class="btn tvonly" onclick="setFull(true)">⛶ ملء الشاشة</button>
+    <button class="btn bg" onclick="bgMode()">🎧 بالخلفية</button>
+    ${PL && PL.kind === "native" ? `<button class="btn" onclick="switchPlayer(true)" title="بدون إعلانات • ${esc(PL.q || "")}">🔁 مشغّل يوتيوب</button>` : PL && PL.kind === "yt" ? `<button class="btn" onclick="switchPlayer(false)">🚫 بدون إعلانات</button>` : ""}
+    <button class="btn ${lk === 1 ? "on" : ""}" onclick="like(1)">👍 ${v.likes ? num(v.likes) : ""}</button>
+    <button class="btn ${lk === -1 ? "on" : ""}" onclick="like(-1)">👎</button>
+    <button class="btn ${inQ ? "on" : ""}" onclick="addQ('${id}');paintInfo()">${inQ ? "✓ بالقائمة" : "＋ قائمة"}</button>
+    <button class="btn ${saved ? "on" : ""}" onclick="toggleSave()">${saved ? "✓ محفوظ" : "💾 حفظ"}</button>
+    <button class="btn ${SLEEP.end || SLEEP.eov ? "on" : ""}" onclick="openSleep()">⏲ ${sleepLabel() || "مؤقت"}</button>
+    <button class="btn" onclick="copyLink()">↗ نسخ</button>
+    <a class="btn" href="https://www.youtube.com/watch?v=${id}" target="_blank" rel="noopener">▶ يوتيوب</a>
+  </div>
+  ${v.desc || v.views ? `<div class="desc" onclick="this.classList.toggle('open')"><b>${v.views ? num(v.views) + " مشاهدة • " : ""}${ago(v.date)}</b>${linkify(esc(v.desc || ""))}</div>` : ""}`;
+}
+function myCommentsHTML(id) {
+  return (st.my[id] || []).slice().reverse().map((c) => `<div class="cmt">${av("أنت")}<div><b>@أنت<small>${ago(c.d)}</small></b><p>${esc(c.t)}</p></div></div>`).join("");
+}
+async function loadComments(id, my) {
+  $("cm").innerHTML = `<h2>التعليقات ${W.v.comments ? "(" + num(W.v.comments) + ")" : ""}</h2><form class="cform" onsubmit="event.preventDefault();addComment()">${av("أنت")}<input id="cin" placeholder="أضف تعليقًا (يُحفظ عندك فقط)..." maxlength="500"><button class="btn primary" type="submit">تعليق</button></form><div id="mine">${myCommentsHTML(id)}</div><div id="ytc">${spinner}</div>`;
+  try {
+    const l = await src.comments(id);
+    if (my !== token) return;
+    $("ytc").innerHTML = l.map((c) => `<div class="cmt">${c.img ? `<img src="${esc(c.img)}" alt="" loading="lazy" onerror="this.style.visibility='hidden'">` : av(c.n)}<div><b>${esc(c.n)}<small>${ago(c.d)}${c.l ? " • 👍 " + num(c.l) : ""}</small></b><p>${esc(c.t)}</p></div></div>`).join("") || '<div class="empty" style="padding:20px">ما فيه تعليقات</div>';
+  } catch (e) {
+    if (my === token) $("ytc").innerHTML = '<div class="empty" style="padding:20px">ما قدرت أجيب التعليقات</div>';
+  }
+}
+function like(n) {
+  st.likes[W.id] = st.likes[W.id] === n ? 0 : n;
+  save();
+  paintInfo();
+}
+function toggleSave() {
+  const i = st.saved.indexOf(W.id);
+  if (i >= 0) {
+    st.saved.splice(i, 1);
+    toast("انحذف من المحفوظة");
+  } else {
+    st.saved.unshift(W.id);
+    toast("انحفظ في مكتبتك 💾");
+  }
+  save();
+  paintInfo();
+}
+function toggleSubW() {
+  const v = W.v;
+  const i = st.subs.findIndex((c) => v.channelId && c.id === v.channelId || c.n === v.channel);
+  if (i >= 0) {
+    st.subs.splice(i, 1);
+    toast("تم إلغاء الاشتراك");
+  } else {
+    st.subs.push({ id: v.channelId, n: v.channel, img: v.authorImg });
+    toast("اشتركت في " + v.channel + " 🔔");
+  }
+  save();
+  paintInfo();
+}
+function addComment() {
+  const i = $("cin"), t = i.value.trim();
+  if (!t) return;
+  (st.my[W.id] = st.my[W.id] || []).push({ t, d: (/* @__PURE__ */ new Date()).toISOString() });
+  save();
+  i.value = "";
+  $("mine").innerHTML = myCommentsHTML(W.id);
+  toast("انضاف تعليقك");
+}
+function copyLink() {
+  const u = "https://youtu.be/" + (W ? W.id : A.id);
+  try {
+    navigator.clipboard.writeText(u).then(() => toast("تم نسخ الرابط 📋"), () => toast(u));
+  } catch (e) {
+    toast(u);
+  }
+}
+function addQ(id) {
+  if (st.queue.includes(id)) {
+    st.queue = st.queue.filter((x) => x !== id);
+    toast("انشال من القائمة");
+  } else {
+    st.queue.push(id);
+    toast("انضاف لقائمة التشغيل 🎵");
+  }
+  save();
+  paintQueue();
+}
+function paintQueue() {
+  const el = $("qpanel");
+  if (!el || !W) return;
+  const q = st.queue.filter((x) => x !== W.id);
+  const nx = nextVideo(true);
+  el.innerHTML = `<div class="qbox"><div class="qhead">🎵 التالي<span class="sp"></span><small style="font-weight:500;color:var(--muted)">تشغيل تلقائي</small><div class="switch ${prefs.auto ? "on" : ""}" onclick="toggleAuto()"></div></div>
+   ${q.map((id) => {
+    const v = st.cache[id] || { id, title: "مقطع" };
+    return `<div class="qitem" tabindex="0" onclick="go('watch','${id}')"><img src="${thumb(id)}" alt=""><span>${esc(v.title)}</span><button class="ibtn" style="width:30px;height:30px;font-size:14px" onclick="event.stopPropagation();addQ('${id}')">✕</button></div>`;
+  }).join("")}
+   ${!q.length && nx ? `<div class="qitem" tabindex="0" onclick="go('watch','${nx.id}')"><img src="${thumb(nx.id)}" alt=""><span>${esc(nx.title)}</span></div>` : ""}
+   ${!q.length && !nx ? `<div style="padding:10px 12px;font-size:13px;color:var(--muted)">${prefs.auto ? "جاري تجهيز التالي..." : "التشغيل التلقائي مقفّل"}</div>` : ""}</div>`;
+}
+function nextVideo(force, cur) {
+  cur = cur || (W ? W.id : A.id);
+  const q = st.queue.filter((x) => x !== cur);
+  if (q.length) {
+    const id = q[0];
+    return st.cache[id] || { id, title: "مقطع" };
+  }
+  if (!prefs.auto && !force) return null;
+  const rel = (A.id && !W ? A.related : W && W.related) || [];
+  const recent = new Set(st.hist.slice(0, 25));
+  return rel.find((v) => !recent.has(v.id) && !v.live) || rel.find((v) => v.id !== cur) || null;
+}
+function playNext(manual) {
+  const audioMode = !!(A.id && !W);
+  const cur = audioMode ? A.id : W && W.id;
+  if (!cur) return;
+  const adv = (n2) => {
+    st.queue = st.queue.filter((x) => x !== cur && x !== n2.id);
+    save();
+    if (audioMode) playAudioFor(n2, 0);
+    else go("watch", n2.id, { full: !!document.querySelector(".player.full") });
+  };
+  const n = nextVideo(manual, cur);
+  if (n) {
+    adv(n);
+    return;
+  }
+  if (!manual && !prefs.auto) return;
+  const holder = audioMode ? A : W;
+  if (holder.related && holder.related.length) {
+    toast("ما فيه مقطع تالي");
+    return;
+  }
+  toast("جاري البحث عن المقطع التالي...");
+  src.video(cur).then((r) => {
+    if ((audioMode ? A.id : W && W.id) !== cur) return;
+    holder.related = r.related;
+    const m = nextVideo(true, cur);
+    m ? adv(m) : toast("ما لقيت مقطع تالي");
+  }).catch(() => toast("ما لقيت مقطع تالي"));
+}
+function playQueue(bg) {
+  if (!st.queue.length) return;
+  const id = st.queue.shift();
+  save();
+  if (bg) {
+    playAudioFor(st.cache[id] || { id, title: "مقطع" }, resumeAt(id));
+  } else go("watch", id);
+}
+const aud = $("aud");
+const A = { id: null, v: null, related: [] };
+let PRE = null, preBusy = null;
+const PIPED = ["https://pipedapi.kavin.rocks", "https://pipedapi.adminforge.de", "https://api.piped.private.coffee", "https://pipedapi.r4fo.com"];
+function probe(el, url, ms) {
+  return new Promise((res) => {
+    let ok = false;
+    const fin = (r) => {
+      if (ok) return;
+      ok = true;
+      clearTimeout(t);
+      el.oncanplay = el.onloadedmetadata = el.onerror = null;
+      res(r);
+    };
+    const t = setTimeout(() => fin(false), ms || 9e3);
+    el.onloadedmetadata = el.oncanplay = () => fin(true);
+    el.onerror = () => fin(false);
+    el.src = url;
+    el.load();
+  });
+}
+async function audioSources(id) {
+  const insts = await invList();
+  const good = LS.get("inv", "");
+  const order = good ? [good].concat(insts.filter((x) => x !== good)) : insts;
+  const out = [], inv_ = (b) => out.push(async () => ["inv:" + b, b + "/latest_version?id=" + id + "&itag=140&local=true"]), pip_ = (p) => out.push(async () => {
+    const u = await pipedUrl(p, id);
+    return u ? ["pip:" + p, u] : null;
+  });
+  const ga = LS.get("aud", "");
+  if (ga.indexOf("pip:") === 0) pip_(ga.slice(4));
+  order.slice(0, 3).forEach(inv_);
+  PIPED.forEach(pip_);
+  order.slice(3, 7).forEach(inv_);
+  return out;
+}
+async function pipedUrl(p, id) {
+  try {
+    const c = new AbortController();
+    setTimeout(() => c.abort(), 7e3);
+    const j = await (await fetch(p + "/streams/" + id, { signal: c.signal })).json();
+    const a = (j.audioStreams || []).filter((x) => x.url).sort((x, y) => /mp4|m4a/.test(y.mimeType) - /mp4|m4a/.test(x.mimeType) || y.bitrate - x.bitrate)[0];
+    return a ? a.url : null;
+  } catch (e) {
+    return null;
+  }
+}
+async function findAudio(id, el, alive) {
+  const list = await audioSources(id);
+  for (const f of list) {
+    if (alive && !alive()) return null;
+    const r = await f();
+    if (!r) continue;
+    if (await probe(el, r[1])) {
+      LS.set("aud", r[0]);
+      return r[1];
+    }
+  }
+  return null;
+}
+async function prepAudio(id) {
+  if (preBusy === id || PRE && PRE.id === id) return;
+  preBusy = id;
+  const el = new Audio();
+  el.preload = "metadata";
+  el.muted = true;
+  const url = await findAudio(id, el);
+  el.removeAttribute("src");
+  try {
+    el.load();
+  } catch (e) {
+  }
+  if (preBusy === id) preBusy = null;
+  if (url) PRE = { id, url };
+}
+function startAud(url, t) {
+  aud.src = url;
+  if (t > 1) aud.addEventListener("loadedmetadata", () => {
+    try {
+      aud.currentTime = t;
+    } catch (e) {
+    }
+  }, { once: true });
+  return aud.play();
+}
+async function playAudioFor(v, t, related) {
+  const ready = NEXT && NEXT.id === v.id && Date.now() - NEXT.at < 3 * 36e5 ? NEXT.url : PRE && PRE.id === v.id ? PRE.url : null;
+  if (ready) startAud(ready, t).catch(() => {
+  });
+  NEXT = null;
+  A.id = v.id;
+  A.v = v;
+  A.related = related && related.length ? related : [];
+  A.prepped = false;
+  showMini(v, ready ? "" : "جاري تجهيز الصوت...");
+  setMedia(v);
+  st.hist = [v.id].concat(st.hist.filter((x) => x !== v.id)).slice(0, 80);
+  save();
+  if (!A.related.length) src.video(v.id).then((r) => {
+    if (A.id === v.id) {
+      A.v = Object.assign({}, A.v, r.v);
+      A.related = r.related;
+      showMini(A.v);
+      setMedia(A.v);
+      prepNext();
+    }
+    save();
+  }).catch(() => {
+  });
+  if (ready) return true;
+  const url = await findAudio(v.id, aud, () => A.id === v.id);
+  if (A.id !== v.id) return false;
+  if (url) {
+    try {
+      if (t > 1) aud.currentTime = t;
+    } catch (e) {
+    }
+    try {
+      await aud.play();
+    } catch (e) {
+    }
+    return true;
+  }
+  return false;
+}
+let NEXT = null, nextBusy = null;
+async function prepNext() {
+  if (!A.id || W) return;
+  const cur = A.id;
+  const n = nextVideo(false, cur);
+  if (!n || NEXT && NEXT.id === n.id || nextBusy === n.id) return;
+  nextBusy = n.id;
+  const el = new Audio();
+  el.preload = "metadata";
+  el.muted = true;
+  const url = await findAudio(n.id, el, () => A.id === cur);
+  el.removeAttribute("src");
+  try {
+    el.load();
+  } catch (e) {
+  }
+  if (nextBusy === n.id) nextBusy = null;
+  if (url && A.id === cur) NEXT = { id: n.id, url, at: Date.now() };
+}
+async function bgMode(auto) {
+  if (!W) return;
+  const v = W.v, t = ytTime(), rel = W.related;
+  try {
+    PL && PL.pause();
+  } catch (e) {
+  }
+  const wasW = W;
+  leaveWatchSoft();
+  const ok = await playAudioFor(v, t, rel);
+  if (ok) {
+    if (!auto) toast("🎧 الحين تقدر تقفل الشاشة أو تطلع من المتصفح");
+  } else if (A.id === v.id) {
+    stopA();
+    toast("ما قدرت أجيب الصوت الحين، جرّب بعد شوي");
+    go("watch", v.id, { start: t });
+  }
+}
+function leaveWatchSoft() {
+  clearInterval(posTimer);
+  destroyYT();
+  const el = document.querySelector(".player");
+  if (el) el.innerHTML = `<div style="position:absolute;top:0;left:0;right:0;bottom:0;display:grid;place-items:center;color:#fff;text-align:center;background:url(${thumb(W.id)}) center/cover"><div style="background:rgba(0,0,0,.7);padding:14px 18px;border-radius:12px">🎧 شغّال بالخلفية<br><button class="btn" style="margin-top:8px" onclick="backToVideo()">▶ ارجع للفيديو</button></div></div>`;
+  W = null;
+}
+function showMini(v, sub) {
+  $("miniImg").src = thumb(v.id);
+  $("miniT").textContent = v.title || "مقطع";
+  $("miniS").textContent = sub || v.channel || "";
+  $("mini").classList.add("open");
+  document.body.classList.add("has-mini");
+}
+function setMedia(v) {
+  if (!("mediaSession" in navigator)) return;
+  try {
+    navigator.mediaSession.metadata = new MediaMetadata({ title: v.title || "", artist: v.channel || "", album: "تيوبي", artwork: [{ src: thumb(v.id), sizes: "480x360", type: "image/jpeg" }] });
+    const ms = navigator.mediaSession, h = (a, f) => {
+      try {
+        ms.setActionHandler(a, f);
+      } catch (e) {
+      }
+    };
+    h("play", () => aud.play());
+    h("pause", () => aud.pause());
+    h("seekbackward", () => seekA(-10));
+    h("seekforward", () => seekA(10));
+    h("nexttrack", () => playNext(true));
+    h("previoustrack", () => {
+      aud.currentTime = 0;
+    });
+    h("seekto", (e) => {
+      aud.currentTime = e.seekTime;
+    });
+  } catch (e) {
+  }
+}
+function toggleA() {
+  aud.paused ? aud.play().catch(() => {
+  }) : aud.pause();
+}
+function seekA(d) {
+  try {
+    aud.currentTime = Math.max(0, Math.min(aud.duration || 1e9, aud.currentTime + d));
+  } catch (e) {
+  }
+}
+function stopA() {
+  if (A.id) savePos(A.id, aud.currentTime, aud.duration);
+  A.id = null;
+  aud.pause();
+  aud.removeAttribute("src");
+  try {
+    aud.load();
+  } catch (e) {
+  }
+  $("mini").classList.remove("open");
+  document.body.classList.remove("has-mini");
+  try {
+    navigator.mediaSession.metadata = null;
+  } catch (e) {
+  }
+}
+function backToVideo() {
+  if (!A.id) return;
+  const id = A.id, t = aud.currentTime || 0;
+  stopA();
+  go("watch", id, { start: t });
+}
+aud.addEventListener("play", () => {
+  $("miniPP").textContent = "⏸";
+});
+aud.addEventListener("pause", () => {
+  $("miniPP").textContent = "▶";
+});
+let lastPosSave = 0;
+aud.addEventListener("timeupdate", () => {
+  if (!A.id) return;
+  $("miniS").textContent = fmtT(aud.currentTime) + " / " + fmtT(aud.duration) + (sleepLabel() ? " • ⏲ " + sleepLabel() : "");
+  $("miniBar").style.width = (aud.duration ? aud.currentTime / aud.duration * 100 : 0) + "%";
+  if (Date.now() - lastPosSave > 5e3) {
+    lastPosSave = Date.now();
+    savePos(A.id, aud.currentTime, aud.duration);
+    if (!A.prepped && aud.currentTime > 8 && A.related.length) {
+      A.prepped = true;
+      prepNext();
+    }
+  }
+  try {
+    aud.duration && isFinite(aud.duration) && navigator.mediaSession.setPositionState({ duration: aud.duration, position: Math.min(aud.currentTime, aud.duration), playbackRate: 1 });
+  } catch (e) {
+  }
+});
+aud.addEventListener("ended", () => {
+  if (!A.id) return;
+  delete st.pos[A.id];
+  save();
+  if (SLEEP.eov) {
+    fireSleep();
+    return;
+  }
+  playNext(false);
+});
+$("miniTrack").onclick = (e) => {
+  const r = e.currentTarget.getBoundingClientRect();
+  if (aud.duration) aud.currentTime = (r.right - e.clientX) / r.width * aud.duration;
+};
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden && !prefs.tv && route.name === "watch" && W && !A.id && ytState() === 1) {
+    if (PRE && PRE.id === W.id) {
+      const v = W.v, t = ytTime(), rel = W.related;
+      try {
+        PL && PL.pause();
+      } catch (e) {
+      }
+      leaveWatchSoft();
+      playAudioFor(v, t, rel);
+    } else bgMode(true);
+  }
+});
+const SLEEP = { end: 0, eov: false };
+let sleepT = null;
+function sleepLabel() {
+  if (SLEEP.eov) return "نهاية المقطع";
+  if (!SLEEP.end) return "";
+  const m = Math.max(0, Math.ceil((SLEEP.end - Date.now()) / 6e4));
+  return m + " د";
+}
+function openSleep() {
+  $("sleepNow").textContent = SLEEP.end || SLEEP.eov ? "المؤقت شغّال: " + sleepLabel() : "اختر متى يوقف التشغيل:";
+  $("sleepModal").classList.add("open");
+}
+function setSleep(m) {
+  clearInterval(sleepT);
+  SLEEP.end = 0;
+  SLEEP.eov = false;
+  if (m === "eov") {
+    SLEEP.eov = true;
+    toast("⏲ بيوقف إذا خلص المقطع");
+  } else if (m) {
+    SLEEP.end = Date.now() + m * 6e4;
+    sleepT = setInterval(() => {
+      if (Date.now() >= SLEEP.end) fireSleep();
+      else {
+        const b = $("miniSleep");
+        if (b) b.textContent = "⏲";
+      }
+    }, 1e3);
+    toast("⏲ بيوقف بعد " + m + " دقيقة");
+  } else toast("انلغى المؤقت");
+  closeM("sleepModal");
+  if (W) paintInfo();
+  $("miniSleep").style.color = SLEEP.end || SLEEP.eov ? "#3ea6ff" : "";
+}
+function checkSleepEov() {
+}
+function fireSleep() {
+  clearInterval(sleepT);
+  SLEEP.end = 0;
+  SLEEP.eov = false;
+  aud.pause();
+  try {
+    PL && PL.pause();
+  } catch (e) {
+  }
+  stopShorts();
+  $("miniSleep").style.color = "";
+  if (W) paintInfo();
+  toast("😴 وقف التشغيل، تصبح على خير");
+}
+let shObs = null, shPage = 0, shLoading = false, shSeen = /* @__PURE__ */ new Set();
+function stopShorts() {
+  if (shObs) {
+    shObs.disconnect();
+    shObs = null;
+  }
+  document.querySelectorAll(".sbox9 iframe").forEach((f) => f.remove());
+}
+async function renderShorts() {
+  ++token;
+  if (A.id) aud.pause();
+  shPage = 0;
+  shSeen = /* @__PURE__ */ new Set();
+  app.innerHTML = `<div class="shorts" id="shorts">${spinner}</div>`;
+  shObs = new IntersectionObserver((es) => es.forEach((e) => {
+    const b = e.target.querySelector(".sbox9");
+    if (e.isIntersecting && e.intersectionRatio > 0.6) mountShort(b);
+    else unmountShort(b);
+  }), { root: $("shorts"), threshold: [0, 0.6, 1] });
+  $("shorts").addEventListener("scroll", () => {
+    const s = $("shorts");
+    if (s && s.scrollTop + s.clientHeight * 3 > s.scrollHeight) loadShorts();
+  });
+  await loadShorts();
+}
+async function loadShorts() {
+  var _a;
+  if (shLoading) return;
+  shLoading = true;
+  const box = $("shorts");
+  try {
+    let l = [];
+    for (let i = 0; i < 3 && l.length < 4; i++) {
+      shPage++;
+      l = l.concat((await src.shorts(shPage)).filter((v) => !shSeen.has(v.id)));
+    }
+    if (!$("shorts")) return;
+    (_a = box.querySelector(".loading")) == null ? void 0 : _a.remove();
+    if (!l.length && !box.children.length) {
+      box.innerHTML = `<div class="empty">⚠️ ${errMsg(new Error("net"))}<br><br><button class="btn" onclick="render()">🔄 إعادة المحاولة</button></div>`;
+      return;
+    }
+    l.forEach((v) => {
+      shSeen.add(v.id);
+      const d = document.createElement("div");
+      d.className = "short";
+      d.innerHTML = `<div class="sbox9" data-id="${v.id}"><img src="https://i.ytimg.com/vi/${v.id}/oar2.jpg" onerror="this.onerror=null;this.src='${thumb(v.id)}'" alt=""><div class="splay">▶</div>
+      <div class="sact"><button onclick="shLike(this,'${v.id}')">${st.likes[v.id] === 1 ? "💙" : "👍"}</button><button onclick="addQ('${v.id}')">＋</button><button onclick="go('watch','${v.id}')">⛶</button></div>
+      <div class="sinfo"><b>${esc(v.title)}</b><small>${esc(v.channel)}</small></div></div>`;
+      box.appendChild(d);
+      shObs && shObs.observe(d);
+    });
+  } catch (e) {
+    if (!box.querySelector(".short")) box.innerHTML = `<div class="empty">⚠️ ${errMsg(e)}<br><br><button class="btn" onclick="render()">🔄 إعادة المحاولة</button></div>`;
+  } finally {
+    shLoading = false;
+  }
+}
+function mountShort(b) {
+  if (!b || b.querySelector("iframe")) return;
+  const id = b.dataset.id;
+  const f = document.createElement("iframe");
+  f.src = `https://www.youtube.com/embed/${id}?autoplay=1&playsinline=1&loop=1&playlist=${id}&rel=0&modestbranding=1${location.protocol.startsWith("http") ? "&origin=" + encodeURIComponent(location.origin) : ""}`;
+  f.allow = "autoplay; encrypted-media; picture-in-picture";
+  f.referrerPolicy = "strict-origin-when-cross-origin";
+  b.insertBefore(f, b.querySelector(".sact"));
+  b.querySelector(".splay").style.display = "none";
+  st.hist = [id, ...st.hist.filter((x) => x !== id)].slice(0, 80);
+  save();
+}
+function unmountShort(b) {
+  const f = b && b.querySelector("iframe");
+  if (f) {
+    f.remove();
+    b.querySelector(".splay").style.display = "";
+  }
+}
+function shLike(btn, id) {
+  st.likes[id] = st.likes[id] === 1 ? 0 : 1;
+  save();
+  btn.textContent = st.likes[id] === 1 ? "💙" : "👍";
+}
+function closeM(id) {
+  $(id).classList.remove("open");
+}
+function openSettings() {
+  $("keyIn").value = KEY;
+  $("swTheme").classList.toggle("on", prefs.light);
+  $("swAuto").classList.toggle("on", prefs.auto);
+  $("swPre").classList.toggle("on", prefs.pre);
+  $("swTv").classList.toggle("on", !!prefs.tv);
+  $("swNoads").classList.toggle("on", !!prefs.noads);
+  $("setModal").classList.add("open");
+}
+function applyTheme() {
+  document.body.classList.toggle("light", prefs.light);
+  document.querySelector("meta[name=theme-color]").content = prefs.light ? "#ffffff" : "#0f0f0f";
+}
+function toggleTheme() {
+  prefs.light = !prefs.light;
+  savePrefs();
+  applyTheme();
+  $("swTheme").classList.toggle("on", prefs.light);
+}
+function toggleAuto() {
+  prefs.auto = !prefs.auto;
+  savePrefs();
+  $("swAuto").classList.toggle("on", prefs.auto);
+  paintQueue();
+  toast(prefs.auto ? "التشغيل التلقائي شغّال" : "التشغيل التلقائي مقفّل");
+}
+function toggleNoads() {
+  prefs.noads = !prefs.noads;
+  savePrefs();
+  $("swNoads").classList.toggle("on", prefs.noads);
+  toast(prefs.noads ? "🚫 بدون إعلانات شغّال" : "رجع مشغّل يوتيوب");
+}
+function togglePre() {
+  prefs.pre = !prefs.pre;
+  savePrefs();
+  $("swPre").classList.toggle("on", prefs.pre);
+}
+function saveKey() {
+  const k = $("keyIn").value.trim();
+  if (k !== KEY) {
+    KEY = k;
+    LS.set("key", KEY);
+    toast(KEY ? "تم حفظ المفتاح ✓" : "تم حذف المفتاح");
+    closeM("setModal");
+    go("home");
+  } else closeM("setModal");
+}
+let deferredPrompt = null;
+window.addEventListener("beforeinstallprompt", (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+});
+window.addEventListener("appinstalled", () => {
+  deferredPrompt = null;
+  toast("تم تثبيت تيوبي 🎉");
+});
+const standalone = () => matchMedia("(display-mode: standalone)").matches || navigator.standalone;
+async function installApp() {
+  if (standalone()) {
+    toast("تيوبي مثبّت عندك ✓");
+    return;
+  }
+  if (deferredPrompt) {
+    deferredPrompt.prompt();
+    await deferredPrompt.userChoice.catch(() => {
+    });
+    deferredPrompt = null;
+  } else {
+    closeM("setModal");
+    $("iosModal").classList.add("open");
+  }
+}
+if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(() => {
+});
+document.addEventListener("paste", (e) => {
+  if (/INPUT|TEXTAREA/.test(e.target.tagName)) return;
+  const id = ytId(e.clipboardData.getData("text"));
+  if (id) go("watch", id);
+});
+document.addEventListener("keydown", (e) => {
+  if (e.defaultPrevented || /INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) return;
+  if (e.key === "/") {
+    e.preventDefault();
+    $("q").focus();
+  }
+  if (A.id && !W) {
+    if (e.code === "Space") {
+      e.preventDefault();
+      toggleA();
+    }
+    if (e.key === "ArrowLeft") seekA(-10);
+    if (e.key === "ArrowRight") seekA(10);
+  }
+  if (route.name === "shorts" && (e.key === "ArrowDown" || e.key === "ArrowUp")) {
+    e.preventDefault();
+    const s = $("shorts");
+    s && s.scrollBy({ top: (e.key === "ArrowDown" ? 1 : -1) * s.clientHeight, behavior: "smooth" });
+  }
+});
+if (prefs.tv === void 0) {
+  prefs.tv = /Web0S|webOS|SmartTV|SMART-TV|NetCast|Tizen|BRAVIA|AFT[A-Z]|GoogleTV|Android TV|HbbTV/i.test(navigator.userAgent);
+  savePrefs();
+}
+function applyTv() {
+  document.body.classList.toggle("tv", !!prefs.tv);
+}
+function toggleTv() {
+  prefs.tv = !prefs.tv;
+  savePrefs();
+  applyTv();
+  $("swTv").classList.toggle("on", prefs.tv);
+  toast(prefs.tv ? "📺 وضع التلفزيون شغّال" : "وضع التلفزيون مقفّل");
+}
+function setFull(on) {
+  const pl = document.querySelector(".player");
+  if (!pl) return;
+  pl.classList.toggle("full", on);
+  route.full = on;
+  try {
+    history.replaceState({ r: route }, "");
+  } catch (e) {
+  }
+  pl.focus({ preventScroll: true });
+  if (on) showOsd();
+  else pl.scrollIntoView({ block: "center" });
+}
+let osdT;
+function showOsd() {
+  const o = $("osd");
+  if (!o || !W) return;
+  const t = ytTime(), d = ytDur(), st_ = ytState();
+  o.innerHTML = `<b>${st_ === 2 ? "⏸ " : ""}${esc(W.v.title || "")}</b><div class="ot"><span>${fmtT(t)}</span><span>${fmtT(d)}</span></div><div class="ob"><i style="width:${d ? t / d * 100 : 0}%"></i></div><div class="hint">OK: تشغيل/إيقاف • ◀ ▶: رجوع/تقديم 10 ثواني • ▼: التفاصيل والتالي • رجوع: خروج</div>`;
+  o.classList.add("show");
+  clearTimeout(osdT);
+  osdT = setTimeout(() => o.classList.remove("show"), 3500);
+}
+function toggleV() {
+  try {
+    ytState() === 1 ? PL.pause() : PL.play();
+  } catch (e) {
+  }
+  setTimeout(showOsd, 200);
+}
+function seekV(d) {
+  try {
+    PL.seek(Math.max(0, ytTime() + d));
+  } catch (e) {
+  }
+  setTimeout(showOsd, 150);
+}
+function playerOk() {
+  const pl = document.querySelector(".player");
+  if (pl && !pl.classList.contains("full")) setFull(true);
+  else toggleV();
+}
+function focusables() {
+  const m = document.querySelector(".modal.open");
+  const root = m || document;
+  return [].slice.call(root.querySelectorAll("button,a[href],input,select,.card,.qitem,.player,.short")).filter((el) => {
+    if (!m && el.closest(".modal")) return false;
+    const c = el.closest(".card,.qitem");
+    if (c && c !== el) return false;
+    if (el.closest(".mini") && !$("mini").classList.contains("open")) return false;
+    if (el.closest(".sugg") && !suggEl.classList.contains("open")) return false;
+    const r = el.getBoundingClientRect();
+    return r.width > 0 && r.height > 0;
+  });
+}
+function focusEl(e) {
+  try {
+    e.focus({ preventScroll: true });
+  } catch (_) {
+    e.focus();
+  }
+  e.scrollIntoView({ block: "center", inline: "nearest", behavior: "smooth" });
+}
+function spatial(dir) {
+  const els = focusables();
+  if (!els.length) return;
+  const cur = document.activeElement;
+  if (!cur || els.indexOf(cur) < 0) {
+    focusEl(els.filter((e) => {
+      const r = e.getBoundingClientRect();
+      return r.top >= 60 && r.bottom <= innerHeight;
+    })[0] || els[0]);
+    return;
+  }
+  const a = cur.getBoundingClientRect(), ax = a.left + a.width / 2, ay = a.top + a.height / 2;
+  let best = null, bs = 1e12;
+  els.forEach((e) => {
+    if (e === cur) return;
+    const b = e.getBoundingClientRect(), bx = b.left + b.width / 2, by = b.top + b.height / 2, dx = bx - ax, dy = by - ay;
+    let main, cross;
+    if (dir === "left") {
+      if (dx > -4) return;
+      main = -dx;
+      cross = Math.abs(dy);
+    } else if (dir === "right") {
+      if (dx < 4) return;
+      main = dx;
+      cross = Math.abs(dy);
+    } else if (dir === "up") {
+      if (dy > -4) return;
+      main = -dy;
+      cross = Math.abs(dx);
+    } else {
+      if (dy < 4) return;
+      main = dy;
+      cross = Math.abs(dx);
+    }
+    const sc = main + cross * (dir === "up" || dir === "down" ? 0.6 : 3);
+    if (sc < bs) {
+      bs = sc;
+      best = e;
+    }
+  });
+  if (best) focusEl(best);
+  else if (dir === "up") window.scrollTo({ top: 0, behavior: "smooth" });
+}
+document.addEventListener("keydown", (e) => {
+  if (!prefs.tv) return;
+  const k = e.keyCode, t = e.target, tag = t.tagName;
+  const back = k === 461 || k === 10009 || k === 27 || k === 8 && tag !== "INPUT";
+  if (back) {
+    e.preventDefault();
+    const at = Date.now();
+    setTimeout(() => {
+      if (popAt >= at) return;
+      if (!closeOverlays()) history.back();
+    }, 180);
+    return;
+  }
+  const pl = document.querySelector(".player"), full = pl && pl.classList.contains("full");
+  if (k === 415 || k === 19 || k === 179 || k === 463) {
+    e.preventDefault();
+    if (A.id && !W) toggleA();
+    else toggleV();
+    return;
+  }
+  if (k === 417 || k === 412) {
+    e.preventDefault();
+    const d = k === 417 ? 10 : -10;
+    if (A.id && !W) seekA(d);
+    else seekV(d);
+    return;
+  }
+  if (k === 425) {
+    e.preventDefault();
+    playNext(true);
+    return;
+  }
+  if (full) {
+    e.preventDefault();
+    if (k === 13) toggleV();
+    else if (k === 37) seekV(-10);
+    else if (k === 39) seekV(10);
+    else if (k === 40) setFull(false);
+    else showOsd();
+    return;
+  }
+  if (t === pl && pl) {
+    if (k === 13) {
+      e.preventDefault();
+      playerOk();
+      return;
+    }
+    if (k === 37 || k === 39) {
+      e.preventDefault();
+      seekV(k === 39 ? 10 : -10);
+      return;
+    }
+  }
+  if (route.name === "shorts" && (k === 38 || k === 40)) return;
+  const dir = { 37: "left", 38: "up", 39: "right", 40: "down" }[k];
+  if (dir) {
+    if (tag === "INPUT" && (dir === "left" || dir === "right")) return;
+    e.preventDefault();
+    spatial(dir);
+    return;
+  }
+  if (k === 13 && t && t.matches && t.matches(".card,.qitem,.short")) {
+    e.preventDefault();
+    t.click();
+  }
+}, true);
+applyTheme();
+applyTv();
+(function boot() {
+  const p = new URLSearchParams(location.search);
+  const v = p.get("v") || ytId(p.get("url") || p.get("text") || "");
+  try {
+    history.replaceState({ r: { name: "home" } }, "", location.pathname);
+  } catch (e) {
+  }
+  if (v) go("watch", v);
+  else render();
+})();
+</script>
+</body>
+</html>
