@@ -65,6 +65,7 @@ textarea{min-height:140px;resize:vertical;margin-top:14px;line-height:1.8}
 .fine{color:var(--muted);font-size:14px;text-align:center;margin-top:14px}
 .live{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:15px;margin-bottom:6px}
 .live b{color:var(--text)}
+.role{display:inline-block;background:rgba(236,72,153,.12);color:#fbcfe8;border:1px solid rgba(236,72,153,.35);border-radius:999px;padding:2px 12px;font-size:14px;font-weight:700;margin-bottom:8px}
 .dot{width:9px;height:9px;border-radius:50%;background:#f59e0b;display:inline-block}
 .dot.on{background:var(--ok);box-shadow:0 0 0 4px rgba(52,211,153,.15)}
 .linkbox{background:var(--card2);border:1px dashed var(--line);border-radius:12px;padding:10px 12px;font-size:13px;word-break:break-all;color:var(--muted);text-align:left;font-family:ui-monospace,Menlo,monospace}
@@ -658,6 +659,7 @@ function renderOpen() {
   app.innerHTML = `
     ${backLink()}
     <h2 class="ttl">${esc(setup.title)}</h2>
+    ${isHost ? '<div class="role">👑 أنت المشرف على هذي الجلسة</div>' : ''}
     <div class="live"><span class="dot" id="dot"></span><span id="conn">يتصل…</span><span>·</span><span>وصلت <b id="count">0</b> صراحة</span></div>
     ${isHost ? hostPanel() : ''}
     <section class="card write">
@@ -694,8 +696,10 @@ function hostPanel() {
       ${navigator.share ? '<button class="btn" id="sh">مشاركة</button>' : ''}
     </div>
     <details class="admin"><summary>🔑 رابط المشرف (لك أنت بس)</summary>
-      <p class="muted small">هذا الرابط يخليك تكشف الصراحات من أي جهاز. <b>لا ترسله لأحد</b>، لأن اللي معه يقدر يقرأ الرسائل قبل الكشف.</p>
-      <button class="btn ghost" id="cpa">نسخ رابط المشرف</button>
+      <p class="muted small">على هذا الجوال <b>ما تحتاجه</b>: الجلسة محفوظة عندك في «جلساتك» بالصفحة الرئيسية.</p>
+      <p class="muted small">تحتاجه بس لو بتفتح الجلسة كمشرف من جوال أو متصفح ثاني (أو لو مسحت بيانات المتصفح). احفظه عندك، و<b>لا ترسله لأحد</b>، لأن اللي معه يقدر يقرأ الرسائل قبل الكشف ويكشفها.</p>
+      <div class="linkbox" dir="ltr">${esc(adminLink())}</div>
+      <button class="btn ghost" id="cpa" style="margin-top:10px">نسخ رابط المشرف</button>
     </details>
   </section>`;
 }
@@ -875,11 +879,20 @@ function route() {
     app.innerHTML = `<div class="card center"><h3>المتصفح ما يدعم التشفير</h3><p class="muted">افتح الصفحة برابط https من متصفح حديث.</p></div>`;
     return;
   }
-  const h = location.hash.slice(1);
+  let h = location.hash.slice(1);
+  try { h = decodeURIComponent(h); } catch {}
+  // تطبيقات الدردشة أحيانًا تضيف محارف مخفية (اتجاه النص) أو علامات في آخر الرابط
+  h = h.replace(/[^\w.=-]/g, '');
   if (h === 'new') return viewCreate();
-  const m = h.match(/^([jh])=([\w-]{8,64})\.([\w-]{43})(?:\.([\w-]{43}))?$/);
-  if (m) return openSession(m[2], m[3], m[1] === 'h' ? m[4] : null).catch(e => { console.error(e); viewHome(); toast('الرابط فيه مشكلة', true); });
+  const m = h.match(/^([jh])=([\w-]{8,64})\.([\w-]{43})(?:\.([\w-]{43}))?/);
+  if (m && m[1] === 'h' && !m[4]) return brokenLink();
+  if (m) return openSession(m[2], m[3], m[1] === 'h' ? m[4] : null).catch(e => { console.error(e); brokenLink(); });
+  if (/^[jh]=/.test(h)) return brokenLink();
   viewHome();
+}
+function brokenLink() {
+  app.innerHTML = `${backLink()}<div class="card center"><div class="big-ic">🔗</div><h3>الرابط ناقص أو تغيّر</h3>
+    <p class="muted">يمكن انقص منه حرف وقت النسخ. ارجع للرسالة وانسخ الرابط كامل، أو اضغط عليه مباشرة بدل النسخ.</p></div>`;
 }
 addEventListener('hashchange', route);
 window.SarahaTest = { polish: Polish.polish, isRude: Polish.isRude };
