@@ -178,13 +178,80 @@ details.ans summary{color:var(--pink)}
 .qcard small{color:var(--pink);font-weight:800;font-size:16px}
 .qcard p{font-size:23px;font-weight:700;margin:12px 0 16px;line-height:1.7}
 .qcard.flip{animation:pop .35s ease}
+/* الألعاب الجديدة */
+.sel{width:100%;background:var(--card2);border:1px solid var(--line);border-radius:14px;color:var(--text);font:inherit;font-size:16px;padding:12px 14px;outline:none}
+.addrow .sel{width:auto;flex:1}
+.pink{color:var(--pink)}
+.winner{font-size:clamp(28px,7vw,42px)!important;font-weight:800;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent!important;margin-bottom:14px}
+.story p{margin:0 0 10px;font-size:18px;line-height:1.9}
+.story p.first{color:var(--pink);font-weight:700}
+.msg .by{margin-top:8px;color:var(--pink);font-weight:700;font-size:15px}
+.names{color:var(--muted);font-size:14px;margin:-4px 6px 10px}
+.pick{text-align:center}
+.pick small{color:var(--muted);font-weight:700}
+.pick .gname{font-size:30px;font-weight:800;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent;line-height:1.5}
+.pass{padding:28px 18px}
+.pass .gname{font-size:40px;font-weight:800;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent;line-height:1.4;margin:6px 0}
+.wrow{width:100%;background:none;border:0;border-bottom:1px solid var(--line);color:var(--text);font:inherit;text-align:right;cursor:pointer;justify-content:space-between}
+.wrow.out b{opacity:.45;text-decoration:line-through}
+/* سباق الأسئلة */
+.qhead{color:var(--muted);font-weight:700;font-size:14px}
+.qq{font-size:21px;margin:6px 0 12px}
+.qopt{display:flex;align-items:center;gap:10px;width:100%;border:0;border-radius:14px;padding:14px 16px;margin:8px 0;font:inherit;font-size:17px;font-weight:700;color:#fff;background:var(--c);text-align:right;cursor:pointer}
+.qopt span{opacity:.8}
+.qopt b{margin-inline-start:auto}
+.qopt.dim{opacity:.35}
+.qopt.ok{outline:3px solid #fff;outline-offset:-3px}
+.qopt.picked{outline:3px solid #fff}
+.qopt[disabled]{cursor:default}
+.qbar{height:8px;background:var(--card2);border-radius:99px;overflow:hidden;margin-bottom:6px}
+.qbar i{display:block;height:100%;width:100%;background:var(--grad);transition:width .1s linear}
+.qgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+.brow{display:flex;justify-content:space-between;gap:10px;padding:9px 6px;border-bottom:1px solid var(--line)}
+.brow:last-child{border-bottom:0}
+.brow.me{background:rgba(236,72,153,.12);border-radius:10px}
+.result h3{font-size:26px;margin:0}
+.podium{display:flex;align-items:flex-end;justify-content:center;gap:8px;margin:14px 0}
+.pod{flex:1;max-width:150px;background:var(--card);border:1px solid var(--line);border-radius:18px 18px 8px 8px;text-align:center;padding:12px 6px}
+.pod b{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pod small{color:var(--muted);font-weight:700}
+.pod.p0{padding-top:28px;border-color:#a16207;background:linear-gradient(180deg,rgba(234,179,8,.18),var(--card))}
+.pod.p1{padding-top:18px}
+/* كبسولة الزمن */
+.capsule .cd{display:flex;justify-content:center;gap:10px;margin:6px 0 10px}
+.cd div{background:var(--card2);border-radius:14px;padding:10px 12px;min-width:66px}
+.cd b{display:block;font-size:26px}
+.cd small{color:var(--muted)}
+/* ارسم وخمّن */
+.dword{font-size:18px;font-weight:700;min-height:48px;margin-bottom:6px}
+.tools{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+.sw{width:30px;height:30px;border-radius:50%;border:2px solid var(--line);cursor:pointer;font-size:14px;padding:0;background:#fff}
+.sw.on{outline:3px solid var(--pink);outline-offset:2px}
+.sw.er{display:grid;place-items:center}
+#pad{width:100%;display:block;border-radius:14px;touch-action:none;background:#fff}
+.timer{font-size:26px;font-weight:800;min-width:44px}
+/* الإيموجي */
+.ecard small{color:var(--pink);font-weight:800}
+.emo{font-size:clamp(46px,14vw,72px);line-height:1.4;margin:10px 0}
+.ecard .ans{font-size:24px;font-weight:800;margin-bottom:6px}
+/* الفرق والدولاب */
+.teams{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-top:10px}
+.team{margin:0}
+.team div{padding:4px 0;border-bottom:1px solid var(--line)}
+.team div:last-child{border-bottom:0}
+.wheelbox{position:relative;display:flex;justify-content:center;margin:16px 0 6px}
+.wheelbox canvas{border-radius:50%;box-shadow:0 10px 40px rgba(0,0,0,.45)}
+.pin{position:absolute;top:-14px;left:50%;transform:translateX(-50%);font-size:30px;color:#fff;z-index:2;text-shadow:0 2px 6px rgba(0,0,0,.6)}
 </style>
 </head>
 <body>
 <main class="wrap" id="app"></main>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
-<script src="polish.js?v=2"></script>
-<script src="modes.js?v=2"></script>
-<script src="app.js?v=2"></script>
+<script src="polish.js?v=3"></script>
+<script src="banks.js?v=3"></script>
+<script src="modes.js?v=3"></script>
+<script src="games.js?v=3"></script>
+<script src="offline.js?v=3"></script>
+<script src="app.js?v=3"></script>
 </body>
 </html>

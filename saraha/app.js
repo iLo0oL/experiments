@@ -215,7 +215,7 @@ function openSheet(html) {
 function validEnv(e) {
   if (!e || e.v !== 1 || typeof e.iv !== 'string' || typeof e.ct !== 'string' || !B64.test(e.iv) || !B64.test(e.ct)) return false;
   if (e.k === 'm' || e.k === 't') return typeof e.e === 'string' && B64.test(e.e);
-  return e.k === 's' || e.k === 'r' || e.k === 'w';
+  return ['s', 'r', 'w', 'x', 'q'].includes(e.k);
 }
 const strArr = (a, max, len) => Array.isArray(a) ? a.filter(x => typeof x === 'string' && x.trim()).map(x => x.slice(0, len)).slice(0, max) : [];
 
@@ -228,7 +228,11 @@ function normalizeSetup(s) {
   if (F.names) { cfg.names = strArr(c.names, MAX_NAMES, NAME_LEN); if (!cfg.names.length) return null; }
   if (F.prompt) cfg.prompt = typeof c.prompt === 'string' ? c.prompt.slice(0, Q_LEN) : '';
   if (F.note) cfg.note = typeof c.note === 'string' ? c.note.slice(0, 200) : '';
-  if (M.kind === 'vote') {
+  const isDay = d => typeof d === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(d);
+  if (F.subject) { cfg.subject = typeof c.subject === 'string' ? c.subject.slice(0, NAME_LEN) : ''; if (!cfg.subject) return null; }
+  if (F.open) { if (!isDay(c.open)) return null; cfg.open = c.open; }
+  if (F.days) { cfg.days = (Array.isArray(c.days) ? c.days : []).filter(isDay).slice(0, 21); if (!cfg.days.length) return null; }
+  if (M.kind === 'vote' || M.kind === 'know' || M.kind === 'quiz') {
     cfg.questions = (Array.isArray(c.questions) ? c.questions : []).slice(0, MAX_Q).map(q => ({
       q: q && typeof q.q === 'string' ? q.q.slice(0, Q_LEN) : '',
       opts: q && Array.isArray(q.opts) ? strArr(q.opts, MAX_OPTS, OPT_LEN) : null
@@ -241,6 +245,16 @@ function normalizeSetup(s) {
 function validItem(M, cfg, p) {
   if (!p || typeof p !== 'object') return null;
   const str = (x, n) => typeof x === 'string' && x.trim() ? x.slice(0, n) : null;
+  if (M.kind === 'know') {
+    if (!(cfg.names.includes(p.by) || p.by === cfg.subject) || !Array.isArray(p.a) || p.a.length !== cfg.questions.length) return null;
+    const ok = p.a.every((v, i) => Number.isInteger(v) && v >= -1 && v < optsOf(cfg.questions[i], cfg).length);
+    return ok ? { by: p.by, a: p.a } : null;
+  }
+  if (M.kind === 'quiz') {
+    const by = str(p.by, NAME_LEN);
+    if (!by || !Number.isInteger(p.i) || p.i < 0 || p.i >= cfg.questions.length || !Number.isInteger(p.a) || p.a < 0 || p.a >= cfg.questions[p.i].opts.length) return null;
+    return { by: by.trim(), i: p.i, a: p.a, t: typeof p.t === 'number' && p.t >= 0 ? Math.min(p.t, 600000) : 600000 };
+  }
   if (M.kind === 'vote') {
     if (typeof p.bid !== 'string' || p.bid.length > 40 || !Array.isArray(p.a) || p.a.length !== cfg.questions.length) return null;
     const ok = p.a.every((v, i) => Number.isInteger(v) && v >= -1 && v < optsOf(cfg.questions[i], cfg).length);
@@ -261,13 +275,17 @@ function validItem(M, cfg, p) {
     return text ? { by: p.by, text } : null;
   }
   const text = str(p.text, 1000);
-  return text ? { text } : null;
+  if (!text) return null;
+  return M.signable && typeof p.by === 'string' && p.by.trim() ? { text, by: p.by.trim().slice(0, NAME_LEN) } : { text };
 }
 const validPairs = p => Array.isArray(p) && p.length >= 2 && p.length <= MAX_NAMES &&
   p.every(x => Array.isArray(x) && x.length === 2 && x.every(n => typeof n === 'string' && n)) ? p.map(([a, b]) => [a.slice(0, NAME_LEN), b.slice(0, NAME_LEN)]) : null;
 const validOrder = (o, n) => Array.isArray(o) && o.length === n && new Set(o).size === n && o.every(i => Number.isInteger(i) && i >= 0 && i < n) ? o : null;
 
 async function createSession(mode, title, cfg) {
+  let secret = null;
+  if (mode === 'santa') secret = { order: shuffle(cfg.names.map((_, i) => i)) };
+  if (mode === 'quiz') { secret = { c: cfg.questions.map(q => q.c) }; cfg = { ...cfg, questions: cfg.questions.map(({ q, opts }) => ({ q, opts })) }; }
   const topic = 'saraha_' + b64u(crypto.getRandomValues(new Uint8Array(15)));
   const raw = crypto.getRandomValues(new Uint8Array(32));
   const key = b64u(raw);
@@ -277,10 +295,10 @@ async function createSession(mode, title, cfg) {
   if (JSON.stringify(env).length > 4000) throw Object.assign(new Error('too big'), { big: true });
   await Relay.post(topic, env);
   const rec = { topic, key, d, mode, title, created: Date.now() };
-  if (mode === 'santa') {
-    const order = shuffle(cfg.names.map((_, i) => i));
-    await Relay.post(topic, { v: 1, k: 't', ...(await Crypto.sealTo(pk, { order })) });
-    Object.assign(rec, { order, cfg, pk, rc });
+  if (secret) {
+    // سر المشرف (القرعة أو الأجوبة الصحيحة) مشفر بمفتاحه هو بس
+    await Relay.post(topic, { v: 1, k: 't', ...(await Crypto.sealTo(pk, secret)) });
+    Object.assign(rec, { secret, cfg, pk, rc }, secret.order ? { order: secret.order } : {});
   }
   store.upsert(rec);
   location.hash = `h=${topic}.${key}.${d}`;
@@ -306,7 +324,7 @@ async function openSession(topic, key, d, token) {
   const my = S = {
     topic, key, d, token, isHost: !!d && !token, raws: [], seen: new Set(), checkedR: new Set(), wseen: new Set(),
     msgs: [], wishes: {}, setup: null, setupIdx: -1, reveal: null, results: rec.results || null,
-    order: rec.order || null, online: false, phase: null
+    secret: rec.secret || null, order: rec.order || (rec.secret && rec.secret.order) || null, online: false, phase: null
   };
   my.room = await Crypto.aes(unb64u(key));
   if (token) {
@@ -382,15 +400,22 @@ async function processSanta(my) {
         const x = await Crypto.open(my.room, r.env);
         if (x && typeof x.by === 'string' && typeof x.wish === 'string') my.wishes[x.by.slice(0, NAME_LEN)] = x.wish.slice(0, 300);
       } catch {}
-    } else if (r.env.k === 't' && my.d && my.setup && my.setup.pk) {
-      my.wseen.add(r.id);
-      if (my.order) continue;
-      try {
-        const x = await Crypto.openFrom(await Crypto.priv(my.d, my.setup.pk), r.env);
-        const o = validOrder(x && x.order, my.cfg.names.length);
-        if (o) { my.order = o; store.upsert({ topic: my.topic, order: o, cfg: my.cfg, pk: my.setup.pk, rc: my.setup.rc }); }
-      } catch {}
     }
+  }
+  if (!my.order && my.secret) {
+    const o = validOrder(my.secret.order, my.cfg.names.length);
+    if (o) { my.order = o; store.upsert({ topic: my.topic, order: o }); }
+  }
+}
+
+async function processSecret(my) {
+  if (my.secret || !my.d || !my.setup || !my.setup.pk) return;
+  for (const r of my.raws) {
+    if (r.env.k !== 't') continue;
+    try {
+      const x = await Crypto.openFrom(await Crypto.priv(my.d, my.setup.pk), r.env);
+      if (x && typeof x === 'object') { my.secret = x; store.upsert({ topic: my.topic, secret: x, cfg: my.cfg, pk: my.setup.pk, rc: my.setup.rc }); return; }
+    } catch {}
   }
 }
 
@@ -423,6 +448,9 @@ async function processOnce(my) {
       } catch {}
     }
   }
+  await processSecret(my);
+  const K = KINDS[my.M.kind];
+  if (K && K.process) return K.process(my);
   if (my.mode === 'santa') {
     await processSanta(my);
     const pairs = my.reveal && validPairs(my.reveal.pairs);
@@ -453,6 +481,14 @@ async function processOnce(my) {
       return c;
     });
     my.results = { ...base, tally, voters: latest.size };
+  } else if (my.M.kind === 'know') {
+    const latest = new Map();
+    for (const b of items) latest.set(b.by, b);
+    const key = latest.get(my.cfg.subject);
+    const players = [...latest.values()].filter(b => b.by !== my.cfg.subject)
+      .map(b => ({ by: b.by, a: b.a, score: key ? b.a.filter((v, i) => v >= 0 && v === key.a[i]).length : 0 }))
+      .sort((x, y) => y.score - x.score);
+    my.results = { ...base, key: key ? key.a : null, players };
   } else {
     const clean = items.map(({ id, ...x }) => {
       if (my.M.fields !== 'three') return x;
@@ -487,8 +523,11 @@ function renderSession() {
     $('#retry').onclick = () => route();
   } else if (S.mode === 'santa') {
     S.phase === 'revealed' ? renderSantaReveal() : S.token ? renderSantaPersonal() : renderSantaHost();
-  } else if (S.phase === 'revealed') renderReveal();
-  else renderOpen();
+  } else {
+    const K = KINDS[S.M.kind];
+    if (S.phase === 'revealed') K && K.reveal ? K.reveal() : renderReveal();
+    else K && K.open ? K.open() : renderOpen();
+  }
 }
 
 function sessionHead(title) {
@@ -505,13 +544,11 @@ function renderOpen() {
     ${sessionHead(setup.title)}
     <div class="live"><span class="dot" id="dot"></span><span id="conn">يتصل…</span><span>·</span><span>وصل <b id="count">0</b> ${M.unit}</span></div>
     ${isHost ? hostPanel() : ''}
-    ${M.kind === 'vote' ? voteCard() : writeCard()}
-    ${isHost
-      ? `<button class="btn danger big" id="reveal">${M.revealBtn}</button>`
-      : `<div class="card wait">⏳ النتائج تنكشف لما صاحب الجلسة ينهيها.<br>خلّ الصفحة مفتوحة، أو ارجع لها بعدين من نفس الجوال.</div>`}
+    ${M.kind === 'vote' ? voteCard() : M.kind === 'know' ? knowCard() : writeCard()}
+    ${isHost ? `<button class="btn danger big" id="reveal">${M.revealBtn}</button>` : waitCard()}
     ${howCard(M)}
     ${privacyNote(M)}`;
-  M.kind === 'vote' ? bindVote() : bindWrite();
+  M.kind === 'vote' ? bindVote() : M.kind === 'know' ? bindKnow() : bindWrite();
   if (isHost) bindHost();
   updateLive();
 }
@@ -547,11 +584,14 @@ function writeCard() {
   } else if (M.target === 'author') {
     chooser = `<h3>${M.chooseLabel}</h3><p class="hint">${M.authorHint}</p><div class="chips" id="targets">${cfg.names.map(n => `<button class="chip" data-to="${esc(n)}">${esc(n)}</button>`).join('')}</div>`;
   }
-  const prompt = cfg.prompt ? `<div class="prompt">${esc(cfg.prompt)}</div>` : '';
+  const prompt = M.kind === 'story'
+    ? `<h3>📜 القصة لين الحين…</h3><div class="prompt" id="lastLine">${esc(cfg.prompt)}</div><p class="hint" id="lastHint">هذي بداية القصة. كمّل عليها 👇</p>`
+    : cfg.prompt ? `<div class="prompt">${esc(cfg.prompt)}</div>` : '';
   const fields = M.fields === 'three'
     ? `<div class="three">${[0, 1, 2].map(i => `<div class="tline"><input class="ti" maxlength="160" placeholder="المعلومة ${i + 1}"><label class="lie"><input type="radio" name="lie" value="${i}"> كذبة</label></div>`).join('')}</div>`
-    : `<textarea id="txt" maxlength="${MAX_LEN}" placeholder="${esc(M.placeholder)}"></textarea>`;
-  return `<section class="card write">${chooser}${prompt}${fields}
+    : `<textarea id="txt" maxlength="${M.maxLen || MAX_LEN}" placeholder="${esc(M.placeholder)}"></textarea>`;
+  const sig = M.signable ? `<input id="sig" maxlength="${NAME_LEN}" placeholder="اسمك (اختياري، خلّه فاضي لو تبيها بدون اسم)" style="margin-top:10px">` : '';
+  return `<section class="card write">${chooser}${prompt}${fields}${sig}
     <div class="err" id="err"></div>
     <div class="row between" id="nextRow"><small class="muted" id="len"></small><button class="btn primary" id="next">التالي ←</button></div>
     <div class="preview" id="pv" hidden>
@@ -579,6 +619,7 @@ function voteCard() {
 function sentText() {
   const { M, topic } = S;
   if (M.kind === 'vote') return store.kv('voted.' + topic) ? 'صوّت من هذا الجوال ✓ لو غيّرت رأيك عدّل وأرسل مرة ثانية، ويُحسب آخر تصويت بس.' : '';
+  if (M.kind === 'know') return store.kv('voted.' + topic) ? 'انرسلت أجوبتك ✓ تقدر تعدّل وترسل مرة ثانية، ويُحسب آخر إرسال بس.' : '';
   const k = store.sent(topic);
   return k ? `أرسلت ${k} من هذا الجوال${M.target === 'author' ? '' : '، ومحد يعرف إنها منك 🤫'}` : '';
 }
@@ -590,6 +631,8 @@ function updateLive() {
   if (dot) { dot.classList.toggle('on', S.online); conn.textContent = S.online ? 'متصل' : 'يتصل…'; }
   const sent = $('#sent'); if (sent && S.M) sent.textContent = sentText();
   if (S.mode === 'santa') updateSanta();
+  const K = S.M && KINDS[S.M.kind];
+  if (K && K.update && S.phase === 'open') K.update();
 }
 
 function bindWrite() {
@@ -615,8 +658,9 @@ function bindWrite() {
     if (saved && my.cfg.names.includes(saved)) pick(saved);
     else if (single) pick(my.cfg.names[0]);
   }
-  const setLen = () => { if (txt) $('#len').textContent = `${txt.value.length}/${MAX_LEN}`; };
-  $$('#txt, .ti, input[name=lie]').forEach(f => f.addEventListener('input', () => { setLen(); if (!pv.hidden) closePreview(); showErr(''); }));
+  const maxLen = M.maxLen || MAX_LEN, sig = $('#sig');
+  const setLen = () => { if (txt) $('#len').textContent = `${txt.value.length}/${maxLen}`; };
+  $$('#txt, .ti, input[name=lie], #sig').forEach(f => f.addEventListener('input', () => { setLen(); if (!pv.hidden) closePreview(); showErr(''); }));
   setLen();
   $('#next').onclick = () => {
     if (M.target !== 'none' && !target) return showErr(M.target === 'author' ? 'اختر اسمك أول' : 'اختر الشخص أول');
@@ -632,15 +676,16 @@ function bindWrite() {
       payload = { by: target, items, lie: +lie.value };
       body = `<ol class="tl">${items.map((t, i) => `<li class="${i === payload.lie ? 'isLie' : ''}">${esc(t)}${i === payload.lie ? ' <em>(الكذبة)</em>' : ''}</li>`).join('')}</ol>`;
     } else {
-      const raw = txt.value.trim();
+      const raw = txt.value.trim(), signed = sig && sig.value.trim().slice(0, NAME_LEN);
       if (raw.length < 2) return showErr('اكتب شي أول');
-      const text = Polish.polish(raw).slice(0, MAX_LEN + 200);
+      // الرسالة الموقّعة تبقى بأسلوب صاحبها، والمجهولة تتصحح وتتوحّد
+      const text = signed ? raw.slice(0, maxLen) : Polish.polish(raw).slice(0, maxLen + 200);
       if (!text) return showErr('الرسالة فاضية بعد التصحيح. اكتب كلام مو بس إيموجي 🙂');
       if (Polish.isRude(text)) return showErr(RUDE_MSG);
-      payload = M.target === 'to' ? { to: target, text } : M.target === 'author' ? { by: target, text } : { text };
+      payload = M.target === 'to' ? { to: target, text } : M.target === 'author' ? { by: target, text } : signed ? { text, by: signed } : { text };
       body = `<div class="msg">${esc(text)}</div>`;
     }
-    $('#pvTo').textContent = M.target === 'to' ? aboutOf(M, target) : M.target === 'author' ? `من: ${target} (ما ينكشف إلا وقت اللعب)` : '';
+    $('#pvTo').textContent = M.target === 'to' ? aboutOf(M, target) : M.target === 'author' ? `من: ${target} (ما ينكشف إلا وقت اللعب)` : payload.by ? `من: ${payload.by}` : '';
     $('#pvBody').innerHTML = body;
     nextRow.hidden = true; pv.hidden = false;
     pv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
@@ -651,7 +696,10 @@ function bindWrite() {
     const btn = e.currentTarget;
     btn.disabled = true; btn.textContent = 'جاري الإرسال…';
     try {
-      const res = await Relay.post(my.topic, { v: 1, k: 'm', ...(await Crypto.sealTo(my.setup.pk, payload)) });
+      const env = M.kind === 'story'
+        ? { v: 1, k: 'x', ...(await Crypto.seal(my.room, payload)) }
+        : { v: 1, k: 'm', ...(await Crypto.sealTo(my.setup.pk, payload)) };
+      const res = await Relay.post(my.topic, env);
       store.addSent(my.topic);
       onRaw(res, my);
       if (S !== my) return;
@@ -704,7 +752,7 @@ function bindHost() {
   $('#cpa').onclick = () => copyText(adminLink());
   const sh = $('#sh');
   if (sh) sh.onclick = () => navigator.share({ title: S.M.name, text: shareText(inviteLink()) }).catch(() => {});
-  $('#reveal').onclick = startReveal;
+  const rv = $('#reveal'); if (rv) rv.onclick = startReveal;
 }
 
 async function postReveal(my, payload, btn, close) {
@@ -726,6 +774,8 @@ async function startReveal() {
   btn.disabled = true;
   try {
     if (my.mode === 'santa') return santaRevealSheet(my);
+    const K = KINDS[my.M.kind];
+    if (K && K.startReveal) return K.startReveal(my);
     const items = await decryptMsgs(my, await Crypto.priv(my.d, my.setup.pk), my.msgs);
     if (S === my) reviewSheet(my, shuffle(items));
   } catch (e) { console.error(e); toast('صار خطأ، جرّب مرة ثانية', true); }
@@ -733,10 +783,10 @@ async function startReveal() {
 }
 
 function reviewSheet(my, items) {
-  const M = my.M, vote = M.kind === 'vote';
+  const M = my.M, vote = M.kind === 'vote' || M.kind === 'know';
   const txt = x => M.fields === 'three' ? x.items.map((t, i) => `${i + 1}. ${t}`).join('\n') : x.text;
   let body;
-  if (vote) body = `<p class="muted">صوّت ${new Set(items.map(b => b.bid)).size}. متأكد تبي تنهي التصويت؟</p>`;
+  if (vote) body = `<p class="muted">${M.kind === 'know' ? 'شارك' : 'صوّت'} ${new Set(items.map(b => b.bid || b.by)).size}. متأكد تبي تنهي وتكشف النتائج؟</p>`;
   else if (items.length) body = `<p class="muted">وصل ${items.length} ${M.unit}. تقدر تخفي أي شي جارح قبل لا يشوفه الكل.</p>
     <div class="review">${items.map(x => `<label class="rv"><input type="checkbox" data-id="${esc(x.id)}"><span>${M.target === 'to' ? `<small>${esc(aboutOf(M, x.to))}</small>` : ''}${esc(txt(x))}</span><em>إخفاء</em></label>`).join('')}</div>`;
   else body = `<p class="muted">ما وصل شي للحين. متأكد تبي تنهي الجلسة؟</p>`;
@@ -769,8 +819,8 @@ function barsHtml(q, counts, cfg, max = 8) {
 function renderReveal() {
   const R = S.results, M = S.M, cfg = S.cfg;
   document.title = `${R.title} · صراحة`;
-  const summary = M.kind === 'vote'
-    ? `صوّت ${R.voters}`
+  if (M.reveal === 'capsule') return renderCapsule(R);
+  const summary = M.kind === 'vote' ? `صوّت ${R.voters}` : M.kind === 'know' ? `خمّن ${R.players.length}`
     : `انكشف ${R.items.length} ${M.unit}${R.hidden ? ` · ${R.hidden} مخفية من المشرف` : ''}`;
   const prompt = cfg.prompt ? `<div class="prompt">${esc(cfg.prompt)}</div>` : '';
   let body = '', slides = [], after = null;
@@ -780,7 +830,7 @@ function renderReveal() {
     const filled = groups.filter(g => g.items.length);
     const none = groups.filter(g => !g.items.length && g.n !== ALL).map(g => g.n);
     let filter = '';
-    body = R.items.length ? `
+    body = R.items.length ? `${prompt}
       <div class="chips" id="flt"><button class="chip on" data-f="">الكل (${R.items.length})</button>${filled.map(g => `<button class="chip" data-f="${esc(g.n)}">${esc(g.n === ALL ? 'الشلة كلها' : g.n)} (${g.items.length})</button>`).join('')}</div>
       <button class="btn big" id="present" style="margin-top:16px">📽️ اعرضها وحدة وحدة</button>
       ${filled.map(g => `<section class="grp" data-g="${esc(g.n)}"><div class="gh"><h3>${esc(groupTitle(M, g.n))} <span class="muted">(${g.items.length})</span></h3>${M.image ? `<button class="btn ghost sm" data-img="${esc(g.n)}">📸 صورة</button>` : ''}</div>${g.items.map(x => `<div class="msg">${esc(x.text)}</div>`).join('')}</section>`).join('')}
@@ -823,9 +873,16 @@ function renderReveal() {
       ${R.items.map(x => `<section class="card"><h3>${esc(x.by)}</h3>${plain(x)}<details class="ans"><summary>وين الكذبة؟</summary>${marked(x)}</details></section>`).join('')}` : emptyCard();
     slides = R.items.map(x => ({ kick: `صدق ولا كذب: ${esc(x.by)}`, body: plain(x), ans: marked(x), replace: true, ansBtn: '🤥 اكشف الكذبة' }));
   } else if (M.reveal === 'votes') {
-    body = R.voters ? `<button class="btn primary big" id="present">📽️ اعرض النتائج سؤال سؤال</button>
+    body = R.voters ? `<button class="btn primary big" id="present">${M.ceremony ? '🏅 ابدأ حفل الجوائز' : '📽️ اعرض النتائج سؤال سؤال'}</button>
       ${cfg.questions.map((q, qi) => `<section class="card"><h3>${esc(qText(q, S.mode))}</h3>${barsHtml(q, R.tally[qi], cfg)}</section>`).join('')}` : emptyCard('محد صوّت هالمرة 😅');
-    slides = cfg.questions.map((q, qi) => ({ kick: `سؤال ${qi + 1}`, body: `<p>${esc(qText(q, S.mode))}</p>`, ans: barsHtml(q, R.tally[qi], cfg, 5), ansBtn: '🏆 اكشف النتيجة' }));
+    slides = cfg.questions.map((q, qi) => {
+      if (!M.ceremony) return { kick: `سؤال ${qi + 1}`, body: `<p>${esc(qText(q, S.mode))}</p>`, ans: barsHtml(q, R.tally[qi], cfg, 5), ansBtn: '🏆 اكشف النتيجة' };
+      const c = R.tally[qi], top = Math.max(...c), win = top ? optsOf(q, cfg).filter((_, i) => c[i] === top) : [];
+      return { kick: `🏅 ${esc(q.q)}`, body: '<p>🥁</p>', replace: true, ansBtn: '🥁 والجائزة تروح لـ…',
+        ans: `<p class="winner">${win.length ? '🏆 ' + win.map(esc).join(' و ') : 'محد صوّت 😅'}</p>${barsHtml(q, c, cfg, 4)}` };
+    });
+  } else if (M.reveal === 'know') {
+    ({ body, slides } = knowReveal(R, M, cfg));
   }
 
   app.innerHTML = `${backLink()}
@@ -1080,49 +1137,6 @@ function renderSantaReveal() {
   })));
 }
 
-/* ============ صراحة ولا جرأة (جوال واحد) ============ */
-function viewTod() {
-  const M = MODES.tod;
-  document.title = `${M.name} · صراحة`;
-  let names = [];
-  try { names = JSON.parse(store.kv('tod.names')) || []; } catch {}
-  const decks = { t: [], d: [] };
-  let last = null, kind = null;
-  app.innerHTML = `${backLink()}
-    <header class="mhead"><div class="big-ic">${M.icon}</div><h2 class="ttl">${M.name}</h2><p class="muted">${M.tag}</p></header>
-    ${howCard(M)}
-    <div class="card">
-      <label for="nm">اللاعبين (اختياري)</label>
-      <div class="addrow"><input id="nm" maxlength="400" placeholder="اكتب اسم واضغط إضافة" enterkeyhint="done"><button class="btn" id="add" type="button">إضافة</button></div>
-      <div class="chips" id="chips"></div>
-    </div>
-    <div class="card center"><div class="turn" id="turn">🎲</div><button class="btn" id="spin">🎯 مين عليه الدور؟</button></div>
-    <div class="todbtns"><button class="btn big truth" id="bt">🤫 صراحة</button><button class="btn big dare" id="bd">🔥 جرأة</button></div>
-    <div class="card qcard" id="qc" hidden><small id="qk"></small><p id="qt"></p><button class="btn ghost" id="again">🔄 غيّر السؤال</button></div>`;
-  chipList($('#nm'), $('#add'), $('#chips'), names, {
-    max: MAX_NAMES, len: NAME_LEN, empty: 'بدون أسماء تقدرون تلعبون بالدور',
-    onChange: () => store.kv('tod.names', JSON.stringify(names))
-  });
-  $('#spin').onclick = () => {
-    if (names.length < 2) return toast('أضف اسمين على الأقل', true);
-    const t = $('#turn'), pool = names.filter(n => n !== last), pick = pool[Math.floor(Math.random() * pool.length)];
-    let k = 0;
-    const iv = setInterval(() => { t.textContent = names[k++ % names.length]; }, 70);
-    setTimeout(() => { clearInterval(iv); t.textContent = '👉 ' + pick; last = pick; }, 1100);
-  };
-  const show = k => {
-    kind = k;
-    if (!decks[k].length) decks[k] = shuffle(k === 't' ? TOD_TRUTH : TOD_DARE);
-    $('#qk').textContent = (k === 't' ? '🤫 صراحة' : '🔥 جرأة') + (last ? ` · ${last}` : '');
-    $('#qt').textContent = decks[k].pop();
-    const qc = $('#qc'); qc.hidden = false; qc.classList.remove('flip'); void qc.offsetWidth; qc.classList.add('flip');
-    qc.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-  };
-  $('#bt').onclick = () => show('t');
-  $('#bd').onclick = () => show('d');
-  $('#again').onclick = () => kind && show(kind);
-}
-
 /* ============ الرئيسية وإنشاء الجلسات ============ */
 function viewHome() {
   document.title = 'صراحة';
@@ -1134,18 +1148,20 @@ function viewHome() {
     </header>
     ${list.length ? `<h3 class="sec">جلساتك</h3><div class="list">${list.map(sessItem).join('')}</div>` : ''}
     ${GROUPS.map(g => `<h3 class="sec">${g.title}</h3><div class="modes">${Object.entries(MODES).filter(([, M]) => M.group === g.id).map(([id, M]) => `
-      <a class="mcard" href="#${M.kind === 'offline' ? 'tod' : 'new/' + id}"><span class="mi">${M.icon}</span><span class="mt"><b>${M.name}</b><small>${M.tag}</small></span><span class="go">←</span></a>`).join('')}</div>`).join('')}
-    <p class="fine">🔒 كل شي مشفر من جوالك، والجلسات تبقى ${KEEP_HOURS} ساعة.</p>`;
+      <a class="mcard" href="#${M.kind === 'offline' ? 'play/' : 'new/'}${id}"><span class="mi">${M.icon}</span><span class="mt"><b>${M.name}</b><small>${M.tag}</small></span><span class="go">←</span></a>`).join('')}</div>`).join('')}
+    <p class="fine">🔒 كل شي مشفر من جوالك، والجلسات تبقى ${KEEP_HOURS} ساعة. ألعاب «جوال واحد» ما تحتاج نت.</p>`;
   $$('[data-del]').forEach(b => {
     b.onclick = () => { if (confirm('تبي تحذف الجلسة من القائمة؟')) { store.remove(b.dataset.del); viewHome(); } };
   });
 }
 function sessItem(s) {
   const M = MODES[s.mode || 'saraha'] || MODES.saraha;
-  const href = s.d ? `#h=${s.topic}.${s.key}.${s.d}` : s.token ? `#p=${s.topic}.${s.key}.${s.token}` : `#j=${s.topic}.${s.key}`;
+  const href = s.caplink ? s.caplink : s.d ? `#h=${s.topic}.${s.key}.${s.d}` : s.token ? `#p=${s.topic}.${s.key}.${s.token}` : `#j=${s.topic}.${s.key}`;
   const expired = !s.results && M.kind !== 'santa' && Date.now() - (s.created || 0) > KEEP_HOURS * 3600e3;
-  const st = s.results ? '✅ انكشفت' : expired ? '⌛ انتهت' : '🟣 شغالة';
-  return `<div class="item"><a href="${esc(href)}"><b>${M.icon} ${esc(s.title || M.name)}</b><small>${M.name} · ${s.d ? 'أنت المشرف' : 'مشارك'} · ${st}</small></a><button class="x" data-del="${esc(s.topic)}" aria-label="حذف">✕</button></div>`;
+  const cap = s.mode === 'capsule' && s.results && s.results.cfg;
+  const st = cap ? (capLocked(cap.open) ? `🔒 تنفتح ${fmtDay(cap.open, { day: 'numeric', month: 'short', year: 'numeric' })}` : '🔓 انفتحت')
+    : s.results ? (s.mode === 'when' ? '📌 تثبّت الموعد' : s.mode === 'quiz' ? '🏁 خلصت' : '✅ انكشفت') : expired ? '⌛ انتهت' : '🟣 شغالة';
+  return `<div class="item"><a href="${esc(href)}"><b>${M.icon} ${esc(s.title || M.name)}</b><small>${M.name} · ${s.caplink ? 'كبسولة محفوظة' : s.d ? 'أنت المشرف' : 'مشارك'} · ${st}</small></a><button class="x" data-del="${esc(s.topic)}" aria-label="حذف">✕</button></div>`;
 }
 
 function viewMode(id) {
@@ -1158,6 +1174,11 @@ function viewMode(id) {
     <div class="card" id="form">
       <label for="title">اسم الجلسة</label>
       <input id="title" maxlength="${TITLE_LEN}" placeholder="${esc(M.name)}">
+      ${F.subject ? `<label for="subj">${F.subject.label}</label><input id="subj" maxlength="${NAME_LEN}" placeholder="اسمه">` : ''}
+      ${F.open ? `<label for="open">متى تنفتح الكبسولة؟</label>
+        <div class="chips" id="openQuick"><button type="button" class="chip" data-m="1">بعد شهر</button><button type="button" class="chip" data-m="6">بعد 6 شهور</button><button type="button" class="chip on" data-m="12">بعد سنة</button><button type="button" class="chip" data-m="60">بعد 5 سنين</button></div>
+        <input type="date" id="open" style="margin-top:10px">` : ''}
+      ${F.days ? `<label>الأيام المقترحة</label><p class="hint" style="margin:-4px 0 8px">اختر الأيام اللي تبي الشلة تختار منها.</p><div class="chips" id="days"></div>` : ''}
       ${F.names ? `<label for="nm">${F.names.label}</label>${F.names.hint ? `<p class="hint" style="margin:-4px 0 8px">${F.names.hint}</p>` : ''}
         <div class="addrow"><input id="nm" maxlength="400" placeholder="اكتب اسم واضغط إضافة" enterkeyhint="done"><button class="btn" id="add" type="button">إضافة</button></div>
         <p class="hint">تقدر تلصق كذا اسم مرة وحدة، وافصل بينها بفاصلة.</p><div class="chips" id="chips"></div>` : ''}
@@ -1168,7 +1189,9 @@ function viewMode(id) {
         <div id="qlist"></div>
         ${F.questions.kind === 'pair'
           ? `<div class="addrow"><input id="qa" maxlength="${OPT_LEN}" placeholder="الخيار الأول"><input id="qb" maxlength="${OPT_LEN}" placeholder="الخيار الثاني"></div><button class="btn ghost" id="qadd" type="button" style="margin-top:8px">+ أضف سؤال</button>`
-          : `<div class="addrow"><input id="qa" maxlength="${Q_LEN}" placeholder="مين أكثر واحد…؟"><button class="btn" id="qadd" type="button">إضافة</button></div>`}` : ''}
+          : F.questions.kind === 'quiz'
+            ? `<input id="qa" maxlength="${Q_LEN}" placeholder="سؤالك"><div class="qgrid"><input id="qc0" maxlength="${OPT_LEN}" placeholder="✅ الجواب الصح"><input id="qc1" maxlength="${OPT_LEN}" placeholder="❌ جواب غلط"><input id="qc2" maxlength="${OPT_LEN}" placeholder="❌ جواب غلط"><input id="qc3" maxlength="${OPT_LEN}" placeholder="❌ جواب غلط"></div><button class="btn ghost" id="qadd" type="button" style="margin-top:8px">+ أضف سؤال</button>`
+            : `<div class="addrow"><input id="qa" maxlength="${Q_LEN}" placeholder="${esc(F.questions.placeholder || '')}"><button class="btn" id="qadd" type="button">إضافة</button></div>`}` : ''}
       ${F.poll ? `<label for="pq">السؤال</label><input id="pq" maxlength="${Q_LEN}" placeholder="مثلًا: وين نطلع الخميس؟">
         <label for="po">الخيارات</label>
         <div class="addrow"><input id="po" maxlength="200" placeholder="اكتب خيار واضغط إضافة" enterkeyhint="done"><button class="btn" id="poAdd" type="button">إضافة</button></div>
@@ -1194,7 +1217,7 @@ function viewMode(id) {
   let qs = [];
   if (F.questions) {
     qs = F.questions.presets.map((v, i) => ({ v, on: i < F.questions.pick }));
-    const label = v => Array.isArray(v) ? `${esc(v[0])} <em>ولا</em> ${esc(v[1])}` : esc(v);
+    const label = v => !Array.isArray(v) ? esc(v) : v.length > 2 ? `${esc(v[0])} <em>✅ ${esc(v[1])}</em>` : `${esc(v[0])} <em>ولا</em> ${esc(v[1])}`;
     const draw = () => {
       $('#qlist').innerHTML = qs.map((q, i) => `<label class="qrow"><input type="checkbox" data-i="${i}"${q.on ? ' checked' : ''}><span>${label(q.v)}</span></label>`).join('');
     };
@@ -1210,33 +1233,70 @@ function viewMode(id) {
         if (!a || !b) return toast('اكتب الخيارين', true);
         v = [a.slice(0, OPT_LEN), b.slice(0, OPT_LEN)];
         $('#qa').value = $('#qb').value = '';
+      } else if (F.questions.kind === 'quiz') {
+        const q = $('#qa').value.trim(), ans = [0, 1, 2, 3].map(i => $('#qc' + i).value.trim().slice(0, OPT_LEN));
+        if (!q || ans.some(x => !x)) return toast('اكتب السؤال والأربع أجوبة', true);
+        if (new Set(ans).size < 4) return toast('الأجوبة لازم تكون مختلفة', true);
+        v = [q.slice(0, Q_LEN), ...ans];
+        ['qa', 'qc0', 'qc1', 'qc2', 'qc3'].forEach(id => { $('#' + id).value = ''; });
       } else {
+        const Q = F.questions;
         v = $('#qa').value.trim().replace(/[؟?]+$/, '');
         if (!v) return;
-        if (!/^مين/.test(v)) v = 'مين أكثر واحد ' + v;
-        v = (v + '؟').slice(0, Q_LEN);
+        if (Q.starts && !v.startsWith(Q.starts)) v = (Q.prefix || '') + v;
+        v = (v + (Q.suffix || '')).slice(0, Q_LEN);
         $('#qa').value = '';
       }
       if (qs.filter(q => q.on).length >= MAX_Q) return toast(`الحد ${MAX_Q} أسئلة، شيل سؤال أول`, true);
       qs.unshift({ v, on: true }); draw();
     };
-    $('#qa').onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); $('#qadd').click(); } };
+    $('#qa').onkeydown = e => { if (e.key === 'Enter' && F.questions.kind === 'text') { e.preventDefault(); $('#qadd').click(); } };
     draw();
+  }
+
+  if (F.open) {
+    const setIn = months => { const d = new Date(); d.setMonth(d.getMonth() + months); $('#open').value = isoDay(d); };
+    const tmr = new Date(); tmr.setDate(tmr.getDate() + 1); $('#open').min = isoDay(tmr);
+    setIn(12);
+    $('#openQuick').onclick = e => { const b = e.target.closest('[data-m]'); if (!b) return; setIn(+b.dataset.m); $$('#openQuick .chip').forEach(c => c.classList.toggle('on', c === b)); };
+    $('#open').oninput = () => $$('#openQuick .chip').forEach(c => c.classList.remove('on'));
+  }
+  const days = new Set();
+  if (F.days) {
+    const list = Array.from({ length: 21 }, (_, i) => { const d = new Date(); d.setDate(d.getDate() + i); return isoDay(d); });
+    $('#days').innerHTML = list.map((d, i) => `<button type="button" class="chip" data-d="${d}">${i === 0 ? 'اليوم · ' : i === 1 ? 'بكرة · ' : ''}${esc(fmtDay(d, { weekday: 'short', day: 'numeric', month: 'short' }))}</button>`).join('');
+    $('#days').onclick = e => { const b = e.target.closest('[data-d]'); if (!b) return; const d = b.dataset.d; days.has(d) ? days.delete(d) : days.add(d); b.classList.toggle('on', days.has(d)); };
   }
 
   $('#create').onclick = async e => {
     const cfg = {};
+    if (F.subject) {
+      cfg.subject = $('#subj').value.trim().slice(0, NAME_LEN);
+      if (!cfg.subject) return toast('اكتب اسم صاحب الأسئلة', true);
+    }
     if (F.names) {
       if ($('#nm').value.trim()) namesCtl.add();
       const min = F.names.min;
       if (names.length < min) return toast(min === 1 ? 'أضف اسم واحد على الأقل' : min === 2 ? 'أضف شخصين على الأقل' : `أضف ${min} أشخاص على الأقل`, true);
-      cfg.names = names.slice();
+      cfg.names = names.filter(n => n !== cfg.subject);
+      if (cfg.names.length < min) return toast('أضف اللي بيخمّنون (غير صاحب الأسئلة)', true);
+    }
+    if (F.open) {
+      const o = $('#open').value;
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(o) || !capLocked(o)) return toast('اختر تاريخ بعد اليوم', true);
+      cfg.open = o;
+    }
+    if (F.days) {
+      if (!days.size) return toast('اختر يوم واحد على الأقل', true);
+      cfg.days = [...days].sort();
     }
     if (F.prompt) cfg.prompt = ($('#promptCustom').value.trim() || F.prompt.presets[promptSel]).slice(0, Q_LEN);
     if (F.questions) {
       const chosen = qs.filter(q => q.on).map(q => q.v);
       if (!chosen.length) return toast('اختر سؤال واحد على الأقل', true);
-      cfg.questions = F.questions.kind === 'pair' ? chosen.map(v => ({ q: 'لو خيروك', opts: v })) : chosen.map(q => ({ q, opts: null }));
+      if (F.questions.kind === 'quiz') {
+        cfg.questions = chosen.map(([q, ...ans]) => { const o = shuffle([0, 1, 2, 3]); return { q, opts: o.map(i => ans[i]), c: o.indexOf(0) }; });
+      } else cfg.questions = F.questions.kind === 'pair' ? chosen.map(v => ({ q: 'لو خيروك', opts: v })) : chosen.map(q => ({ q, opts: null }));
     }
     if (F.poll) {
       if ($('#po').value.trim()) optsCtl.add();
@@ -1265,17 +1325,21 @@ function brokenLink() {
 /* ============ التوجيه ============ */
 function route() {
   closeSession();
+  [offTimer, capTimer, quizTimer].forEach(t => clearInterval(t));
   scrollTo(0, 0);
   let h = location.hash.slice(1);
   try { h = decodeURIComponent(h); } catch {}
-  if (h === 'tod') return viewTod();
+  if (h === 'tod') return OFFLINE.tod();
+  if (h.startsWith('play/')) { const id = h.slice(5).replace(/[^a-z]/g, ''); return OFFLINE[id] ? OFFLINE[id]() : viewHome(); }
+  if (h.startsWith('bill=')) return OFFLINE.bill(h.slice(5).replace(/[^\w-]/g, ''));
   if (!window.crypto || !crypto.subtle) {
     app.innerHTML = `<div class="card center"><h3>المتصفح ما يدعم التشفير</h3><p class="muted">افتح الصفحة برابط https من متصفح حديث.</p></div>`;
     return;
   }
+  if (h.startsWith('c=')) return openCapsuleLink(h.slice(2).replace(/[^\w-]/g, ''));
   if (h.startsWith('new/')) {
     const id = h.slice(4).replace(/[^a-z]/g, '');
-    if (id === 'tod') return viewTod();
+    if (OFFLINE[id]) return OFFLINE[id]();
     return MODES[id] ? viewMode(id) : viewHome();
   }
   // تطبيقات الدردشة أحيانًا تضيف محارف مخفية (اتجاه النص) أو علامات في آخر الرابط
