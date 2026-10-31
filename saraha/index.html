@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#0f0c1a">
 <meta name="referrer" content="no-referrer">
-<meta name="description" content="جلسة صراحة: قولوا رأيكم في بعض بدون ما أحد يعرف مين كتب">
+<meta name="description" content="ألعاب وسوالف للشلة: صراحة، تصويت سري، الكرسي الساخن، الصديق الخفي وغيرها">
 <title>صراحة</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
@@ -72,6 +72,7 @@ textarea{min-height:140px;resize:vertical;margin-top:14px;line-height:1.8}
 details summary{cursor:pointer;font-weight:700;list-style-position:inside}
 .admin{margin-top:14px;border-top:1px solid var(--line);padding-top:12px}
 .admin p{margin:8px 0}
+.card>.admin:first-child{margin-top:0;border-top:0;padding-top:0}
 .err{color:var(--bad);font-weight:700;font-size:15px;min-height:0;margin-top:8px}
 .err:empty{display:none}
 .preview{margin-top:14px;border-top:1px solid var(--line);padding-top:14px}
@@ -102,801 +103,88 @@ details summary{cursor:pointer;font-weight:700;list-style-position:inside}
 .ptop{display:flex;justify-content:space-between;align-items:center;color:var(--muted);font-weight:700;max-width:640px;width:100%;margin:0 auto}
 .pcard{flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;max-width:640px;width:100%;margin:0 auto;cursor:pointer;user-select:none;animation:pop .35s ease}
 .pcard small{color:var(--pink);font-size:20px;font-weight:800;margin-bottom:16px}
-.pcard p{font-size:clamp(22px,5.5vw,34px);font-weight:700;line-height:1.7;white-space:pre-wrap;overflow-wrap:anywhere}
 .present .row{max-width:640px;width:100%;margin:0 auto}
 @keyframes pop{from{opacity:0;transform:translateY(14px) scale(.98)}}
 [hidden]{display:none!important}
+/* الرئيسية: بطاقات الألعاب */
+.modes{display:grid;gap:10px}
+.mcard{display:flex;align-items:center;gap:14px;background:var(--card);border:1px solid var(--line);border-radius:18px;padding:14px 16px;text-decoration:none;color:var(--text);transition:transform .1s,border-color .2s}
+.mcard:active{transform:scale(.98)}
+.mcard:hover{border-color:#4b3f72}
+.mcard .mi{font-size:28px;width:52px;height:52px;display:grid;place-items:center;background:var(--card2);border-radius:14px;flex-shrink:0}
+.mcard .mt{flex:1;min-width:0}
+.mcard b{display:block;font-size:17px}
+.mcard small{display:block;color:var(--muted);font-size:14px;line-height:1.5}
+.mcard .go{color:var(--muted);font-size:18px}
+.mhead{text-align:center;padding:6px 0 0}
+.mchip{color:var(--muted);font-size:14px;font-weight:700}
+.how p{margin-bottom:8px}
+.how ol{margin:8px 0}
+.note{color:var(--text);font-weight:500}
+.prompt{background:var(--card2);border-radius:14px;padding:12px 14px;margin-top:14px;font-weight:700;font-size:17px;border-inline-start:4px solid var(--pink)}
+/* صدق ولا كذب */
+.tline{display:flex;gap:8px;align-items:center;margin-top:10px}
+.tline .ti{flex:1;min-width:0}
+label.lie{display:flex;align-items:center;gap:6px;margin:0;font-weight:500;font-size:14px;color:var(--muted);white-space:nowrap;cursor:pointer}
+label.lie input{width:18px;height:18px;accent-color:#ec4899}
+ol.tl{padding-inline-start:24px;margin:6px 0}
+ol.tl li{margin:6px 0}
+ol.tl li.isLie{color:var(--bad)}
+ol.tl li.isTrue{color:var(--ok)}
+ol.tl em{font-style:normal;font-size:14px}
+details.ans{margin-top:8px;font-size:15px}
+details.ans summary{color:var(--pink)}
+/* التصويت */
+.vq{margin:6px 0 20px}
+.vqt{font-weight:800;font-size:17px}
+.chips.pair{align-items:center}
+.chips.pair .chip{flex:1;min-width:120px;border-radius:14px;padding:12px}
+.chips .or{color:var(--muted);font-weight:700}
+.qrow{display:flex;gap:10px;align-items:flex-start;font-weight:500;margin:0;padding:9px 4px;border-bottom:1px solid var(--line);cursor:pointer}
+.qrow input{width:20px;height:20px;flex-shrink:0;margin-top:4px;accent-color:#8b5cf6}
+.qrow em{font-style:normal;color:var(--pink);font-weight:700}
+#qlist{max-height:330px;overflow:auto;margin-bottom:12px;border:1px solid var(--line);border-radius:14px;padding:0 10px}
+.bar{position:relative;background:var(--card2);border-radius:12px;padding:10px 12px;margin:8px 0;display:flex;justify-content:space-between;gap:10px;overflow:hidden;text-align:right}
+.bar i{position:absolute;inset-block:0;inset-inline-start:0;background:rgba(139,92,246,.32);border-radius:12px}
+.bar.top i{background:linear-gradient(90deg,rgba(236,72,153,.5),rgba(139,92,246,.5))}
+.bar span,.bar b{position:relative}
+.bar b{white-space:nowrap;color:var(--muted);font-weight:700}
+.bar.top b{color:var(--text)}
+/* العرض */
+.pbody{width:100%}
+.pbody p{font-size:clamp(22px,5.5vw,34px);font-weight:700;line-height:1.7;white-space:pre-wrap;overflow-wrap:anywhere}
+.pbody ol.tl{text-align:right;font-size:clamp(19px,4.8vw,26px);font-weight:700;padding-inline-start:34px}
+.pbody .bar{font-size:18px}
+.pans{margin-top:22px;font-size:28px;font-weight:800;color:var(--pink);animation:pop .35s ease}
+.pans p{color:var(--pink)}
+/* الصديق الخفي */
+.hello{font-size:20px;font-weight:700;margin:8px 0}
+.gift{text-align:center;cursor:pointer;padding:30px 18px;border-style:dashed}
+.gift.open{cursor:default;border-style:solid;animation:pop .4s ease}
+.gift .gname{font-size:42px;font-weight:800;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent;line-height:1.4}
+.gift small{color:var(--muted);font-weight:700}
+.prow{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--line)}
+.prow:last-child{border-bottom:0}
+.prow b{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.btn.sm{padding:8px 12px;font-size:14px;border-radius:12px}
+.gh{display:flex;justify-content:space-between;align-items:center;gap:10px}
+/* صراحة ولا جرأة */
+.turn{font-size:30px;font-weight:800;min-height:52px;margin-bottom:10px}
+.todbtns{display:flex;gap:10px}
+.todbtns .btn{flex:1}
+.btn.truth{background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff}
+.btn.dare{background:linear-gradient(135deg,#f97316,#ec4899);color:#fff}
+.qcard{text-align:center}
+.qcard small{color:var(--pink);font-weight:800;font-size:16px}
+.qcard p{font-size:23px;font-weight:700;margin:12px 0 16px;line-height:1.7}
+.qcard.flip{animation:pop .35s ease}
 </style>
 </head>
 <body>
 <main class="wrap" id="app"></main>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
-<script>
-'use strict';
-/*
-  صراحة — جلسة رسائل مجهولة.
-  • الرسائل تنتقل عبر ntfy.sh (خدمة رسائل مجانية) وتنحفظ هناك 12 ساعة.
-  • كل شي مشفر في المتصفح: مفتاح الجلسة في الرابط بعد # (ما يوصل للسيرفر أبد).
-  • الرسائل تنشفر بمفتاح المشرف العام، فمحد يقدر يقراها قبل الكشف إلا المشرف.
-  • الكشف = المشرف ينشر مفتاحه الخاص (مشفر بمفتاح الجلسة) مع قائمة الرسائل المعتمدة.
-  • التصحيح وتوحيد الأسلوب يصير على جوال الكاتب قبل التشفير، فالنص الأصلي ما يطلع منه.
-*/
-const SERVER = (localStorage.getItem('saraha.server') || 'https://ntfy.sh').replace(/\/+$/, '');
-const MAX_LEN = 500, MAX_NAMES = 30, NAME_LEN = 24, TITLE_LEN = 40, KEEP_HOURS = 12;
-const ALL = '*';
-
-const $ = (s, r = document) => r.querySelector(s);
-const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-const sleep = ms => new Promise(r => setTimeout(r, ms));
-const label = to => to === ALL ? 'الشلة كلها' : to;
-const app = $('#app');
-
-let toastTimer;
-function toast(msg, bad) {
-  const t = $('#toast');
-  t.textContent = msg; t.classList.toggle('bad', !!bad); t.classList.add('show');
-  clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), 2800);
-}
-async function copyText(text) {
-  try { await navigator.clipboard.writeText(text); }
-  catch {
-    const ta = document.createElement('textarea');
-    ta.value = text; ta.style.cssText = 'position:fixed;opacity:0';
-    document.body.appendChild(ta); ta.select();
-    try { document.execCommand('copy'); } catch {}
-    ta.remove();
-  }
-  toast('انتسخ ✓');
-}
-function shuffle(a) {
-  a = a.slice();
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = crypto.getRandomValues(new Uint32Array(1))[0] % (i + 1);
-    [a[i], a[j]] = [a[j], a[i]];
-  }
-  return a;
-}
-
-/* ============ التصحيح وتوحيد الأسلوب ============ */
-const Polish = (() => {
-  const L = '\\u0621-\\u063A\\u0641-\\u064A';
-  const reWord = new RegExp(`[${L}]+`, 'g');
-  const reAr = new RegExp(`[${L}]`);
-  const NB = `(?=[^${L}]|$)`;
-  const LAUGH = '';
-  const skel = w => w.replace(/[أإآ]/g, 'ا').replace(/ة$/, 'ه').replace(/ى$/, 'ي');
-
-  // قاموس: الشكل الصحيح ← يتطابق مع أي كتابة لها نفس الهيكل (بدون همزات/ة/ى)
-  const DICT = new Map();
-  const add = (words, f) => words.trim().split(/\s+/).forEach(w => DICT.set(skel(w), { w, ...f }));
-  add(`أحب أكره أحس أعرف أعتقد أظن أشوف أقول أقدر أبي أبغى أتمنى أتوقع أخاف أفكر أصدق أكيد أبد أبدا أول أولا
-       أحيانا أصلا أيضا أمس آسف آخر أحلى أجمل أطيب أحسن أفضل أكثر أقل أسوأ أغلب أسلوب أخلاق أهل أخت أخو أخوي
-       أختي أبوي أمي أم أصحاب أصدقاء أمور أشياء أسرار أيام أفكار أخطاء أحلام إنسان إحساس أدري
-       ابتسامة اهتمام احترام اختلاف انطباع اعتذار اتصال امتحان انتظار اثنين اسم استهبال اجتماعي انتباه استغلال`, { suf: true });
-  add(`أنا أنت أنتي أنتم أنتو أب أهلا إذا إلا حتى متى أخرى أولى`, {});
-  add(`أو`, { nopre: true });
-  add(`صراحة حلوة مرة شخصية طيبة جميلة حياة فكرة مشكلة علاقة صداقة ثقة نفسية عصبية حساسة ذكية قوية ضعيفة لطيفة
-       كريمة عنيدة مغرورة متكبرة مرحة خفيفة ثقيلة نصيحة ملاحظة ساعة حاجة سنة لحظة سالفة طاقة بداية نهاية عادة
-       عادية طبيعية واضحة صادقة كذابة أنانية اجتماعية هدية فرصة تجربة مدرسة جامعة شلة زعلانة مبسوطة رهيبة
-       مزاجية دلوعة عسولة مهمة صعبة سهلة غريبة بعيدة كبيرة صغيرة زينة حنونة مميزة مختلفة محترمة مزعجة مضحكة
-       وناسة نية إنسانة غبية ثانية`, { ta: true });
-
-  // أخطاء مشهورة (تطابق حرفي)
-  const EX = new Map(Object.entries({
-    'لاكن': 'لكن', 'لاكنك': 'لكنك', 'لاكني': 'لكني', 'لاكنه': 'لكنه', 'لاكنها': 'لكنها', 'لاكنهم': 'لكنهم',
-    'هاذا': 'هذا', 'هاذي': 'هذي', 'هاذه': 'هذه', 'هذى': 'هذي', 'هاذى': 'هذي', 'ذالك': 'ذلك',
-    'هاكذا': 'هكذا', 'هكذى': 'هكذا', 'فى': 'في', 'الى': 'إلى', 'اللة': 'الله', 'انته': 'أنته',
-    'انشالله': 'إن شاء الله', 'انشاالله': 'إن شاء الله', 'انشاءالله': 'إن شاء الله', 'إنشاءالله': 'إن شاء الله',
-    'إنشالله': 'إن شاء الله', 'انشاللة': 'إن شاء الله',
-    'ماشالله': 'ما شاء الله', 'ماشاءالله': 'ما شاء الله', 'ماشاالله': 'ما شاء الله', 'مشالله': 'ما شاء الله',
-    'الحمدالله': 'الحمد لله', 'الحمدلله': 'الحمد لله', 'باذن': 'بإذن', 'بأذن': 'بإذن',
-    'لان': 'لأن', 'لانه': 'لأنه', 'لانك': 'لأنك', 'لاني': 'لأني', 'لانها': 'لأنها', 'لانهم': 'لأنهم', 'لانكم': 'لأنكم', 'لاننا': 'لأننا',
-    'للاسف': 'للأسف', 'للإسف': 'للأسف', 'شئ': 'شيء', 'شيئ': 'شيء',
-    'مسئول': 'مسؤول', 'مسوول': 'مسؤول', 'مسئوليه': 'مسؤولية', 'مسؤوليه': 'مسؤولية', 'مسئولية': 'مسؤولية',
-    'سوال': 'سؤال', 'اسئله': 'أسئلة', 'اسئلة': 'أسئلة',
-    'عضيم': 'عظيم', 'عضيمه': 'عظيمة', 'عضيمة': 'عظيمة', 'نضيف': 'نظيف', 'نضيفه': 'نظيفة', 'نضيفة': 'نظيفة',
-    'ضلم': 'ظلم', 'ضالم': 'ظالم', 'ضالمه': 'ظالمة', 'ضالمة': 'ظالمة', 'ضروف': 'ظروف', 'لحضه': 'لحظة', 'لحضة': 'لحظة',
-    'ملاحضه': 'ملاحظة', 'ملاحضة': 'ملاحظة', 'منضر': 'منظر', 'حافض': 'حافظ', 'انتضر': 'انتظر',
-    'مضلوم': 'مظلوم', 'مضلومه': 'مظلومة', 'نضره': 'نظره', 'نضرة': 'نظرة',
-    'علشان': 'عشان', 'علشانك': 'عشانك', 'اوكي': 'أوكي', 'اوكيه': 'أوكي', 'اوك': 'أوكي',
-    'رايع': 'رائع', 'رايعه': 'رائعة', 'رايعة': 'رائعة', 'رائعه': 'رائعة',
-    'هاديه': 'هادئة', 'هادئه': 'هادئة', 'هادية': 'هادئة', 'مؤدبه': 'مؤدبة',
-    'راي': 'رأي', 'رايي': 'رأيي', 'مافي': 'ما في', 'مادري': 'ما أدري', 'ماعرف': 'ما أعرف',
-    'ماعندي': 'ما عندي', 'ماعندك': 'ما عندك', 'ماعنده': 'ما عنده', 'ماعندها': 'ما عندها', 'ماعندهم': 'ما عندهم'
-  }));
-
-  const PRE = ['وال', 'فال', 'بال', 'لل', 'ال', 'و', 'ف', 'ب', 'ل'];
-  const SUF = ['كم', 'هم', 'ها', 'نا', 'ك', 'ه', 'ي'];
-  const preOK = (d, p) => !p || (!d.nopre && ((p !== 'ب' && p !== 'ل') || d.ta));
-  function lookup(t, p) {
-    const ex = EX.get(t);
-    if (ex) return (p === 'ب' || p === 'ل') ? null : ex;
-    let d = DICT.get(skel(t));
-    if (d && preOK(d, p)) return d.w;
-    for (const s of SUF) {
-      if (t.length - s.length < 2 || !t.endsWith(s)) continue;
-      const base = t.slice(0, -s.length);
-      d = DICT.get(skel(base));
-      if (d && d.suf && preOK(d, p)) return d.w + s;
-      const e2 = EX.get(base);
-      if (e2 && p !== 'ب' && p !== 'ل' && /^[^\sةى]+$/.test(e2)) return e2 + s;
-    }
-    return null;
-  }
-  function fixWord(t) {
-    if (t.length < 2) return t;
-    let r = lookup(t, '');
-    if (r) return r;
-    for (const p of PRE) {
-      if (t.length - p.length < 2 || !t.startsWith(p)) continue;
-      r = lookup(t.slice(p.length), p);
-      if (r) return p + r;
-    }
-    return t;
-  }
-  const isLaugh = w => /^(?:[هخ]{2,}[عا]*|(?:ها){2,}ه?|ه+ع+)$/.test(w);
-
-  const EMOJI = /[\p{Extended_Pictographic}\u{1F1E6}-\u{1F1FF}\u{1F3FB}-\u{1F3FF}‍︎️⃣]/gu;
-  const EMOTICON = /(^|\s)(?:[:;=xX][-'^]?[)(\]\[DPpOo3*|\\/@$]+|[)(\]\[]+[-'^]?[:;=]|<\/?3+|\^[_.-]?\^|[Tt][_.][Tt]|-_-|>_<|[oO]_[oO])(?=\s|$)/g;
-  const endP = s => /[.!؟?…]$/.test(s) ? s : s.replace(/[\s،,؛;:\-]+$/, '') + '.';
-
-  function polish(input) {
-    let t = String(input || '').normalize('NFKC').replace(/\r\n?/g, '\n');
-    // تشكيل، تطويل، محارف مخفية
-    t = t.replace(/[ؐ-ًؚ-ٰٟۖ-ۭـ]/g, '');
-    t = t.replace(/[​-‏‪-‮⁠-⁩﻿­]/g, '');
-    // حروف وأرقام بأشكال مختلفة
-    t = t.replace(/[کڪ]/g, 'ك').replace(/[یێ]/g, 'ي').replace(/[ہھ]/g, 'ه').replace(/ۀ/g, 'ة').replace(/ٱ/g, 'ا');
-    t = t.replace(/[٠-٩]/g, d => d.charCodeAt(0) - 0x660).replace(/[۰-۹]/g, d => d.charCodeAt(0) - 0x6F0);
-    // إيموجي ووجوه وزخارف
-    t = t.replace(EMOJI, ' ').replace(EMOTICON, '$1').replace(/[♡♥❤☺☹✿❀✨★☆•●◦▪~*_|^]+/g, ' ');
-    const ar = reAr.test(t);
-    // الضحك بكل أشكاله ← ههه
-    t = t.replace(reWord, w => isLaugh(w) ? LAUGH : w);
-    if (ar) t = t.replace(/\b(?:h{2,}|(?:ha){2,}h?|(?:he){2,}|lo+l|lmf?ao+|xd+)\b/gi, LAUGH);
-    t = t.replace(new RegExp(`${LAUGH}(?:[\\s.,،!؟?]*${LAUGH})+`, 'g'), LAUGH);
-    // التمطيط: حلووووه ← حلوه
-    t = t.replace(new RegExp(`([${L}])\\1{2,}`, 'g'), (m, c) => c === 'ل' ? 'لل' : c);
-    t = t.replace(/([a-z])\1{2,}/gi, '$1$1');
-    t = t.replace(new RegExp(`(^|[^${L}])ماا(?=[${L}]{2})`, 'g'), '$1ما ا');
-    // النفي الملصوق: ماتفهم ← ما تفهم
-    t = t.replace(new RegExp(`(^|[^${L}])(و?)ما(?=[تين][${L}]{3}${NB})`, 'g'), '$1$2ما ');
-    t = t.replace(new RegExp(`اا${NB}`, 'g'), 'ا');
-    // عبارات مشهورة
-    t = t.replace(new RegExp(`(^|[^${L}])[اأإ]ن\\s*شاء?\\s*الل[هة]${NB}`, 'g'), '$1إن شاء الله');
-    t = t.replace(new RegExp(`(^|[^${L}])ما\\s*شاء?\\s*الل[هة]${NB}`, 'g'), '$1ما شاء الله');
-    t = t.replace(new RegExp(`(^|[^${L}])الحمد\\s*(?:لل|الل)[هة]${NB}`, 'g'), '$1الحمد لله');
-    // واو العطف المفصولة: "و انا" ← "وأنا"
-    t = t.replace(new RegExp(`(^|\\s)و\\s+(?=[${L}])`, 'g'), '$1و');
-    // تصحيح الكلمات
-    t = t.replace(reWord, fixWord);
-    // علامات الترقيم
-    t = t.replace(/[“”„‟″"«»]/g, '"').replace(/[‘’‚‛′`]/g, "'").replace(/[–—]/g, '-');
-    if (ar) t = t.replace(/\?/g, '؟').replace(/,/g, '،').replace(/;/g, '؛');
-    t = t.replace(/[!؟?]{2,}/g, m => /[؟?]/.test(m) ? (ar ? '؟' : '?') : '!');
-    t = t.replace(/(?:\.{2,}|…)[.…]*/g, '…');
-    t = t.replace(/([،,؛;:])(?:\s*[،,؛;:])+/g, '$1');
-    t = t.replace(/[،,؛;:]\s*([.!؟?…])/g, '$1');
-    t = t.replace(/[ \t ]+/g, ' ');
-    t = t.replace(/ ([،,؛;:.!؟?…])/g, '$1');
-    t = t.replace(/([،,؛;:!؟?…])(?=[^\s\d.،,؛;:!؟?…)\]"'])/g, '$1 ');
-    t = t.replace(/\.(?=[^\s\d.،,؛;:!؟?…)\]"'])/g, '. ');
-    // الأسطر تصير جمل متتالية
-    const lines = t.split('\n').map(s => s.trim().replace(/^[\s.،,؛;:!؟?…\-]+/, '').trim()).filter(Boolean);
-    t = lines.map(endP).join(' ');
-    t = t.replace(/ {2,}/g, ' ').trim();
-    if (!/[\p{L}\p{N}]/u.test(t)) return '';
-    return endP(t).replace(new RegExp(LAUGH, 'g'), 'ههه');
-  }
-
-  // ألفاظ جارحة (سب وشتم) — تمنع الإرسال
-  const BAD = new Set(`كلب كلبه حمار حماره حيوان حيوانه زق خرا خره قحبه قحب شرموط شرموطه منيوك منيك زب كس طيز تفو
-    يلعن ملعون ملعونه لعنه حقير حقيره واطي واطيه عاهر عاهره داعر داعره ديوث زباله حثاله نذل نذله سافل سافله`.split(/\s+/));
-  function isRude(text) {
-    const norm = text.replace(/[أإآ]/g, 'ا').replace(/ة/g, 'ه').replace(/ى/g, 'ي');
-    for (const w of norm.match(reWord) || []) {
-      if (BAD.has(w)) return true;
-      for (const p of ['يال', 'وال', 'يا', 'ال', 'و']) if (w.startsWith(p) && BAD.has(w.slice(p.length))) return true;
-      if (w.endsWith('ين') && BAD.has(w.slice(0, -2))) return true;
-    }
-    return false;
-  }
-  return { polish, isRude };
-})();
-
-/* ============ التشفير ============ */
-const enc = new TextEncoder(), dec = new TextDecoder();
-const b64u = buf => {
-  const b = new Uint8Array(buf); let s = '';
-  for (let i = 0; i < b.length; i++) s += String.fromCharCode(b[i]);
-  return btoa(s).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-};
-const unb64u = str => {
-  str = str.replace(/-/g, '+').replace(/_/g, '/');
-  while (str.length % 4) str += '=';
-  const s = atob(str), b = new Uint8Array(s.length);
-  for (let i = 0; i < s.length; i++) b[i] = s.charCodeAt(i);
-  return b;
-};
-const Crypto = {
-  ec: { name: 'ECDH', namedCurve: 'P-256' },
-  aes(raw) { return crypto.subtle.importKey('raw', raw, 'AES-GCM', false, ['encrypt', 'decrypt']); },
-  async seal(key, obj) {
-    const iv = crypto.getRandomValues(new Uint8Array(12));
-    const ct = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, enc.encode(JSON.stringify(obj)));
-    return { iv: b64u(iv), ct: b64u(ct) };
-  },
-  async open(key, env) {
-    const pt = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: unb64u(env.iv) }, key, unb64u(env.ct));
-    return JSON.parse(dec.decode(pt));
-  },
-  async hostKeys() {
-    const kp = await crypto.subtle.generateKey(this.ec, true, ['deriveBits']);
-    const jwk = await crypto.subtle.exportKey('jwk', kp.privateKey);
-    return { d: jwk.d, pk: b64u(await crypto.subtle.exportKey('raw', kp.publicKey)) };
-  },
-  pub(pk) { return crypto.subtle.importKey('raw', unb64u(pk), this.ec, false, []); },
-  priv(d, pk) {
-    const p = unb64u(pk);
-    return crypto.subtle.importKey('jwk', { kty: 'EC', crv: 'P-256', d, x: b64u(p.slice(1, 33)), y: b64u(p.slice(33, 65)), ext: true }, this.ec, false, ['deriveBits']);
-  },
-  async shared(priv, pub, e) {
-    const bits = new Uint8Array(await crypto.subtle.deriveBits({ name: 'ECDH', public: pub }, priv, 256));
-    const ep = unb64u(e), mat = new Uint8Array(bits.length + ep.length);
-    mat.set(bits); mat.set(ep, bits.length);
-    return this.aes(new Uint8Array(await crypto.subtle.digest('SHA-256', mat)));
-  },
-  async sealTo(pk, obj) {
-    const eph = await crypto.subtle.generateKey(this.ec, true, ['deriveBits']);
-    const e = b64u(await crypto.subtle.exportKey('raw', eph.publicKey));
-    const key = await this.shared(eph.privateKey, await this.pub(pk), e);
-    return { e, ...(await this.seal(key, obj)) };
-  },
-  async openFrom(priv, env) { return this.open(await this.shared(priv, await this.pub(env.e), env.e), env); },
-  async sha(s) { return b64u(await crypto.subtle.digest('SHA-256', enc.encode('saraha:' + s))); }
-};
-
-/* ============ النقل (ntfy) ============ */
-const Relay = {
-  async post(topic, env) {
-    const body = JSON.stringify(env);
-    let wait = 1500;
-    for (let i = 0; i < 4; i++) {
-      try {
-        const r = await fetch(`${SERVER}/${topic}`, { method: 'POST', body });
-        if (r.ok) return await r.json();
-        if (r.status !== 429 && r.status < 500) throw Object.assign(new Error('HTTP ' + r.status), { fatal: true });
-      } catch (e) { if (e.fatal) throw e; }
-      await sleep(wait); wait *= 2;
-    }
-    throw new Error('network');
-  },
-  subscribe(topic, onMsg, onStatus) {
-    let es = null, timer = null, closed = false, tries = 0, last = 'all';
-    const connect = () => {
-      if (closed) return;
-      clearTimeout(timer);
-      try { es && es.close(); } catch {}
-      es = new EventSource(`${SERVER}/${topic}/sse?since=${encodeURIComponent(last)}`);
-      es.onopen = () => { tries = 0; onStatus(true); };
-      es.onmessage = e => {
-        let m; try { m = JSON.parse(e.data); } catch { return; }
-        if (m && m.event === 'message') { last = m.id; onMsg(m); }
-      };
-      es.onerror = () => {
-        onStatus(false);
-        if (es.readyState === 2) timer = setTimeout(connect, Math.min(30000, 2000 * 2 ** tries++));
-      };
-    };
-    const wake = () => { if (!closed && document.visibilityState === 'visible' && (!es || es.readyState === 2)) connect(); };
-    document.addEventListener('visibilitychange', wake);
-    addEventListener('online', wake);
-    connect();
-    return () => {
-      closed = true; clearTimeout(timer);
-      try { es && es.close(); } catch {}
-      document.removeEventListener('visibilitychange', wake);
-      removeEventListener('online', wake);
-    };
-  }
-};
-
-/* ============ التخزين المحلي ============ */
-const store = {
-  list() { try { return JSON.parse(localStorage.getItem('saraha.sessions')) || []; } catch { return []; } },
-  save(l) { try { localStorage.setItem('saraha.sessions', JSON.stringify(l.slice(0, 50))); } catch {} },
-  get(topic) { return this.list().find(s => s.topic === topic); },
-  upsert(rec) {
-    const l = this.list(), i = l.findIndex(s => s.topic === rec.topic);
-    if (i >= 0) l[i] = { ...l[i], ...rec, d: rec.d || l[i].d || null }; else l.unshift(rec);
-    this.save(l);
-  },
-  remove(topic) { this.save(this.list().filter(s => s.topic !== topic)); localStorage.removeItem('saraha.sent.' + topic); },
-  sent(topic) { return +localStorage.getItem('saraha.sent.' + topic) || 0; },
-  addSent(topic) { localStorage.setItem('saraha.sent.' + topic, this.sent(topic) + 1); }
-};
-
-/* ============ الجلسة ============ */
-let S = null;
-const B64 = /^[\w-]+$/;
-const baseUrl = () => location.href.split('#')[0];
-const inviteLink = () => `${baseUrl()}#j=${S.topic}.${S.key}`;
-const adminLink = () => `${baseUrl()}#h=${S.topic}.${S.key}.${S.d}`;
-const shareText = link => `🤫 جلسة صراحة: «${S.setup.title}»\nاكتب رأيك بصراحة عن الشلة، ومحد بيعرف إنك أنت اللي كتبت:\n${link}`;
-
-function validEnv(e) {
-  if (!e || e.v !== 1 || typeof e.iv !== 'string' || typeof e.ct !== 'string' || !B64.test(e.iv) || !B64.test(e.ct)) return false;
-  if (e.k === 'm') return typeof e.e === 'string' && B64.test(e.e);
-  return e.k === 's' || e.k === 'r';
-}
-function validSetup(s) {
-  try {
-    return s && typeof s.title === 'string' && Array.isArray(s.names) && s.names.length > 0 &&
-      s.names.every(n => typeof n === 'string') && typeof s.rc === 'string' &&
-      typeof s.pk === 'string' && unb64u(s.pk).length === 65;
-  } catch { return false; }
-}
-
-async function createSession(title, names) {
-  const topic = 'saraha_' + b64u(crypto.getRandomValues(new Uint8Array(15)));
-  const raw = crypto.getRandomValues(new Uint8Array(32));
-  const key = b64u(raw);
-  const { d, pk } = await Crypto.hostKeys();
-  const rc = await Crypto.sha(d);
-  const env = { v: 1, k: 's', ...(await Crypto.seal(await Crypto.aes(raw), { title, names, pk, rc })) };
-  await Relay.post(topic, env);
-  store.upsert({ topic, key, d, title, names, created: Date.now() });
-  location.hash = `h=${topic}.${key}.${d}`;
-}
-
-function closeSession() {
-  if (S) { S.closed = true; S.unsub && S.unsub(); clearTimeout(S.timeout); }
-  S = null;
-  document.querySelectorAll('.modal,.present').forEach(n => n.remove());
-}
-
-async function openSession(topic, key, d) {
-  const rec = store.get(topic);
-  d = d || (rec && rec.d) || null;
-  store.upsert({ topic, key, d, created: (rec && rec.created) || Date.now() });
-  const my = S = {
-    topic, key, d, isHost: !!d, raws: [], seen: new Set(), checkedR: new Set(), msgs: [],
-    setup: null, setupIdx: -1, reveal: null, results: (rec && rec.results) || null, online: false, phase: null
-  };
-  my.room = await Crypto.aes(unb64u(key));
-  if (my.results) { my.phase = 'revealed'; renderSession(); return; }
-  my.phase = 'loading'; renderSession();
-  my.unsub = Relay.subscribe(topic, m => onRaw(m, my), on => { my.online = on; if (S === my) updateLive(); });
-  my.timeout = setTimeout(() => { if (S === my && !my.setup) { my.phase = 'notfound'; renderSession(); } }, 15000);
-}
-
-function onRaw(m, my = S) {
-  if (!my || my.closed || !m || m.event !== 'message' || my.seen.has(m.id)) return;
-  my.seen.add(m.id);
-  let env; try { env = JSON.parse(m.message); } catch { return; }
-  if (!validEnv(env)) return;
-  my.raws.push({ id: String(m.id), idx: my.raws.length, env });
-  process(my);
-}
-
-async function decryptMsgs(my, priv, list) {
-  const out = [];
-  for (const r of list) {
-    try {
-      const m = await Crypto.openFrom(priv, r.env);
-      if (m && typeof m.text === 'string' && m.text.trim() && typeof m.to === 'string' && (m.to === ALL || my.setup.names.includes(m.to)))
-        out.push({ id: r.id, to: m.to, text: m.text.slice(0, 1000) });
-    } catch {}
-  }
-  return out;
-}
-
-async function processOnce(my) {
-  if (!my.setup) {
-    for (const r of my.raws) {
-      if (r.env.k !== 's') continue;
-      try {
-        const s = await Crypto.open(my.room, r.env);
-        if (validSetup(s)) {
-          my.setup = { title: s.title.slice(0, TITLE_LEN) || 'جلسة صراحة', names: s.names.map(n => n.slice(0, NAME_LEN)).slice(0, MAX_NAMES), pk: s.pk, rc: s.rc };
-          my.setupIdx = r.idx;
-          break;
-        }
-      } catch {}
-    }
-    if (!my.setup) return;
-    clearTimeout(my.timeout);
-    store.upsert({ topic: my.topic, title: my.setup.title, names: my.setup.names });
-  }
-  if (!my.reveal) {
-    for (const r of my.raws) {
-      if (r.env.k !== 'r' || r.idx < my.setupIdx || my.checkedR.has(r.id)) continue;
-      my.checkedR.add(r.id);
-      try {
-        const x = await Crypto.open(my.room, r.env);
-        if (x && typeof x.d === 'string' && await Crypto.sha(x.d) === my.setup.rc) {
-          my.reveal = { d: x.d, ids: Array.isArray(x.ids) ? new Set(x.ids.map(String)) : null, hide: new Set(Array.isArray(x.hide) ? x.hide.map(String) : []), idx: r.idx, at: Date.now() };
-          break;
-        }
-      } catch {}
-    }
-  }
-  const all = my.raws.filter(r => r.env.k === 'm' && r.idx > my.setupIdx);
-  my.msgs = my.reveal ? all.filter(r => r.idx < my.reveal.idx) : all;
-  if (my.reveal && !my.results) {
-    const R = my.reveal;
-    let list;
-    if (R.ids) {
-      list = all.filter(r => R.ids.has(r.id));
-      // ننتظر شوي لو فيه رسائل معتمدة ما وصلت لهذا الجهاز للحين
-      if (list.length < R.ids.size && Date.now() - R.at < 4000) { setTimeout(() => process(my), 1000); return; }
-    } else list = my.msgs.filter(r => !R.hide.has(r.id));
-    const items = await decryptMsgs(my, await Crypto.priv(R.d, my.setup.pk), list);
-    my.results = {
-      title: my.setup.title, names: my.setup.names, at: Date.now(),
-      items: shuffle(items.map(({ to, text }) => ({ to, text }))),
-      hidden: R.ids ? Math.max(0, my.msgs.length - R.ids.size) : R.hide.size
-    };
-    store.upsert({ topic: my.topic, results: my.results });
-  }
-}
-
-async function process(my) {
-  if (my.busy) { my.again = true; return; }
-  my.busy = true;
-  try { do { my.again = false; await processOnce(my); } while (my.again); }
-  catch (e) { console.error(e); }
-  finally { my.busy = false; }
-  if (S !== my) return;
-  const ph = my.results ? 'revealed' : my.setup ? 'open' : my.phase;
-  if (ph !== my.phase) { my.phase = ph; renderSession(); } else updateLive();
-}
-
-/* ============ الواجهات ============ */
-const backLink = () => `<a class="back" href="#">→ الرئيسية</a>`;
-const privacyNote = () => `
-  <details class="card faq"><summary>🤫 كيف نضمن إن محد يعرف مين كتب؟</summary><ul>
-    <li>كلامك يتصحح إملائيًا ويتوحّد أسلوبه <b>على جوالك</b> قبل لا يطلع منه، والنص الأصلي ما يوصل لأحد أبد.</li>
-    <li>نشيل الإيموجي والتمطيط وعلامات الترقيم المكررة والتشكيل، ونوحّد الضحك، ونصحح الهمزات والتاء المربوطة والأخطاء المشهورة، عشان كل الرسائل تطلع بنفس الأسلوب.</li>
-    <li>الرسالة تنشفّر قبل لا تطلع من جوالك وما فيها اسمك ولا رقمك. حتى السيرفر ما يقدر يقراها.</li>
-    <li>محد يقدر يقرأ الصراحات قبل الكشف إلا صاحب الجلسة (عشان يخفي أي كلام جارح)، وعند الكشف تنخلط عشوائيًا بدون أوقات.</li>
-    <li>نصيحة: لا تكتب أشياء محد يعرفها غيرك، ولا كلمات معروف إنك تقولها 😉</li>
-  </ul></details>`;
-
-function viewHome() {
-  document.title = 'صراحة';
-  const list = store.list();
-  app.innerHTML = `
-    <header class="hero">
-      <div class="logo">صراحة</div>
-      <p class="tag">قولوا اللي في خاطركم عن بعض… بدون ما أحد يعرف مين كتب</p>
-    </header>
-    <a class="btn primary big" href="#new">✨ سوّ جلسة صراحة</a>
-    ${list.length ? `<h3 class="sec">جلساتك</h3><div class="list">${list.map(sessItem).join('')}</div>` : ''}
-    <section class="card how">
-      <h3>كيف تشتغل؟</h3>
-      <ol>
-        <li><b>سوّ جلسة</b> واكتب أسماء الأشخاص اللي بتقولون فيهم صراحة.</li>
-        <li><b>أرسل الرابط</b> للشلة، وكل واحد يكتب صراحته عن أي شخص من جواله.</li>
-        <li><b>في الأخير</b> اكشف الصراحات، وتطلع كلها مصححة إملائيًا وبأسلوب موحّد عشان محد يعرف مين كتب.</li>
-      </ol>
-    </section>
-    <p class="fine">🔒 الرسائل مشفرة، والتصحيح يصير على جوال الكاتب قبل لا تطلع منه. الجلسة تبقى ${KEEP_HOURS} ساعة.</p>`;
-  app.querySelectorAll('[data-del]').forEach(b => b.onclick = () => {
-    if (confirm('تبي تحذف الجلسة من القائمة؟')) { store.remove(b.dataset.del); viewHome(); }
-  });
-}
-function sessItem(s) {
-  const href = s.d ? `#h=${s.topic}.${s.key}.${s.d}` : `#j=${s.topic}.${s.key}`;
-  const expired = !s.results && Date.now() - (s.created || 0) > KEEP_HOURS * 3600e3;
-  const st = s.results ? '✅ انكشفت' : expired ? '⌛ انتهت' : '🟣 شغالة';
-  return `<div class="item"><a href="${esc(href)}"><b>${esc(s.title || 'جلسة صراحة')}</b><small>${s.d ? 'أنت المشرف' : 'مشارك'} · ${st}</small></a><button class="x" data-del="${esc(s.topic)}" aria-label="حذف">✕</button></div>`;
-}
-
-function viewCreate() {
-  document.title = 'جلسة جديدة · صراحة';
-  const names = [];
-  app.innerHTML = `
-    ${backLink()}
-    <h2 class="ttl">جلسة جديدة</h2>
-    <div class="card">
-      <label for="title">اسم الجلسة</label>
-      <input id="title" maxlength="${TITLE_LEN}" placeholder="مثلًا: صراحة الشلة">
-      <label for="nm">الأشخاص اللي بتقولون فيهم صراحة</label>
-      <div class="addrow"><input id="nm" maxlength="400" placeholder="اكتب اسم واضغط إضافة" enterkeyhint="done"><button class="btn" id="add">إضافة</button></div>
-      <p class="hint">تقدر تلصق كذا اسم مرة وحدة، وافصل بينها بفاصلة.</p>
-      <div class="chips" id="chips"></div>
-    </div>
-    <button class="btn primary big" id="create">إنشاء الجلسة</button>`;
-  const nm = $('#nm'), chips = $('#chips');
-  const draw = () => {
-    chips.innerHTML = names.length
-      ? names.map((n, i) => `<button class="chip" data-i="${i}" aria-label="حذف ${esc(n)}">${esc(n)} <span class="x">✕</span></button>`).join('')
-      : '<p class="hint">ما أضفت أحد للحين</p>';
-  };
-  const addNames = () => {
-    for (let n of nm.value.split(/[,،\n]+/)) {
-      n = n.replace(/\s+/g, ' ').trim().slice(0, NAME_LEN);
-      if (n && n !== ALL && !names.includes(n) && names.length < MAX_NAMES) names.push(n);
-    }
-    nm.value = ''; draw();
-  };
-  $('#add').onclick = () => { addNames(); nm.focus(); };
-  nm.onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); addNames(); } };
-  chips.onclick = e => { const b = e.target.closest('[data-i]'); if (b) { names.splice(+b.dataset.i, 1); draw(); } };
-  draw();
-  $('#create').onclick = async e => {
-    if (nm.value.trim()) addNames();
-    if (names.length < 2) return toast('أضف شخصين على الأقل', true);
-    const btn = e.currentTarget;
-    btn.disabled = true; btn.textContent = 'جاري الإنشاء…';
-    try { await createSession(($('#title').value.trim() || 'جلسة صراحة').slice(0, TITLE_LEN), names); }
-    catch (err) {
-      console.error(err);
-      toast('ما قدرنا ننشئ الجلسة، تأكد من النت وجرّب مرة ثانية', true);
-      btn.disabled = false; btn.textContent = 'إنشاء الجلسة';
-    }
-  };
-}
-
-function renderSession() {
-  if (!S) return;
-  if (S.phase === 'loading') {
-    app.innerHTML = `${backLink()}<div class="center"><div class="spin"></div><p class="muted">جاري فتح الجلسة…</p></div>`;
-  } else if (S.phase === 'notfound') {
-    app.innerHTML = `${backLink()}<div class="card center"><div class="big-ic">🫥</div><h3>ما لقينا الجلسة</h3>
-      <p class="muted">يمكن الرابط ناقص، أو الجلسة انتهت (الجلسات تبقى ${KEEP_HOURS} ساعة بس)، أو فيه مشكلة بالنت.</p>
-      <button class="btn" id="retry" style="margin-top:12px">جرّب مرة ثانية</button></div>`;
-    $('#retry').onclick = () => route();
-  } else if (S.phase === 'revealed') renderReveal();
-  else renderOpen();
-}
-
-function renderOpen() {
-  const { setup, isHost } = S;
-  document.title = setup.title + ' · صراحة';
-  const targets = [...setup.names, ALL];
-  app.innerHTML = `
-    ${backLink()}
-    <h2 class="ttl">${esc(setup.title)}</h2>
-    ${isHost ? '<div class="role">👑 أنت المشرف على هذي الجلسة</div>' : ''}
-    <div class="live"><span class="dot" id="dot"></span><span id="conn">يتصل…</span><span>·</span><span>وصلت <b id="count">0</b> صراحة</span></div>
-    ${isHost ? hostPanel() : ''}
-    <section class="card write">
-      <h3>صراحتك لمين؟</h3>
-      <div class="chips" id="targets">${targets.map(n => `<button class="chip" data-to="${esc(n)}">${n === ALL ? '👥 الشلة كلها' : esc(n)}</button>`).join('')}</div>
-      <textarea id="txt" maxlength="${MAX_LEN}" placeholder="اكتب صراحتك هنا… ولا تكتب اسمك 😉"></textarea>
-      <div class="err" id="err"></div>
-      <div class="row between" id="nextRow"><small class="muted" id="len">0/${MAX_LEN}</small><button class="btn primary" id="next">التالي ←</button></div>
-      <div class="preview" id="pv" hidden>
-        <small class="muted">كذا بتطلع رسالتك بعد التصحيح وتوحيد الأسلوب. تأكد إن المعنى ما تغيّر:</small>
-        <div class="pv-to" id="pvTo"></div>
-        <div class="msg" id="pvText"></div>
-        <div class="row"><button class="btn ghost" id="edit">تعديل</button><button class="btn primary grow" id="send">🔒 إرسال</button></div>
-      </div>
-      <p class="muted small" id="sent" style="margin-top:10px"></p>
-    </section>
-    ${isHost
-      ? `<button class="btn danger big" id="reveal">🎉 إنهاء الجلسة وكشف الصراحات</button>`
-      : `<div class="card wait">⏳ الصراحات تنكشف لما صاحب الجلسة ينهيها.<br>خلّ الصفحة مفتوحة، أو ارجع لها بعدين من نفس الجوال.</div>`}
-    ${privacyNote()}`;
-  bindWrite();
-  if (isHost) bindHost();
-  updateLive();
-}
-
-function hostPanel() {
-  const inv = inviteLink();
-  return `<section class="card share">
-    <h3>📨 أرسل الرابط للشلة</h3>
-    <div class="linkbox" dir="ltr">${esc(inv)}</div>
-    <div class="row multi">
-      <button class="btn" id="cp">نسخ الرابط</button>
-      <a class="btn wa" target="_blank" rel="noopener" href="https://wa.me/?text=${encodeURIComponent(shareText(inv))}">واتساب</a>
-      ${navigator.share ? '<button class="btn" id="sh">مشاركة</button>' : ''}
-    </div>
-    <details class="admin"><summary>🔑 رابط المشرف (لك أنت بس)</summary>
-      <p class="muted small">على هذا الجوال <b>ما تحتاجه</b>: الجلسة محفوظة عندك في «جلساتك» بالصفحة الرئيسية.</p>
-      <p class="muted small">تحتاجه بس لو بتفتح الجلسة كمشرف من جوال أو متصفح ثاني (أو لو مسحت بيانات المتصفح). احفظه عندك، و<b>لا ترسله لأحد</b>، لأن اللي معه يقدر يقرأ الرسائل قبل الكشف ويكشفها.</p>
-      <div class="linkbox" dir="ltr">${esc(adminLink())}</div>
-      <button class="btn ghost" id="cpa" style="margin-top:10px">نسخ رابط المشرف</button>
-    </details>
-  </section>`;
-}
-
-function updateLive() {
-  if (!S) return;
-  const c = $('#count'); if (c) c.textContent = S.msgs.length;
-  const dot = $('#dot'), conn = $('#conn');
-  if (dot) { dot.classList.toggle('on', S.online); conn.textContent = S.online ? 'متصل' : 'يتصل…'; }
-  const sent = $('#sent');
-  if (sent) { const k = store.sent(S.topic); sent.textContent = k ? `أرسلت ${k} من هذا الجوال، ومحد يعرف إنها منك 🤫` : ''; }
-}
-
-function bindWrite() {
-  const my = S;
-  let target = null, polished = '';
-  const txt = $('#txt'), err = $('#err'), pv = $('#pv'), nextRow = $('#nextRow');
-  const showErr = m => { err.textContent = m || ''; };
-  const closePreview = () => { pv.hidden = true; nextRow.hidden = false; };
-  $('#targets').onclick = e => {
-    const b = e.target.closest('[data-to]'); if (!b) return;
-    target = b.dataset.to;
-    $('#targets').querySelectorAll('.chip').forEach(c => c.classList.toggle('on', c === b));
-    $('#pvTo').textContent = target === ALL ? '👥 للشلة كلها' : 'عن ' + target;
-    showErr('');
-  };
-  txt.oninput = () => { $('#len').textContent = `${txt.value.length}/${MAX_LEN}`; if (!pv.hidden) closePreview(); showErr(''); };
-  $('#next').onclick = () => {
-    const raw = txt.value.trim();
-    if (!target) return showErr('اختر الشخص اللي بتقول له صراحتك');
-    if (raw.length < 2) return showErr('اكتب صراحتك أول');
-    polished = Polish.polish(raw).slice(0, MAX_LEN + 200);
-    if (!polished) return showErr('الرسالة فاضية بعد التصحيح. اكتب كلام مو بس إيموجي 🙂');
-    if (Polish.isRude(polished)) return showErr('فيها ألفاظ جارحة. الصراحة ما تحتاج سب، عدّلها وأرسلها 🙏');
-    $('#pvText').textContent = polished;
-    nextRow.hidden = true; pv.hidden = false;
-    pv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-  };
-  $('#edit').onclick = () => { closePreview(); txt.focus(); };
-  $('#send').onclick = async e => {
-    if (my.reveal) return toast('الجلسة انتهت', true);
-    const btn = e.currentTarget;
-    btn.disabled = true; btn.textContent = 'جاري الإرسال…';
-    try {
-      const env = { v: 1, k: 'm', ...(await Crypto.sealTo(my.setup.pk, { to: target, text: polished })) };
-      const res = await Relay.post(my.topic, env);
-      store.addSent(my.topic);
-      onRaw(res, my);
-      if (S !== my) return;
-      txt.value = ''; polished = ''; target = null;
-      $('#targets').querySelectorAll('.chip').forEach(c => c.classList.remove('on'));
-      $('#len').textContent = `0/${MAX_LEN}`;
-      closePreview(); updateLive();
-      toast('انرسلت ✓ تقدر تكتب لشخص ثاني');
-    } catch (err) {
-      console.error(err);
-      toast('ما انرسلت… تأكد من النت وجرّب مرة ثانية', true);
-    } finally { btn.disabled = false; btn.textContent = '🔒 إرسال'; }
-  };
-}
-
-function bindHost() {
-  $('#cp').onclick = () => copyText(inviteLink());
-  $('#cpa').onclick = () => copyText(adminLink());
-  const sh = $('#sh');
-  if (sh) sh.onclick = () => navigator.share({ title: 'صراحة', text: shareText(inviteLink()) }).catch(() => {});
-  $('#reveal').onclick = startReveal;
-}
-
-async function startReveal() {
-  const my = S, btn = $('#reveal');
-  btn.disabled = true;
-  try {
-    const items = await decryptMsgs(my, await Crypto.priv(my.d, my.setup.pk), my.msgs);
-    if (S === my) reviewSheet(my, shuffle(items));
-  } catch (e) { console.error(e); toast('صار خطأ، جرّب مرة ثانية', true); }
-  finally { btn.disabled = false; }
-}
-
-function reviewSheet(my, items) {
-  const m = document.createElement('div');
-  m.className = 'modal';
-  m.innerHTML = `<div class="sheet" role="dialog" aria-modal="true">
-    <h3>جاهز للكشف؟</h3>
-    ${items.length
-      ? `<p class="muted">وصلت ${items.length} صراحة. تقدر تخفي أي رسالة جارحة قبل لا يشوفها الكل.</p>
-         <div class="review">${items.map(x => `<label class="rv"><input type="checkbox" data-id="${esc(x.id)}"><span><small>${x.to === ALL ? 'للشلة كلها' : 'عن ' + esc(x.to)}</small>${esc(x.text)}</span><em>إخفاء</em></label>`).join('')}</div>`
-      : `<p class="muted">ما وصلت ولا صراحة للحين. متأكد تبي تنهي الجلسة؟</p>`}
-    <div class="row"><button class="btn ghost" id="rvBack">رجوع</button><button class="btn primary grow" id="rvGo">🎉 اكشفها للكل</button></div>
-    <p class="muted small" style="margin-top:10px">بعد الكشف ما تقدر تضيف صراحات جديدة.</p>
-  </div>`;
-  document.body.appendChild(m);
-  const close = () => m.remove();
-  m.onclick = e => { if (e.target === m) close(); };
-  $('#rvBack', m).onclick = close;
-  $('#rvGo', m).onclick = async e => {
-    const btn = e.currentTarget;
-    btn.disabled = true; btn.textContent = 'جاري الكشف…';
-    const hidden = new Set([...m.querySelectorAll('input:checked')].map(i => i.dataset.id));
-    const ids = items.map(x => x.id).filter(id => !hidden.has(id));
-    // قائمة الرسائل المعتمدة تخلي النتيجة نفسها على كل الأجهزة (والحد الأعلى لحجم الرسالة 4KB)
-    const payload = ids.length <= 190 ? { d: my.d, ids } : { d: my.d, hide: [...hidden] };
-    try {
-      const res = await Relay.post(my.topic, { v: 1, k: 'r', ...(await Crypto.seal(my.room, payload)) });
-      close();
-      onRaw(res, my);
-    } catch (err) {
-      console.error(err);
-      toast('ما قدرنا نكشفها، تأكد من النت وجرّب مرة ثانية', true);
-      btn.disabled = false; btn.textContent = '🎉 اكشفها للكل';
-    }
-  };
-}
-
-function renderReveal() {
-  const R = S.results;
-  document.title = R.title + ' · صراحة';
-  const groups = [...R.names, ALL].map(n => ({ n, items: R.items.filter(x => x.to === n) }));
-  const filled = groups.filter(g => g.items.length);
-  const none = groups.filter(g => !g.items.length && g.n !== ALL).map(g => g.n);
-  const head = g => g.n === ALL ? '👥 للشلة كلها' : 'عن ' + esc(g.n);
-  app.innerHTML = `
-    ${backLink()}
-    <header class="hero small"><div class="big-ic">🎉</div><h2 class="ttl">${esc(R.title)}</h2>
-      <p class="muted">انكشفت ${R.items.length} صراحة${R.hidden ? ` · ${R.hidden} مخفية من المشرف` : ''}</p></header>
-    ${R.items.length ? `
-      <div class="chips" id="flt"><button class="chip on" data-f="">الكل (${R.items.length})</button>${filled.map(g => `<button class="chip" data-f="${esc(g.n)}">${esc(label(g.n))} (${g.items.length})</button>`).join('')}</div>
-      <button class="btn big" id="present" style="margin-top:16px">📽️ اعرضها وحدة وحدة</button>
-      <div id="groups">${filled.map(g => `<section class="grp" data-g="${esc(g.n)}"><h3>${head(g)} <span class="muted">(${g.items.length})</span></h3>${g.items.map(x => `<div class="msg">${esc(x.text)}</div>`).join('')}</section>`).join('')}</div>
-      ${none.length ? `<p class="muted small center" style="margin-top:18px">ما وصلهم شي: ${none.map(esc).join('، ')}</p>` : ''}`
-    : `<div class="card center"><p>ما أحد كتب شي هالمرة 😅</p></div>`}
-    <a class="btn primary big" href="#new" style="margin-top:24px">✨ سوّ جلسة جديدة</a>`;
-  if (!R.items.length) return;
-  let filter = '';
-  $('#flt').onclick = e => {
-    const b = e.target.closest('[data-f]'); if (!b) return;
-    filter = b.dataset.f;
-    $('#flt').querySelectorAll('.chip').forEach(c => c.classList.toggle('on', c === b));
-    app.querySelectorAll('.grp').forEach(s => { s.hidden = !!filter && s.dataset.g !== filter; });
-  };
-  $('#present').onclick = () => present(filled.filter(g => !filter || g.n === filter).flatMap(g => g.items));
-}
-
-function present(list) {
-  if (!list.length) return;
-  let i = 0;
-  const ov = document.createElement('div');
-  ov.className = 'present';
-  const draw = () => {
-    const x = list[i];
-    ov.innerHTML = `
-      <div class="ptop"><span>${i + 1} من ${list.length}</span><button class="btn ghost" data-a="x">✕ إغلاق</button></div>
-      <div class="pcard" data-a="n"><small>${x.to === ALL ? '👥 للشلة كلها' : 'عن ' + esc(x.to)}</small><p>${esc(x.text)}</p></div>
-      <div class="row"><button class="btn ghost grow" data-a="p" ${i ? '' : 'disabled'}>→ السابق</button><button class="btn primary grow" data-a="n" ${i < list.length - 1 ? '' : 'disabled'}>التالي ←</button></div>`;
-  };
-  const go = d => { const j = i + d; if (j >= 0 && j < list.length) { i = j; draw(); } };
-  const close = () => { ov.remove(); removeEventListener('keydown', key); };
-  const key = e => {
-    if (e.key === 'Escape') close();
-    else if (e.key === 'ArrowLeft' || e.key === ' ') { e.preventDefault(); go(1); }
-    else if (e.key === 'ArrowRight') go(-1);
-  };
-  ov.onclick = e => {
-    const a = e.target.closest('[data-a]'); if (!a) return;
-    if (a.dataset.a === 'x') close(); else go(a.dataset.a === 'n' ? 1 : -1);
-  };
-  addEventListener('keydown', key);
-  draw();
-  document.body.appendChild(ov);
-}
-
-/* ============ التوجيه ============ */
-function route() {
-  closeSession();
-  scrollTo(0, 0);
-  if (!window.crypto || !crypto.subtle) {
-    app.innerHTML = `<div class="card center"><h3>المتصفح ما يدعم التشفير</h3><p class="muted">افتح الصفحة برابط https من متصفح حديث.</p></div>`;
-    return;
-  }
-  let h = location.hash.slice(1);
-  try { h = decodeURIComponent(h); } catch {}
-  // تطبيقات الدردشة أحيانًا تضيف محارف مخفية (اتجاه النص) أو علامات في آخر الرابط
-  h = h.replace(/[^\w.=-]/g, '');
-  if (h === 'new') return viewCreate();
-  const m = h.match(/^([jh])=([\w-]{8,64})\.([\w-]{43})(?:\.([\w-]{43}))?/);
-  if (m && m[1] === 'h' && !m[4]) return brokenLink();
-  if (m) return openSession(m[2], m[3], m[1] === 'h' ? m[4] : null).catch(e => { console.error(e); brokenLink(); });
-  if (/^[jh]=/.test(h)) return brokenLink();
-  viewHome();
-}
-function brokenLink() {
-  app.innerHTML = `${backLink()}<div class="card center"><div class="big-ic">🔗</div><h3>الرابط ناقص أو تغيّر</h3>
-    <p class="muted">يمكن انقص منه حرف وقت النسخ. ارجع للرسالة وانسخ الرابط كامل، أو اضغط عليه مباشرة بدل النسخ.</p></div>`;
-}
-addEventListener('hashchange', route);
-window.SarahaTest = { polish: Polish.polish, isRude: Polish.isRude };
-route();
-</script>
+<script src="polish.js?v=2"></script>
+<script src="modes.js?v=2"></script>
+<script src="app.js?v=2"></script>
 </body>
 </html>
