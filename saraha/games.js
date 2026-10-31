@@ -162,8 +162,15 @@ const boardHtml = (board, me, max = 10) => {
   return rows + (k >= max ? `<div class="brow me"><span>${k + 1}. ${esc(me)}</span><b>${board[k][1]}</b></div>` : '');
 };
 const Quiz = {
+  qs(my) { return my.qs || my.cfg.questions; },
   async process(my) {
-    const ev = [], n = my.cfg.questions.length;
+    if (my.M.fromFacts && !my.qs) {
+      // مسابقة الشلة: الأسئلة تنبني بعدين من معلومات اللاعبين وتنرسل على أجزاء
+      const got = assemble((await roomEvents(my)).filter(x => x.s === 'qs'), 'qs')[0];
+      const list = got && Array.isArray(got.qs) ? got.qs.filter(x => x && typeof x.q === 'string' && Array.isArray(x.opts)).map(x => ({ q: x.q.slice(0, 200), opts: strArr(x.opts, 4, NAME_LEN) })).filter(x => x.opts.length >= 2).slice(0, 15) : [];
+      if (list.length) my.qs = list;
+    }
+    const ev = [], n = Quiz.qs(my).length;
     for (const r of my.raws) {
       if (r.env.k !== 'q' || r.idx < my.setupIdx) continue;
       const x = await roomOpen(my, r);
@@ -183,7 +190,12 @@ const Quiz = {
         if (r.env.k !== 'm' || my.aseen.has(r.id)) continue;
         my.aseen.add(r.id);
         try {
-          const p = validItem(my.M, my.cfg, await Crypto.openFrom(my.priv, r.env));
+          const raw = await Crypto.openFrom(my.priv, r.env);
+          if (my.M.fromFacts && raw && Array.isArray(raw.facts) && typeof raw.by === 'string' && raw.by.trim()) {
+            (my.facts = my.facts || new Map()).set(raw.by.trim().slice(0, NAME_LEN), strArr(raw.facts, 3, 100));
+            continue;
+          }
+          const p = validItem(my.M, { ...my.cfg, questions: Quiz.qs(my) }, raw);
           if (!p) continue;
           if (!my.answers.has(p.i)) my.answers.set(p.i, new Map());
           const m = my.answers.get(p.i);
@@ -228,9 +240,13 @@ const Quiz = {
     Quiz.update();
   },
   update() {
-    const my = S, st = my.state, key = (st ? st.s + st.i : 'lobby') + (my.isHost && my.qkey ? 'k' : '');
+    const my = S, st = my.state, key = (st ? st.s + st.i : 'lobby') + (my.isHost && my.qkey ? 'k' : '') + (my.qs ? 'q' : '');
+    if (my.isHost && my.M.fromFacts && !my.qs) {
+      const f = my.facts || new Map(), fc = $('#fcount');
+      if (fc) { fc.textContent = f.size; $('#fnames').textContent = [...f.keys()].join('، '); }
+    }
     if (my.isHost) { const c = $('#count'); if (c) c.textContent = Quiz.players(my); }
-    else { const q = $('#qpos'); if (q) q.textContent = st && st.s !== 'end' ? `سؤال ${st.i + 1} من ${my.cfg.questions.length}` : 'قبل البداية'; }
+    else { const q = $('#qpos'); if (q) q.textContent = st && st.s !== 'end' ? `سؤال ${st.i + 1} من ${Quiz.qs(my).length}` : 'قبل البداية'; }
     if (key !== my.qdrawn) { my.qdrawn = key; Quiz.draw(); }
     else if (my.isHost && st && st.s === 'ask') { const a = $('#acount'); if (a) a.textContent = (my.answers.get(st.i) || new Map()).size; }
   },
@@ -241,23 +257,24 @@ const Quiz = {
     S.isHost ? Quiz.drawHost(A) : Quiz.drawPlayer(A);
   },
   qCard(my, i, inner) {
-    const q = my.cfg.questions[i];
-    return `<div class="card"><div class="qhead">سؤال ${i + 1} من ${my.cfg.questions.length}</div><h3 class="qq">${esc(q.q)}</h3>${inner}</div>`;
+    const q = Quiz.qs(my)[i];
+    return `<div class="card"><div class="qhead">سؤال ${i + 1} من ${Quiz.qs(my).length}</div><h3 class="qq">${esc(q.q)}</h3>${inner}</div>`;
   },
   showHtml(my, st, me) {
-    const q = my.cfg.questions[st.i];
+    const q = Quiz.qs(my)[st.i];
     return Quiz.qCard(my, st.i, q.opts.map((o, k) => `<div class="qopt ${k === st.c ? 'ok' : 'dim'}" style="--c:${QCOL[k]}"><span>${QSYM[k]}</span>${esc(o)}${k === st.c ? ' ✅' : ''}<b>${st.stats[k] ?? ''}</b></div>`).join(''))
       + `<section class="card"><h3>🏆 الترتيب</h3>${boardHtml(st.board, me)}</section>`;
   },
   drawHost(A) {
-    const my = S, st = my.state, n = my.cfg.questions.length;
+    const my = S, st = my.state, n = Quiz.qs(my).length;
+    if (my.M.fromFacts && !my.qs) return Quiz.drawFactsHost(A);
     if (!my.qkey) { A.innerHTML = '<div class="card center"><div class="spin" style="margin:20px auto"></div><p class="muted">جاري تجهيز المسابقة…</p></div>'; return; }
     if (!st) {
       A.innerHTML = `<div class="card center"><div class="big-ic">🎮</div><h3>جاهزين؟</h3><p class="muted">أرسل الرابط للشلة، وكل واحد يدخل اسمه. لما يجهزون ابدأ.</p></div>
         <button class="btn primary big" id="qgo">▶️ ابدأ السؤال 1</button>`;
       $('#qgo').onclick = e => Quiz.send(my, { s: 'ask', i: 0 }, e.currentTarget);
     } else if (st.s === 'ask') {
-      const q = my.cfg.questions[st.i];
+      const q = Quiz.qs(my)[st.i];
       A.innerHTML = Quiz.qCard(my, st.i, q.opts.map((o, k) => `<div class="qopt ${k === my.qkey[st.i] ? 'ok' : ''}" style="--c:${QCOL[k]}"><span>${QSYM[k]}</span>${esc(o)}${k === my.qkey[st.i] ? ' ✅' : ''}</div>`).join('')
         + `<p class="muted center" style="margin-top:10px">جاوب <b id="acount">${(my.answers.get(st.i) || new Map()).size}</b> لاعب</p>`)
         + `<button class="btn primary big" id="qshow">👀 اعرض الجواب والترتيب</button>`;
@@ -278,13 +295,18 @@ const Quiz = {
       $('#qjoin').onclick = () => { const v = $('#qn').value.trim(); if (!v) return toast('اكتب اسمك', true); store.kv('qname.' + my.topic, v.slice(0, NAME_LEN)); Quiz.draw(); };
       return;
     }
+    if (my.M.fromFacts && !my.qs) return Quiz.drawFacts(A, name);
     if (!st) {
       A.innerHTML = `<div class="card center"><div class="big-ic">⏳</div><h3>أهلًا ${esc(name)}!</h3><p class="muted">بانتظار المشرف يبدأ المسابقة…</p><button class="btn ghost sm" id="rename">تغيير الاسم</button></div>`;
       $('#rename').onclick = () => { localStorage.removeItem('saraha.qname.' + my.topic); Quiz.draw(); };
       return;
     }
+    if (my.M.fromFacts && !my.qs) return Quiz.drawFacts(A, name);
     if (st.s === 'ask') {
-      const q = my.cfg.questions[st.i], key = `qans.${my.topic}.${st.i}`;
+      const q = Quiz.qs(my)[st.i], key = `qans.${my.topic}.${st.i}`;
+      let own = [];
+      try { own = JSON.parse(store.kv('gfacts.' + my.topic)) || []; } catch {}
+      if (own.some(f => q.q.includes(`«${f}»`))) { A.innerHTML = Quiz.qCard(my, st.i, '<div class="center"><div class="big-ic">😄</div><h3>هذي معلومتك!</h3><p class="muted">خلّهم يخمّنون…</p></div>'); return; }
       if (store.kv(key) !== null) { A.innerHTML = '<div class="card center"><div class="big-ic">✅</div><h3>جاوبت!</h3><p class="muted">بانتظار الباقين…</p></div>'; return; }
       my.seenAt = my.seenAt || {};
       if (!my.seenAt[st.i]) my.seenAt[st.i] = Date.now();
@@ -309,6 +331,54 @@ const Quiz = {
       const res = mine === null ? '⌛ ما لحقت تجاوب' : +mine === st.c ? '🎉 صح!' : '❌ للأسف غلط';
       A.innerHTML = `<div class="card center result"><h3>${res}</h3></div>` + Quiz.showHtml(my, st, name);
     }
+  },
+  drawFactsHost(A) {
+    const my = S, f = my.facts || new Map();
+    A.innerHTML = `<div class="card center"><div class="big-ic">🧠</div><h3>المرحلة الأولى: المعلومات</h3>
+      <p class="muted">كل واحد يكتب معلومات عن نفسه من جواله. لما يخلصون، سوّ المسابقة.</p>
+      <p>كتب <b id="fcount">${f.size}</b> شخص: <span class="muted" id="fnames">${[...f.keys()].map(esc).join('، ')}</span></p></div>
+      <button class="btn primary big" id="build">🎲 سوّ المسابقة</button>`;
+    $('#build').onclick = e => Quiz.build(my, e.currentTarget);
+  },
+  async build(my, btn) {
+    const f = my.facts || new Map(), people = [...f.keys()];
+    if (people.length < 2) return toast('لازم شخصين على الأقل يكتبون معلوماتهم', true);
+    const all = [];
+    for (const [by, fs] of f) fs.forEach(t => all.push([by, t]));
+    const qs = [], c = [];
+    for (const [by, t] of shuffle(all).slice(0, 12)) {
+      const opts = shuffle([by, ...shuffle(people.filter(p => p !== by)).slice(0, 3)]);
+      qs.push({ q: `«${t}»\nمين صاحب هذي المعلومة؟`, opts }); c.push(opts.indexOf(by));
+    }
+    btn.disabled = true;
+    try {
+      my.qkey = c; my.secret = { c };
+      store.upsert({ topic: my.topic, secret: { c }, cfg: my.cfg, pk: my.setup.pk, rc: my.setup.rc });
+      await Relay.post(my.topic, { v: 1, k: 't', ...(await Crypto.sealTo(my.setup.pk, { c })) });
+      await postChunked(my, 'q', { s: 'qs' }, 'qs', qs);
+    } catch (err) { console.error(err); toast('ما انرسل… تأكد من النت', true); btn.disabled = false; }
+  },
+  drawFacts(A, name) {
+    const my = S;
+    let mine = [];
+    try { mine = JSON.parse(store.kv('gfacts.' + my.topic)) || []; } catch {}
+    A.innerHTML = `<div class="card"><h3>🧠 اكتب معلومات عنك</h3>
+      <p class="muted small">معلومات ما يعرفها الكل. بتنقلب أسئلة: «مين صاحب هذي المعلومة؟». والكلام يتصحح ويتوحّد أسلوبه عشان ما ينعرف من طريقة الكتابة.</p>
+      ${[0, 1, 2].map(i => `<input class="gf" maxlength="100" placeholder="${esc(FACT_HINTS[i])}" value="${esc(mine[i] || '')}" style="margin-top:8px">`).join('')}
+      <div class="err" id="err"></div>
+      <button class="btn primary big" id="gsend">🔒 ${mine.length ? 'تحديث معلوماتي' : 'إرسال'}</button>
+      ${mine.length ? '<p class="muted small center">انرسلت ✓ بانتظار المشرف يبدأ المسابقة</p>' : ''}</div>`;
+    $('#gsend').onclick = async e => {
+      const facts = $$('.gf', A).map(i => i.value.trim()).filter(v => v.length >= 3).map(v => Polish.polish(v).slice(0, 100)).filter(Boolean);
+      if (!facts.length) return ($('#err').textContent = 'اكتب معلومة وحدة على الأقل');
+      if (facts.some(Polish.isRude)) return ($('#err').textContent = RUDE_MSG);
+      e.currentTarget.disabled = true;
+      try {
+        const res = await Relay.post(my.topic, { v: 1, k: 'm', ...(await Crypto.sealTo(my.setup.pk, { by: name, facts })) });
+        store.kv('gfacts.' + my.topic, JSON.stringify(facts)); onRaw(res, my); toast('انرسلت ✓');
+        if (S === my && !my.qs) Quiz.drawFacts(A, name);
+      } catch { toast('ما انرسلت… تأكد من النت', true); e.currentTarget.disabled = false; }
+    };
   },
   reveal() {
     clearInterval(quizTimer);

@@ -242,16 +242,73 @@ details.ans summary{color:var(--pink)}
 .wheelbox{position:relative;display:flex;justify-content:center;margin:16px 0 6px}
 .wheelbox canvas{border-radius:50%;box-shadow:0 10px 40px rgba(0,0,0,.45)}
 .pin{position:absolute;top:-14px;left:50%;transform:translateX(-50%);font-size:30px;color:#fff;z-index:2;text-shadow:0 2px 6px rgba(0,0,0,.6)}
+/* الدفعة الثالثة */
+.gfilter{margin:18px 0 0}
+.bigl{font-size:64px;font-weight:800;line-height:1.3;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+label.abcin{display:flex;align-items:center;gap:10px;margin:8px 0;font-weight:700}
+label.abcin input{flex:1}
+.arow{display:flex;justify-content:space-between;margin-top:12px;font-size:17px}
+.arow span{color:var(--ok);font-weight:800}
+.acells{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 4px}
+.cell{background:var(--card2);border:1px solid var(--line);border-radius:10px;padding:5px 9px;font-size:14px}
+.cell small{font-weight:800}
+.cell.s0{opacity:.55;text-decoration:line-through}
+.cell.s5{border-color:#a16207}
+.cell.s10{border-color:#15803d}
+.cell.s20{border-color:var(--pink);background:rgba(236,72,153,.12)}
+.cell[data-c]{cursor:pointer}
+.blank{color:var(--pink);border-bottom:2px dashed var(--pink);padding:0 6px}
+.qopt.fun{color:var(--text);border:1px solid var(--line);font-weight:500;line-height:1.7}
+.chips.rank .chip i{font-style:normal;font-weight:800;margin-inline-end:4px}
+.chips.rank .chip i:empty{display:none}
+.titem{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--line)}
+.titem:last-child{border-bottom:0}
+.titem.done .tmain b{text-decoration:line-through;opacity:.6}
+.tchk{background:none;border:0;font-size:22px;cursor:pointer;padding:0}
+.tmain{flex:1;min-width:0}
+.tmain b{display:block}
+.tmain small{color:var(--muted)}
+.titem .x,.place .x{background:none;border:0;color:var(--muted);font-size:15px;cursor:pointer;padding:6px}
+.place .avg{margin:2px 0 6px}
+.stars{display:flex;align-items:center;gap:2px;margin-bottom:8px}
+.stars button{background:none;border:0;font-size:30px;color:#4b4466;cursor:pointer;padding:0 2px;line-height:1}
+.stars button.on{color:#fbbf24}
+.stars small{margin-inline-start:8px}
+.baloot{display:flex;gap:10px;margin:14px 0}
+.bcol{flex:1;background:var(--card);border:1px solid var(--line);border-radius:20px;padding:14px;text-align:center}
+.bcol input{text-align:center;font-weight:800;background:transparent;border-color:transparent}
+.bcol b{display:block;font-size:56px;line-height:1.2}
+.srow{display:flex;align-items:center;flex-wrap:wrap;gap:10px;padding:14px 16px;margin:10px 0}
+.srow b{flex:1}
+.sval{font-size:30px;font-weight:800;min-width:60px;text-align:center}
+.sbtns{display:flex;gap:6px;width:100%;justify-content:flex-end}
+.scoreboard{display:flex;gap:10px;margin:12px 0}
+.sbt{flex:1;background:var(--card);border:1px solid var(--line);border-radius:16px;text-align:center;padding:10px}
+.sbt.on{border-color:var(--pink);background:rgba(236,72,153,.1)}
+.sbt b{display:block;font-size:34px}
+.sbt small{color:var(--muted);font-weight:700}
+.timer.big{font-size:44px}
+.tcard{margin:10px 0 16px}
+.tcard .gname{font-size:38px;font-weight:800;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent;line-height:1.4}
+.ban{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-top:8px}
+.ban small{width:100%;color:var(--bad);font-weight:700}
+.ban span{background:rgba(251,113,133,.15);color:#fecdd3;border-radius:10px;padding:4px 10px;font-weight:700}
+.rq{font-size:24px;font-weight:700;line-height:1.7;margin:10px 0}
+.tlog{display:flex;flex-wrap:wrap;gap:4px;justify-content:center;margin-top:10px}
+.tlog span{background:var(--card2);border-radius:8px;padding:2px 6px;font-size:13px}
 </style>
 </head>
 <body>
 <main class="wrap" id="app"></main>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
-<script src="polish.js?v=3"></script>
-<script src="banks.js?v=3"></script>
-<script src="modes.js?v=3"></script>
-<script src="games.js?v=3"></script>
-<script src="offline.js?v=3"></script>
-<script src="app.js?v=3"></script>
+<script src="polish.js?v=4"></script>
+<script src="banks.js?v=4"></script>
+<script src="banks2.js?v=4"></script>
+<script src="modes.js?v=4"></script>
+<script src="games.js?v=4"></script>
+<script src="games2.js?v=4"></script>
+<script src="offline.js?v=4"></script>
+<script src="offline2.js?v=4"></script>
+<script src="app.js?v=4"></script>
 </body>
 </html>

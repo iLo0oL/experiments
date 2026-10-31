@@ -231,13 +231,14 @@ function normalizeSetup(s) {
   const isDay = d => typeof d === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(d);
   if (F.subject) { cfg.subject = typeof c.subject === 'string' ? c.subject.slice(0, NAME_LEN) : ''; if (!cfg.subject) return null; }
   if (F.open) { if (!isDay(c.open)) return null; cfg.open = c.open; }
+  if (F.cats) { cfg.cats = strArr(c.cats, 8, 14); if (!cfg.cats.length) return null; }
   if (F.days) { cfg.days = (Array.isArray(c.days) ? c.days : []).filter(isDay).slice(0, 21); if (!cfg.days.length) return null; }
-  if (M.kind === 'vote' || M.kind === 'know' || M.kind === 'quiz') {
+  if (['vote', 'know', 'quiz', 'rank', 'funny'].includes(M.kind)) {
     cfg.questions = (Array.isArray(c.questions) ? c.questions : []).slice(0, MAX_Q).map(q => ({
       q: q && typeof q.q === 'string' ? q.q.slice(0, Q_LEN) : '',
       opts: q && Array.isArray(q.opts) ? strArr(q.opts, MAX_OPTS, OPT_LEN) : null
-    })).filter(q => q.q && (q.opts ? q.opts.length >= 2 : (cfg.names || []).length >= 2));
-    if (!cfg.questions.length) return null;
+    })).filter(q => q.q && (q.opts ? q.opts.length >= 2 : M.kind === 'funny' || (cfg.names || []).length >= 2));
+    if (!cfg.questions.length && !M.fromFacts) return null;
   }
   return { mode, title: s.title.slice(0, TITLE_LEN) || M.name, cfg, pk: s.pk, rc: s.rc };
 }
@@ -249,6 +250,12 @@ function validItem(M, cfg, p) {
     if (!(cfg.names.includes(p.by) || p.by === cfg.subject) || !Array.isArray(p.a) || p.a.length !== cfg.questions.length) return null;
     const ok = p.a.every((v, i) => Number.isInteger(v) && v >= -1 && v < optsOf(cfg.questions[i], cfg).length);
     return ok ? { by: p.by, a: p.a } : null;
+  }
+  if (M.kind === 'rank') {
+    if (typeof p.bid !== 'string' || p.bid.length > 40 || !Array.isArray(p.r) || p.r.length !== cfg.questions.length) return null;
+    const n = cfg.names.length;
+    const ok = p.r.every(o => Array.isArray(o) && o.length <= n && new Set(o).size === o.length && o.every(v => Number.isInteger(v) && v >= 0 && v < n));
+    return ok ? { bid: p.bid, r: p.r } : null;
   }
   if (M.kind === 'quiz') {
     const by = str(p.by, NAME_LEN);
@@ -337,6 +344,10 @@ async function openSession(topic, key, d, token) {
     my.setup = { mode: 'santa', title: rec.title, cfg: rec.cfg, pk: rec.pk, rc: rec.rc };
     my.mode = 'santa'; my.M = MODES.santa; my.cfg = rec.cfg;
   }
+  if (!my.setup && !token && rec.setupCache && MODES[rec.setupCache.mode] && MODES[rec.setupCache.mode].kind === 'board') {
+    const sc = rec.setupCache;
+    my.setup = sc; my.mode = sc.mode; my.M = MODES[sc.mode]; my.cfg = sc.cfg;
+  }
   if (my.results) { useResults(my); my.phase = 'revealed'; renderSession(); return; }
   my.phase = (my.setup || my.token) ? 'open' : 'loading';
   renderSession();
@@ -376,7 +387,7 @@ function onRaw(m, my = S) {
   my.seen.add(m.id);
   let env; try { env = JSON.parse(m.message); } catch { return; }
   if (!validEnv(env)) return;
-  my.raws.push({ id: String(m.id), idx: my.raws.length, env });
+  my.raws.push({ id: String(m.id), idx: my.raws.length, env, time: +m.time || 0 });
   process(my);
 }
 
@@ -432,7 +443,8 @@ async function processOnce(my) {
     if (!my.token) { my.mode = my.setup.mode; my.M = MODES[my.mode]; }
     my.cfg = my.setup.cfg;
     clearTimeout(my.timeout);
-    store.upsert({ topic: my.topic, mode: my.mode, title: my.setup.title });
+    // القوائم المحفوظة تحتفظ بإعداداتها في الجوال عشان تنفتح حتى لو انتهت مدة السيرفر
+    store.upsert({ topic: my.topic, mode: my.mode, title: my.setup.title, ...(my.M.kind === 'board' ? { setupCache: my.setup } : {}) });
   }
   const rc = my.setup.rc || my.trc;
   if (!my.reveal && rc) {
@@ -481,6 +493,10 @@ async function processOnce(my) {
       return c;
     });
     my.results = { ...base, tally, voters: latest.size };
+  } else if (my.M.kind === 'rank') {
+    const latest = new Map();
+    for (const b of items) latest.set(b.bid, b);
+    my.results = { ...base, tally: rankTally(my.cfg, [...latest.values()]), voters: latest.size };
   } else if (my.M.kind === 'know') {
     const latest = new Map();
     for (const b of items) latest.set(b.by, b);
@@ -544,11 +560,11 @@ function renderOpen() {
     ${sessionHead(setup.title)}
     <div class="live"><span class="dot" id="dot"></span><span id="conn">يتصل…</span><span>·</span><span>وصل <b id="count">0</b> ${M.unit}</span></div>
     ${isHost ? hostPanel() : ''}
-    ${M.kind === 'vote' ? voteCard() : M.kind === 'know' ? knowCard() : writeCard()}
+    ${M.kind === 'vote' ? voteCard() : M.kind === 'know' ? knowCard() : M.kind === 'rank' ? rankCard() : writeCard()}
     ${isHost ? `<button class="btn danger big" id="reveal">${M.revealBtn}</button>` : waitCard()}
     ${howCard(M)}
     ${privacyNote(M)}`;
-  M.kind === 'vote' ? bindVote() : M.kind === 'know' ? bindKnow() : bindWrite();
+  M.kind === 'vote' ? bindVote() : M.kind === 'know' ? bindKnow() : M.kind === 'rank' ? bindRank() : bindWrite();
   if (isHost) bindHost();
   updateLive();
 }
@@ -618,7 +634,7 @@ function voteCard() {
 
 function sentText() {
   const { M, topic } = S;
-  if (M.kind === 'vote') return store.kv('voted.' + topic) ? 'صوّت من هذا الجوال ✓ لو غيّرت رأيك عدّل وأرسل مرة ثانية، ويُحسب آخر تصويت بس.' : '';
+  if (M.kind === 'vote' || M.kind === 'rank') return store.kv('voted.' + topic) ? 'صوّت من هذا الجوال ✓ لو غيّرت رأيك عدّل وأرسل مرة ثانية، ويُحسب آخر تصويت بس.' : '';
   if (M.kind === 'know') return store.kv('voted.' + topic) ? 'انرسلت أجوبتك ✓ تقدر تعدّل وترسل مرة ثانية، ويُحسب آخر إرسال بس.' : '';
   const k = store.sent(topic);
   return k ? `أرسلت ${k} من هذا الجوال${M.target === 'author' ? '' : '، ومحد يعرف إنها منك 🤫'}` : '';
@@ -783,7 +799,7 @@ async function startReveal() {
 }
 
 function reviewSheet(my, items) {
-  const M = my.M, vote = M.kind === 'vote' || M.kind === 'know';
+  const M = my.M, vote = ['vote', 'know', 'rank'].includes(M.kind);
   const txt = x => M.fields === 'three' ? x.items.map((t, i) => `${i + 1}. ${t}`).join('\n') : x.text;
   let body;
   if (vote) body = `<p class="muted">${M.kind === 'know' ? 'شارك' : 'صوّت'} ${new Set(items.map(b => b.bid || b.by)).size}. متأكد تبي تنهي وتكشف النتائج؟</p>`;
@@ -820,7 +836,7 @@ function renderReveal() {
   const R = S.results, M = S.M, cfg = S.cfg;
   document.title = `${R.title} · صراحة`;
   if (M.reveal === 'capsule') return renderCapsule(R);
-  const summary = M.kind === 'vote' ? `صوّت ${R.voters}` : M.kind === 'know' ? `خمّن ${R.players.length}`
+  const summary = M.kind === 'vote' || M.kind === 'rank' ? `صوّت ${R.voters}` : M.kind === 'know' ? `خمّن ${R.players.length}`
     : `انكشف ${R.items.length} ${M.unit}${R.hidden ? ` · ${R.hidden} مخفية من المشرف` : ''}`;
   const prompt = cfg.prompt ? `<div class="prompt">${esc(cfg.prompt)}</div>` : '';
   let body = '', slides = [], after = null;
@@ -883,6 +899,8 @@ function renderReveal() {
     });
   } else if (M.reveal === 'know') {
     ({ body, slides } = knowReveal(R, M, cfg));
+  } else if (M.reveal === 'rank') {
+    ({ body, slides } = rankReveal(R, M, cfg));
   }
 
   app.innerHTML = `${backLink()}
@@ -1147,21 +1165,27 @@ function viewHome() {
       <p class="tag">ألعاب وسوالف للشلة… وأغلبها بدون ما ينعرف مين</p>
     </header>
     ${list.length ? `<h3 class="sec">جلساتك</h3><div class="list">${list.map(sessItem).join('')}</div>` : ''}
-    ${GROUPS.map(g => `<h3 class="sec">${g.title}</h3><div class="modes">${Object.entries(MODES).filter(([, M]) => M.group === g.id).map(([id, M]) => `
-      <a class="mcard" href="#${M.kind === 'offline' ? 'play/' : 'new/'}${id}"><span class="mi">${M.icon}</span><span class="mt"><b>${M.name}</b><small>${M.tag}</small></span><span class="go">←</span></a>`).join('')}</div>`).join('')}
+    <div class="chips gfilter" id="gf"><button class="chip on" data-g="">الكل (${Object.keys(MODES).length})</button>${GROUPS.map(g => `<button class="chip" data-g="${g.id}">${g.title.replace(/\s*\(.*\)$/, '')}</button>`).join('')}</div>
+    ${GROUPS.map(g => `<section class="mgroup" data-g="${g.id}"><h3 class="sec">${g.title}</h3><div class="modes">${Object.entries(MODES).filter(([, M]) => M.group === g.id).map(([id, M]) => `
+      <a class="mcard" href="#${M.kind === 'offline' ? 'play/' : 'new/'}${id}"><span class="mi">${M.icon}</span><span class="mt"><b>${M.name}</b><small>${M.tag}</small></span><span class="go">←</span></a>`).join('')}</div></section>`).join('')}
     <p class="fine">🔒 كل شي مشفر من جوالك، والجلسات تبقى ${KEEP_HOURS} ساعة. ألعاب «جوال واحد» ما تحتاج نت.</p>`;
   $$('[data-del]').forEach(b => {
     b.onclick = () => { if (confirm('تبي تحذف الجلسة من القائمة؟')) { store.remove(b.dataset.del); viewHome(); } };
   });
+  $('#gf').onclick = e => {
+    const b = e.target.closest('[data-g]'); if (!b) return;
+    $$('#gf .chip').forEach(c => c.classList.toggle('on', c === b));
+    $$('.mgroup').forEach(sec => { sec.hidden = !!b.dataset.g && sec.dataset.g !== b.dataset.g; });
+  };
 }
 function sessItem(s) {
   const M = MODES[s.mode || 'saraha'] || MODES.saraha;
   const href = s.caplink ? s.caplink : s.d ? `#h=${s.topic}.${s.key}.${s.d}` : s.token ? `#p=${s.topic}.${s.key}.${s.token}` : `#j=${s.topic}.${s.key}`;
-  const expired = !s.results && M.kind !== 'santa' && Date.now() - (s.created || 0) > KEEP_HOURS * 3600e3;
+  const expired = !s.results && M.kind !== 'santa' && M.kind !== 'board' && Date.now() - (s.created || 0) > KEEP_HOURS * 3600e3;
   const cap = s.mode === 'capsule' && s.results && s.results.cfg;
   const st = cap ? (capLocked(cap.open) ? `🔒 تنفتح ${fmtDay(cap.open, { day: 'numeric', month: 'short', year: 'numeric' })}` : '🔓 انفتحت')
-    : s.results ? (s.mode === 'when' ? '📌 تثبّت الموعد' : s.mode === 'quiz' ? '🏁 خلصت' : '✅ انكشفت') : expired ? '⌛ انتهت' : '🟣 شغالة';
-  return `<div class="item"><a href="${esc(href)}"><b>${M.icon} ${esc(s.title || M.name)}</b><small>${M.name} · ${s.caplink ? 'كبسولة محفوظة' : s.d ? 'أنت المشرف' : 'مشارك'} · ${st}</small></a><button class="x" data-del="${esc(s.topic)}" aria-label="حذف">✕</button></div>`;
+    : M.kind === 'board' ? '📌 محفوظة' : s.results ? (s.mode === 'when' ? '📌 تثبّت الموعد' : s.mode === 'quiz' ? '🏁 خلصت' : '✅ انكشفت') : expired ? '⌛ انتهت' : '🟣 شغالة';
+  return `<div class="item"><a href="${esc(href)}"><b>${M.icon} ${esc(s.title || M.name)}</b><small>${M.name} · ${s.caplink ? 'كبسولة محفوظة' : M.kind === 'board' ? 'قائمة مشتركة' : s.d ? 'أنت المشرف' : 'مشارك'} · ${st}</small></a><button class="x" data-del="${esc(s.topic)}" aria-label="حذف">✕</button></div>`;
 }
 
 function viewMode(id) {
@@ -1178,6 +1202,8 @@ function viewMode(id) {
       ${F.open ? `<label for="open">متى تنفتح الكبسولة؟</label>
         <div class="chips" id="openQuick"><button type="button" class="chip" data-m="1">بعد شهر</button><button type="button" class="chip" data-m="6">بعد 6 شهور</button><button type="button" class="chip on" data-m="12">بعد سنة</button><button type="button" class="chip" data-m="60">بعد 5 سنين</button></div>
         <input type="date" id="open" style="margin-top:10px">` : ''}
+      ${F.cats ? `<label>الخانات</label><p class="hint" style="margin:-4px 0 8px">اختر الخانات، أو أضف خانة من عندك.</p><div class="chips" id="cats"></div>
+        <div class="addrow" style="margin-top:8px"><input id="catIn" maxlength="14" placeholder="خانة جديدة (مثلًا: لاعب كورة)"><button class="btn" id="catAdd" type="button">إضافة</button></div>` : ''}
       ${F.days ? `<label>الأيام المقترحة</label><p class="hint" style="margin:-4px 0 8px">اختر الأيام اللي تبي الشلة تختار منها.</p><div class="chips" id="days"></div>` : ''}
       ${F.names ? `<label for="nm">${F.names.label}</label>${F.names.hint ? `<p class="hint" style="margin:-4px 0 8px">${F.names.hint}</p>` : ''}
         <div class="addrow"><input id="nm" maxlength="400" placeholder="اكتب اسم واضغط إضافة" enterkeyhint="done"><button class="btn" id="add" type="button">إضافة</button></div>
@@ -1186,6 +1212,7 @@ function viewMode(id) {
         <div class="chips" id="prompts">${F.prompt.presets.map((p, i) => `<button type="button" class="chip${i ? '' : ' on'}" data-p="${i}">${esc(p)}</button>`).join('')}</div>
         <input id="promptCustom" maxlength="${Q_LEN}" placeholder="أو اكتب سؤالك أنت" style="margin-top:10px">` : ''}
       ${F.questions ? `<label>${F.questions.label}</label><p class="hint" style="margin:-4px 0 8px">اختر الأسئلة اللي تبيها (لين ${MAX_Q} سؤال)، أو أضف أسئلتك.</p>
+        ${F.questions.packs ? `<div class="chips" id="packs" style="margin-bottom:10px">${F.questions.packs.map(([n], i) => `<button type="button" class="chip${i ? '' : ' on'}" data-k="${i}">${esc(n)}</button>`).join('')}</div>` : ''}
         <div id="qlist"></div>
         ${F.questions.kind === 'pair'
           ? `<div class="addrow"><input id="qa" maxlength="${OPT_LEN}" placeholder="الخيار الأول"><input id="qb" maxlength="${OPT_LEN}" placeholder="الخيار الثاني"></div><button class="btn ghost" id="qadd" type="button" style="margin-top:8px">+ أضف سؤال</button>`
@@ -1248,8 +1275,20 @@ function viewMode(id) {
         $('#qa').value = '';
       }
       if (qs.filter(q => q.on).length >= MAX_Q) return toast(`الحد ${MAX_Q} أسئلة، شيل سؤال أول`, true);
-      qs.unshift({ v, on: true }); draw();
+      qs.unshift({ v, on: true, custom: true }); draw();
     };
+    if (F.questions.packs) {
+      $('#packs').onclick = e => {
+        const b = e.target.closest('[data-k]'); if (!b) return;
+        $$('#packs .chip').forEach(c => c.classList.toggle('on', c === b));
+        // المختار من قبل يبقى، وتنضاف أسئلة الباقة الجديدة تحته (مختارة لو ما فيه شي مختار)
+        const keep = qs.filter(q => q.on || q.custom), have = new Set(keep.map(q => JSON.stringify(q.v)));
+        const pack = F.questions.packs[+b.dataset.k][1].filter(v => !have.has(JSON.stringify(v)));
+        const auto = keep.some(q => q.on) ? 0 : F.questions.pick;
+        qs = [...keep, ...pack.map((v, i) => ({ v, on: i < auto }))];
+        draw();
+      };
+    }
     $('#qa').onkeydown = e => { if (e.key === 'Enter' && F.questions.kind === 'text') { e.preventDefault(); $('#qadd').click(); } };
     draw();
   }
@@ -1260,6 +1299,13 @@ function viewMode(id) {
     setIn(12);
     $('#openQuick').onclick = e => { const b = e.target.closest('[data-m]'); if (!b) return; setIn(+b.dataset.m); $$('#openQuick .chip').forEach(c => c.classList.toggle('on', c === b)); };
     $('#open').oninput = () => $$('#openQuick .chip').forEach(c => c.classList.remove('on'));
+  }
+  const cats = F.cats ? ABC_CATS.map((c, i) => ({ c, on: i < 5 })) : [];
+  if (F.cats) {
+    const drawCats = () => { $('#cats').innerHTML = cats.map((x, i) => `<button type="button" class="chip${x.on ? ' on' : ''}" data-i="${i}">${esc(x.c)}</button>`).join(''); };
+    $('#cats').onclick = e => { const b = e.target.closest('[data-i]'); if (!b) return; cats[+b.dataset.i].on = !cats[+b.dataset.i].on; drawCats(); };
+    $('#catAdd').onclick = () => { const v = $('#catIn').value.trim().slice(0, 14); if (!v) return; if (!cats.some(x => x.c === v)) cats.push({ c: v, on: true }); $('#catIn').value = ''; drawCats(); };
+    drawCats();
   }
   const days = new Set();
   if (F.days) {
@@ -1285,6 +1331,10 @@ function viewMode(id) {
       const o = $('#open').value;
       if (!/^\d{4}-\d{2}-\d{2}$/.test(o) || !capLocked(o)) return toast('اختر تاريخ بعد اليوم', true);
       cfg.open = o;
+    }
+    if (F.cats) {
+      cfg.cats = cats.filter(x => x.on).map(x => x.c).slice(0, 8);
+      if (cfg.cats.length < 2) return toast('اختر خانتين على الأقل', true);
     }
     if (F.days) {
       if (!days.size) return toast('اختر يوم واحد على الأقل', true);
