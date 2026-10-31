@@ -8,3 +8,4 @@
 | ▶️ تيوبي | https://ilo0ol.github.io/experiments/tubey/ |
 | 🤫 صراحة | https://ilo0ol.github.io/experiments/saraha/ |
 | 🐋 أرض العجايب | https://ilo0ol.github.io/experiments/ajayib/ |
+| 💻 التابلت كمبيوتر | https://ilo0ol.github.io/experiments/tablet-desktop/ |
