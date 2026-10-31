@@ -163,14 +163,14 @@ const Abc = {
       const l = (pool.length ? pool : [...ABC_LETTERS])[Math.floor(Math.random() * (pool.length || ABC_LETTERS.length))];
       const r = my.qev.filter(x => x.s === 'ask').length;
       e.currentTarget.disabled = true;
-      try { await postRoom(my, 'q', { s: 'ask', r, l }); } catch { toast('ما انرسل… تأكد من النت', true); e.currentTarget.disabled = false; }
+      try { await postRoom(my, 'q', { s: 'ask', r, l }); } catch { toast('ما وصل… تأكد من النت', true); e.currentTarget.disabled = false; }
     };
     if (!st || st.s === 'show') {
       const prev = st ? Abc.showHtml(my, st) : `<div class="card center"><div class="big-ic">🔤</div><h3>جاهزين؟</h3><p class="muted">أرسل الرابط، وكل واحد يدخل اسمه. كل جولة يطلع حرف، والكل يكتب كلمة لكل خانة تبدأ فيه.</p><p class="muted small">الخانات: ${my.cfg.cats.map(esc).join('، ')}</p></div>`;
       A.innerHTML = prev + `<button class="btn primary big" id="nr">🔤 ${st ? 'جولة جديدة' : 'ابدأ أول جولة'}</button>` + (st ? '<button class="btn big" id="fin">🏁 النتيجة النهائية</button>' : '');
       $('#nr').onclick = newRound;
       const fin = $('#fin');
-      if (fin) fin.onclick = e => { e.currentTarget.disabled = true; postRoom(my, 'q', { s: 'end', board: st.board }).catch(() => { toast('ما انرسل', true); e.currentTarget.disabled = false; }); };
+      if (fin) fin.onclick = e => { e.currentTarget.disabled = true; postRoom(my, 'q', { s: 'end', board: st.board }).catch(() => { toast('ما وصل', true); e.currentTarget.disabled = false; }); };
     } else if (st.s === 'ask') {
       A.innerHTML = `<div class="card center">${Abc.bigLetter(st.r, st.l)}<p class="muted">خلّص <b id="acount">${(my.ans && my.ans.get(st.r) || new Map()).size}</b> لاعب</p></div>
         <button class="btn danger big" id="stop">⏹️ وقّف الجولة</button>`;
@@ -192,7 +192,7 @@ const Abc = {
         const prev = [...my.qev].reverse().find(x => x.s === 'show');
         const board = addBoard(prev ? prev.board : [], rows.map(([by, , p]) => [by, p.reduce((x, y) => x + y, 0)]));
         try { await postChunked(my, 'q', { s: 'show', r: st.r, l: st.l, board }, 'rows', rows); }
-        catch { toast('ما انرسل… تأكد من النت', true); e.currentTarget.disabled = false; }
+        catch { toast('ما وصل… تأكد من النت', true); e.currentTarget.disabled = false; }
       };
     }
   },
@@ -205,7 +205,7 @@ const Abc = {
       store.kv(`abcsent.${my.topic}.${r}`, '1');
       onRaw(res, my);
       if (S === my) { my.qdrawn = null; Abc.update(); }
-    } catch { toast('ما انرسل… جرّب مرة ثانية', true); }
+    } catch { toast('ما وصل… جرّب مرة ثانية', true); }
     finally { my.abcBusy = false; }
   },
   drawPlayer(A) {
@@ -214,7 +214,7 @@ const Abc = {
     const name = gameName(my);
     if (!st) { A.innerHTML = `<div class="card center"><div class="big-ic">⏳</div><h3>أهلًا ${esc(name)}!</h3><p class="muted">بانتظار المشرف يبدأ الجولة…</p></div>`; return; }
     if (st.s === 'ask') {
-      if (store.kv(`abcsent.${my.topic}.${st.r}`)) { A.innerHTML = `<div class="card center">${Abc.bigLetter(st.r, st.l)}<h3>✋ انرسلت أجوبتك</h3><p class="muted">بانتظار الباقين…</p></div>`; return; }
+      if (store.kv(`abcsent.${my.topic}.${st.r}`)) { A.innerHTML = `<div class="card center">${Abc.bigLetter(st.r, st.l)}<h3>✋ وصلت أجوبتك</h3><p class="muted">بانتظار الباقين…</p></div>`; return; }
       my.abcDraft = my.abcDraft || {};
       const d = my.abcDraft[st.r] = my.abcDraft[st.r] || my.cfg.cats.map(() => '');
       my.seenAt = my.seenAt || {};
@@ -299,7 +299,7 @@ const Funny = {
   },
   async send(my, btn, fn) {
     btn.disabled = true;
-    try { await fn(); } catch (err) { console.error(err); toast('ما انرسل… تأكد من النت', true); btn.disabled = false; }
+    try { await fn(); } catch (err) { console.error(err); toast('ما وصل… تأكد من النت', true); btn.disabled = false; }
   },
   drawHost(A) {
     const my = S, st = my.state, n = my.cfg.questions.length;
@@ -341,7 +341,7 @@ const Funny = {
     if (!st) { A.innerHTML = `<div class="card center"><div class="big-ic">⏳</div><h3>أهلًا ${esc(name)}!</h3><p class="muted">بانتظار المشرف يبدأ…</p></div>`; return; }
     const mine = store.kv(`fans.${my.topic}.${st.i}`);
     if (st.s === 'ask') {
-      if (mine) { A.innerHTML = Funny.qCard(my, st.i, `<div class="msg">${esc(mine)}</div><p class="muted center">انرسل جوابك ✓ بانتظار الباقين…</p>`); return; }
+      if (mine) { A.innerHTML = Funny.qCard(my, st.i, `<div class="msg">${esc(mine)}</div><p class="muted center">وصل جوابك ✓ بانتظار الباقين…</p>`); return; }
       A.innerHTML = Funny.qCard(my, st.i, `<textarea id="fa" maxlength="120" placeholder="جوابك اللي بيضحّكهم… (بدون اسمك)"></textarea><div class="err" id="err"></div><button class="btn primary big" id="send">🔒 إرسال</button>`);
       $('#send').onclick = async e => {
         const raw = $('#fa').value.trim();
@@ -365,8 +365,8 @@ const Funny = {
         try {
           const res = await Relay.post(my.topic, { v: 1, k: 'm', ...(await Crypto.sealTo(my.setup.pk, { by: name, i: st.i, v: b.dataset.k })) });
           store.kv(`fvote.${my.topic}.${st.i}`, b.dataset.k); onRaw(res, my);
-          my.qdrawn = null; Funny.update(); toast('انحسب صوتك ✓');
-        } catch { toast('ما انرسل… جرّب مرة ثانية', true); }
+          my.qdrawn = null; Funny.update(); toast('تم احتساب صوتك ✓');
+        } catch { toast('ما وصل… جرّب مرة ثانية', true); }
       };
     } else if (st.s === 'show') A.innerHTML = Funny.showHtml(my, st, name);
   },
@@ -403,8 +403,8 @@ function bindRank() {
       let bid = store.kv('bid.' + my.topic);
       if (!bid) { bid = b64u(crypto.getRandomValues(new Uint8Array(12))); store.kv('bid.' + my.topic, bid); }
       const res = await Relay.post(my.topic, { v: 1, k: 'm', ...(await Crypto.sealTo(my.setup.pk, { bid, r: orders })) });
-      store.kv('voted.' + my.topic, '1'); onRaw(res, my); toast('انرسل ترتيبك ✓'); updateLive();
-    } catch (err) { console.error(err); toast('ما انرسل… تأكد من النت', true); }
+      store.kv('voted.' + my.topic, '1'); onRaw(res, my); toast('وصل ترتيبك ✓'); updateLive();
+    } catch (err) { console.error(err); toast('ما وصل… تأكد من النت', true); }
     finally { btn.disabled = false; }
   };
 }
@@ -429,6 +429,8 @@ function rankReveal(R, M, cfg) {
 
 /* ============ القوائم المحفوظة: مين يجيب وش؟ وقيّم الطلعة ============ */
 const ID = () => b64u(crypto.getRandomValues(new Uint8Array(6)));
+// أنواع القوائم الإضافية (تتعرّف في games3.js): كل نوع يحدد التحقق والنموذج والرسم
+const BOARDS = {};
 const Board = {
   load(my) {
     if (my.bstate) return;
@@ -440,6 +442,7 @@ const Board = {
     if (!e || typeof e.id !== 'string' || !e.id || e.id.length > 80 || !Number.isFinite(e.t)) return null;
     const s = (x, n) => typeof x === 'string' ? x.slice(0, n) : '';
     const base = { id: e.id.slice(0, 80), t: e.t, c: Number.isFinite(e.c) ? e.c : e.t, del: !!e.del };
+    if (BOARDS[my.M.board]) return BOARDS[my.M.board].valid(e, base, s);
     if (my.M.board === 'trip' && e.k === 'i') return { ...base, k: 'i', name: s(e.name, 50), who: s(e.who, NAME_LEN), done: !!e.done };
     if (my.M.board === 'rate' && e.k === 'p') return { ...base, k: 'p', name: s(e.name, 50), type: PLACE_TYPES.some(p => p[0] === e.type) ? e.type : 'other' };
     if (my.M.board === 'rate' && e.k === 'r' && Number.isInteger(e.s) && e.s >= 0 && e.s <= 5) return { ...base, k: 'r', p: s(e.p, 20), by: s(e.by, NAME_LEN), s: e.s, note: s(e.note, 80) };
@@ -466,14 +469,14 @@ const Board = {
       if (x && Array.isArray(x.e)) ch = Board.merge(my, x.e) || ch;
     }
     if (ch) Board.save(my);
-    my.msgs = [...my.bstate.values()].filter(e => !e.del && e.k !== 'r');
+    my.msgs = BOARDS[my.M.board] ? BOARDS[my.M.board].count(my) : [...my.bstate.values()].filter(e => !e.del && e.k !== 'r');
   },
   async put(my, entries) {
     const t = Date.now();
     entries.forEach(e => { e.t = t; if (!e.c) e.c = t; });
     Board.merge(my, entries); Board.save(my); Board.update();
     try { await postRoom(my, 'x', { e: entries }); }
-    catch { toast('انحفظ في جوالك، بس ما وصل للشلة… تأكد من النت', true); }
+    catch { toast('تم الحفظ في جوالك، بس ما وصل للشلة… تأكد من النت', true); }
   },
   async sync(my) {
     // الرسائل على السيرفر تبقى 12 ساعة، فإذا صار لها وقت نرسل نسخة كاملة عشان توصل للي ما فتحوها
@@ -487,10 +490,35 @@ const Board = {
       await postChunked(my, 'x', {}, 'e', [...my.bstate.values()]);
     } catch (e) { console.error(e); }
   },
+  me() {
+    const el = $('#wname'), n = el ? el.value.trim().slice(0, NAME_LEN) : (store.kv('wname') || '');
+    if (!n) { toast('اكتب اسمك فوق أول', true); if (el) el.focus(); } else store.kv('wname', n);
+    return n;
+  },
+  openWith(my, B) {
+    app.innerHTML = `${sessionHead(my.setup.title)}
+      ${liveBar(B.live)}
+      ${my.cfg.note ? `<div class="card note">📝 ${esc(my.cfg.note)}</div>` : ''}
+      <section class="card share"><h3>📨 شارك الرابط مع الشلة</h3><p class="muted small">${B.shareHint || 'أي أحد معه الرابط يقدر يضيف ويعدّل.'}</p>
+        <div class="row multi"><button class="btn" id="cp">نسخ الرابط</button><a class="btn wa" target="_blank" rel="noopener" href="https://wa.me/?text=${encodeURIComponent(shareText(inviteLink()))}">واتساب</a></div></section>
+      ${B.named === false ? '' : `<section class="card"><label for="wname" style="margin-top:0">اسمك</label><input id="wname" maxlength="${NAME_LEN}" placeholder="${B.namePh || 'اكتب اسمك'}" value="${esc(store.kv('wname') || '')}"></section>`}
+      ${B.html ? B.html(my) : ''}
+      <div id="blist"></div>
+      <p class="fine">📌 محفوظة في جوالك وجوال كل واحد فتحها، وتتزامن كل ما أحد فتح الرابط.</p>
+      ${howCard(my.M)}${privacyNote(my.M)}`;
+    $('#cp').onclick = () => copyText(inviteLink());
+    const w = $('#wname'); if (w) w.onchange = e => { store.kv('wname', e.target.value.trim().slice(0, NAME_LEN)); Board.update(); };
+    $('#blist').addEventListener('focusout', () => setTimeout(() => { if (my.pendingDraw) Board.update(); }, 50));
+    if (B.bind) B.bind(my);
+    my.openedAt = my.openedAt || Date.now();
+    Board.render();
+    setTimeout(() => Board.sync(my), 6500);
+  },
   open() {
     const my = S;
     document.title = `${my.setup.title} · صراحة`;
     Board.load(my);
+    if (BOARDS[my.M.board]) return Board.openWith(my, BOARDS[my.M.board]);
     const trip = my.M.board === 'trip';
     app.innerHTML = `${sessionHead(my.setup.title)}
       ${liveBar(trip ? '<b id="count">0</b> غرض · <span id="tleft"></span>' : '<b id="count">0</b> مكان')}
@@ -556,6 +584,7 @@ const Board = {
     if (L.contains(document.activeElement) && document.activeElement.tagName === 'INPUT') { my.pendingDraw = true; return; }
     my.pendingDraw = false;
     const live = [...my.bstate.values()].filter(e => !e.del), meName = store.kv('wname') || '';
+    if (BOARDS[my.M.board]) return BOARDS[my.M.board].render(my, L, live, meName);
     if (my.M.board === 'trip') {
       const items = live.filter(e => e.k === 'i').sort((a, b) => a.c - b.c);
       const free = items.filter(i => !i.who).length;
@@ -579,7 +608,7 @@ const Board = {
       const icon = t => (PLACE_TYPES.find(x => x[0] === t) || PLACE_TYPES[3])[1].split(' ')[0];
       L.innerHTML = info.length ? info.map(({ p, rs, avg, mine }, k) => `<section class="card place">
           <div class="gh"><h3>${k === 0 && avg ? '🏆 ' : ''}${icon(p.type)} ${esc(p.name)}</h3><button class="x" data-del="${p.id}" aria-label="حذف">✕</button></div>
-          <div class="avg">${avg ? `<b>★ ${avg.toFixed(1)}</b> <small class="muted">(${rs.length} تقييم)</small>` : '<small class="muted">ما انقيّم للحين</small>'}</div>
+          <div class="avg">${avg ? `<b>★ ${avg.toFixed(1)}</b> <small class="muted">(${rs.length} تقييم)</small>` : '<small class="muted">ما أحد قيّمه للحين</small>'}</div>
           <div class="stars">${[1, 2, 3, 4, 5].map(s => `<button data-star="${s}" data-p="${p.id}" class="${mine && mine.s >= s ? 'on' : ''}" aria-label="${s} نجوم">★</button>`).join('')}<small class="muted">تقييمك</small></div>
           <input class="rnote" data-p="${p.id}" maxlength="80" placeholder="ملاحظتك (اختياري)" value="${esc(mine ? mine.note : '')}">
           ${rs.length ? `<details><summary>تقييمات الشلة</summary>${rs.map(r => `<div class="brow"><span>${esc(r.by)}${r.note ? ` <small class="muted">— ${esc(r.note)}</small>` : ''}</span><b>${'★'.repeat(r.s)}</b></div>`).join('')}</details>` : ''}

@@ -52,7 +52,7 @@ const Story = {
     if (!ll || !my.lines) return;
     const last = my.lines[my.lines.length - 1];
     ll.textContent = last ? last.text : my.cfg.prompt;
-    hint.textContent = last ? `هذي آخر جملة انكتبت (القصة فيها ${my.lines.length} جملة). كمّل عليها 👇` : 'هذي بداية القصة. كمّل عليها 👇';
+    hint.textContent = last ? `هذي آخر جملة كُتبت (القصة فيها ${my.lines.length} جملة). كمّل عليها 👇` : 'هذي بداية القصة. كمّل عليها 👇';
   },
   reveal() {
     const R = S.results, M = S.M, all = [R.cfg.prompt, ...R.lines];
@@ -131,8 +131,8 @@ const When = {
       const by = nameIn.value.trim().slice(0, NAME_LEN);
       if (!by) return toast('اكتب اسمك أول', true);
       const btn = e.currentTarget; btn.disabled = true;
-      try { store.kv('wname', by); await postRoom(my, 'x', { by, days: [...sel].sort((a, b) => a - b) }); toast('انحفظت أيامك ✓'); }
-      catch (err) { console.error(err); toast('ما انحفظت… تأكد من النت', true); }
+      try { store.kv('wname', by); await postRoom(my, 'x', { by, days: [...sel].sort((a, b) => a - b) }); toast('تم حفظ أيامك ✓'); }
+      catch (err) { console.error(err); toast('ما تم الحفظ… تأكد من النت', true); }
       finally { btn.disabled = false; }
     };
     When.update();
@@ -225,7 +225,7 @@ const Quiz = {
   async send(my, ev, btn) {
     btn.disabled = true;
     try { await postRoom(my, 'q', ev); }
-    catch (err) { console.error(err); toast('ما انرسل… تأكد من النت', true); btn.disabled = false; }
+    catch (err) { console.error(err); toast('ما وصل… تأكد من النت', true); btn.disabled = false; }
   },
   open() {
     const my = S;
@@ -322,7 +322,7 @@ const Quiz = {
           store.kv(key, b.dataset.k);
           onRaw(res, my);
           if (S === my && my.state === st) Quiz.draw();
-        } catch (err) { console.error(err); toast('ما انرسل… جرّب مرة ثانية', true); $$('.qopt', A).forEach(x => { x.disabled = false; }); b.classList.remove('picked'); }
+        } catch (err) { console.error(err); toast('ما وصل… جرّب مرة ثانية', true); $$('.qopt', A).forEach(x => { x.disabled = false; }); b.classList.remove('picked'); }
       };
       return;
     }
@@ -356,18 +356,18 @@ const Quiz = {
       store.upsert({ topic: my.topic, secret: { c }, cfg: my.cfg, pk: my.setup.pk, rc: my.setup.rc });
       await Relay.post(my.topic, { v: 1, k: 't', ...(await Crypto.sealTo(my.setup.pk, { c })) });
       await postChunked(my, 'q', { s: 'qs' }, 'qs', qs);
-    } catch (err) { console.error(err); toast('ما انرسل… تأكد من النت', true); btn.disabled = false; }
+    } catch (err) { console.error(err); toast('ما وصل… تأكد من النت', true); btn.disabled = false; }
   },
   drawFacts(A, name) {
     const my = S;
     let mine = [];
     try { mine = JSON.parse(store.kv('gfacts.' + my.topic)) || []; } catch {}
     A.innerHTML = `<div class="card"><h3>🧠 اكتب معلومات عنك</h3>
-      <p class="muted small">معلومات ما يعرفها الكل. بتنقلب أسئلة: «مين صاحب هذي المعلومة؟». والكلام يتصحح ويتوحّد أسلوبه عشان ما ينعرف من طريقة الكتابة.</p>
+      <p class="muted small">معلومات ما يعرفها الكل. بتتحول لأسئلة: «مين صاحب هذي المعلومة؟». والكلام يتصحح ويتوحّد أسلوبه عشان ما يُعرف من طريقة الكتابة.</p>
       ${[0, 1, 2].map(i => `<input class="gf" maxlength="100" placeholder="${esc(FACT_HINTS[i])}" value="${esc(mine[i] || '')}" style="margin-top:8px">`).join('')}
       <div class="err" id="err"></div>
       <button class="btn primary big" id="gsend">🔒 ${mine.length ? 'تحديث معلوماتي' : 'إرسال'}</button>
-      ${mine.length ? '<p class="muted small center">انرسلت ✓ بانتظار المشرف يبدأ المسابقة</p>' : ''}</div>`;
+      ${mine.length ? '<p class="muted small center">وصلت ✓ بانتظار المشرف يبدأ المسابقة</p>' : ''}</div>`;
     $('#gsend').onclick = async e => {
       const facts = $$('.gf', A).map(i => i.value.trim()).filter(v => v.length >= 3).map(v => Polish.polish(v).slice(0, 100)).filter(Boolean);
       if (!facts.length) return ($('#err').textContent = 'اكتب معلومة وحدة على الأقل');
@@ -375,9 +375,9 @@ const Quiz = {
       e.currentTarget.disabled = true;
       try {
         const res = await Relay.post(my.topic, { v: 1, k: 'm', ...(await Crypto.sealTo(my.setup.pk, { by: name, facts })) });
-        store.kv('gfacts.' + my.topic, JSON.stringify(facts)); onRaw(res, my); toast('انرسلت ✓');
+        store.kv('gfacts.' + my.topic, JSON.stringify(facts)); onRaw(res, my); toast('وصلت ✓');
         if (S === my && !my.qs) Quiz.drawFacts(A, name);
-      } catch { toast('ما انرسلت… تأكد من النت', true); e.currentTarget.disabled = false; }
+      } catch { toast('ما وصلت… تأكد من النت', true); e.currentTarget.disabled = false; }
     };
   },
   reveal() {
@@ -437,8 +437,8 @@ function bindKnow() {
     try {
       const res = await Relay.post(my.topic, { v: 1, k: 'm', ...(await Crypto.sealTo(my.setup.pk, { by: me, a: ans })) });
       store.kv('voted.' + my.topic, '1');
-      onRaw(res, my); toast('انرسلت أجوبتك ✓'); updateLive();
-    } catch (err) { console.error(err); toast('ما انرسلت… تأكد من النت', true); }
+      onRaw(res, my); toast('وصلت أجوبتك ✓'); updateLive();
+    } catch (err) { console.error(err); toast('ما وصلت… تأكد من النت', true); }
     finally { btn.disabled = false; }
   };
 }

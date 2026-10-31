@@ -129,7 +129,7 @@ const OFFLINE = {
         stage.innerHTML = `<div class="card center"><h3>📱 الحين عطوا الجوال للراوي</h3><p class="muted small">الراوي ما يلعب، هو اللي يمشّي اللعبة.</p></div>
           ${win ? `<div class="card center pick"><div class="gname">${win}</div></div>` : ''}
           <section class="card"><div class="gh"><h3>👥 اللاعبين</h3><button class="btn ghost sm" id="tg">${show ? '🙈 خبّ الأدوار' : '👁️ ورّني الأدوار'}</button></div>
-            <p class="muted small">اضغط على اللي يطلع (انقتل أو صوّتوا عليه).</p>
+            <p class="muted small">اضغط على اللي يطلع (قُتل أو صوّتوا عليه).</p>
             ${names.map(n => `<button class="prow wrow${out.has(n) ? ' out' : ''}" data-n="${esc(n)}"><b>${out.has(n) ? '❌ ' : ''}${esc(n)}</b><span>${show ? WOLF_ROLES[role.get(n)].icon + ' ' + WOLF_ROLES[role.get(n)].name : ''}</span></button>`).join('')}
             ${show ? `<p class="muted" style="margin-top:8px">باقي: 🐺 ${aw} · 🏡 ${ao}</p>` : ''}</section>
           <details class="card" open><summary>🌙 الليل</summary><ol>
@@ -138,7 +138,7 @@ const OFFLINE = {
             ${[...role.values()].includes('seer') ? '<li>«يا عرّاف افتح عيونك… أشر على شخص» (الراوي يأشر 👍 ذيب أو 👎 لا) «…وغمّض» 🔮</li>' : ''}
             <li>«الكل يفتح عيونه» ☀️</li></ol></details>
           <details class="card" open><summary>☀️ النهار</summary><ol>
-            <li>أعلن مين انقتل (إلا لو الحارس حماه)، واضغط عليه فوق.</li><li>نقاش: مين تشكّون فيه؟</li>
+            <li>أعلن مين قُتل (إلا لو الحارس حماه)، واضغط عليه فوق.</li><li>نقاش: مين تشكّون فيه؟</li>
             <li>تصويت: اللي ياخذ أكثر الأصوات يطلع، واضغط عليه فوق.</li><li>ارجعوا لليل 🌙</li></ol></details>
           <button class="btn primary big" id="again">🔄 لعبة جديدة</button>`;
         $('#tg').onclick = () => { show = !show; draw(); };
@@ -424,7 +424,7 @@ const OFFLINE = {
       const fr = B.people.filter(n => forSel.has(n));
       if (!fr.length) return toast('اختر على مين المصروف', true);
       B.items.push({ d: $('#ed').value.trim().slice(0, 60), amt, by: $('#eb').value, for: fr });
-      $('#ed').value = ''; $('#ea').value = ''; save(); drawSum(); toast('انضاف ✓');
+      $('#ed').value = ''; $('#ea').value = ''; save(); drawSum(); toast('تمت الإضافة ✓');
     };
     drawForm(); drawSum();
   }

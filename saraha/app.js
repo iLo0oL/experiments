@@ -1,7 +1,7 @@
 'use strict';
 /*
   صراحة — ألعاب وسوالف للشلة.
-  • الرسائل تنتقل عبر ntfy.sh (خدمة رسائل مجانية) وتنحفظ هناك 12 ساعة.
+  • الرسائل تنتقل عبر ntfy.sh (خدمة رسائل مجانية) وتُحفظ هناك 12 ساعة.
   • كل شي مشفر في المتصفح: مفتاح الجلسة في الرابط بعد # (ما يوصل للسيرفر أبد).
   • المشاركات تنشفر بمفتاح المشرف العام، فمحد يقراها قبل الكشف إلا المشرف.
   • الكشف = المشرف ينشر مفتاحه الخاص (مشفر بمفتاح الجلسة) مع قائمة المشاركات المعتمدة.
@@ -33,7 +33,7 @@ async function copyText(text) {
     try { document.execCommand('copy'); } catch {}
     ta.remove();
   }
-  toast('انتسخ ✓');
+  toast('تم النسخ ✓');
 }
 function shuffle(a) {
   a = a.slice();
@@ -176,7 +176,7 @@ const aboutOf = (M, to) => to === ALL ? '👥 للشلة كلها' : M.about(to)
 const groupTitle = (M, n) => n === ALL ? '👥 للشلة كلها' : (M.groupTitle || M.about)(n);
 const backLink = () => `<a class="back" href="#">→ الرئيسية</a>`;
 const emptyCard = (t = 'ما أحد شارك هالمرة 😅') => `<div class="card center"><p>${t}</p></div>`;
-const howCard = (M, open) => `<details class="card how"${open ? ' open' : ''}><summary>📖 وش هي وكيف تنلعب؟</summary>
+const howCard = (M, open) => `<details class="card how"${open ? ' open' : ''}><summary>📖 وش هي وكيف نلعبها؟</summary>
   <p style="margin-top:10px">${M.desc}</p><ol>${M.steps.map(s => `<li>${s}</li>`).join('')}</ol>
   <p class="muted small">🔒 ${M.privacy}</p></details>`;
 const privacyNote = M => M.faq ? `<details class="card faq"><summary>🤫 كيف نضمن الخصوصية؟</summary><ul>${M.faq.map(x => `<li>${x}</li>`).join('')}</ul></details>` : '';
@@ -232,12 +232,22 @@ function normalizeSetup(s) {
   if (F.subject) { cfg.subject = typeof c.subject === 'string' ? c.subject.slice(0, NAME_LEN) : ''; if (!cfg.subject) return null; }
   if (F.open) { if (!isDay(c.open)) return null; cfg.open = c.open; }
   if (F.cats) { cfg.cats = strArr(c.cats, 8, 14); if (!cfg.cats.length) return null; }
+  if (F.amount) { cfg.amount = Number.isFinite(c.amount) && c.amount > 0 ? Math.min(c.amount, 1e7) : 0; if (!cfg.amount) return null; }
+  if (F.month) { if (typeof c.start !== 'string' || !/^\d{4}-\d{2}$/.test(c.start)) return null; cfg.start = c.start; }
+  if (M.board === 'daily') { if (!isDay(c.start)) return null; cfg.start = c.start; }
+  if (F.challenge) {
+    cfg.goal = typeof c.goal === 'string' ? c.goal.slice(0, 40) : '';
+    cfg.unit = typeof c.unit === 'string' ? c.unit.slice(0, 12) : '';
+    cfg.target = Number.isFinite(c.target) && c.target > 0 ? c.target : 0;
+    cfg.end = isDay(c.end) ? c.end : '';
+    if (!cfg.goal) return null;
+  }
   if (F.days) { cfg.days = (Array.isArray(c.days) ? c.days : []).filter(isDay).slice(0, 21); if (!cfg.days.length) return null; }
-  if (['vote', 'know', 'quiz', 'rank', 'funny'].includes(M.kind)) {
+  if (['vote', 'know', 'quiz', 'rank', 'funny', 'guess', 'auction'].includes(M.kind)) {
     cfg.questions = (Array.isArray(c.questions) ? c.questions : []).slice(0, MAX_Q).map(q => ({
       q: q && typeof q.q === 'string' ? q.q.slice(0, Q_LEN) : '',
       opts: q && Array.isArray(q.opts) ? strArr(q.opts, MAX_OPTS, OPT_LEN) : null
-    })).filter(q => q.q && (q.opts ? q.opts.length >= 2 : M.kind === 'funny' || (cfg.names || []).length >= 2));
+    })).filter(q => q.q && (q.opts ? q.opts.length >= 2 : ['funny', 'guess', 'auction'].includes(M.kind) || (cfg.names || []).length >= 2));
     if (!cfg.questions.length && !M.fromFacts) return null;
   }
   return { mode, title: s.title.slice(0, TITLE_LEN) || M.name, cfg, pk: s.pk, rc: s.rc };
@@ -292,6 +302,7 @@ const validOrder = (o, n) => Array.isArray(o) && o.length === n && new Set(o).si
 async function createSession(mode, title, cfg) {
   let secret = null;
   if (mode === 'santa') secret = { order: shuffle(cfg.names.map((_, i) => i)) };
+  if (mode === 'guess') { secret = { a: cfg.questions.map(q => q.a) }; cfg = { ...cfg, questions: cfg.questions.map(({ q }) => ({ q, opts: null })) }; }
   if (mode === 'quiz') { secret = { c: cfg.questions.map(q => q.c) }; cfg = { ...cfg, questions: cfg.questions.map(({ q, opts }) => ({ q, opts })) }; }
   const topic = 'saraha_' + b64u(crypto.getRandomValues(new Uint8Array(15)));
   const raw = crypto.getRandomValues(new Uint8Array(32));
@@ -635,7 +646,7 @@ function voteCard() {
 function sentText() {
   const { M, topic } = S;
   if (M.kind === 'vote' || M.kind === 'rank') return store.kv('voted.' + topic) ? 'صوّت من هذا الجوال ✓ لو غيّرت رأيك عدّل وأرسل مرة ثانية، ويُحسب آخر تصويت بس.' : '';
-  if (M.kind === 'know') return store.kv('voted.' + topic) ? 'انرسلت أجوبتك ✓ تقدر تعدّل وترسل مرة ثانية، ويُحسب آخر إرسال بس.' : '';
+  if (M.kind === 'know') return store.kv('voted.' + topic) ? 'وصلت أجوبتك ✓ تقدر تعدّل وترسل مرة ثانية، ويُحسب آخر إرسال بس.' : '';
   const k = store.sent(topic);
   return k ? `أرسلت ${k} من هذا الجوال${M.target === 'author' ? '' : '، ومحد يعرف إنها منك 🤫'}` : '';
 }
@@ -724,10 +735,10 @@ function bindWrite() {
       $$('input[name=lie]').forEach(i => { i.checked = false; });
       if (M.target === 'to' && !single) { target = null; $$('#targets .chip').forEach(c => c.classList.remove('on')); }
       setLen(); closePreview(); updateLive();
-      toast('انرسلت ✓');
+      toast('وصلت ✓');
     } catch (err) {
       console.error(err);
-      toast('ما انرسلت… تأكد من النت وجرّب مرة ثانية', true);
+      toast('ما وصلت… تأكد من النت وجرّب مرة ثانية', true);
     } finally { btn.disabled = false; btn.textContent = '🔒 إرسال'; }
   };
 }
@@ -754,11 +765,11 @@ function bindVote() {
       const res = await Relay.post(my.topic, { v: 1, k: 'm', ...(await Crypto.sealTo(my.setup.pk, { bid, a: ans })) });
       store.kv('voted.' + my.topic, '1');
       onRaw(res, my);
-      toast('انرسل تصويتك ✓');
+      toast('وصل تصويتك ✓');
       updateLive();
     } catch (err) {
       console.error(err);
-      toast('ما انرسل… تأكد من النت وجرّب مرة ثانية', true);
+      toast('ما وصل… تأكد من النت وجرّب مرة ثانية', true);
     } finally { btn.disabled = false; btn.textContent = '🔒 إرسال تصويتي'; }
   };
 }
@@ -1003,7 +1014,7 @@ async function shareImage(blob, name) {
   a.href = URL.createObjectURL(blob); a.download = name;
   document.body.appendChild(a); a.click(); a.remove();
   setTimeout(() => URL.revokeObjectURL(a.href), 5000);
-  toast('انحفظت الصورة ✓');
+  toast('تم حفظ الصورة ✓');
 }
 
 /* ============ الصديق الخفي ============ */
@@ -1074,7 +1085,7 @@ function updateSanta() {
   if (tw) {
     if (my.wishes[my.give]) store.kv('twish.' + my.topic, my.wishes[my.give]);
     const w = my.wishes[my.give] || store.kv('twish.' + my.topic);
-    tw.textContent = w || `ما انكتبت أمنية ${my.give} للحين.`;
+    tw.textContent = w || `ما كُتبت أمنية ${my.give} للحين.`;
     tw.classList.toggle('muted', !w);
   }
   const nt = $('#snote');
@@ -1120,11 +1131,11 @@ function renderSantaPersonal() {
     const wish = $('#wish').value.trim();
     if (!wish) return toast('اكتب أمنيتك أول', true);
     const btn = e.currentTarget; btn.disabled = true;
-    try { await saveWish(my, wish); toast('انحفظت أمنيتك ✓'); }
-    catch (err) { console.error(err); toast('ما انحفظت… تأكد من النت', true); }
+    try { await saveWish(my, wish); toast('تم حفظ أمنيتك ✓'); }
+    catch (err) { console.error(err); toast('ما تم الحفظ… تأكد من النت', true); }
     finally { btn.disabled = false; }
   };
-  // الرسائل تنحفظ على السيرفر 12 ساعة، فنجدد الأمنية لو صار لها وقت
+  // الرسائل تُحفظ على السيرفر 12 ساعة، فنجدد الأمنية لو صار لها وقت
   if (own && !my.wishRefreshed && Date.now() - own.at > 10 * 3600e3) {
     my.wishRefreshed = true;
     saveWish(my, own.wish).catch(() => {});
@@ -1162,7 +1173,7 @@ function viewHome() {
   app.innerHTML = `
     <header class="hero">
       <div class="logo">صراحة</div>
-      <p class="tag">ألعاب وسوالف للشلة… وأغلبها بدون ما ينعرف مين</p>
+      <p class="tag">ألعاب وسوالف للشلة… وأغلبها بدون ما يُعرف مين</p>
     </header>
     ${list.length ? `<h3 class="sec">جلساتك</h3><div class="list">${list.map(sessItem).join('')}</div>` : ''}
     <div class="chips gfilter" id="gf"><button class="chip on" data-g="">الكل (${Object.keys(MODES).length})</button>${GROUPS.map(g => `<button class="chip" data-g="${g.id}">${g.title.replace(/\s*\(.*\)$/, '')}</button>`).join('')}</div>
@@ -1183,9 +1194,10 @@ function sessItem(s) {
   const href = s.caplink ? s.caplink : s.d ? `#h=${s.topic}.${s.key}.${s.d}` : s.token ? `#p=${s.topic}.${s.key}.${s.token}` : `#j=${s.topic}.${s.key}`;
   const expired = !s.results && M.kind !== 'santa' && M.kind !== 'board' && Date.now() - (s.created || 0) > KEEP_HOURS * 3600e3;
   const cap = s.mode === 'capsule' && s.results && s.results.cfg;
-  const st = cap ? (capLocked(cap.open) ? `🔒 تنفتح ${fmtDay(cap.open, { day: 'numeric', month: 'short', year: 'numeric' })}` : '🔓 انفتحت')
+  const cdLeft = s.mode === 'countdown' && s.at ? Math.ceil((s.at - Date.now()) / 864e5) : null;
+  const st = cdLeft !== null ? (cdLeft > 0 ? `⏳ باقي ${cdLeft} يوم` : '🎉 جا اليوم') : cap ? (capLocked(cap.open) ? `🔒 تنفتح ${fmtDay(cap.open, { day: 'numeric', month: 'short', year: 'numeric' })}` : '🔓 مفتوحة')
     : M.kind === 'board' ? '📌 محفوظة' : s.results ? (s.mode === 'when' ? '📌 تثبّت الموعد' : s.mode === 'quiz' ? '🏁 خلصت' : '✅ انكشفت') : expired ? '⌛ انتهت' : '🟣 شغالة';
-  return `<div class="item"><a href="${esc(href)}"><b>${M.icon} ${esc(s.title || M.name)}</b><small>${M.name} · ${s.caplink ? 'كبسولة محفوظة' : M.kind === 'board' ? 'قائمة مشتركة' : s.d ? 'أنت المشرف' : 'مشارك'} · ${st}</small></a><button class="x" data-del="${esc(s.topic)}" aria-label="حذف">✕</button></div>`;
+  return `<div class="item"><a href="${esc(href)}"><b>${M.icon} ${esc(s.title || M.name)}</b><small>${M.name} · ${s.mode === 'countdown' ? 'عدّاد' : s.caplink ? 'كبسولة محفوظة' : M.kind === 'board' ? 'قائمة مشتركة' : s.d ? 'أنت المشرف' : 'مشارك'} · ${st}</small></a><button class="x" data-del="${esc(s.topic)}" aria-label="حذف">✕</button></div>`;
 }
 
 function viewMode(id) {
@@ -1204,6 +1216,13 @@ function viewMode(id) {
         <input type="date" id="open" style="margin-top:10px">` : ''}
       ${F.cats ? `<label>الخانات</label><p class="hint" style="margin:-4px 0 8px">اختر الخانات، أو أضف خانة من عندك.</p><div class="chips" id="cats"></div>
         <div class="addrow" style="margin-top:8px"><input id="catIn" maxlength="14" placeholder="خانة جديدة (مثلًا: لاعب كورة)"><button class="btn" id="catAdd" type="button">إضافة</button></div>` : ''}
+      ${F.amount ? `<label for="amt">المبلغ الشهري لكل عضو (ريال)</label><input id="amt" inputmode="numeric" placeholder="مثلًا: 1000">` : ''}
+      ${F.month ? `<label for="mstart">أول شهر</label><input type="month" id="mstart" value="${isoDay(new Date()).slice(0, 7)}">` : ''}
+      ${F.draw ? `<label class="qrow"><input type="checkbox" id="mdraw" checked><span>🎲 سوّ قرعة على ترتيب الدور (لو تشيلها، الدور بنفس ترتيب الأسماء)</span></label>` : ''}
+      ${F.challenge ? `<label>الهدف</label><div class="chips" id="goals">${CHALLENGE_GOALS.map(([g], i) => `<button type="button" class="chip${i ? '' : ' on'}" data-g="${i}">${esc(g)}</button>`).join('')}</div>
+        <div class="addrow" style="margin-top:10px"><input id="cgoal" maxlength="40" value="${esc(CHALLENGE_GOALS[0][0])}" placeholder="الهدف"><input id="cunit" maxlength="12" value="${esc(CHALLENGE_GOALS[0][1])}" placeholder="الوحدة"></div>
+        <label for="ctarget">الهدف اليومي (اختياري)</label><input id="ctarget" inputmode="numeric" value="${CHALLENGE_GOALS[0][2]}">
+        <label for="cend">آخر يوم بالتحدي (اختياري)</label><input type="date" id="cend">` : ''}
       ${F.days ? `<label>الأيام المقترحة</label><p class="hint" style="margin:-4px 0 8px">اختر الأيام اللي تبي الشلة تختار منها.</p><div class="chips" id="days"></div>` : ''}
       ${F.names ? `<label for="nm">${F.names.label}</label>${F.names.hint ? `<p class="hint" style="margin:-4px 0 8px">${F.names.hint}</p>` : ''}
         <div class="addrow"><input id="nm" maxlength="400" placeholder="اكتب اسم واضغط إضافة" enterkeyhint="done"><button class="btn" id="add" type="button">إضافة</button></div>
@@ -1216,6 +1235,8 @@ function viewMode(id) {
         <div id="qlist"></div>
         ${F.questions.kind === 'pair'
           ? `<div class="addrow"><input id="qa" maxlength="${OPT_LEN}" placeholder="الخيار الأول"><input id="qb" maxlength="${OPT_LEN}" placeholder="الخيار الثاني"></div><button class="btn ghost" id="qadd" type="button" style="margin-top:8px">+ أضف سؤال</button>`
+          : F.questions.kind === 'guess'
+            ? `<input id="qa" maxlength="${Q_LEN}" placeholder="سؤالك (جوابه رقم)"><div class="addrow" style="margin-top:8px"><input id="qnum" inputmode="decimal" placeholder="الجواب الصحيح (رقم)"><button class="btn" id="qadd" type="button">إضافة</button></div>`
           : F.questions.kind === 'quiz'
             ? `<input id="qa" maxlength="${Q_LEN}" placeholder="سؤالك"><div class="qgrid"><input id="qc0" maxlength="${OPT_LEN}" placeholder="✅ الجواب الصح"><input id="qc1" maxlength="${OPT_LEN}" placeholder="❌ جواب غلط"><input id="qc2" maxlength="${OPT_LEN}" placeholder="❌ جواب غلط"><input id="qc3" maxlength="${OPT_LEN}" placeholder="❌ جواب غلط"></div><button class="btn ghost" id="qadd" type="button" style="margin-top:8px">+ أضف سؤال</button>`
             : `<div class="addrow"><input id="qa" maxlength="${Q_LEN}" placeholder="${esc(F.questions.placeholder || '')}"><button class="btn" id="qadd" type="button">إضافة</button></div>`}` : ''}
@@ -1244,7 +1265,7 @@ function viewMode(id) {
   let qs = [];
   if (F.questions) {
     qs = F.questions.presets.map((v, i) => ({ v, on: i < F.questions.pick }));
-    const label = v => !Array.isArray(v) ? esc(v) : v.length > 2 ? `${esc(v[0])} <em>✅ ${esc(v[1])}</em>` : `${esc(v[0])} <em>ولا</em> ${esc(v[1])}`;
+    const label = v => !Array.isArray(v) ? esc(v) : F.questions.kind === 'guess' ? `${esc(v[0])} <em>(${fmtNum(v[1])})</em>` : v.length > 2 ? `${esc(v[0])} <em>✅ ${esc(v[1])}</em>` : `${esc(v[0])} <em>ولا</em> ${esc(v[1])}`;
     const draw = () => {
       $('#qlist').innerHTML = qs.map((q, i) => `<label class="qrow"><input type="checkbox" data-i="${i}"${q.on ? ' checked' : ''}><span>${label(q.v)}</span></label>`).join('');
     };
@@ -1260,6 +1281,11 @@ function viewMode(id) {
         if (!a || !b) return toast('اكتب الخيارين', true);
         v = [a.slice(0, OPT_LEN), b.slice(0, OPT_LEN)];
         $('#qa').value = $('#qb').value = '';
+      } else if (F.questions.kind === 'guess') {
+        const q = $('#qa').value.trim(), a = numIn($('#qnum').value);
+        if (!q || a === null) return toast('اكتب السؤال وجوابه (رقم)', true);
+        v = [q.slice(0, Q_LEN), a];
+        $('#qa').value = $('#qnum').value = '';
       } else if (F.questions.kind === 'quiz') {
         const q = $('#qa').value.trim(), ans = [0, 1, 2, 3].map(i => $('#qc' + i).value.trim().slice(0, OPT_LEN));
         if (!q || ans.some(x => !x)) return toast('اكتب السؤال والأربع أجوبة', true);
@@ -1307,6 +1333,14 @@ function viewMode(id) {
     $('#catAdd').onclick = () => { const v = $('#catIn').value.trim().slice(0, 14); if (!v) return; if (!cats.some(x => x.c === v)) cats.push({ c: v, on: true }); $('#catIn').value = ''; drawCats(); };
     drawCats();
   }
+  if (F.challenge) {
+    $('#goals').onclick = e => {
+      const b = e.target.closest('[data-g]'); if (!b) return;
+      const [g, u, t] = CHALLENGE_GOALS[+b.dataset.g];
+      $('#cgoal').value = g; $('#cunit').value = u; $('#ctarget').value = t;
+      $$('#goals .chip').forEach(c => c.classList.toggle('on', c === b));
+    };
+  }
   const days = new Set();
   if (F.days) {
     const list = Array.from({ length: 21 }, (_, i) => { const d = new Date(); d.setDate(d.getDate() + i); return isoDay(d); });
@@ -1344,7 +1378,8 @@ function viewMode(id) {
     if (F.questions) {
       const chosen = qs.filter(q => q.on).map(q => q.v);
       if (!chosen.length) return toast('اختر سؤال واحد على الأقل', true);
-      if (F.questions.kind === 'quiz') {
+      if (F.questions.kind === 'guess') cfg.questions = chosen.map(([q, a]) => ({ q, a }));
+      else if (F.questions.kind === 'quiz') {
         cfg.questions = chosen.map(([q, ...ans]) => { const o = shuffle([0, 1, 2, 3]); return { q, opts: o.map(i => ans[i]), c: o.indexOf(0) }; });
       } else cfg.questions = F.questions.kind === 'pair' ? chosen.map(v => ({ q: 'لو خيروك', opts: v })) : chosen.map(q => ({ q, opts: null }));
     }
@@ -1356,6 +1391,15 @@ function viewMode(id) {
       cfg.questions = [{ q: q.slice(0, Q_LEN), opts: opts.slice() }];
     }
     if (F.note) cfg.note = $('#note').value.trim().slice(0, 200);
+    if (F.amount) { cfg.amount = numIn($('#amt').value); if (!(cfg.amount > 0)) return toast('اكتب المبلغ الشهري', true); }
+    if (F.month) { cfg.start = $('#mstart').value; if (!/^\d{4}-\d{2}$/.test(cfg.start)) return toast('اختر أول شهر', true); }
+    if (M.board === 'tourney' || (F.draw && $('#mdraw').checked)) cfg.names = shuffle(cfg.names); // قرعة
+    if (M.board === 'daily') cfg.start = isoDay(new Date());
+    if (F.challenge) {
+      cfg.goal = $('#cgoal').value.trim().slice(0, 40); cfg.unit = $('#cunit').value.trim().slice(0, 12) || 'مرة';
+      cfg.target = numIn($('#ctarget').value) || 0; cfg.end = $('#cend').value || '';
+      if (!cfg.goal) return toast('اكتب الهدف', true);
+    }
     const btn = e.currentTarget;
     btn.disabled = true; btn.textContent = 'جاري الإنشاء…';
     try { await createSession(id, ($('#title').value.trim() || M.name).slice(0, TITLE_LEN), cfg); }
@@ -1369,7 +1413,7 @@ function viewMode(id) {
 
 function brokenLink() {
   app.innerHTML = `${backLink()}<div class="card center"><div class="big-ic">🔗</div><h3>الرابط ناقص أو تغيّر</h3>
-    <p class="muted">يمكن انقص منه حرف وقت النسخ. ارجع للرسالة وانسخ الرابط كامل، أو اضغط عليه مباشرة بدل النسخ.</p></div>`;
+    <p class="muted">يمكن نقص منه حرف وقت النسخ. ارجع للرسالة وانسخ الرابط كامل، أو اضغط عليه مباشرة بدل النسخ.</p></div>`;
 }
 
 /* ============ التوجيه ============ */
@@ -1386,6 +1430,7 @@ function route() {
     app.innerHTML = `<div class="card center"><h3>المتصفح ما يدعم التشفير</h3><p class="muted">افتح الصفحة برابط https من متصفح حديث.</p></div>`;
     return;
   }
+  if (h.startsWith('cd=')) return OFFLINE.countdown(h.slice(3).replace(/[^\w-]/g, ''));
   if (h.startsWith('c=')) return openCapsuleLink(h.slice(2).replace(/[^\w-]/g, ''));
   if (h.startsWith('new/')) {
     const id = h.slice(4).replace(/[^a-z]/g, '');
