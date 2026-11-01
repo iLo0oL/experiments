@@ -102,9 +102,11 @@ if [ -x /usr/share/code/bin/code ]; then
 exec /usr/share/code/bin/code --no-sandbox --disable-gpu "$@"
 EOF
   chmod 755 /usr/local/bin/code
-  for f in /usr/share/applications/code*.desktop; do
-    [ -f "$f" ] && sed -i -E -e 's# --no-sandbox --disable-gpu##g' \
-                             -e 's#^Exec=[^ ]*code( |$)#Exec=/usr/local/bin/code\1#' "$f"
+  # Find the menu entries by what they run, not by file name (Microsoft has
+  # renamed code.desktop before): any Exec= whose program is .../code or code.
+  for f in $(grep -lE '^Exec=([^ ]*/)?code( |$)' /usr/share/applications/*.desktop 2>/dev/null); do
+    sed -i -E -e 's# --no-sandbox --disable-gpu##g' \
+              -e 's#^Exec=([^ ]*/)?code( |$)#Exec=/usr/local/bin/code\2#' "$f"
   done
 fi
 want libreoffice-writer      "Word Documents"
