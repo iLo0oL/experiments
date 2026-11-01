@@ -87,6 +87,12 @@ code{direction:ltr;unicode-bidi:isolate;white-space:nowrap;background:#2c2c2e;bo
 </section>
 
 <section class="card">
+<h2><span class="ic">🎨</span><span>تحديث الشكل بس</span></h2>
+<p class="note">إذا قلت لك «حدّث الشكل»، الصق هالأمر في Termux والكمبيوتر مطفي (<code>desktop-stop</code>). يحدّث شكل ويندوز في دقيقة، وإعداداتك ما تتغيّر. بعدها شغّل الكمبيوتر.</p>
+<div class="cmd"><pre id="cmd4"></pre><button id="copy4" type="button">نسخ</button></div>
+</section>
+
+<section class="card">
 <h2><span class="ic">🟢</span><span>شكل ويندوز XP <span class="tag">اختياري</span></span></h2>
 <div class="shots">
 <img src="win10/preview-ar-xp.jpg" alt="سطح المكتب بشكل ويندوز XP">
@@ -132,5 +138,6 @@ function box(preId,btnId,text){
 box('cmd','copy','apt update && apt full-upgrade -y && curl -fsSL '+base+'setup.sh -o setup.sh && bash setup.sh');
 box('cmd2','copy2','curl -fsSL '+base+'debug.sh -o debug.sh && bash debug.sh');
 box('cmd3','copy3','curl -fsSL '+base+'commands.sh -o commands.sh && bash commands.sh');
+box('cmd4','copy4','curl -fsSL '+base+'win10/apply.sh -o $PREFIX/tmp/apply.sh && proot-distro login debian --user user --shared-tmp -- env DESKTOP_BASE='+base.replace(/\/$/,'')+' bash /tmp/apply.sh');
 </script>
 </body></html>
