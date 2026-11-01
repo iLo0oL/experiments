@@ -6,6 +6,8 @@
 #   - Windows 7 style Start menu: programs on the left,
 #     categories on the right, search at the bottom
 #   - Windows 10 theme, icons, window buttons and wallpaper
+#   - Windows names for the programs (Arabic and English)
+#   - Arabic (right-to-left) layout when the desktop runs in Arabic
 #
 #  Theme and icons by the B00merang Project (GPL-3.0):
 #    https://github.com/B00merang-Project/windows-10
@@ -17,7 +19,7 @@
 # =============================================================
 set -u
 
-BASE="${DESKTOP_BASE:-https://raw.githubusercontent.com/iLo0oL/experiments/main/tablet-desktop}"
+BASE="${DESKTOP_BASE:-https://ilo0ol.github.io/experiments/tablet-desktop}"
 THEME_URL="https://github.com/B00merang-Project/windows-10/archive/refs/heads/master.tar.gz"
 ICONS_URL="https://github.com/B00merang-Artwork/windows-10/archive/refs/heads/master.tar.gz"
 
@@ -26,6 +28,8 @@ ICONS="$HOME/.icons"
 CONF="$HOME/.config/xfce4"
 XML="$CONF/xfconf/xfce-perchannel-xml"
 WALL="$HOME/.local/share/backgrounds/win10.jpg"
+APPS="$HOME/.local/share/applications"
+BIN="$HOME/.local/bin"
 
 ok()   { printf '\033[1;32m  [ok] %s\033[0m\n' "$*"; }
 fail() { printf '\033[1;31m  [failed] %s\033[0m\n' "$*"; }
@@ -228,13 +232,16 @@ cat > "$XML/xfce4-panel.xml" <<'EOF'
       <property name="show-command-menueditor" type="bool" value="false"/>
       <property name="show-command-profile" type="bool" value="false"/>
       <property name="favorites" type="array">
-        <value type="string" value="firefox.desktop"/>
+        <value type="string" value="firefox-esr.desktop"/>
         <value type="string" value="thunar.desktop"/>
-        <value type="string" value="code-oss.desktop"/>
         <value type="string" value="libreoffice-writer.desktop"/>
         <value type="string" value="libreoffice-calc.desktop"/>
+        <value type="string" value="libreoffice-impress.desktop"/>
         <value type="string" value="org.xfce.mousepad.desktop"/>
-        <value type="string" value="xfce4-terminal.desktop"/>
+        <value type="string" value="org.xfce.ristretto.desktop"/>
+        <value type="string" value="vlc.desktop"/>
+        <value type="string" value="galculator.desktop"/>
+        <value type="string" value="run-exe.desktop"/>
         <value type="string" value="xfce-settings-manager.desktop"/>
       </property>
     </property>
@@ -275,19 +282,117 @@ cat > "$XML/xfce4-panel.xml" <<'EOF'
 EOF
 
 # pinned taskbar apps
-launcher() { # id file name exec icon
+launcher() { # id file english arabic exec icon
   mkdir -p "$CONF/panel/launcher-$1"
   cat > "$CONF/panel/launcher-$1/$2" <<EOF
 [Desktop Entry]
 Type=Application
 Name=$3
-Exec=$4
-Icon=$5
+Name[ar]=$4
+Exec=$5
+Icon=$6
 EOF
 }
-launcher 2 files.desktop    "File Explorer" "thunar"         system-file-manager
-launcher 3 browser.desktop  "Browser"       "firefox"        web-browser
-launcher 4 terminal.desktop "Command Prompt" "xfce4-terminal" utilities-terminal
-
+launcher 2 files.desktop    "File Explorer"    "مستكشف الملفات"  "thunar"         system-file-manager
+launcher 3 browser.desktop  "Internet Browser" "متصفح الإنترنت" "x-www-browser"  web-browser
+launcher 4 terminal.desktop "Command Prompt"   "موجه الأوامر"    "xfce4-terminal" utilities-terminal
 ok "Taskbar, Start menu and settings"
+
+# ---------- Windows names for the programs ----------
+# rename "<desktop ids>" "English" "Arabic" [icon]
+rename() {
+  local id d
+  mkdir -p "$APPS"
+  for id in $1; do
+    for d in /usr/local/share/applications /usr/share/applications; do
+      [ -f "$d/$id" ] || continue
+      awk -v en="$2" -v ar="$3" -v icon="${4:-}" '
+        /^\[/ { main = ($0 == "[Desktop Entry]") }
+        main && /^Name(\[[^]]*\])?=/ { if (!n++) { print "Name=" en; print "Name[ar]=" ar }; next }
+        main && /^GenericName(\[[^]]*\])?=/ { next }
+        main && icon != "" && /^Icon=/ { print "Icon=" icon; next }
+        { print }' "$d/$id" > "$APPS/$id"
+      break
+    done
+  done
+}
+rename "thunar.desktop"                                      "File Explorer"      "مستكشف الملفات"   system-file-manager
+rename "org.xfce.mousepad.desktop mousepad.desktop"          "Notepad"            "المفكرة"          accessories-text-editor
+rename "xfce4-terminal.desktop"                              "Command Prompt"     "موجه الأوامر"     utilities-terminal
+rename "firefox-esr.desktop firefox.desktop"                 "Internet Browser"   "متصفح الإنترنت"  web-browser
+rename "xfce-settings-manager.desktop"                       "Control Panel"      "لوحة التحكم"      preferences-desktop
+rename "org.xfce.ristretto.desktop ristretto.desktop"        "Photos"             "الصور"            eog
+rename "galculator.desktop"                                  "Calculator"         "الحاسبة"          accessories-calculator
+rename "org.xfce.taskmanager.desktop xfce4-taskmanager.desktop" "Task Manager"    "إدارة المهام"     utilities-system-monitor
+rename "org.xfce.screenshooter.desktop xfce4-screenshooter.desktop" "Snipping Tool" "أداة القطع"     applets-screenshooter
+rename "vlc.desktop"                                         "Media Player"       "مشغل الوسائط"
+rename "libreoffice-writer.desktop"                          "Word Documents"     "مستندات Word"
+rename "libreoffice-calc.desktop"                            "Excel Spreadsheets" "جداول Excel"
+rename "libreoffice-impress.desktop"                         "PowerPoint Slides"  "عروض PowerPoint"
+rename "xarchiver.desktop"                                   "Zip Files"          "الملفات المضغوطة" package-x-generic
+rename "org.pulseaudio.pavucontrol.desktop pavucontrol.desktop" "Sound"           "الصوت"            multimedia-volume-control
+ok "Windows names for programs"
+
+# ---------- runs every time the desktop starts ----------
+mkdir -p "$BIN" "$HOME/.config/autostart"
+cat > "$BIN/desktop-tweaks" <<'EOF'
+#!/usr/bin/env bash
+# Runs each time the desktop starts (from ~/.config/autostart).
+scale="${GDK_SCALE:-1}"
+# window borders: big ones on a scaled-up screen
+if [ -d "$HOME/.themes/Windows-10/xfwm4" ]; then
+  if [ "$scale" -ge 2 ] 2>/dev/null; then theme=Windows-10-hidpi; else theme=Windows-10; fi
+elif [ "$scale" -ge 2 ] 2>/dev/null; then theme=Default-xhdpi; else theme=Default; fi
+xfconf-query -c xfwm4 -p /general/theme -s "$theme" 2>/dev/null \
+  || xfconf-query -c xfwm4 -p /general/theme -n -t string -s "$theme"
+# Arabic Windows has the window buttons on the left and the title on the right
+case "${LANG:-}" in
+  ar*) layout="CMH|O"; align=right ;;
+  *)   layout="O|HMC"; align=left ;;
+esac
+xfconf-query -c xfwm4 -p /general/button_layout -s "$layout" 2>/dev/null \
+  || xfconf-query -c xfwm4 -p /general/button_layout -n -t string -s "$layout"
+xfconf-query -c xfwm4 -p /general/title_alignment -s "$align" 2>/dev/null \
+  || xfconf-query -c xfwm4 -p /general/title_alignment -n -t string -s "$align"
+xfconf-query -c xsettings -p /Gtk/CursorThemeSize -n -t int -s $((24 * scale)) 2>/dev/null
+# Arabic Windows: Start button on the right, clock on the left, menu mirrored
+case "${LANG:-}" in
+  ar*) order="9 8 7 6 5 4 3 2 1"; menu_alt=true ;;
+  *)   order="1 2 3 4 5 6 7 8 9"; menu_alt=false ;;
+esac
+now="$(xfconf-query -c xfce4-panel -p /panels/panel-1/plugin-ids 2>/dev/null | grep -E '^[0-9]+$' | tr '\n' ' ' | sed 's/ $//')"
+if [ -n "$now" ] && [ "$now" != "$order" ] && [ "$(echo "$now" | wc -w)" = 9 ]; then
+  args=(); for id in $order; do args+=(-t int -s "$id"); done
+  xfconf-query -c xfce4-panel -p /panels/panel-1/plugin-ids "${args[@]}"
+  xfconf-query -c xfce4-panel -p /plugins/plugin-1/position-categories-alternate -n -t bool -s "$menu_alt"
+  xfce4-panel -r >/dev/null 2>&1 &
+fi
+# wallpaper (only the first time, so your own choice is kept later)
+wall="$HOME/.local/share/backgrounds/win10.jpg"
+mark="$HOME/.config/xfce4/.win10-wallpaper-set"
+if [ -f "$wall" ] && [ ! -f "$mark" ]; then
+  for i in 1 2 3 4 5 6 7 8 9 10; do
+    paths="$(xfconf-query -c xfce4-desktop -l 2>/dev/null | grep 'workspace0/last-image$')"
+    [ -n "$paths" ] && break; sleep 1
+  done
+  for p in $paths; do
+    xfconf-query -c xfce4-desktop -p "$p" -s "$wall"
+    xfconf-query -c xfce4-desktop -p "${p%last-image}image-style" -n -t int -s 5
+  done
+  [ -n "$paths" ] && touch "$mark"
+fi
+# Alt+Shift switches the keyboard between English and Arabic
+command -v setxkbmap >/dev/null 2>&1 && setxkbmap -layout us,ara -option grp:alt_shift_toggle 2>/dev/null
+exit 0
+EOF
+chmod +x "$BIN/desktop-tweaks"
+cat > "$HOME/.config/autostart/desktop-tweaks.desktop" <<EOF
+[Desktop Entry]
+Type=Application
+Name=Desktop tweaks
+Exec=$BIN/desktop-tweaks
+OnlyShowIn=XFCE;
+EOF
+ok "Startup tweaks"
+
 echo "Done. Restart the desktop to see it: desktop-stop, then desktop"
