@@ -93,9 +93,20 @@ if ! command -v code >/dev/null 2>&1; then
 else
   ok "VS Code (already installed)"
 fi
-for f in /usr/share/applications/code.desktop /usr/share/applications/code-url-handler.desktop; do
-  [ -f "$f" ] && sed -i -E 's#^(Exec=/usr/share/code/code)( --no-sandbox --disable-gpu)?#\1 --no-sandbox --disable-gpu#' "$f"
-done
+# A wrapper that always adds the flags, and every VS Code menu entry points to it
+# (works whatever Exec= form Microsoft's .desktop files use).
+if [ -x /usr/share/code/bin/code ]; then
+  cat > /usr/local/bin/code <<'EOF'
+#!/bin/sh
+# VS Code inside proot: no Chromium sandbox, no GPU
+exec /usr/share/code/bin/code --no-sandbox --disable-gpu "$@"
+EOF
+  chmod 755 /usr/local/bin/code
+  for f in /usr/share/applications/code*.desktop; do
+    [ -f "$f" ] && sed -i -E -e 's# --no-sandbox --disable-gpu##g' \
+                             -e 's#^Exec=[^ ]*code( |$)#Exec=/usr/local/bin/code\1#' "$f"
+  done
+fi
 want libreoffice-writer      "Word Documents"
 want libreoffice-calc        "Excel Spreadsheets"
 want libreoffice-impress     "PowerPoint Slides"
