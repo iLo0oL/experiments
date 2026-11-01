@@ -12,6 +12,7 @@
 #  Stop the computer:      desktop-stop
 #  Options:                DESKTOP_SCALE=1|2|3   (size, default 2)
 #                          DESKTOP_LANG=en       (English instead of Arabic)
+#                          desktop-gpu on|off    (graphics chip, experimental)
 # =============================================================
 # Messages are in English because the Termux terminal can't
 # join Arabic letters or show them right-to-left.
@@ -49,6 +50,9 @@ apt-get "${APT[@]}" install x11-repo || die "Could not add the x11 repository."
 apt-get update || die "Could not refresh package lists."
 apt-get "${APT[@]}" install termux-x11-nightly pulseaudio proot-distro curl \
   || die "Could not install Termux:X11 / PulseAudio / proot-distro."
+# Experimental: lets Linux programs draw with the tablet's graphics chip (GPU)
+if apt-get "${APT[@]}" install virglrenderer-android; then ok "Graphics chip support"
+else printf "${Y}  [skipped] Graphics chip support (everything else still works)${N}\n"; fi
 ok "Termux part"
 
 step "3/6  Installing Debian Linux (about 1 GB, please wait)"
