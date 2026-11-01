@@ -31,7 +31,11 @@ case "${PREFIX:-}" in
   */com.termux/files/usr) ;;
   *) die "Run this inside the Termux app (installed from F-Droid or GitHub)." ;;
 esac
-ROOTFS="$PREFIX/var/lib/proot-distro/installed-rootfs/$DISTRO"
+# Files for Debian go to Termux's tmp folder, which is /tmp inside Debian
+# (--shared-tmp). This works with every proot-distro version, whatever
+# folder it keeps the Debian files in.
+SHARED_TMP="$PREFIX/tmp"
+mkdir -p "$SHARED_TMP"
 
 export DEBIAN_FRONTEND=noninteractive
 APT=(-y -o Dpkg::Options::=--force-confdef -o Dpkg::Options::=--force-confold)
@@ -48,7 +52,7 @@ apt-get "${APT[@]}" install termux-x11-nightly pulseaudio proot-distro curl \
 ok "Termux part"
 
 step "3/6  Installing Debian Linux (about 1 GB, please wait)"
-if [ -d "$ROOTFS/etc" ]; then
+if proot-distro login "$DISTRO" -- true >/dev/null 2>&1; then
   ok "Debian is already installed"
 else
   proot-distro install "$DISTRO" || die "Could not install Debian. Check your internet and run: bash setup.sh"
@@ -56,15 +60,15 @@ else
 fi
 
 step "4/6  Installing the desktop and programs inside Debian (10-30 minutes)"
-curl -fsSL "$BASE/debian-setup.sh" -o "$ROOTFS/root/debian-setup.sh" \
+curl -fsSL "$BASE/debian-setup.sh" -o "$SHARED_TMP/debian-setup.sh" \
   || die "Could not download debian-setup.sh from $BASE"
-proot-distro login "$DISTRO" -- env DESKTOP_USER="$DUSER" bash /root/debian-setup.sh \
+proot-distro login "$DISTRO" --shared-tmp -- env DESKTOP_USER="$DUSER" bash /tmp/debian-setup.sh \
   || die "Something went wrong inside Debian. Run 'bash setup.sh' again; it continues where it stopped."
 
 step "5/6  Applying the Windows look"
-curl -fsSL "$BASE/win10/apply.sh" -o "$ROOTFS/tmp/apply.sh" || die "Could not download the Windows look."
-chmod 755 "$ROOTFS/tmp/apply.sh"
-proot-distro login "$DISTRO" --user "$DUSER" -- env DESKTOP_BASE="$BASE" bash /tmp/apply.sh \
+curl -fsSL "$BASE/win10/apply.sh" -o "$SHARED_TMP/apply.sh" || die "Could not download the Windows look."
+chmod 755 "$SHARED_TMP/apply.sh"
+proot-distro login "$DISTRO" --user "$DUSER" --shared-tmp -- env DESKTOP_BASE="$BASE" bash /tmp/apply.sh \
   || die "Could not apply the Windows look."
 
 step "6/6  Creating the 'desktop' and 'desktop-stop' commands"
@@ -119,8 +123,8 @@ if [ ! -d "$HOME/storage" ]; then
   termux-setup-storage 2>/dev/null || true
 fi
 # Shortcut to the tablet's own files inside the computer's home folder
-TABLET_LINK="$ROOTFS/home/$DUSER/ملفات التابلت"
-[ -e "$TABLET_LINK" ] || [ -L "$TABLET_LINK" ] || ln -s /sdcard "$TABLET_LINK" 2>/dev/null
+proot-distro login "$DISTRO" --user "$DUSER" -- bash -c \
+  'L="$HOME/ملفات التابلت"; [ -e "$L" ] || [ -L "$L" ] || ln -s /sdcard "$L"' 2>/dev/null
 
 printf "\n${G}=====================================================${N}\n"
 printf "${G}  Done! Your tablet is now a computer.${N}\n"
