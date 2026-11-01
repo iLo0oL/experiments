@@ -115,6 +115,45 @@ want libreoffice-impress     "PowerPoint Slides"
 want libreoffice-gtk3        "Office look"
 want libreoffice-l10n-ar     "Office in Arabic"
 
+# Fonts with the same sizes as the Windows ones (Arial, Times New Roman,
+# Courier New, Calibri, Cambria), Arabic fonts, and spell check, so Word and
+# Excel files from Windows keep their layout.
+want fonts-liberation        "Fonts like Arial, Times New Roman, Courier New"
+want fonts-crosextra-carlito "Font like Calibri"
+want fonts-crosextra-caladea "Font like Cambria"
+want fonts-hosny-amiri       "Arabic font Amiri (like Traditional Arabic)"
+want hunspell-ar             "Arabic spell check"
+want hunspell-en-us          "English spell check"
+# Arabic Windows fonts that have no free twin: use the closest free one.
+mkdir -p /etc/fonts/conf.d
+cat > /etc/fonts/conf.d/61-windows-arabic.conf <<'EOF'
+<?xml version="1.0"?>
+<!DOCTYPE fontconfig SYSTEM "fonts.dtd">
+<!-- Closest free fonts for the Arabic fonts of Windows and Office -->
+<fontconfig>
+  <alias binding="same"><family>Simplified Arabic</family><prefer><family>Noto Naskh Arabic</family></prefer></alias>
+  <alias binding="same"><family>Simplified Arabic Fixed</family><prefer><family>Noto Naskh Arabic</family></prefer></alias>
+  <alias binding="same"><family>Traditional Arabic</family><prefer><family>Amiri</family></prefer></alias>
+  <alias binding="same"><family>Arabic Typesetting</family><prefer><family>Amiri</family></prefer></alias>
+  <alias binding="same"><family>Sakkal Majalla</family><prefer><family>Amiri</family></prefer></alias>
+  <alias binding="same"><family>Tahoma</family><prefer><family>DejaVu Sans</family><family>Noto Sans Arabic</family></prefer></alias>
+  <alias binding="same"><family>Segoe UI</family><prefer><family>Noto Sans</family><family>Noto Sans Arabic</family></prefer></alias>
+  <alias binding="same"><family>Microsoft Sans Serif</family><prefer><family>Liberation Sans</family><family>Noto Sans Arabic</family></prefer></alias>
+</fontconfig>
+EOF
+fc-cache -f >/dev/null 2>&1
+ok "Windows document fonts"
+
+# Add or Remove Programs (Synaptic). There is no polkit inside proot, so its
+# pkexec launcher is replaced by one that uses sudo (the user has sudo).
+want synaptic                "Add or Remove Programs"
+cat > /usr/local/bin/synaptic-pkexec <<'EOF'
+#!/bin/sh
+# Open Synaptic as administrator with sudo (pkexec does not work inside proot)
+exec sudo --preserve-env=DISPLAY,LANG,LC_ALL,LANGUAGE,GDK_SCALE,GDK_GL,LIBGL_ALWAYS_SOFTWARE,NO_AT_BRIDGE,TZ /usr/sbin/synaptic "$@"
+EOF
+chmod 755 /usr/local/bin/synaptic-pkexec
+
 step "Debian: graphics chip (experimental)"
 # The tablet's GPU is reached through the virgl server that 'desktop' starts in
 # Termux (socket /tmp/.virgl_test). Programs use it through Mesa's virpipe driver.
