@@ -25,7 +25,7 @@ want() {
 
 step "Debian: updating"
 # Some slim images skip translation files; Arabic needs them.
-sed -i '/path-exclude=\/usr\/share\/locale/d' /etc/dpkg/dpkg.cfg.d/* 2>/dev/null
+sed -i -E '/path-exclude[= ]+\/usr\/share\/locale/d' /etc/dpkg/dpkg.cfg.d/* 2>/dev/null
 apt-get update || die "Could not reach the Debian servers. Check your internet."
 apt-get "${APT[@]}" full-upgrade || die "Debian update failed."
 
