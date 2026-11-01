@@ -165,6 +165,10 @@ cat > "$XML/xfce4-desktop.xml" <<'EOF'
 </channel>
 EOF
 
+# xfce4-desktop.xml was just rewritten (no wallpaper in it), so let the
+# startup tweaks set the wallpaper again
+rm -f "$CONF/.win10-wallpaper-set"
+
 # Taskbar: [Start][Files][Browser][Terminal][open windows ...........][tray][clock][|]
 cat > "$XML/xfce4-panel.xml" <<'EOF'
 <?xml version="1.0" encoding="UTF-8"?>
@@ -387,6 +391,23 @@ if [ -f "$wall" ] && [ ! -f "$mark" ]; then
     xfconf-query -c xfce4-desktop -p "${p%last-image}image-style" -n -t int -s 5
   done
   [ -n "$paths" ] && touch "$mark"
+fi
+# Desktop icons start at the top right in Arabic (like Arabic Windows), top left in English
+# (xfdesktop gravity flags: 1 = horizontal, 2 = right, 4 = bottom)
+case "${LANG:-}" in ar*) gravity=2 ;; *) gravity=0 ;; esac
+xfconf-query -c xfce4-desktop -p /desktop-icons/gravity -n -t int -s "$gravity" 2>/dev/null
+# Windows keyboard shortcuts. Added once the keyboard settings have copied the
+# defaults into "custom" (override=true); before that they would be reset.
+for i in 1 2 3 4 5 6 7 8 9 10; do
+  xfconf-query -c xfce4-keyboard-shortcuts -p /commands/custom/override >/dev/null 2>&1 && break
+  sleep 1
+done
+if xfconf-query -c xfce4-keyboard-shortcuts -p /commands/custom/override >/dev/null 2>&1; then
+  sc() { xfconf-query -c xfce4-keyboard-shortcuts -p "$1" -n -t string -s "$2" 2>/dev/null; }
+  sc '/commands/custom/<Primary><Alt>Delete' xfce4-taskmanager      # Ctrl+Alt+Del -> Task Manager
+  sc '/commands/custom/Super_L'              xfce4-popup-whiskermenu # Windows key -> Start menu
+  sc '/commands/custom/<Super>e'             thunar                  # Win+E -> File Explorer
+  sc '/xfwm4/custom/<Super>d'                show_desktop_key        # Win+D -> show desktop
 fi
 # Alt+Shift switches the keyboard between English and Arabic
 command -v setxkbmap >/dev/null 2>&1 && setxkbmap -layout us,ara -option grp:alt_shift_toggle 2>/dev/null
