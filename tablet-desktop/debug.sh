@@ -1,66 +1,51 @@
 #!/data/data/com.termux/files/usr/bin/bash
 # =============================================================
 #  Black screen check. Run inside Termux:   bash debug.sh
-#  Known so far: the screen can draw a colour (xsetroot), the
-#  desktop parts run, but nothing shows (also without compositor).
-#  This test:
-#   1) shows a simple window with eyes (xeyes)
-#   2) starts the desktop parts
-#   3) lists the windows on the screen and where each part waits
-#  Put Termux and Termux:X11 side by side, answer y or n,
-#  then send a photo of Termux.
+#  Known so far: simple X windows show (xeyes), but the GTK
+#  desktop parts hang before opening any window (0 windows,
+#  all waiting in futex). This test shows:
+#   1) the threads of a stuck xfwm4 and what each waits on
+#   2) Notepad (mousepad) with English, then Arabic language,
+#      with GLib debug messages and the window count
+#  No questions this time. Send a photo of Termux at the end.
 # =============================================================
-LOG="$HOME/debug-f.log"
-ask() { local a; read -r -p "$1 (y/n): " a; case "$a" in *[yY]*) return 0 ;; *) return 1 ;; esac; }
-inside() { proot-distro login debian --user user --shared-tmp -- env DISPLAY=:0 "$@"; }
+inside() { proot-distro login debian --user user --shared-tmp -- env DISPLAY=:0 \
+             XDG_RUNTIME_DIR=/tmp/runtime-user NO_AT_BRIDGE=1 "$@"; }
+wins() { inside bash -c 'xwininfo -root -children 2>&1 | grep -m1 children'; }
 
-: >"$LOG"
 echo "== stopping old sessions"
-pkill -9 -f 'xfce4-session|xfwm4|xfce4-panel|xfdesktop|xfsettingsd|xfconfd|dbus-daemon|dbus-launch|gvfs|xeyes' 2>/dev/null
+pkill -9 -f 'xfce4-session|xfwm4|xfce4-panel|xfdesktop|xfsettingsd|xfconfd|dbus-daemon|dbus-launch|gvfs|xeyes|mousepad' 2>/dev/null
 pkill -9 -f 'bin/proot' 2>/dev/null
 pkill -f 'com.termux.x11' 2>/dev/null
 sleep 2
-
-echo "== installing 2 small test tools (x11-utils, x11-apps)..."
-proot-distro login debian -- bash -c \
-  'DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends x11-utils x11-apps >/dev/null 2>&1 && echo "   ok" || echo "   failed"'
-
-echo "== starting the screen"
-pulseaudio --start --exit-idle-time=-1 \
-  --load="module-native-protocol-tcp auth-ip-acl=127.0.0.1 auth-anonymous=1" >/dev/null 2>&1
 termux-x11 :0 >"$HOME/x11-debug.log" 2>&1 &
 sleep 3
 am start --user 0 -n com.termux.x11/com.termux.x11.MainActivity >/dev/null 2>&1
 sleep 2
 
-echo "== Test 1: a window with eyes"
-inside xeyes -geometry 600x400+100+100 >>"$LOG" 2>&1 &
-sleep 6
-ask "Do you see EYES in Termux:X11?" && eyes=yes || eyes=no
-pkill -f xeyes 2>/dev/null
+echo "== 1) xfwm4 alone (Arabic), threads after 12 s:"
+inside bash -c 'mkdir -p -m 700 "$XDG_RUNTIME_DIR"; LANG=ar_SA.UTF-8 LC_ALL=ar_SA.UTF-8 \
+  exec dbus-run-session -- xfwm4 --compositor=off' >"$HOME/debug-g1.log" 2>&1 &
+sleep 12
+pid=$(pgrep -f '^[^ ]*xfwm4' | head -1)
+if [ -n "$pid" ]; then
+  for t in /proc/$pid/task/*; do
+    printf '   %-16s %s\n' "$(cat $t/comm 2>/dev/null)" "$(cat $t/wchan 2>/dev/null)"
+  done | head -8
+else
+  echo "   xfwm4 not running"
+fi
+echo "   $(wins)"
+tail -n 3 "$HOME/debug-g1.log" | cut -c1-100
+pkill -9 -f 'xfwm4|dbus-daemon|dbus-run-session' 2>/dev/null; sleep 2
 
-echo "== Test 2: desktop parts, 25 seconds..."
-proot-distro login debian --user user --shared-tmp -- env \
-  DISPLAY=:0 GDK_SCALE=2 LANG=ar_SA.UTF-8 LC_ALL=ar_SA.UTF-8 LANGUAGE=ar \
-  XDG_RUNTIME_DIR=/tmp/runtime-user NO_AT_BRIDGE=1 GIO_USE_VFS=local \
-  bash -c 'mkdir -p -m 700 "$XDG_RUNTIME_DIR"
-           eval "$(dbus-launch --sh-syntax)"
-           xfsettingsd & xfwm4 --compositor=off & sleep 2
-           xfdesktop & xfce4-panel &
-           wait' >>"$LOG" 2>&1 &
-sleep 25
-ask "Do you see the desktop now?" && desk=yes || desk=no
-
-echo "== RESULT: eyes=$eyes desktop=$desk"
-echo "== windows on the screen:"
-inside bash -c 'xwininfo -root -children 2>&1 | grep -E "children|\"" | cut -c1-90 | head -12'
-echo "== screen info:"
-inside bash -c 'xdpyinfo 2>&1 | grep -E "dimensions|MIT-SHM|Composite|XInputExtension" | head -5'
-echo "== where each part waits:"
-for p in xfwm4 xfdesktop xfce4-panel xfsettingsd xfconfd; do
-  pid=$(pgrep -f "^[^ ]*$p" | head -1)
-  [ -n "$pid" ] && echo "   $p: $(awk '/^State/{print $2}' /proc/$pid/status 2>/dev/null) $(cat /proc/$pid/wchan 2>/dev/null)" \
-                || echo "   $p: not running"
+for L in C.UTF-8 ar_SA.UTF-8; do
+  echo "== 2) Notepad with LANG=$L, 15 s:"
+  inside bash -c "LANG=$L LC_ALL=$L G_MESSAGES_DEBUG=all exec dbus-run-session -- mousepad" \
+    >"$HOME/debug-g2.log" 2>&1 &
+  sleep 15
+  echo "   $(wins)"
+  grep -v '^$' "$HOME/debug-g2.log" | tail -n 5 | cut -c1-100
+  pkill -9 -f 'mousepad|dbus-daemon|dbus-run-session' 2>/dev/null; sleep 2
 done
-echo "== messages:"; tail -n 8 "$LOG" | cut -c1-100
 echo "Take a photo of this screen and send it."
