@@ -93,7 +93,7 @@ nohup proot-distro login debian --user user --shared-tmp -- env \
   LANG="$lang" LC_ALL="$lang" LANGUAGE="${lang%%_*}" \
   XDG_RUNTIME_DIR=/tmp/runtime-user MOZ_FAKE_NO_SANDBOX=1 \
   bash -c 'mkdir -p -m 700 "$XDG_RUNTIME_DIR"; exec dbus-launch --exit-with-session xfce4-session' \
-  >/dev/null 2>&1 &
+  >"$HOME/.desktop.log" 2>&1 &
 echo "The computer is starting... open the Termux:X11 app if it didn't open by itself."
 echo "To stop it, come back here and type: desktop-stop"
 EOF

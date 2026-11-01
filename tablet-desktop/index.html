@@ -75,6 +75,12 @@ code{direction:ltr;unicode-bidi:isolate;white-space:nowrap;background:#2c2c2e;bo
 </section>
 
 <section class="card">
+<h2><span class="ic">🛠️</span><span>إذا طلعت لك شاشة سوداء</span></h2>
+<p class="note">إذا فتح Termux:X11 وطلعت شاشة سوداء وفيها مؤشر ✕ بس، ارجع لـ Termux والصق هالأمر. يشغّل الكمبيوتر ويحفظ كل الرسائل، وبعد ٣٠ ثانية يعرضها لك في Termux. صوّرها وأرسلها.</p>
+<div class="cmd"><pre id="cmd2"></pre><button id="copy2" type="button">نسخ</button></div>
+</section>
+
+<section class="card">
 <h2><span class="ic">💡</span><span>نصايح</span></h2>
 <ul>
 <li><b>الكتابة بالعربي</b> من الكيبورد: <code>Alt + Shift</code> يبدّل بين العربي والإنجليزي.</li>
@@ -94,16 +100,18 @@ code{direction:ltr;unicode-bidi:isolate;white-space:nowrap;background:#2c2c2e;bo
 </section>
 </main>
 <script>
-const fallback='https://ilo0ol.github.io/experiments/tablet-desktop/setup.sh';
-const url=/^https?:$/.test(location.protocol)?new URL('setup.sh',location.href).href:fallback;
-const text='apt update && apt full-upgrade -y && curl -fsSL '+url+' -o setup.sh && bash setup.sh';
-const pre=document.getElementById('cmd'),btn=document.getElementById('copy');
-pre.textContent=text;
-btn.onclick=async()=>{
-  try{await navigator.clipboard.writeText(text)}
-  catch(e){const r=document.createRange();r.selectNodeContents(pre);const s=getSelection();s.removeAllRanges();s.addRange(r);document.execCommand('copy')}
-  btn.textContent='تم ✓';btn.classList.add('done');
-  setTimeout(()=>{btn.textContent='نسخ';btn.classList.remove('done')},2000);
-};
+const base=/^https?:$/.test(location.protocol)?new URL('.',location.href).href:'https://ilo0ol.github.io/experiments/tablet-desktop/';
+function box(preId,btnId,text){
+  const pre=document.getElementById(preId),btn=document.getElementById(btnId);
+  pre.textContent=text;
+  btn.onclick=async()=>{
+    try{await navigator.clipboard.writeText(text)}
+    catch(e){const r=document.createRange();r.selectNodeContents(pre);const s=getSelection();s.removeAllRanges();s.addRange(r);document.execCommand('copy')}
+    btn.textContent='تم ✓';btn.classList.add('done');
+    setTimeout(()=>{btn.textContent='نسخ';btn.classList.remove('done')},2000);
+  };
+}
+box('cmd','copy','apt update && apt full-upgrade -y && curl -fsSL '+base+'setup.sh -o setup.sh && bash setup.sh');
+box('cmd2','copy2','curl -fsSL '+base+'debug.sh -o debug.sh && bash debug.sh');
 </script>
 </body></html>
