@@ -48,6 +48,25 @@ want fonts-noto-color-emoji  "Emoji"
 step "Debian: programs"
 want firefox-esr             "Internet Browser (Firefox)"
 want firefox-esr-l10n-ar     "Internet Browser in Arabic"
+# Ad blocker: Firefox installs uBlock Origin from addons.mozilla.org on its next
+# start and keeps it updated (the user can turn it off, not remove it).
+if [ -d /usr/lib/firefox-esr ]; then
+  mkdir -p /usr/lib/firefox-esr/distribution /etc/firefox/policies
+  cat > /usr/lib/firefox-esr/distribution/policies.json <<'EOF'
+{
+  "policies": {
+    "ExtensionSettings": {
+      "uBlock0@raymondhill.net": {
+        "installation_mode": "normal_installed",
+        "install_url": "https://addons.mozilla.org/firefox/downloads/latest/ublock-origin/latest.xpi"
+      }
+    }
+  }
+}
+EOF
+  cp /usr/lib/firefox-esr/distribution/policies.json /etc/firefox/policies/policies.json
+  ok "Ad blocker for the browser (uBlock Origin)"
+fi
 want mousepad                "Notepad"
 want ristretto               "Photos"
 want galculator              "Calculator"
