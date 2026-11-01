@@ -81,11 +81,19 @@ code{direction:ltr;unicode-bidi:isolate;white-space:nowrap;background:#2c2c2e;bo
 </section>
 
 <section class="card">
+<h2><span class="ic">🔄</span><span>تحديث أوامر التشغيل</span></h2>
+<p class="note">إذا قلت لك «حدّث أوامر التشغيل»، الصق هالأمر في Termux. يحدّث أمر <code>desktop</code> وزر Computer في ثواني، بدون ما يعيد التثبيت كامل.</p>
+<div class="cmd"><pre id="cmd3"></pre><button id="copy3" type="button">نسخ</button></div>
+</section>
+
+<section class="card">
 <h2><span class="ic">💡</span><span>نصايح</span></h2>
 <ul>
 <li><b>الكتابة بالعربي</b> من الكيبورد: <code>Alt + Shift</code> يبدّل بين العربي والإنجليزي.</li>
 <li><b>تبي الواجهة بالإنجليزي؟</b> شغّله كذا: <code>DESKTOP_LANG=en desktop</code>.</li>
-<li><b>الخط صغير أو كبير؟</b> شغّله كذا: <code>DESKTOP_SCALE=1 desktop</code> لحجم أصغر، أو <code>DESKTOP_SCALE=3 desktop</code> لحجم أكبر. الحجم الافتراضي 2.</li>
+<li><b>الخط صغير أو كبير؟</b> اكتب في Termux <code>desktop-size 1</code> لحجم أصغر، أو <code>desktop-size 3</code> لحجم أكبر، أو <code>desktop-size 2</code> للحجم الافتراضي. يحفظ اختيارك، وزر Computer يشغّل عليه.</li>
+<li><b>تبيها مثل شاشة تو كي؟</b> من إشعار Termux:X11 ← Preferences ← Output: خلّ <code>Display resolution mode</code> على <code>exact</code> و<code>Display resolution</code> على <code>2560x1600</code>، وبعدها اكتب <code>desktop-size 1</code>. وللفل اتش دي اختر <code>1920x1200</code>.</li>
+<li><b>اختصارات ويندوز:</b> <code>Ctrl + Alt + Delete</code> يفتح إدارة المهام، وزر ويندوز يفتح قائمة ابدأ، و<code>Win + E</code> يفتح مستكشف الملفات، و<code>Win + D</code> يظهر سطح المكتب. إذا ما اشتغلت، فعّل <code>Intercept system shortcuts</code> من Preferences ← Keyboard في Termux:X11.</li>
 <li><b>اللمس:</b> من إعدادات Termux:X11 (من الإشعار حقه اضغط Preferences) غيّر <code>Touchscreen input mode</code> من Trackpad إلى اللمس المباشر، عشان تضغط على الشاشة نفسها بدل ما تحرّك مؤشر.</li>
 <li><b>ملفات التابلت</b> (صورك وتنزيلاتك) تلقاها في مستكشف الملفات داخل مجلد «ملفات التابلت».</li>
 <li><b>تبي برامج زيادة؟</b> افتح «موجه الأوامر» داخل الكمبيوتر واكتب مثلاً <code>sudo apt install gimp</code> (برنامج تعديل صور مثل فوتوشوب).</li>
@@ -113,5 +121,6 @@ function box(preId,btnId,text){
 }
 box('cmd','copy','apt update && apt full-upgrade -y && curl -fsSL '+base+'setup.sh -o setup.sh && bash setup.sh');
 box('cmd2','copy2','curl -fsSL '+base+'debug.sh -o debug.sh && bash debug.sh');
+box('cmd3','copy3','curl -fsSL '+base+'commands.sh -o commands.sh && bash commands.sh');
 </script>
 </body></html>
