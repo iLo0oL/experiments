@@ -115,6 +115,84 @@ want libreoffice-impress     "PowerPoint Slides"
 want libreoffice-gtk3        "Office look"
 want libreoffice-l10n-ar     "Office in Arabic"
 
+step "Debian: graphics chip (experimental)"
+# The tablet's GPU is reached through the virgl server that 'desktop' starts in
+# Termux (socket /tmp/.virgl_test). Programs use it through Mesa's virpipe driver.
+want mesa-utils "Graphics test tools"
+cat > /usr/local/bin/gpu <<'EOF'
+#!/bin/sh
+# Run a program with the tablet's graphics chip (experimental):  gpu <program>
+if [ -S /tmp/.virgl_test ]; then
+  export GALLIUM_DRIVER=virpipe MESA_GL_VERSION_OVERRIDE="${MESA_GL_VERSION_OVERRIDE:-4.0}"
+else
+  echo "gpu: the graphics chip is not available, using the processor." >&2
+fi
+[ $# -gt 0 ] || { echo "Usage: gpu <program>"; exit 1; }
+exec "$@"
+EOF
+chmod 755 /usr/local/bin/gpu
+cat > /usr/local/bin/gpu-test <<'EOF'
+#!/bin/bash
+# Graphics chip test: spinning gears for 12 seconds with the processor (CPU),
+# then 12 seconds with the graphics chip (GPU), and the speed of each.
+# (glxinfo can't be used: with virpipe it fails on its hidden window.)
+gears() {  # gears <command prefix...>  -> sets R (renderer) and F (frames per second)
+  local out
+  out="$(timeout 12 "$@" stdbuf -oL glxgears -info 2>&1)"
+  R="$(printf '%s\n' "$out" | sed -n 's/^GL_RENDERER *= *//p' | head -1)"
+  F="$(printf '%s\n' "$out" | grep 'FPS' | tail -1 | sed -E 's/.*= *([0-9]+).*/\1/')"
+  [ -n "$F" ] || F=0
+}
+note() { command -v notify-send >/dev/null 2>&1 && notify-send -i video-display "اختبار كرت الشاشة" "$1"; }
+echo "Graphics chip test"
+echo "=================="
+echo
+echo "1) With the processor (CPU), 12 seconds..."
+gears env GALLIUM_DRIVER=llvmpipe
+cpu=$F; echo "   $R: $cpu frames per second"
+echo
+if [ ! -S /tmp/.virgl_test ]; then
+  echo "The graphics chip is not available."
+  echo "Update first (step 4 on the instructions page), then restart the computer."
+  note "كرت الشاشة مو متاح. حدّث من الخطوة ٤ وأعد تشغيل الكمبيوتر."
+  exit 1
+fi
+echo "2) With the graphics chip (GPU), 12 seconds..."
+gears gpu
+gpu=$F; echo "   $R: $gpu frames per second"
+echo
+case "$R" in
+  virgl*)
+    if [ "$gpu" -gt "$cpu" ]; then
+      echo "The graphics chip works and is faster."
+      echo "To use it for all programs: in Termux type  desktop-gpu on  then restart the computer."
+      echo "For one program only, in Terminal:  gpu <program>"
+      msg="يشتغل وأسرع: المعالج $cpu إطار بالثانية، وكرت الشاشة $gpu إطار بالثانية."
+    else
+      echo "The graphics chip works, but it is not faster here. Keep the normal setting."
+      msg="يشتغل بس مو أسرع: المعالج $cpu، وكرت الشاشة $gpu إطار بالثانية. خلّه على العادي."
+    fi ;;
+  *)
+    echo "The graphics chip did not answer. Restart the computer and try again."
+    msg="كرت الشاشة ما استجاب. أعد تشغيل الكمبيوتر وجرّب مرة ثانية." ;;
+esac
+note "$msg"
+exit 0
+EOF
+chmod 755 /usr/local/bin/gpu-test
+cat > /usr/share/applications/gpu-test.desktop <<'EOF'
+[Desktop Entry]
+Type=Application
+Name=Graphics chip test
+Name[ar]=اختبار كرت الشاشة
+Comment=Compare drawing with the processor and with the graphics chip
+Comment[ar]=يقارن الرسم بالمعالج وبكرت الشاشة
+Exec=xfce4-terminal --hold --title=GPU -x gpu-test
+Icon=video-display
+Categories=System;
+EOF
+ok "Graphics chip: 'gpu <program>', and 'Graphics chip test' in the Start menu"
+
 # The desktop's message bus needs a machine id
 dbus-uuidgen --ensure 2>/dev/null
 [ -s /etc/machine-id ] || dbus-uuidgen > /etc/machine-id 2>/dev/null
