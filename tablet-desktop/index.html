@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#0e0e10">
+<title>التابلت كمبيوتر</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;background:#0e0e10;color:#fff;font-family:system-ui,-apple-system,Tahoma,sans-serif;padding:32px 20px 60px;line-height:1.7}
+main{max-width:760px;margin:0 auto}
+a{color:#64d2ff}
+h1{font-size:28px;margin:0 0 4px}
+.sub{opacity:.65;margin:0 0 26px}
+.card{background:#1c1c1e;border-radius:18px;padding:20px 20px 8px;margin-bottom:18px}
+.card h2{font-size:20px;margin:0 0 4px;display:flex;align-items:center;gap:10px}
+.card h2 .ic{font-size:26px;width:46px;height:46px;display:grid;place-items:center;background:#2c2c2e;border-radius:12px;flex:none}
+.tag{display:inline-block;font-size:12px;background:#30d15833;color:#30d158;border-radius:8px;padding:1px 8px;margin-inline-start:4px;vertical-align:middle}
+.note{opacity:.7;font-size:14px;margin:6px 0 14px}
+ol,ul{padding-inline-start:22px;margin:10px 0 16px}
+li{margin-bottom:10px}
+li b{color:#ffd60a}
+code{direction:ltr;unicode-bidi:isolate;white-space:nowrap;background:#2c2c2e;border-radius:6px;padding:1px 7px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:14px}
+.cmd{direction:ltr;text-align:left;display:flex;gap:8px;align-items:stretch;margin:10px 0 6px}
+.cmd pre{flex:1;margin:0;background:#000;border:1px solid #333;border-radius:12px;padding:12px 14px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px;white-space:pre-wrap;word-break:break-all;color:#30d158}
+.cmd button{flex:none;border:0;border-radius:12px;background:#0a84ff;color:#fff;font:inherit;font-weight:700;padding:0 18px;cursor:pointer}
+.cmd button.done{background:#30d158}
+.links{display:flex;flex-wrap:wrap;gap:8px;margin:6px 0 2px}
+.links a{background:#2c2c2e;border-radius:10px;padding:5px 12px;text-decoration:none;font-size:14px}
+.back{display:inline-block;margin-bottom:18px;text-decoration:none;opacity:.8}
+.shots{display:grid;gap:10px;margin:12px 0 16px}
+.shots img{width:100%;border-radius:12px;display:block;border:1px solid #333}
+.tag.exp{background:#ff9f0a33;color:#ff9f0a}
+</style></head><body><main>
+<a class="back" href="../">→ تجاربي</a>
+<h1>💻 التابلت كمبيوتر</h1>
+<p class="sub">خلّ جالكسي تاب S9 Ultra يشتغل كأنه كمبيوتر. فيه طريقتين، وتقدر تستخدمهم مع بعض.</p>
+
+<section class="card">
+<h2><span class="ic">🖥️</span><span>الطريقة ١: سامسونج DeX <span class="tag">موجود بجهازك</span></span></h2>
+<p class="note">ما تحتاج تثبّت شي. يعطيك شكل الكمبيوتر: شريط مهام ونوافذ تكبّرها وتصغّرها.</p>
+<ol>
+<li>اسحب من فوق الشاشة لتحت <b>مرتين</b> عشان تفتح الإعدادات السريعة.</li>
+<li>اضغط زر <b>DeX</b>. إذا ما لقيته اضغط ✏️ (تعديل) وأضفه للقائمة.</li>
+<li>ركّب كيبورد الكفر أو أي كيبورد وماوس بلوتوث، ويصير عندك لابتوب.</li>
+<li>تبيه على شاشة كبيرة؟ وصّل التابلت بشاشة أو تلفزيون بكيبل <b>USB-C إلى HDMI</b>.</li>
+</ol>
+<p class="note">ملاحظة: البرامج في DeX تبقى تطبيقات أندرويد. إذا تبي كمبيوتر حقيقي بشكل ويندوز، شوف الطريقة ٢.</p>
+</section>
+
+<section class="card">
+<h2><span class="ic">🪟</span><span>الطريقة ٢: كمبيوتر بشكل ويندوز ١٠، وبالعربي</span></h2>
+<p class="note">كمبيوتر حقيقي (لينكس) شكله مثل ويندوز ١٠، وقائمة ابدأ مثل ويندوز ٧، والواجهة كلها بالعربي. فيه مستكشف الملفات، ومتصفح الإنترنت، والمفكرة، والحاسبة، والصور، ومشغل الوسائط، ومستندات Word وجداول Excel وعروض PowerPoint. يشتغل بدون نت، وما يحتاج روت ولا يأثر على جهازك.</p>
+<div class="shots">
+<img src="win10/preview-ar-start-menu.jpg" alt="قائمة ابدأ بالعربي">
+<img src="win10/preview-ar-windows.jpg" alt="مستكشف الملفات والمفكرة بالعربي">
+</div>
+<ol>
+<li><b>نزّل تطبيق Termux</b> من F-Droid. لا تنزّله من Google Play لأن نسخته مختلفة. في صفحة F-Droid انزل للإصدار المكتوب جنبه «مقترحة» (مو «تجريبي») واضغط «نزّل APK» تحته.
+<div class="links"><a href="https://f-droid.org/packages/com.termux/" target="_blank" rel="noopener">F-Droid</a><a href="https://github.com/termux/termux-app/releases" target="_blank" rel="noopener">GitHub</a></div></li>
+<li><b>نزّل تطبيق Termux:X11</b>، وهو الشاشة اللي يطلع فيها سطح المكتب. من صفحة الإصدارات نزّل الملف <code>termux-x11-universal-debug.apk</code>. لا تنزّل اللي اسمه فيه <code>sharedUid</code>.
+<div class="links"><a href="https://github.com/termux/termux-x11/releases" target="_blank" rel="noopener">Termux:X11 على GitHub</a></div>
+<span class="note">إذا طلع لك تنبيه Google «تم حظر تطبيق غير آمن»: هذا طبيعي مع هالتطبيقات لأنها مصنوعة لإصدار أندرويد قديم عن قصد. اضغط «التثبيت على أي حال» (مو «حسنًا»). وإذا منعك «الحظر التلقائي» من سامسونج: الإعدادات ← الأمان والخصوصية ← الحظر التلقائي ← طفّه، وبعد التثبيت ترجّعه إذا تبي.</span></li>
+<li><b>إعداد مهم عشان ما يقفل لحاله:</b>
+<ul>
+<li>فعّل خيارات المطوّر: الإعدادات ← حول الجهاز اللوحي ← معلومات البرامج ← اضغط «رقم الإصدار» ٧ مرات.</li>
+<li>الإعدادات ← خيارات المطوّر ← فعّل <code>Disable child process restrictions</code> (تعطيل قيود العمليات الفرعية).</li>
+<li>الإعدادات ← التطبيقات ← Termux ← البطارية ← <b>غير مقيّدة</b>.</li>
+</ul></li>
+<li><b>افتح Termux</b> والصق هالأمر واضغط Enter:
+<div class="cmd"><pre id="cmd"></pre><button id="copy" type="button">نسخ</button></div>
+<span class="note">ياخذ من ٢٠ إلى ٤٠ دقيقة حسب سرعة النت، ويحتاج تقريباً ٤ جيجا مساحة. إذا طلب منك صلاحية الملفات، وافق.</span></li>
+<li><b>شغّل الكمبيوتر:</b> اكتب <code>desktop</code> في Termux، وبيفتح Termux:X11 وفيه سطح المكتب.<br>
+لإيقافه ارجع لـ Termux واكتب <code>desktop-stop</code>.</li>
+<li><b>زر على الشاشة الرئيسية (اختياري):</b> نزّل تطبيق Termux:Widget من F-Droid، وأضف الويدجت حقه للشاشة الرئيسية، واختر <code>Computer</code>. بعدها تضغط عليه مرة وحدة ويشتغل الكمبيوتر.
+<div class="links"><a href="https://f-droid.org/packages/com.termux.widget/" target="_blank" rel="noopener">Termux:Widget</a></div></li>
+</ol>
+</section>
+
+<section class="card">
+<h2><span class="ic">🛠️</span><span>إذا طلعت لك شاشة سوداء</span></h2>
+<p class="note">إذا فتح Termux:X11 وطلعت شاشة سوداء وفيها مؤشر ✕ بس، ارجع لـ Termux والصق هالأمر. يشغّل الكمبيوتر ويحفظ كل الرسائل، وبعد ٣٠ ثانية يعرضها لك في Termux. صوّرها وأرسلها.</p>
+<div class="cmd"><pre id="cmd2"></pre><button id="copy2" type="button">نسخ</button></div>
+</section>
+
+<section class="card">
+<h2><span class="ic">💡</span><span>نصايح</span></h2>
+<ul>
+<li><b>الكتابة بالعربي</b> من الكيبورد: <code>Alt + Shift</code> يبدّل بين العربي والإنجليزي.</li>
+<li><b>تبي الواجهة بالإنجليزي؟</b> شغّله كذا: <code>DESKTOP_LANG=en desktop</code>.</li>
+<li><b>الخط صغير أو كبير؟</b> شغّله كذا: <code>DESKTOP_SCALE=1 desktop</code> لحجم أصغر، أو <code>DESKTOP_SCALE=3 desktop</code> لحجم أكبر. الحجم الافتراضي 2.</li>
+<li><b>اللمس:</b> من إعدادات Termux:X11 (من الإشعار حقه اضغط Preferences) غيّر <code>Touchscreen input mode</code> من Trackpad إلى اللمس المباشر، عشان تضغط على الشاشة نفسها بدل ما تحرّك مؤشر.</li>
+<li><b>ملفات التابلت</b> (صورك وتنزيلاتك) تلقاها في مستكشف الملفات داخل مجلد «ملفات التابلت».</li>
+<li><b>تبي برامج زيادة؟</b> افتح «موجه الأوامر» داخل الكمبيوتر واكتب مثلاً <code>sudo apt install gimp</code> (برنامج تعديل صور مثل فوتوشوب).</li>
+<li><b>مع DeX:</b> تقدر تفتح Termux:X11 كنافذة داخل DeX، أو تعرضه على شاشة خارجية.</li>
+</ul>
+</section>
+
+<section class="card">
+<h2><span class="ic">⚙️</span><span>برامج ويندوز (.exe) <span class="tag exp">تجريبي</span></span></h2>
+<p class="note">برامج ويندوز مصنوعة لمعالجات الكمبيوتر (Intel وAMD)، ومعالج التابلت نوعه مختلف (ARM)، فما تشتغل مباشرة. السكربت يركّب أداتين تترجم لها: <b>Wine</b> يخلي البرنامج يحسب نفسه على ويندوز، و<b>Box64</b> يترجم أوامر معالج الكمبيوتر لمعالج التابلت. بعدها تفتح ملف <code>.exe</code> بضغطتين من مستكشف الملفات.</p>
+<p class="note">البرامج الخفيفة والقديمة غالباً تشتغل، والثقيلة أبطأ، وبعضها ما يشتغل أبداً. للألعاب، تطبيق <b>Winlator</b> على أندرويد أحسن.</p>
+</section>
+</main>
+<script>
+const base=/^https?:$/.test(location.protocol)?new URL('.',location.href).href:'https://ilo0ol.github.io/experiments/tablet-desktop/';
+function box(preId,btnId,text){
+  const pre=document.getElementById(preId),btn=document.getElementById(btnId);
+  pre.textContent=text;
+  btn.onclick=async()=>{
+    try{await navigator.clipboard.writeText(text)}
+    catch(e){const r=document.createRange();r.selectNodeContents(pre);const s=getSelection();s.removeAllRanges();s.addRange(r);document.execCommand('copy')}
+    btn.textContent='تم ✓';btn.classList.add('done');
+    setTimeout(()=>{btn.textContent='نسخ';btn.classList.remove('done')},2000);
+  };
+}
+box('cmd','copy','apt update && apt full-upgrade -y && curl -fsSL '+base+'setup.sh -o setup.sh && bash setup.sh');
+box('cmd2','copy2','curl -fsSL '+base+'debug.sh -o debug.sh && bash debug.sh');
+</script>
+</body></html>
