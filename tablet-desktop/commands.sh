@@ -37,6 +37,17 @@ tz="<${z}>${s}${hh#0}:${mm}"
 read -r -d '' SESSION <<'EOS'
 mkdir -p -m 700 "$XDG_RUNTIME_DIR"
 eval "$(dbus-launch --sh-syntax)"
+# Desktop icons start at the top right in Arabic, top left in English. xfdesktop
+# only uses this when it places icons, so set it before it starts, and once per
+# language clear the saved positions so the icons are placed from that side.
+# After that, icons the user moves stay where they put them.
+case "$LANG" in ar*) side=2 ;; *) side=0 ;; esac
+mark="$HOME/.config/xfce4/.icons-side"
+if [ "$(cat "$mark" 2>/dev/null)" != "$side" ]; then
+  xfconf-query -c xfce4-desktop -p /desktop-icons/gravity -n -t int -s "$side" 2>/dev/null
+  rm -f "$HOME/.config/xfce4/desktop/icons.screen0.yaml"
+  mkdir -p "$(dirname "$mark")" && echo "$side" > "$mark"
+fi
 running() { local f; for f in /proc/[0-9]*/comm; do [ "$(cat "$f" 2>/dev/null)" = "$1" ] && return 0; done; return 1; }
 xfce4-session &
 s=$!
