@@ -273,7 +273,7 @@ cat > "$XML/xfce4-panel.xml" <<'EOF'
         <value type="string" value="org.xfce.ristretto.desktop"/>
         <value type="string" value="vlc.desktop"/>
         <value type="string" value="galculator.desktop"/>
-        <value type="string" value="code.desktop"/>
+        <value type="string" value="com.microsoft.VSCode.desktop"/>
         <value type="string" value="run-exe.desktop"/>
         <value type="string" value="xfce-settings-manager.desktop"/>
       </property>
