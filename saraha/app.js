@@ -35,6 +35,19 @@ async function copyText(text) {
   }
   toast('تم النسخ ✓');
 }
+// خلط ثابت من بذرة: يطلع نفس الترتيب على كل الأجهزة (عشان شاشة العرض تمشي مع المشرف)
+function seededRand(str) {
+  let h = 1779033703 ^ str.length;
+  for (let i = 0; i < str.length; i++) { h = Math.imul(h ^ str.charCodeAt(i), 3432918353); h = (h << 13) | (h >>> 19); }
+  h = Math.imul(h ^ (h >>> 16), 2246822507); h = Math.imul(h ^ (h >>> 13), 3266489909);
+  let a = (h ^= h >>> 16) >>> 0;
+  return () => { a = (a + 0x6D2B79F5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+}
+function shuffleWith(a, rnd) {
+  a = a.slice();
+  for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
+  return a;
+}
 function shuffle(a) {
   a = a.slice();
   for (let i = a.length - 1; i > 0; i--) {
@@ -218,7 +231,7 @@ function openSheet(html) {
 function validEnv(e) {
   if (!e || e.v !== 1 || typeof e.iv !== 'string' || typeof e.ct !== 'string' || !B64.test(e.iv) || !B64.test(e.ct)) return false;
   if (e.k === 'm' || e.k === 't') return typeof e.e === 'string' && B64.test(e.e);
-  return ['s', 'r', 'w', 'x', 'q'].includes(e.k);
+  return ['s', 'r', 'w', 'x', 'q', 'v'].includes(e.k);
 }
 const strArr = (a, max, len) => Array.isArray(a) ? a.filter(x => typeof x === 'string' && x.trim()).map(x => x.slice(0, len)).slice(0, max) : [];
 
@@ -314,10 +327,13 @@ async function createSession(mode, title, cfg, opt = {}) {
   const key = b64u(raw);
   const { d, pk } = await Crypto.hostKeys();
   const rc = await Crypto.sha(d);
+  // جلسات Firebase: رمز سري للمشرف عشان يقدر يحذفها من السيرفر بعدين
+  let own = null;
+  if (isFb(topic)) { own = b64u(crypto.getRandomValues(new Uint8Array(24))); try { await FbRelay.claim(topic, own); } catch { own = null; } }
   const env = { v: 1, k: 's', ...(await Crypto.seal(await Crypto.aes(raw), { mode, title, cfg, pk, rc })) };
   if (JSON.stringify(env).length > 4000) throw Object.assign(new Error('too big'), { big: true });
   await Relay.post(topic, env);
-  const rec = { topic, key, d, mode, title, created: Date.now() };
+  const rec = { topic, key, d, mode, title, created: Date.now(), ...(own ? { own } : {}) };
   if (secret) {
     // سر المشرف (القرعة أو الأجوبة الصحيحة) مشفر بمفتاحه هو بس
     await Relay.post(topic, { v: 1, k: 't', ...(await Crypto.sealTo(pk, secret)) });
@@ -470,7 +486,7 @@ async function processOnce(my) {
       try {
         const x = await Crypto.open(my.room, r.env);
         if (x && typeof x.d === 'string' && await Crypto.sha(x.d) === rc) {
-          my.reveal = { ...x, ids: Array.isArray(x.ids) ? new Set(x.ids.map(String)) : null, hide: new Set(Array.isArray(x.hide) ? x.hide.map(String) : []), idx: r.idx, at: Date.now() };
+          my.reveal = { ...x, ids: Array.isArray(x.ids) ? new Set(x.ids.map(String)) : null, hide: new Set(Array.isArray(x.hide) ? x.hide.map(String) : []), idx: r.idx, rid: r.id, at: Date.now() };
           break;
         }
       } catch {}
@@ -498,6 +514,8 @@ async function processOnce(my) {
     // ننتظر شوي لو فيه مشاركات معتمدة ما وصلت لهذا الجهاز للحين
     if (list.length < R.ids.size && Date.now() - R.at < 4000) { setTimeout(() => process(my), 1000); return; }
   } else list = my.msgs.filter(r => !R.hide.has(r.id));
+  // خلط من بذرة رسالة الكشف: نفس النتيجة بنفس الترتيب على كل الأجهزة
+  const rnd = seededRand(String(R.rid || my.topic));
   const items = await decryptMsgs(my, await Crypto.priv(R.d, my.setup.pk), list);
   const base = { mode: my.mode, title: my.setup.title, cfg: my.cfg, at: Date.now() };
   if (my.M.kind === 'vote') {
@@ -522,12 +540,12 @@ async function processOnce(my) {
       .sort((x, y) => y.score - x.score);
     my.results = { ...base, key: key ? key.a : null, players };
   } else {
-    const clean = items.map(({ id, ...x }) => {
+    const clean = items.slice().sort((a, b) => a.id < b.id ? -1 : a.id > b.id ? 1 : 0).map(({ id, ...x }) => {
       if (my.M.fields !== 'three') return x;
-      const p = shuffle([0, 1, 2]); // نخلط ترتيب المعلومات عشان مكان الكذبة ما يكون ثابت
+      const p = shuffleWith([0, 1, 2], rnd); // نخلط ترتيب المعلومات عشان مكان الكذبة ما يكون ثابت
       return { by: x.by, items: p.map(i => x.items[i]), lie: p.indexOf(x.lie) };
     });
-    my.results = { ...base, items: shuffle(clean), hidden: R.ids ? Math.max(0, my.msgs.length - R.ids.size) : R.hide.size };
+    my.results = { ...base, items: shuffleWith(clean, rnd), hidden: R.ids ? Math.max(0, my.msgs.length - R.ids.size) : R.hide.size };
   }
   store.upsert({ topic: my.topic, results: my.results });
 }
@@ -541,6 +559,7 @@ async function process(my) {
   if (S !== my) return;
   const ph = my.results ? 'revealed' : (my.setup || my.token) ? 'open' : my.phase;
   if (ph !== my.phase) { my.phase = ph; renderSession(); } else updateLive();
+  if (my.tv && my.phase === 'revealed') TV.follow(my);
 }
 
 /* ============ الجلسة: الواجهات ============ */
@@ -562,7 +581,7 @@ function renderSession() {
     if (S.phase === 'revealed') K && K.reveal ? K.reveal() : renderReveal();
     else K && K.open ? K.open() : renderOpen();
   }
-  if (S && S.phase === 'revealed') { addResultImage(); if (S.tv) Sound.play('win'); }
+  if (S && S.phase === 'revealed') { addResultImage(); addWipe(); if (S.tv) Sound.play('win'); }
 }
 
 function sessionHead(title) {
@@ -890,12 +909,12 @@ function renderReveal() {
       <button class="btn big" id="present" style="margin-top:16px">📽️ اعرضها وحدة وحدة</button>
       ${filled.map(g => `<section class="grp" data-g="${esc(g.n)}"><div class="gh"><h3>${esc(groupTitle(M, g.n))} <span class="muted">(${g.items.length})</span></h3>${M.image ? `<button class="btn ghost sm" data-img="${esc(g.n)}">📸 صورة</button>` : ''}</div>${g.items.map(x => `<div class="msg">${esc(x.text)}</div>`).join('')}</section>`).join('')}
       ${none.length ? `<p class="muted small center" style="margin-top:18px">ما وصلهم شي: ${none.map(esc).join('، ')}</p>` : ''}` : emptyCard();
-    slides = () => filled.filter(g => !filter || g.n === filter).flatMap(g => g.items.map(x => ({ kick: esc(aboutOf(M, x.to)), body: `<p>${esc(x.text)}</p>` })));
+    slides = (f = filter) => filled.filter(g => !f || g.n === f).flatMap(g => g.items.map(x => ({ kick: esc(aboutOf(M, x.to)), body: `<p>${esc(x.text)}</p>` })));
     after = () => {
       const flt = $('#flt');
       if (flt) flt.onclick = e => {
         const b = e.target.closest('[data-f]'); if (!b) return;
-        filter = b.dataset.f;
+        filter = b.dataset.f; S.revFilter = filter;
         $$('.chip', flt).forEach(c => c.classList.toggle('on', c === b));
         $$('.grp').forEach(s => { s.hidden = !!filter && s.dataset.g !== filter; });
       };
@@ -946,44 +965,68 @@ function renderReveal() {
     <header class="hero small"><div class="big-ic">${M.icon}</div>${R.title !== M.name ? `<div class="mchip">${M.name}</div>` : ''}<h2 class="ttl">${esc(R.title)}</h2><p class="muted">${summary}</p></header>
     ${body}
     <a class="btn primary big" href="#" style="margin-top:24px">✨ جرّب لعبة ثانية</a>`;
-  const pb = $('#present');
-  if (pb) pb.onclick = () => present(typeof slides === 'function' ? slides() : slides);
+  const pb = $('#present'), slidesOf = f => typeof slides === 'function' ? slides(f) : slides;
+  S.slides = slidesOf; S.revFilter = '';
+  if (pb) pb.onclick = () => present(slidesOf(S.revFilter), { f: S.revFilter });
   if (after) after();
 }
 
-function present(slides) {
-  if (!slides.length) return;
-  let i = 0, shown = false;
+// العرض شريحة شريحة. sync: المشرف يرسل مكانه لشاشة العرض. follow: شاشة العرض تمشي مع المشرف
+function present(slides, sync, follow) {
+  if (!slides.length) return null;
+  let i = 0, shown = false, tmr = null;
+  const my = S, live = !follow && !!sync && !!my && my.isHost && !!my.results && !my.tv;
   const ov = document.createElement('div');
-  ov.className = 'present';
+  ov.className = 'present' + (follow ? ' follow' : '');
+  const send = open => {
+    if (!live || !SlideSync.on(my)) return;
+    clearTimeout(tmr);
+    const obj = { open, i, shown, f: sync.f || '', at: Date.now() };
+    tmr = setTimeout(() => postRoom(my, 'v', obj).catch(() => {}), open ? 300 : 0);
+  };
   const draw = () => {
     const s = slides[i], pending = !!s.ans && !shown;
     const body = shown && s.ans ? (s.replace ? s.ans : `${s.body}<div class="pans">${s.ans}</div>`) : s.body;
     const last = !pending && i >= slides.length - 1;
     ov.innerHTML = `
-      <div class="ptop"><span>${i + 1} من ${slides.length}</span><button class="btn ghost" data-a="x">✕ إغلاق</button></div>
+      <div class="ptop"><span>${i + 1} من ${slides.length}</span>${live ? `<button class="btn ghost sm" data-a="tv">${SlideSync.on(my) ? '📺 الشاشة تتبعك' : '📺 الشاشة ما تتبعك'}</button>` : ''}${follow ? '<span>📺</span>' : '<button class="btn ghost" data-a="x">✕ إغلاق</button>'}</div>
       <div class="pcard" data-a="n"><small>${s.kick || ''}</small><div class="pbody">${body}</div></div>
-      <div class="row"><button class="btn ghost grow" data-a="p" ${i ? '' : 'disabled'}>→ السابق</button><button class="btn primary grow" data-a="n" ${last ? 'disabled' : ''}>${pending ? (s.ansBtn || '👀 اكشف') : 'التالي ←'}</button></div>`;
+      ${follow ? '' : `<div class="row"><button class="btn ghost grow" data-a="p" ${i ? '' : 'disabled'}>→ السابق</button><button class="btn primary grow" data-a="n" ${last ? 'disabled' : ''}>${pending ? (s.ansBtn || '👀 اكشف') : 'التالي ←'}</button></div>`}`;
   };
   const next = () => {
-    if (slides[i].ans && !shown) { shown = true; draw(); Sound.play('reveal'); }
-    else if (i < slides.length - 1) { i++; shown = false; draw(); }
+    if (slides[i].ans && !shown) { shown = true; draw(); Sound.play('reveal'); send(true); }
+    else if (i < slides.length - 1) { i++; shown = false; draw(); send(true); }
   };
-  const prev = () => { if (i > 0) { i--; shown = false; draw(); } };
-  const close = () => { ov.remove(); removeEventListener('keydown', key); };
+  const prev = () => { if (i > 0) { i--; shown = false; draw(); send(true); } };
+  const close = () => { ov.remove(); removeEventListener('keydown', key); send(false); };
   const key = e => {
     if (e.key === 'Escape') close();
     else if (e.key === 'ArrowLeft' || e.key === ' ') { e.preventDefault(); next(); }
     else if (e.key === 'ArrowRight') prev();
   };
-  ov.onclick = e => {
-    const a = e.target.closest('[data-a]'); if (!a || a.disabled) return;
-    if (e.target.closest('details')) return;
-    a.dataset.a === 'x' ? close() : a.dataset.a === 'n' ? next() : prev();
-  };
-  addEventListener('keydown', key);
+  if (!follow) {
+    ov.onclick = e => {
+      const a = e.target.closest('[data-a]'); if (!a || a.disabled) return;
+      if (e.target.closest('details')) return;
+      if (a.dataset.a === 'tv') { SlideSync.set(my, !SlideSync.on(my)); draw(); if (SlideSync.on(my)) send(true); else postRoom(my, 'v', { open: false, at: Date.now() }).catch(() => {}); return; }
+      a.dataset.a === 'x' ? close() : a.dataset.a === 'n' ? next() : prev();
+    };
+    addEventListener('keydown', key);
+  }
   draw();
   document.body.appendChild(ov);
+  send(true);
+  return {
+    go(ni, ns) {
+      ni = Math.max(0, Math.min(slides.length - 1, ni | 0));
+      if (ni === i && !!ns === shown) return;
+      const reveal = ni === i && ns && !shown;
+      i = ni; shown = !!ns && !!slides[i].ans; draw();
+      if (reveal) Sound.play('reveal');
+    },
+    close() { ov.remove(); removeEventListener('keydown', key); },
+    el: ov
+  };
 }
 
 /* ============ بطاقة صورة ============ */
@@ -1080,6 +1123,8 @@ function renderSantaHost() {
   $('#plinks').onclick = e => {
     const b = e.target.closest('[data-cp]');
     if (b && my.links) copyText(my.links[+b.dataset.cp]);
+    const q = e.target.closest('[data-qr]');
+    if (q && my.links) { const n = my.cfg.names[+q.dataset.qr]; qrSheet(my.links[+q.dataset.qr], `رابط ${esc(n)} الخاص`, `خلّ ${esc(n)} يصوّر الكود بجواله، وغطِّ الشاشة عن الباقين عشان المفاجأة ما تنكشف 🤫`); }
   };
   $('#mine').onclick = e => {
     const b = e.target.closest('[data-i]');
@@ -1094,7 +1139,7 @@ function drawLinks() {
   const my = S, pl = $('#plinks');
   if (!pl || !my.links) return;
   pl.innerHTML = my.cfg.names.map((n, i) => `<div class="prow"><b>${esc(n)}</b>${my.wishes[n] ? '<span title="كتب أمنيته">💭</span>' : ''}
-    <button class="btn sm" data-cp="${i}">نسخ</button>
+    <button class="btn sm" data-cp="${i}">نسخ</button><button class="btn sm" data-qr="${i}">📱 QR</button>
     <a class="btn wa sm" target="_blank" rel="noopener" href="https://wa.me/?text=${encodeURIComponent(santaText(my, n, my.links[i]))}">واتساب</a></div>`).join('');
 }
 
@@ -1208,6 +1253,7 @@ function viewHome() {
     </header>
     ${season ? `<a class="card season" href="${season.href}"><span class="big-ic">${season.icon}</span><span><b>${season.title}</b><small>${season.text}</small></span></a>` : ''}
     ${list.length ? `<h3 class="sec">جلساتك</h3><div class="list">${list.map(sessItem).join('')}</div>` : ''}
+    ${(() => { const c = champData().board; return c.length ? `<a class="card season champs" href="#champs"><span class="big-ic">🏆</span><span><b>سجل أبطال الشلة</b><small>المتصدر: ${esc(c[0].name)} بـ ${c[0].wins} فوز</small></span></a>` : ''; })()}
     <div class="search"><input id="q" type="search" placeholder="🔎 دوّر على لعبة… (تصويت، رمضان، رسم)" autocomplete="off"></div>
     ${favs.length ? `<section class="mgroup" data-g="fav"><h3 class="sec">⭐ المفضلة</h3><div class="modes">${favs.map(id => card(id, MODES[id])).join('')}</div></section>` : ''}
     <div class="chips gfilter" id="gf"><button class="chip on" data-g="">الكل (${Object.keys(MODES).length})</button>${GROUPS.map(g => `<button class="chip" data-g="${g.id}">${g.title.replace(/\s*\(.*\)$/, '')}</button>`).join('')}</div>
@@ -1303,7 +1349,8 @@ function viewMode(id) {
             ? `<input id="qa" maxlength="${Q_LEN}" placeholder="سؤالك (جوابه رقم)"><div class="addrow" style="margin-top:8px"><input id="qnum" inputmode="decimal" placeholder="الجواب الصحيح (رقم)"><button class="btn" id="qadd" type="button">إضافة</button></div>`
           : F.questions.kind === 'quiz'
             ? `<input id="qa" maxlength="${Q_LEN}" placeholder="سؤالك"><div class="qgrid"><input id="qc0" maxlength="${OPT_LEN}" placeholder="✅ الجواب الصح"><input id="qc1" maxlength="${OPT_LEN}" placeholder="❌ جواب غلط"><input id="qc2" maxlength="${OPT_LEN}" placeholder="❌ جواب غلط"><input id="qc3" maxlength="${OPT_LEN}" placeholder="❌ جواب غلط"></div><button class="btn ghost" id="qadd" type="button" style="margin-top:8px">+ أضف سؤال</button>`
-            : `<div class="addrow"><input id="qa" maxlength="${Q_LEN}" placeholder="${esc(F.questions.placeholder || '')}"><button class="btn" id="qadd" type="button">إضافة</button></div>`}` : ''}
+            : `<div class="addrow"><input id="qa" maxlength="${Q_LEN}" placeholder="${esc(F.questions.placeholder || '')}"><button class="btn" id="qadd" type="button">إضافة</button></div>`}
+        ${packBox(id)}` : ''}
       ${F.poll ? `<label for="pq">السؤال</label><input id="pq" maxlength="${Q_LEN}" placeholder="مثلًا: وين نطلع الخميس؟">
         <label for="po">الخيارات</label>
         <div class="addrow"><input id="po" maxlength="200" placeholder="اكتب خيار واضغط إضافة" enterkeyhint="done"><button class="btn" id="poAdd" type="button">إضافة</button></div>
@@ -1384,6 +1431,17 @@ function viewMode(id) {
         draw();
       };
     }
+    bindPacks({ mode: id, get: () => qs, set: l => { qs = l; draw(); } });
+    // باقة جاية من رابط («احفظها وابدأ جلسة»)
+    try {
+      const up = JSON.parse(store.kv('usepack') || 'null');
+      if (up && up.mode === id) {
+        localStorage.removeItem('saraha.usepack');
+        const items = Packs.clean(id, up.items), have = new Set(items.map(v => JSON.stringify(v)));
+        qs = [...items.map((v, k) => ({ v, on: k < MAX_Q, custom: true, mine: true })), ...qs.filter(q => !have.has(JSON.stringify(q.v))).map(q => ({ ...q, on: false }))];
+        draw(); toast(`اخترنا أسئلة «${up.name}» ✓`);
+      }
+    } catch {}
     $('#qa').onkeydown = e => { if (e.key === 'Enter' && F.questions.kind === 'text') { e.preventDefault(); $('#qadd').click(); } };
     draw();
   }
@@ -1490,7 +1548,7 @@ function brokenLink() {
 /* ============ التوجيه ============ */
 function route() {
   closeSession();
-  [offTimer, capTimer, quizTimer].forEach(t => clearInterval(t));
+  [offTimer, capTimer, quizTimer, autoTimer].forEach(t => clearInterval(t));
   scrollTo(0, 0);
   let h = location.hash.slice(1);
   try { h = decodeURIComponent(h); } catch {}
@@ -1498,6 +1556,7 @@ function route() {
   TV.topic = null;
   document.body.classList.toggle('tv', h.startsWith('tv='));
   if (h === 'settings') return viewSettings();
+  if (h === 'champs') return viewChamps();
   if (h === 'tod') return OFFLINE.tod();
   if (h.startsWith('play/')) { const id = h.slice(5).replace(/[^a-z]/g, ''); return OFFLINE[id] ? OFFLINE[id]() : viewHome(); }
   if (h.startsWith('bill=')) return OFFLINE.bill(h.slice(5).replace(/[^\w-]/g, ''));
@@ -1507,6 +1566,7 @@ function route() {
   }
   if (h.startsWith('cd=')) return OFFLINE.countdown(h.slice(3).replace(/[^\w-]/g, ''));
   if (h.startsWith('c=')) return openCapsuleLink(h.slice(2).replace(/[^\w-]/g, ''));
+  if (h.startsWith('pk=')) return viewPack(h.slice(3).replace(/[^\w-]/g, ''));
   if (h.startsWith('tv=')) {
     const t = h.slice(3).replace(/[^\w.-]/g, '').match(/^([\w-]{8,64})\.([\w-]{43})/);
     if (!t) { document.body.classList.remove('tv'); return brokenLink(); }

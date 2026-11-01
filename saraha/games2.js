@@ -467,8 +467,10 @@ const Board = {
       if (r.time) my.bnewest = Math.max(my.bnewest || 0, r.time);
       const x = await roomOpen(my, r);
       if (x && Array.isArray(x.e)) ch = Board.merge(my, x.e) || ch;
+      else if (x && typeof x.im === 'string' && Photos.part(my, x)) my.imgNew = true;
     }
     if (ch) Board.save(my);
+    if (my.imgNew) { my.imgNew = false; if (S === my) Board.update(); }
     my.msgs = BOARDS[my.M.board] ? BOARDS[my.M.board].count(my) : [...my.bstate.values()].filter(e => !e.del && e.k !== 'r');
   },
   async put(my, entries) {
@@ -513,6 +515,7 @@ const Board = {
     if (B.bind) B.bind(my);
     my.openedAt = my.openedAt || Date.now();
     Board.render();
+    addWipe();
     setTimeout(() => Board.sync(my), 6500);
   },
   open() {
@@ -576,6 +579,7 @@ const Board = {
     }
     my.openedAt = my.openedAt || Date.now();
     Board.render();
+    addWipe();
     setTimeout(() => Board.sync(my), 6500);
   },
   // نأخر الرسم شوي عشان الضغطة اللي صايرة الحين ما تضيع لو انرسمت القائمة من جديد
@@ -586,7 +590,7 @@ const Board = {
     if (L.contains(document.activeElement) && document.activeElement.tagName === 'INPUT') { my.pendingDraw = true; return; }
     my.pendingDraw = false;
     const live = [...my.bstate.values()].filter(e => !e.del), meName = store.kv('wname') || '';
-    if (BOARDS[my.M.board]) return BOARDS[my.M.board].render(my, L, live, meName);
+    if (BOARDS[my.M.board]) { BOARDS[my.M.board].render(my, L, live, meName); return Photos.fill(my, L); }
     if (my.M.board === 'trip') {
       const items = live.filter(e => e.k === 'i').sort((a, b) => a.c - b.c);
       const free = items.filter(i => !i.who).length;

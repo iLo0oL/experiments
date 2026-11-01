@@ -457,18 +457,25 @@ BOARDS.wish = {
 const voterId = () => { let v = store.kv('voter'); if (!v) { v = b64u(crypto.getRandomValues(new Uint8Array(8))); store.kv('voter', v); } return v; };
 BOARDS.box = {
   live: '<b id="count">0</b> اقتراح', named: false, shareHint: 'أي أحد معه الرابط يقدر يضيف اقتراح بدون اسمه.',
-  valid: (e, base, s) => e.k === 's' ? { ...base, k: 's', text: s(e.text, 400), done: !!e.done } : e.k === 'v' ? { ...base, k: 'v', s: s(e.s, 20), v: e.v ? 1 : 0 } : null,
+  valid: (e, base, s) => e.k === 's' ? { ...base, k: 's', text: s(e.text, 400), done: !!e.done, img: s(e.img, 16) } : e.k === 'v' ? { ...base, k: 'v', s: s(e.s, 20), v: e.v ? 1 : 0 } : null,
   count: my => [...my.bstate.values()].filter(e => !e.del && e.k === 's'),
-  html: () => `<section class="card"><h3>💡 اقتراح جديد</h3><textarea id="bx" maxlength="400" placeholder="اكتب اقتراحك أو ملاحظتك… بدون اسمك"></textarea><div class="err" id="err"></div><button class="btn primary big" id="bsend">🔒 إرسال بدون اسم</button></section>`,
+  html: my => `<section class="card"><h3>💡 اقتراح جديد</h3><textarea id="bx" maxlength="400" placeholder="اكتب اقتراحك أو ملاحظتك… بدون اسمك"></textarea>
+    ${Photos.picker('bimg')}<p class="hint">الصورة تُصغَّر وتُحذف منها بياناتها المخفية (مثل المكان) قبل الإرسال.${isFb(my.topic) ? '' : ' وتبقى على السيرفر 12 ساعة، وبعدها تبقى بس في الجوالات اللي شافتها.'}</p>
+    <div class="err" id="err"></div><button class="btn primary big" id="bsend">🔒 إرسال بدون اسم</button></section>`,
   bind(my) {
-    $('#bsend').onclick = () => {
+    const pick = Photos.bindPicker('bimg');
+    $('#bsend').onclick = async e => {
       const raw = $('#bx').value.trim();
       if (raw.length < 3) return ($('#err').textContent = 'اكتب اقتراحك أول');
       const text = Polish.polish(raw).slice(0, 400);
       if (!text) return ($('#err').textContent = 'الاقتراح فاضي بعد التصحيح');
       if (Polish.isRude(text)) return ($('#err').textContent = RUDE_MSG);
+      const btn = e.currentTarget; btn.disabled = true;
+      let img = '';
+      try { img = await Photos.attach(my, pick); } catch { btn.disabled = false; return toast('ما وصلت الصورة… جرّب مرة ثانية', true); }
+      btn.disabled = false;
       $('#bx').value = ''; $('#err').textContent = '';
-      Board.put(my, [{ id: ID(), k: 's', text, done: false }]); toast('تم إرسال اقتراحك بدون اسم ✓');
+      Board.put(my, [{ id: ID(), k: 's', text, done: false, img }]); toast('تم إرسال اقتراحك بدون اسم ✓');
     };
     $('#blist').onclick = e => {
       const b = e.target.closest('[data-act]'); if (!b) return;
@@ -481,7 +488,7 @@ BOARDS.box = {
   render(my, L, live) {
     const votes = id => live.filter(e => e.k === 'v' && e.s === id && e.v).length, mine = id => { const v = my.bstate.get(id + '|' + voterId()); return v && v.v; };
     const list = live.filter(e => e.k === 's').map(e => ({ e, n: votes(e.id) })).sort((a, b) => a.e.done - b.e.done || b.n - a.n || b.e.c - a.e.c);
-    L.innerHTML = list.length ? list.map(({ e, n }) => `<div class="card sug${e.done ? ' done' : ''}"><p>${esc(e.text)}</p>
+    L.innerHTML = list.length ? list.map(({ e, n }) => `<div class="card sug${e.done ? ' done' : ''}"><p>${esc(e.text)}</p>${Photos.html(e.img)}
       <div class="row"><button class="btn sm${mine(e.id) ? ' primary' : ''}" data-act="up" data-id="${e.id}">👍 ${n}</button><button class="btn ghost sm" data-act="done" data-id="${e.id}">${e.done ? '↩️ رجّعه' : '✅ تم'}</button><span class="grow"></span><button class="x" data-act="del" data-id="${e.id}">✕</button></div></div>`).join('')
       : emptyCard('الصندوق فاضي. أول اقتراح عليك 💡');
   }
@@ -490,26 +497,33 @@ BOARDS.box = {
 // ذكريات الشلة
 BOARDS.memories = {
   live: '<b id="count">0</b> ذكرى', namePh: 'اسمك (اختياري)',
-  valid: (e, base, s) => e.k === 'm' && isDayStr(e.day) ? { ...base, k: 'm', day: e.day, text: s(e.text, 400), by: s(e.by, NAME_LEN) } : null,
+  valid: (e, base, s) => e.k === 'm' && isDayStr(e.day) ? { ...base, k: 'm', day: e.day, text: s(e.text, 400), by: s(e.by, NAME_LEN), img: s(e.img, 16) } : null,
   count: my => [...my.bstate.values()].filter(e => !e.del && e.k === 'm'),
-  html: () => `<section class="card"><h3>✍️ أضف ذكرى</h3><input type="date" id="md" value="${today()}"><textarea id="mt" maxlength="400" placeholder="وش صار؟ (مثلًا: أول كشتة لنا، وضاع الفحم 😂)"></textarea>
+  html: my => `<section class="card"><h3>✍️ أضف ذكرى</h3><input type="date" id="md" value="${today()}"><textarea id="mt" maxlength="400" placeholder="وش صار؟ (مثلًا: أول كشتة لنا، وضاع الفحم 😂)"></textarea>
+    ${Photos.picker('mimg')}${isFb(my.topic) ? '' : '<p class="hint">الصور تبقى على السيرفر 12 ساعة، وبعدها تبقى بس في الجوالات اللي شافتها. (تبقى دايم لو تفعّلت الجلسات الطويلة)</p>'}
     <button class="btn primary big" id="madd">إضافة الذكرى</button></section><button class="btn big" id="mshow">📽️ اعرضوا الذكريات</button>`,
   bind(my) {
-    $('#madd').onclick = () => {
+    const pick = Photos.bindPicker('mimg');
+    $('#madd').onclick = async e => {
       const day = $('#md').value, text = $('#mt').value.trim().slice(0, 400);
       if (!isDayStr(day)) return toast('اختر التاريخ', true);
       if (text.length < 3) return toast('اكتب الذكرى', true);
+      const btn = e.currentTarget; btn.disabled = true;
+      let img = '';
+      try { img = await Photos.attach(my, pick); } catch { btn.disabled = false; return toast('ما وصلت الصورة… جرّب مرة ثانية', true); }
+      btn.disabled = false;
       $('#mt').value = '';
-      Board.put(my, [{ id: ID(), k: 'm', day, text, by: (($('#wname') || {}).value || '').trim().slice(0, NAME_LEN) }]);
+      Board.put(my, [{ id: ID(), k: 'm', day, text, img, by: (($('#wname') || {}).value || '').trim().slice(0, NAME_LEN) }]);
+      if (img) toast('تمت إضافة الذكرى مع الصورة ✓');
     };
     $('#mshow').onclick = () => present([...my.bstate.values()].filter(e => !e.del && e.k === 'm').sort((a, b) => a.day.localeCompare(b.day))
-      .map(e => ({ kick: esc(fmtDay(e.day, { day: 'numeric', month: 'long', year: 'numeric' })), body: `<p>${esc(e.text)}</p>${e.by ? `<div class="pans">— ${esc(e.by)}</div>` : ''}` })));
+      .map(e => ({ kick: esc(fmtDay(e.day, { day: 'numeric', month: 'long', year: 'numeric' })), body: `${Photos.url(my, e.img) ? `<img class="pimg" src="${esc(Photos.url(my, e.img))}" alt="">` : ''}<p>${esc(e.text)}</p>${e.by ? `<div class="pans">— ${esc(e.by)}</div>` : ''}` })));
     $('#blist').onclick = e => { const b = e.target.closest('[data-del]'); if (!b) return; const it = my.bstate.get(b.dataset.del); if (it && confirm('تحذف الذكرى؟')) Board.put(my, [{ ...it, del: true }]); };
   },
   render(my, L, live) {
     const list = live.filter(e => e.k === 'm').sort((a, b) => b.day.localeCompare(a.day) || b.c - a.c);
     const years = [...new Set(list.map(e => e.day.slice(0, 4)))];
-    L.innerHTML = list.length ? years.map(y => `<h3 class="sec">${y}</h3>${list.filter(e => e.day.startsWith(y)).map(e => `<div class="card mem"><div class="gh"><small class="pink">${esc(fmtDay(e.day, { day: 'numeric', month: 'long' }))}</small><button class="x" data-del="${e.id}">✕</button></div><p>${esc(e.text)}</p>${e.by ? `<small class="muted">— ${esc(e.by)}</small>` : ''}</div>`).join('')}`).join('')
+    L.innerHTML = list.length ? years.map(y => `<h3 class="sec">${y}</h3>${list.filter(e => e.day.startsWith(y)).map(e => `<div class="card mem"><div class="gh"><small class="pink">${esc(fmtDay(e.day, { day: 'numeric', month: 'long' }))}</small><button class="x" data-del="${e.id}">✕</button></div><p>${esc(e.text)}</p>${Photos.html(e.img)}${e.by ? `<small class="muted">— ${esc(e.by)}</small>` : ''}</div>`).join('')}`).join('')
       : emptyCard('ما فيه ذكريات للحين. أضيفوا أول ذكرى 📸');
   }
 };

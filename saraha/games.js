@@ -61,7 +61,8 @@ const Story = {
       <section class="card story">${all.map((t, i) => `<p class="${i ? '' : 'first'}">${esc(t)}</p>`).join('')}</section>
       <div class="row"><button class="btn grow" id="present">📽️ اقرؤوها جملة جملة</button><button class="btn grow" id="cpStory">📋 نسخ القصة</button></div>
       ${againBtn()}`;
-    $('#present').onclick = () => present(all.map((t, i) => ({ kick: i ? `الجملة ${i}` : 'البداية', body: `<p>${esc(t)}</p>` })));
+    S.slides = () => all.map((t, i) => ({ kick: i ? `الجملة ${i}` : 'البداية', body: `<p>${esc(t)}</p>` }));
+    $('#present').onclick = () => present(S.slides(), {});
     $('#cpStory').onclick = () => copyText(`📜 ${R.title}\n\n${all.join(' ')}`);
   }
 };
@@ -152,8 +153,8 @@ const When = {
 };
 
 /* ============ سباق الأسئلة ============ */
-const QCOL = ['#e11d48', '#2563eb', '#d97706', '#16a34a'], QSYM = ['▲', '◆', '●', '■'], QTIME = 20000;
-let quizTimer = null;
+const QCOL = ['#e11d48', '#2563eb', '#d97706', '#16a34a'], QSYM = ['▲', '◆', '●', '■'], QTIME = 20000, AUTO_SHOW = 8000;
+let quizTimer = null, autoTimer = null;
 const validBoard = b => Array.isArray(b) ? b.filter(x => Array.isArray(x) && typeof x[0] === 'string' && Number.isFinite(x[1])).slice(0, 100).map(([n, s]) => [n.slice(0, NAME_LEN), Math.round(s)]) : [];
 const boardHtml = (board, me, max = 10) => {
   if (!board.length) return '<p class="muted">محد جاوب للحين</p>';
@@ -265,7 +266,47 @@ const Quiz = {
     return Quiz.qCard(my, st.i, q.opts.map((o, k) => `<div class="qopt ${k === st.c ? 'ok' : 'dim'}" style="--c:${QCOL[k]}"><span>${QSYM[k]}</span>${esc(o)}${k === st.c ? ' ✅' : ''}<b>${st.stats[k] ?? ''}</b></div>`).join(''))
       + `<section class="card"><h3>🏆 الترتيب</h3>${boardHtml(st.board, me)}</section>`;
   },
+  // الانتقال التلقائي: بعد ما يخلص الوقت (أو يجاوب الكل) يعرض الجواب، وبعد ثواني يروح للسؤال اللي بعده
+  auto: my => store.kv('qauto.' + my.topic) === '1',
+  autoBox: my => `<label class="qrow auto"><input type="checkbox" id="qauto"${Quiz.auto(my) ? ' checked' : ''}><span>⏱️ انتقال تلقائي بين الأسئلة <small class="muted" id="qautoT"></small></span></label>`,
+  runAuto(my) {
+    clearInterval(autoTimer);
+    const st = my.state, out = $('#qautoT');
+    if (out) out.textContent = '';
+    if (!Quiz.auto(my) || !st || st.s === 'end' || !my.qkey) return;
+    const key = st.s + st.i;
+    my.autoAt = my.autoAt || {};
+    if (!my.autoAt[key]) my.autoAt[key] = Date.now();
+    const tick = () => {
+      const cur = my.state; // الحالة تُبنى من جديد مع كل رسالة، فنقارن بالمفتاح
+      if (S !== my || !cur || cur.s + cur.i !== key || !Quiz.auto(my)) return clearInterval(autoTimer);
+      const el = Date.now() - my.autoAt[key];
+      let left;
+      if (st.s === 'ask') {
+        const got = (my.answers.get(st.i) || new Map()).size, all = Quiz.players(my);
+        left = st.i > 0 && got && got >= all ? 0 : QTIME + 1500 - el;
+      } else left = AUTO_SHOW - el;
+      const t = $('#qautoT');
+      if (t) t.textContent = left > 0 ? `(بعد ${Math.ceil(left / 1000)} ثواني)` : '';
+      if (left <= 0) {
+        clearInterval(autoTimer);
+        const b = $(st.s === 'ask' ? '#qshow' : '#qnext');
+        if (b && !b.disabled) b.click();
+      }
+    };
+    tick(); autoTimer = setInterval(tick, 250);
+  },
+  bindAuto(my) {
+    const cb = $('#qauto');
+    if (cb) cb.onchange = () => { store.kv('qauto.' + my.topic, cb.checked ? '1' : '0'); Quiz.runAuto(my); };
+    Quiz.runAuto(my);
+  },
   drawHost(A) {
+    Quiz.drawHostInner(A);
+    if (A.querySelector('#qgo, #qshow, #qnext')) { A.insertAdjacentHTML('beforeend', Quiz.autoBox(S)); Quiz.bindAuto(S); }
+    else clearInterval(autoTimer);
+  },
+  drawHostInner(A) {
     const my = S, st = my.state, n = Quiz.qs(my).length;
     if (my.M.fromFacts && !my.qs) return Quiz.drawFactsHost(A);
     if (!my.qkey) { A.innerHTML = '<div class="card center"><div class="spin" style="margin:20px auto"></div><p class="muted">جاري تجهيز المسابقة…</p></div>'; return; }
@@ -514,7 +555,9 @@ function renderCapsule(R, link) {
     $('#waCap').href = `https://wa.me/?text=${encodeURIComponent(`⏳ كبسولة الزمن «${R.title}» تنفتح ${fmtDay(cfg.open, { day: 'numeric', month: 'long', year: 'numeric' })}:\n${l}`)}`;
   });
   if (!locked) {
-    $('#present').onclick = () => present(R.items.map(x => ({ kick: x.by ? `من ${esc(x.by)}` : '💌 رسالة بدون اسم', body: `<p>${esc(x.text)}</p>` })));
+    const slides = () => R.items.map(x => ({ kick: x.by ? `من ${esc(x.by)}` : '💌 رسالة بدون اسم', body: `<p>${esc(x.text)}</p>` }));
+    if (S && S.results === R) S.slides = slides;
+    $('#present').onclick = () => present(slides(), S && S.results === R ? {} : null);
     return;
   }
   const tick = () => {

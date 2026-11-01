@@ -34,11 +34,24 @@ window.SARAHA_CONFIG = {
     "t": {
       "$topic": {
         ".read": "$topic.matches(/^fb_[A-Za-z0-9_-]{20}$/)",
+        ".write": "!newData.exists() && root.child('o').child($topic).exists() && newData.parent().parent().child('del').child($topic).val() == root.child('o').child($topic).val()",
         "$msg": {
           ".write": "$topic.matches(/^fb_[A-Za-z0-9_-]{20}$/) && !data.exists() && newData.exists()",
           ".validate": "newData.hasChildren(['m', 't']) && newData.child('m').isString() && newData.child('m').val().length <= 4096 && newData.child('t').val() == now",
           "$other": { ".validate": "$other == 'm' || $other == 't'" }
         }
+      }
+    },
+    "o": {
+      "$topic": {
+        ".write": "$topic.matches(/^fb_[A-Za-z0-9_-]{20}$/) && !data.exists()",
+        ".validate": "newData.isString() && newData.val().length == 32"
+      }
+    },
+    "del": {
+      "$topic": {
+        ".write": "root.child('o').child($topic).exists()",
+        ".validate": "newData.val() == root.child('o').child($topic).val()"
       }
     }
   }
@@ -47,13 +60,18 @@ window.SARAHA_CONFIG = {
 
    القواعد هذي تعني:
    - محد يقدر يشوف قائمة الجلسات. تقدر تقرأ جلسة بس إذا تعرف اسمها العشوائي (وهو في الرابط).
-   - الرسالة تُضاف مرة وحدة، ومحد يقدر يعدّلها أو يحذفها من الصفحة.
+   - الرسالة تُضاف مرة وحدة، ومحد يقدر يعدّلها.
    - حجم الرسالة محدود، ووقتها من سيرفر Firebase نفسه.
+   - المشرف بس يقدر يحذف جلسته كاملة: وقت الإنشاء يحفظ رمز سري في `o` (ما أحد يقدر يقرأه)، ووقت الحذف يرسل نفس الرمز في `del`، والحذف ما يمشي إلا لو الرمز مطابق.
+
+   > لو عندك القواعد القديمة (قبل خيار الحذف)، بدّلها بهذي. الجلسات القديمة تكمل عادي، بس بدون زر الحذف.
 
 4. انسخ رابط قاعدة البيانات اللي فوق في صفحة **Data** (شكله `https://اسم-المشروع-default-rtdb.firebaseio.com`) وحطه في `firebaseUrl`.
 
 **ملاحظات:**
 - الجلسات القديمة (اللي على ntfy) تكمل عادي. الجديدة بس تروح لـ Firebase، والمشرف يقدر يشيل علامة «💾 جلسة طويلة» وقت الإنشاء لو يبيها مؤقتة.
+- بعد الكشف، المشرف يشوف زر «🗑️ احذف من السيرفر» يحذف كل رسائل الجلسة نهائيًا (والقوائم المحفوظة فيها نفس الزر لصاحبها). النتائج تبقى في الجوالات اللي شافتها.
+- الصور في «ذكريات الشلة» و«صندوق الاقتراحات» تُصغَّر وتُشفَّر وتُحفظ على أجزاء مثل الرسائل، فمع Firebase تبقى دايم.
 - الخطة المجانية (Spark) فيها حد للتخزين والتحميل يكفي لاستخدام الشلة بشكل عادي. لو تبي تنظف الجلسات القديمة، احذف العناصر تحت `t` من لوحة Firebase.
 
 ---
