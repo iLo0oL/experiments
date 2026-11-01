@@ -79,11 +79,30 @@ xpm2x() {
 echo "Applying the Windows 10 look..."
 
 # ---------- theme + icons ----------
+# Arabic is right-to-left, so GTK asks for "go-previous-rtl" etc. (back points
+# right). Packs without those show the arrows the wrong way round; add them as
+# links to the opposite arrow.
+rtl_arrows() {
+  local d pair a b ext
+  while IFS= read -r d; do
+    for pair in previous:next next:previous first:last last:first; do
+      a=${pair%%:*}; b=${pair##*:}
+      for ext in png svg; do
+        [ -e "$d/go-$b.$ext" ] && [ ! -e "$d/go-$a-rtl.$ext" ] && ln -s "go-$b.$ext" "$d/go-$a-rtl.$ext"
+        if [ -e "$d/go-$b-symbolic.$ext" ]; then
+          [ -e "$d/go-$a-rtl-symbolic.$ext" ] || ln -s "go-$b-symbolic.$ext" "$d/go-$a-rtl-symbolic.$ext"
+          [ -e "$d/go-$a-symbolic-rtl.$ext" ] || ln -s "go-$b-symbolic.$ext" "$d/go-$a-symbolic-rtl.$ext"
+        fi
+      done
+    done
+  done < <(find "$1" -type d)
+}
 if get "${WIN10_THEME_SRC:-$THEME_URL}" "$THEMES/Windows-10"; then ok "Windows 10 theme"; else fail "Windows 10 theme (check internet)"; fi
 if get "${WIN10_ICONS_SRC:-$ICONS_URL}" "$ICONS/Windows-10"; then
   # fall back to the standard icons for anything the pack doesn't have
   grep -q '^Inherits=' "$ICONS/Windows-10/index.theme" 2>/dev/null \
     || sed -i 's/^\[Icon Theme\]$/[Icon Theme]\nInherits=Adwaita,hicolor/' "$ICONS/Windows-10/index.theme"
+  rtl_arrows "$ICONS/Windows-10"
   command -v gtk-update-icon-cache >/dev/null 2>&1 && gtk-update-icon-cache -q -f "$ICONS/Windows-10" 2>/dev/null
   ok "Windows 10 icons"
 else
@@ -117,10 +136,18 @@ get_xp_theme() {
   fi
   rm -rf "$tmp"; return 1
 }
-if get_xp_theme; then make_hidpi Windows-XP-Luna; ok "Windows XP theme"; else fail "Windows XP theme (check internet)"; fi
+if get_xp_theme; then
+  # The pack moves window titles 10px past the edge, which cuts off the first
+  # letter of right-aligned (Arabic) titles.
+  sed -i 's/^title_horizontal_offset=.*/title_horizontal_offset=0/' "$THEMES/Windows-XP-Luna/xfwm4/themerc"
+  make_hidpi Windows-XP-Luna; ok "Windows XP theme"
+else
+  fail "Windows XP theme (check internet)"
+fi
 if get "${WINXP_ICONS_SRC:-$XP_ICONS_URL}" "$ICONS/Windows-XP"; then
   grep -q '^Inherits=' "$ICONS/Windows-XP/index.theme" 2>/dev/null \
     || sed -i 's/^\[Icon Theme\]$/[Icon Theme]\nInherits=Adwaita,hicolor/' "$ICONS/Windows-XP/index.theme"
+  rtl_arrows "$ICONS/Windows-XP"
   command -v gtk-update-icon-cache >/dev/null 2>&1 && gtk-update-icon-cache -q -f "$ICONS/Windows-XP" 2>/dev/null
   ok "Windows XP icons"
 else
