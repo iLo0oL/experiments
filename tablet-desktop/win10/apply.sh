@@ -105,6 +105,27 @@ if [ -n "${WIN10_WALLPAPER:-}" ]; then cp "$WIN10_WALLPAPER" "$WALL"
 else curl -fsSL "$BASE/win10/wallpaper.jpg" -o "$WALL" || fail "Wallpaper"; fi
 [ -s "$WALL" ] && ok "Wallpaper"
 
+# asset <name> <destination>: from WIN10_LOCAL_DIR when testing, else from the website
+asset() {
+  mkdir -p "$(dirname "$2")"
+  if [ -n "${WIN10_LOCAL_DIR:-}" ]; then cp "$WIN10_LOCAL_DIR/$1" "$2"
+  else curl -fsSL "$BASE/win10/$1" -o "$2"; fi
+}
+
+# ---------- startup sound (an original chime) ----------
+if asset startup.oga "$HOME/.local/share/sounds/tablet-startup.oga"; then ok "Startup sound"; else fail "Startup sound"; fi
+
+# ---------- Windows 7 style Start menu ----------
+# Kept in its own file and imported, so the user's own gtk.css is left alone.
+# To undo: delete ~/.config/gtk-3.0/win7-menu.css
+if asset win7-menu.css "$HOME/.config/gtk-3.0/win7-menu.css"; then
+  grep -qs 'win7-menu.css' "$HOME/.config/gtk-3.0/gtk.css" \
+    || echo '@import url("win7-menu.css");' >> "$HOME/.config/gtk-3.0/gtk.css"
+  ok "Windows 7 style Start menu"
+else
+  fail "Windows 7 style Start menu"
+fi
+
 # ---------- settings ----------
 # Written only on the first install (or with WIN10_RESET=1), so updates never
 # undo the user's own changes to the taskbar, desktop and windows. Older
@@ -252,6 +273,7 @@ cat > "$XML/xfce4-panel.xml" <<'EOF'
         <value type="string" value="org.xfce.ristretto.desktop"/>
         <value type="string" value="vlc.desktop"/>
         <value type="string" value="galculator.desktop"/>
+        <value type="string" value="code.desktop"/>
         <value type="string" value="run-exe.desktop"/>
         <value type="string" value="xfce-settings-manager.desktop"/>
       </property>
@@ -414,6 +436,11 @@ if xfconf-query -c xfce4-keyboard-shortcuts -p /commands/custom/override >/dev/n
   sc '/commands/custom/Super_L'              xfce4-popup-whiskermenu # Windows key -> Start menu
   sc '/commands/custom/<Super>e'             thunar                  # Win+E -> File Explorer
   sc '/xfwm4/custom/<Super>d'                show_desktop_key        # Win+D -> show desktop
+fi
+# Startup sound (turn off: touch ~/.config/xfce4/.no-startup-sound)
+snd="$HOME/.local/share/sounds/tablet-startup.oga"
+if [ -f "$snd" ] && [ ! -f "$HOME/.config/xfce4/.no-startup-sound" ] && command -v paplay >/dev/null 2>&1; then
+  paplay "$snd" >/dev/null 2>&1 &
 fi
 # Alt+Shift switches the keyboard between English and Arabic
 command -v setxkbmap >/dev/null 2>&1 && setxkbmap -layout us,ara -option grp:alt_shift_toggle 2>/dev/null
