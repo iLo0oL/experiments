@@ -519,7 +519,7 @@ BOARDS.daily = {
   live: 'جاوب اليوم <b id="count">0</b>', namePh: 'اسمك',
   valid: (e, base, s) => e.k === 'a' && isDayStr(e.day) ? { ...base, k: 'a', day: e.day, by: s(e.by, NAME_LEN), text: s(e.text, 300) } : null,
   count: my => [...my.bstate.values()].filter(e => !e.del && e.k === 'a' && e.day === today() && e.text),
-  q(my, day) { const list = dailyQuestions(), n = list.length, k = (daysBetween(my.cfg.start, day) + strHash(my.topic)) % n; return list[(k + n) % n]; },
+  q(my, day) { const list = dailyQuestions(my.cfg.pack), n = list.length, k = (daysBetween(my.cfg.start, day) + (my.cfg.pack ? 0 : strHash(my.topic))) % n; return list[(k + n) % n]; },
   bind(my) {
     $('#blist').onclick = e => {
       const b = e.target.closest('#dsave'); if (!b) return;

@@ -480,7 +480,7 @@ const Board = {
   },
   async sync(my) {
     // الرسائل على السيرفر تبقى 12 ساعة، فإذا صار لها وقت نرسل نسخة كاملة عشان توصل للي ما فتحوها
-    if (S !== my || my.synced || !my.online) return;
+    if (S !== my || my.synced || !my.online || isFb(my.topic)) return; // Firebase يحفظ الرسائل، فما نحتاج نعيد إرسالها
     my.synced = true;
     const stale = !my.bnewest || Date.now() / 1000 - my.bnewest > 10 * 3600;
     if (!stale || !my.bstate.size) return;
@@ -500,13 +500,14 @@ const Board = {
       ${liveBar(B.live)}
       ${my.cfg.note ? `<div class="card note">📝 ${esc(my.cfg.note)}</div>` : ''}
       <section class="card share"><h3>📨 شارك الرابط مع الشلة</h3><p class="muted small">${B.shareHint || 'أي أحد معه الرابط يقدر يضيف ويعدّل.'}</p>
-        <div class="row multi"><button class="btn" id="cp">نسخ الرابط</button><a class="btn wa" target="_blank" rel="noopener" href="https://wa.me/?text=${encodeURIComponent(shareText(inviteLink()))}">واتساب</a></div></section>
+        <div class="row multi"><button class="btn" id="cp">نسخ الرابط</button><a class="btn wa" target="_blank" rel="noopener" href="https://wa.me/?text=${encodeURIComponent(shareText(inviteLink()))}">واتساب</a><button class="btn" id="qrb">📱 QR</button></div></section>
       ${B.named === false ? '' : `<section class="card"><label for="wname" style="margin-top:0">اسمك</label><input id="wname" maxlength="${NAME_LEN}" placeholder="${B.namePh || 'اكتب اسمك'}" value="${esc(store.kv('wname') || '')}"></section>`}
       ${B.html ? B.html(my) : ''}
       <div id="blist"></div>
       <p class="fine">📌 محفوظة في جوالك وجوال كل واحد فتحها، وتتزامن كل ما أحد فتح الرابط.</p>
       ${howCard(my.M)}${privacyNote(my.M)}`;
     $('#cp').onclick = () => copyText(inviteLink());
+    $('#qrb').onclick = () => qrSheet(inviteLink(my), 'كود الرابط');
     const w = $('#wname'); if (w) w.onchange = e => { store.kv('wname', e.target.value.trim().slice(0, NAME_LEN)); Board.update(); };
     $('#blist').addEventListener('focusout', () => setTimeout(() => { if (my.pendingDraw) Board.update(); }, 50));
     if (B.bind) B.bind(my);
@@ -524,7 +525,7 @@ const Board = {
       ${liveBar(trip ? '<b id="count">0</b> غرض · <span id="tleft"></span>' : '<b id="count">0</b> مكان')}
       ${my.cfg.note ? `<div class="card note">📝 ${esc(my.cfg.note)}</div>` : ''}
       <section class="card share"><h3>📨 شارك الرابط مع الشلة</h3><p class="muted small">أي أحد معه الرابط يقدر يضيف ويعدّل.</p>
-        <div class="row multi"><button class="btn" id="cp">نسخ الرابط</button><a class="btn wa" target="_blank" rel="noopener" href="https://wa.me/?text=${encodeURIComponent(shareText(inviteLink()))}">واتساب</a></div></section>
+        <div class="row multi"><button class="btn" id="cp">نسخ الرابط</button><a class="btn wa" target="_blank" rel="noopener" href="https://wa.me/?text=${encodeURIComponent(shareText(inviteLink()))}">واتساب</a><button class="btn" id="qrb">📱 QR</button></div></section>
       <section class="card"><label for="wname" style="margin-top:0">اسمك</label><input id="wname" maxlength="${NAME_LEN}" placeholder="عشان يعرفون ${trip ? 'مين بيجيب وش' : 'مين قيّم'}" value="${esc(store.kv('wname') || '')}"></section>
       ${trip ? `<section class="card"><h3>➕ أضف غرض</h3>
           <div class="addrow"><input id="ti" maxlength="50" placeholder="وش نحتاج؟" enterkeyhint="done"><button class="btn" id="tadd">إضافة</button></div>
@@ -537,6 +538,7 @@ const Board = {
       <p class="fine">📌 ${trip ? 'القائمة' : 'الدليل'} محفوظ في جوالك وجوال كل واحد فتحه، ويتزامن كل ما أحد فتح الرابط.</p>
       ${howCard(my.M)}`;
     $('#cp').onclick = () => copyText(inviteLink());
+    $('#qrb').onclick = () => qrSheet(inviteLink(my), 'كود الرابط');
     $('#wname').onchange = e => { store.kv('wname', e.target.value.trim().slice(0, NAME_LEN)); Board.update(); };
     const me = () => { const n = $('#wname').value.trim().slice(0, NAME_LEN); if (!n) { toast('اكتب اسمك فوق أول', true); $('#wname').focus(); } else store.kv('wname', n); return n; };
     if (trip) {

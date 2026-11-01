@@ -1,0 +1,8 @@
+name = "saraha-ai"
+main = "src/index.js"
+compatibility_date = "2026-10-01"
+compatibility_flags = ["nodejs_compat"]
+
+[vars]
+# المواقع المسموح لها تستخدم الخادم (افصل بينها بفاصلة)
+ALLOWED_ORIGIN = "https://ilo0ol.github.io"

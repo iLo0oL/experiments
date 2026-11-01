@@ -165,7 +165,7 @@ const Quiz = {
   qs(my) { return my.qs || my.cfg.questions; },
   async process(my) {
     if (my.M.fromFacts && !my.qs) {
-      // مسابقة الشلة: الأسئلة تنبني بعدين من معلومات اللاعبين وتنرسل على أجزاء
+      // مسابقة الشلة: الأسئلة تُبنى بعدين من معلومات اللاعبين وتُرسل على أجزاء
       const got = assemble((await roomEvents(my)).filter(x => x.s === 'qs'), 'qs')[0];
       const list = got && Array.isArray(got.qs) ? got.qs.filter(x => x && typeof x.q === 'string' && Array.isArray(x.opts)).map(x => ({ q: x.q.slice(0, 200), opts: strArr(x.opts, 4, NAME_LEN) })).filter(x => x.opts.length >= 2).slice(0, 15) : [];
       if (list.length) my.qs = list;
@@ -329,6 +329,7 @@ const Quiz = {
     if (st.s === 'show') {
       const mine = store.kv(`qans.${my.topic}.${st.i}`);
       const res = mine === null ? '⌛ ما لحقت تجاوب' : +mine === st.c ? '🎉 صح!' : '❌ للأسف غلط';
+      Sound.play(mine !== null && +mine === st.c ? 'ok' : 'bad');
       A.innerHTML = `<div class="card center result"><h3>${res}</h3></div>` + Quiz.showHtml(my, st, name);
     }
   },
