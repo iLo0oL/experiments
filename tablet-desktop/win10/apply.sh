@@ -422,6 +422,7 @@ rename "firefox-esr.desktop firefox.desktop"                 "Internet Browser" 
 rename "xfce-settings-manager.desktop"                       "Control Panel"      "لوحة التحكم"      preferences-desktop
 rename "org.xfce.ristretto.desktop ristretto.desktop"        "Photos"             "الصور"            eog
 rename "galculator.desktop"                                  "Calculator"         "الحاسبة"          accessories-calculator
+rename "synaptic.desktop"                                    "Add or Remove Programs" "إضافة أو إزالة البرامج" system-software-install
 rename "org.xfce.taskmanager.desktop xfce4-taskmanager.desktop" "Task Manager"    "إدارة المهام"     utilities-system-monitor
 rename "org.xfce.screenshooter.desktop xfce4-screenshooter.desktop" "Snipping Tool" "أداة القطع"     applets-screenshooter
 rename "vlc.desktop"                                         "Media Player"       "مشغل الوسائط"
@@ -431,6 +432,28 @@ rename "libreoffice-impress.desktop"                         "PowerPoint Slides"
 rename "xarchiver.desktop"                                   "Zip Files"          "الملفات المضغوطة" package-x-generic
 rename "org.pulseaudio.pavucontrol.desktop pavucontrol.desktop" "Sound"           "الصوت"            multimedia-volume-control
 ok "Windows names for programs"
+
+# ---------- downloads go to the tablet's own Download folder ----------
+# The Arabic "Downloads" folder becomes a link to Android's Download folder, so
+# whatever the browser saves shows up on the tablet right away. Anything already
+# in it is moved there first; a file with the same name there is never replaced,
+# the moved one gets "من الكمبيوتر - " in front of its name instead.
+DL="$HOME/التنزيلات"
+if [ -d /sdcard/Download ] && [ -w /sdcard/Download ] && [ ! -L "$DL" ]; then
+  if [ -d "$DL" ]; then
+    for f in "$DL"/* "$DL"/.[!.]*; do
+      [ -e "$f" ] || [ -L "$f" ] || continue
+      n="$(basename "$f")"; t="/sdcard/Download/$n"
+      [ -e "$t" ] && t="/sdcard/Download/من الكمبيوتر - $n"
+      [ -e "$t" ] || mv "$f" "$t" 2>/dev/null
+    done
+    rmdir "$DL" 2>/dev/null
+  fi
+  if [ ! -e "$DL" ]; then ln -s /sdcard/Download "$DL" && ok "Downloads go to the tablet's Download folder"
+  else fail "Downloads folder: some files could not be moved, it stays as it was"; fi
+elif [ -L "$DL" ]; then
+  ok "Downloads go to the tablet's Download folder"
+fi
 
 # ---------- runs every time the desktop starts ----------
 mkdir -p "$BIN" "$HOME/.config/autostart"

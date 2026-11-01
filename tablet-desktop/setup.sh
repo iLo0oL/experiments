@@ -54,6 +54,12 @@ apt-get "${APT[@]}" install termux-x11-nightly pulseaudio proot-distro curl \
 if apt-get "${APT[@]}" install virglrenderer-android; then ok "Graphics chip support"
 else printf "${Y}  [skipped] Graphics chip support (everything else still works)${N}\n"; fi
 ok "Termux part"
+# Let the computer see the tablet's files (Downloads, Pictures...). Asked now so
+# Android's question is answered by the time the desktop is set up.
+if [ ! -d "$HOME/storage" ]; then
+  echo "  Allow file access if Android asks."
+  termux-setup-storage 2>/dev/null || true
+fi
 
 step "3/6  Installing Debian Linux (about 1 GB, please wait)"
 if proot-distro login "$DISTRO" -- true >/dev/null 2>&1; then
@@ -81,11 +87,6 @@ curl -fsSL "$BASE/commands.sh" -o "$PREFIX/tmp/commands.sh" || die "Could not do
 bash "$PREFIX/tmp/commands.sh" || die "Could not create the commands."
 ok "Commands created"
 
-# Let the computer see the tablet's files (Downloads, Pictures...).
-if [ ! -d "$HOME/storage" ]; then
-  echo "  Allow file access if Android asks."
-  termux-setup-storage 2>/dev/null || true
-fi
 # Shortcut to the tablet's own files inside the computer's home folder
 proot-distro login "$DISTRO" --user "$DUSER" -- bash -c \
   'L="$HOME/ملفات التابلت"; [ -e "$L" ] || [ -L "$L" ] || ln -s /sdcard "$L"' 2>/dev/null

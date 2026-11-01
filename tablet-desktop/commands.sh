@@ -5,6 +5,7 @@
 #    desktop-stop   stop it
 #    desktop-size   save the default size: desktop-size 1|2|3
 #    desktop-gpu    use the graphics chip for all programs: desktop-gpu on|off
+#    desktop-backup / desktop-restore   save / bring back the whole computer
 #  Called by setup.sh. Can also be run on its own to update
 #  just these commands:   bash commands.sh
 # =============================================================
@@ -148,11 +149,68 @@ mkdir -p "$(dirname "$conf")"
 echo "Restart the computer to see it: desktop"
 EOF
 
-chmod +x "$PREFIX/bin/desktop" "$PREFIX/bin/desktop-stop" "$PREFIX/bin/desktop-size" "$PREFIX/bin/desktop-gpu"
+cat > "$PREFIX/bin/desktop-backup" <<'EOF'
+#!/data/data/com.termux/files/usr/bin/bash
+# Save the whole computer (programs, files, settings) to one file on the tablet:
+#   Internal storage > ComputerBackup > computer-YYYY-MM-DD.tar.gz
+# Bring it back with: desktop-restore
+dir=/sdcard/ComputerBackup
+if ! mkdir -p "$dir" 2>/dev/null || [ ! -w "$dir" ]; then
+  termux-setup-storage 2>/dev/null; echo "Allow file access for Termux, then run desktop-backup again."; exit 1
+fi
+f="$dir/computer-$(date +%Y-%m-%d).tar.gz"
+part="$dir/unfinished-computer.tar.gz"
+echo "Stopping the computer..."
+desktop-stop >/dev/null 2>&1
+termux-wake-lock 2>/dev/null
+echo "Saving the computer to: $f"
+echo "This takes 10-40 minutes and needs a few GB free. Keep Termux open."
+rm -f "$part"
+if proot-distro backup --output "$part" debian; then
+  mv -f "$part" "$f"
+  cp "$HOME/.config/tablet-desktop.conf" "$dir/tablet-desktop.conf" 2>/dev/null
+  termux-wake-unlock 2>/dev/null
+  echo; echo "Done. Saved: $f ($(du -h "$f" | cut -f1))"
+  echo "Copy it to a computer or cloud to keep it safe."
+else
+  rm -f "$part"; termux-wake-unlock 2>/dev/null
+  echo; echo "The backup failed. Is there enough free space on the tablet?"; exit 1
+fi
+EOF
+
+cat > "$PREFIX/bin/desktop-restore" <<'EOF'
+#!/data/data/com.termux/files/usr/bin/bash
+# Bring back the computer saved by desktop-backup (replaces the current one).
+#   desktop-restore          -> the newest backup in Internal storage > ComputerBackup
+#   desktop-restore FILE     -> a backup file of your choice
+dir=/sdcard/ComputerBackup
+f="${1:-$(ls -t "$dir"/computer-*.tar.gz 2>/dev/null | head -1)}"
+if [ -n "${1:-}" ] && [ ! -f "$1" ]; then echo "File not found: $1"; exit 1; fi
+if [ -z "$f" ] || [ ! -f "$f" ]; then
+  echo "No backup found in $dir."; echo "Make one with: desktop-backup"; exit 1
+fi
+echo "Backup: $f ($(du -h "$f" | cut -f1))"
+echo "This replaces the computer you have now with the one in the backup."
+read -r -p "Type yes to continue: " a
+[ "$a" = yes ] || { echo "Cancelled."; exit 1; }
+desktop-stop >/dev/null 2>&1
+termux-wake-lock 2>/dev/null
+if proot-distro restore "$f"; then
+  [ -f "$dir/tablet-desktop.conf" ] && mkdir -p "$HOME/.config" && cp "$dir/tablet-desktop.conf" "$HOME/.config/tablet-desktop.conf"
+  termux-wake-unlock 2>/dev/null
+  echo; echo "Done. Start the computer: desktop"
+else
+  termux-wake-unlock 2>/dev/null
+  echo; echo "The restore failed."; exit 1
+fi
+EOF
+
+chmod +x "$PREFIX/bin/desktop" "$PREFIX/bin/desktop-stop" "$PREFIX/bin/desktop-size" "$PREFIX/bin/desktop-gpu" \
+         "$PREFIX/bin/desktop-backup" "$PREFIX/bin/desktop-restore"
 rm -f "$PREFIX/bin/desktop-session" "$PREFIX/bin/desktop-tweaks"   # from the older version
 
 # One-tap button for the Android home screen (needs the Termux:Widget app)
 mkdir -p "$HOME/.shortcuts/tasks"
 printf '#!/data/data/com.termux/files/usr/bin/bash\ndesktop\n' > "$HOME/.shortcuts/tasks/Computer"
 chmod +x "$HOME/.shortcuts/tasks/Computer"
-echo "  [ok] Commands: desktop, desktop-stop, desktop-size, desktop-gpu, and the Computer button"
+echo "  [ok] Commands: desktop, desktop-stop, desktop-size, desktop-gpu, desktop-backup, desktop-restore, and the Computer button"
