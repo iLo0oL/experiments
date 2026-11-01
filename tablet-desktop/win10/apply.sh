@@ -141,6 +141,7 @@ cat > "$XML/xfwm4.xml" <<'EOF'
     <property name="title_font" type="string" value="Sans 10"/>
     <property name="workspace_count" type="int" value="1"/>
     <property name="use_compositing" type="bool" value="true"/>
+    <property name="vblank_mode" type="string" value="off"/>
     <property name="show_dock_shadow" type="bool" value="false"/>
     <property name="snap_to_border" type="bool" value="true"/>
     <property name="tile_on_move" type="bool" value="true"/>
@@ -375,8 +376,14 @@ if [ -f "$wall" ] && [ ! -f "$mark" ]; then
     paths="$(xfconf-query -c xfce4-desktop -l 2>/dev/null | grep 'workspace0/last-image$')"
     [ -n "$paths" ] && break; sleep 1
   done
+  # xfdesktop 4.20 may not write these until changed: build them from the monitor names
+  if [ -z "$paths" ] && command -v xrandr >/dev/null 2>&1; then
+    for m in $(xrandr --listmonitors 2>/dev/null | awk 'NR>1{print $NF}'); do
+      paths="$paths /backdrop/screen0/monitor$m/workspace0/last-image"
+    done
+  fi
   for p in $paths; do
-    xfconf-query -c xfce4-desktop -p "$p" -s "$wall"
+    xfconf-query -c xfce4-desktop -p "$p" -n -t string -s "$wall"
     xfconf-query -c xfce4-desktop -p "${p%last-image}image-style" -n -t int -s 5
   done
   [ -n "$paths" ] && touch "$mark"
