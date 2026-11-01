@@ -99,6 +99,7 @@ const Crypto = {
 /* ============ النقل (ntfy) ============ */
 const Relay = {
   async post(topic, env) {
+    if (isFb(topic)) return FbRelay.post(topic, env);
     const body = JSON.stringify(env);
     let wait = 1500;
     for (let i = 0; i < 4; i++) {
@@ -112,6 +113,7 @@ const Relay = {
     throw new Error('network');
   },
   subscribe(topic, onMsg, onStatus) {
+    if (isFb(topic)) return FbRelay.subscribe(topic, onMsg, onStatus);
     let es = null, timer = null, closed = false, tries = 0, last = 'all';
     const connect = () => {
       if (closed) return;
@@ -148,6 +150,7 @@ const store = {
   get(topic) { return this.list().find(s => s.topic === topic); },
   upsert(rec) {
     const l = this.list(), i = l.findIndex(s => s.topic === rec.topic);
+    if (i < 0 && rec.topic === TV.topic) return; // شاشة العرض ما تُحفظ في «جلساتك»
     if (i >= 0) l[i] = { ...l[i], ...rec, d: rec.d || l[i].d || null, token: rec.token || l[i].token || null }; else l.unshift(rec);
     this.save(l);
   },
@@ -242,6 +245,8 @@ function normalizeSetup(s) {
     cfg.end = isDay(c.end) ? c.end : '';
     if (!cfg.goal) return null;
   }
+  if (c.ai === true) cfg.ai = true;
+  if (F.pack) cfg.pack = c.pack === 'ramadan' ? 'ramadan' : '';
   if (F.days) { cfg.days = (Array.isArray(c.days) ? c.days : []).filter(isDay).slice(0, 21); if (!cfg.days.length) return null; }
   if (['vote', 'know', 'quiz', 'rank', 'funny', 'guess', 'auction'].includes(M.kind)) {
     cfg.questions = (Array.isArray(c.questions) ? c.questions : []).slice(0, MAX_Q).map(q => ({
@@ -299,12 +304,12 @@ const validPairs = p => Array.isArray(p) && p.length >= 2 && p.length <= MAX_NAM
   p.every(x => Array.isArray(x) && x.length === 2 && x.every(n => typeof n === 'string' && n)) ? p.map(([a, b]) => [a.slice(0, NAME_LEN), b.slice(0, NAME_LEN)]) : null;
 const validOrder = (o, n) => Array.isArray(o) && o.length === n && new Set(o).size === n && o.every(i => Number.isInteger(i) && i >= 0 && i < n) ? o : null;
 
-async function createSession(mode, title, cfg) {
+async function createSession(mode, title, cfg, opt = {}) {
   let secret = null;
   if (mode === 'santa') secret = { order: shuffle(cfg.names.map((_, i) => i)) };
   if (mode === 'guess') { secret = { a: cfg.questions.map(q => q.a) }; cfg = { ...cfg, questions: cfg.questions.map(({ q }) => ({ q, opts: null })) }; }
   if (mode === 'quiz') { secret = { c: cfg.questions.map(q => q.c) }; cfg = { ...cfg, questions: cfg.questions.map(({ q, opts }) => ({ q, opts })) }; }
-  const topic = 'saraha_' + b64u(crypto.getRandomValues(new Uint8Array(15)));
+  const topic = (opt.long && CONF.fb ? 'fb_' : 'saraha_') + b64u(crypto.getRandomValues(new Uint8Array(15)));
   const raw = crypto.getRandomValues(new Uint8Array(32));
   const key = b64u(raw);
   const { d, pk } = await Crypto.hostKeys();
@@ -335,12 +340,12 @@ function useResults(my) {
   my.setup = my.setup || { title: R.title, cfg: my.cfg };
 }
 
-async function openSession(topic, key, d, token) {
+async function openSession(topic, key, d, token, tv) {
   const rec = store.get(topic) || {};
-  d = d || rec.d || null;
-  store.upsert({ topic, key, d, token: token || null, created: rec.created || Date.now() });
+  d = tv ? null : d || rec.d || null;
+  if (!tv) store.upsert({ topic, key, d, token: token || null, created: rec.created || Date.now() });
   const my = S = {
-    topic, key, d, token, isHost: !!d && !token, raws: [], seen: new Set(), checkedR: new Set(), wseen: new Set(),
+    topic, key, d, token, tv: !!tv, isHost: !!d && !token, raws: [], seen: new Set(), checkedR: new Set(), wseen: new Set(),
     msgs: [], wishes: {}, setup: null, setupIdx: -1, reveal: null, results: rec.results || null,
     secret: rec.secret || null, order: rec.order || (rec.secret && rec.secret.order) || null, online: false, phase: null
   };
@@ -545,9 +550,11 @@ function renderSession() {
     app.innerHTML = `${backLink()}<div class="center"><div class="spin"></div><p class="muted">جاري فتح الجلسة…</p></div>`;
   } else if (S.phase === 'notfound') {
     app.innerHTML = `${backLink()}<div class="card center"><div class="big-ic">🫥</div><h3>ما لقينا الجلسة</h3>
-      <p class="muted">يمكن الرابط ناقص، أو الجلسة انتهت (الجلسات تبقى ${KEEP_HOURS} ساعة بس)، أو فيه مشكلة بالنت.</p>
+      <p class="muted">يمكن الرابط ناقص، أو الجلسة انتهت${isFb(S.topic) ? '' : ` (الجلسات تبقى ${KEEP_HOURS} ساعة بس)`}، أو فيه مشكلة بالنت.</p>
       <button class="btn" id="retry" style="margin-top:12px">جرّب مرة ثانية</button></div>`;
     $('#retry').onclick = () => route();
+  } else if (S.tv && S.phase === 'open') {
+    TV.render();
   } else if (S.mode === 'santa') {
     S.phase === 'revealed' ? renderSantaReveal() : S.token ? renderSantaPersonal() : renderSantaHost();
   } else {
@@ -555,6 +562,7 @@ function renderSession() {
     if (S.phase === 'revealed') K && K.reveal ? K.reveal() : renderReveal();
     else K && K.open ? K.open() : renderOpen();
   }
+  if (S && S.phase === 'revealed') { addResultImage(); if (S.tv) Sound.play('win'); }
 }
 
 function sessionHead(title) {
@@ -589,6 +597,8 @@ function hostPanel() {
       <button class="btn" id="cp">نسخ الرابط</button>
       <a class="btn wa" target="_blank" rel="noopener" href="https://wa.me/?text=${encodeURIComponent(shareText(inv))}">واتساب</a>
       ${navigator.share ? '<button class="btn" id="sh">مشاركة</button>' : ''}
+      <button class="btn" id="qrb">📱 QR</button>
+      ${tvOk(S) ? '<button class="btn" id="tvb">📺 شاشة العرض</button>' : ''}
     </div>
     ${adminDetails()}
   </section>`;
@@ -656,6 +666,7 @@ function updateLive() {
   const c = $('#count'); if (c) c.textContent = S.msgs.length;
   const dot = $('#dot'), conn = $('#conn');
   if (dot) { dot.classList.toggle('on', S.online); conn.textContent = S.online ? 'متصل' : 'يتصل…'; }
+  if (S.tv) return TV.update();
   const sent = $('#sent'); if (sent && S.M) sent.textContent = sentText();
   if (S.mode === 'santa') updateSanta();
   const K = S.M && KINDS[S.M.kind];
@@ -689,9 +700,9 @@ function bindWrite() {
   const setLen = () => { if (txt) $('#len').textContent = `${txt.value.length}/${maxLen}`; };
   $$('#txt, .ti, input[name=lie], #sig').forEach(f => f.addEventListener('input', () => { setLen(); if (!pv.hidden) closePreview(); showErr(''); }));
   setLen();
-  $('#next').onclick = () => {
+  $('#next').onclick = async () => {
     if (M.target !== 'none' && !target) return showErr(M.target === 'author' ? 'اختر اسمك أول' : 'اختر الشخص أول');
-    let body;
+    let body, after = null;
     if (M.fields === 'three') {
       const vals = $$('.ti').map(i => i.value.trim());
       if (vals.some(v => v.length < 2)) return showErr('اكتب الثلاث معلومات');
@@ -706,14 +717,28 @@ function bindWrite() {
       const raw = txt.value.trim(), signed = sig && sig.value.trim().slice(0, NAME_LEN);
       if (raw.length < 2) return showErr('اكتب شي أول');
       // الرسالة الموقّعة تبقى بأسلوب صاحبها، والمجهولة تتصحح وتتوحّد
-      const text = signed ? raw.slice(0, maxLen) : Polish.polish(raw).slice(0, maxLen + 200);
-      if (!text) return showErr('الرسالة فاضية بعد التصحيح. اكتب كلام مو بس إيموجي 🙂');
-      if (Polish.isRude(text)) return showErr(RUDE_MSG);
-      payload = M.target === 'to' ? { to: target, text } : M.target === 'author' ? { by: target, text } : signed ? { text, by: signed } : { text };
-      body = `<div class="msg">${esc(text)}</div>`;
+      const plain = signed ? raw.slice(0, maxLen) : Polish.polish(raw).slice(0, maxLen + 200);
+      if (!plain) return showErr('الرسالة فاضية بعد التصحيح. اكتب كلام مو بس إيموجي 🙂');
+      if (Polish.isRude(plain)) return showErr(RUDE_MSG);
+      const make = text => M.target === 'to' ? { to: target, text } : M.target === 'author' ? { by: target, text } : signed ? { text, by: signed } : { text };
+      let ai = null;
+      if (!signed && AI.on(my)) {
+        // إعادة الصياغة الاختيارية: لو ما ضبطت لأي سبب نكمل بالتصحيح العادي
+        const nb = $('#next');
+        nb.disabled = true; nb.textContent = '✨ جاري إعادة الصياغة…';
+        ai = await AI.rewrite(raw.slice(0, maxLen));
+        nb.disabled = false; nb.textContent = 'التالي ←';
+        if (S !== my || txt.value.trim() !== raw) return;
+        if (!ai) toast('ما ضبطت إعادة الصياغة، استخدمنا التصحيح العادي');
+      }
+      payload = make(ai ? ai.slice(0, maxLen + 200) : plain);
+      body = `<div class="msg" id="pvMsg">${esc(payload.text)}</div>${ai ? `<p class="hint" id="aiNote">✨ أعاد الذكاء الاصطناعي صياغتها عشان أسلوبك ما يُعرف.
+        <button class="btn ghost sm" id="usePlain" type="button">استخدم التصحيح العادي بدالها</button></p>` : ''}`;
+      if (ai) after = () => { $('#usePlain').onclick = () => { payload = make(plain); $('#pvMsg').textContent = plain; $('#aiNote').remove(); }; };
     }
     $('#pvTo').textContent = M.target === 'to' ? aboutOf(M, target) : M.target === 'author' ? `من: ${target} (ما ينكشف إلا وقت اللعب)` : payload.by ? `من: ${payload.by}` : '';
     $('#pvBody').innerHTML = body;
+    if (after) after();
     nextRow.hidden = true; pv.hidden = false;
     pv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   };
@@ -779,6 +804,9 @@ function bindHost() {
   $('#cpa').onclick = () => copyText(adminLink());
   const sh = $('#sh');
   if (sh) sh.onclick = () => navigator.share({ title: S.M.name, text: shareText(inviteLink()) }).catch(() => {});
+  const my = S, qb = $('#qrb'), tb = $('#tvb');
+  if (qb) qb.onclick = () => qrSheet(inviteLink(my), 'كود الدعوة');
+  if (tb) tb.onclick = () => tvSheet(my);
   const rv = $('#reveal'); if (rv) rv.onclick = startReveal;
 }
 
@@ -938,7 +966,7 @@ function present(slides) {
       <div class="row"><button class="btn ghost grow" data-a="p" ${i ? '' : 'disabled'}>→ السابق</button><button class="btn primary grow" data-a="n" ${last ? 'disabled' : ''}>${pending ? (s.ansBtn || '👀 اكشف') : 'التالي ←'}</button></div>`;
   };
   const next = () => {
-    if (slides[i].ans && !shown) { shown = true; draw(); }
+    if (slides[i].ans && !shown) { shown = true; draw(); Sound.play('reveal'); }
     else if (i < slides.length - 1) { i++; shown = false; draw(); }
   };
   const prev = () => { if (i > 0) { i--; shown = false; draw(); } };
@@ -1136,7 +1164,7 @@ function renderSantaPersonal() {
     finally { btn.disabled = false; }
   };
   // الرسائل تُحفظ على السيرفر 12 ساعة، فنجدد الأمنية لو صار لها وقت
-  if (own && !my.wishRefreshed && Date.now() - own.at > 10 * 3600e3) {
+  if (own && !isFb(my.topic) && !my.wishRefreshed && Date.now() - own.at > 10 * 3600e3) {
     my.wishRefreshed = true;
     saveWish(my, own.wish).catch(() => {});
   }
@@ -1169,30 +1197,66 @@ function renderSantaReveal() {
 /* ============ الرئيسية وإنشاء الجلسات ============ */
 function viewHome() {
   document.title = 'صراحة';
-  const list = store.list();
+  const list = store.list(), favs = Favs.list(), season = Season.current();
+  const card = (id, M) => `<div class="mwrap" data-id="${id}"><a class="mcard" href="#${M.kind === 'offline' ? 'play/' : 'new/'}${id}"><span class="mi">${M.icon}</span><span class="mt"><b>${M.name}</b><small>${M.tag}</small></span></a>
+    <button class="fav${favs.includes(id) ? ' on' : ''}" data-fav="${id}" aria-label="المفضلة">${favs.includes(id) ? '★' : '☆'}</button></div>`;
   app.innerHTML = `
+    <div class="topbar"><button class="iconbtn" id="thBtn" aria-label="المظهر">${Theme.resolve(Theme.get()) === 'light' ? '🌙' : '☀️'}</button><a class="iconbtn" href="#settings" aria-label="الإعدادات">⚙️</a></div>
     <header class="hero">
       <div class="logo">صراحة</div>
       <p class="tag">ألعاب وسوالف للشلة… وأغلبها بدون ما يُعرف مين</p>
     </header>
+    ${season ? `<a class="card season" href="${season.href}"><span class="big-ic">${season.icon}</span><span><b>${season.title}</b><small>${season.text}</small></span></a>` : ''}
     ${list.length ? `<h3 class="sec">جلساتك</h3><div class="list">${list.map(sessItem).join('')}</div>` : ''}
+    <div class="search"><input id="q" type="search" placeholder="🔎 دوّر على لعبة… (تصويت، رمضان، رسم)" autocomplete="off"></div>
+    ${favs.length ? `<section class="mgroup" data-g="fav"><h3 class="sec">⭐ المفضلة</h3><div class="modes">${favs.map(id => card(id, MODES[id])).join('')}</div></section>` : ''}
     <div class="chips gfilter" id="gf"><button class="chip on" data-g="">الكل (${Object.keys(MODES).length})</button>${GROUPS.map(g => `<button class="chip" data-g="${g.id}">${g.title.replace(/\s*\(.*\)$/, '')}</button>`).join('')}</div>
-    ${GROUPS.map(g => `<section class="mgroup" data-g="${g.id}"><h3 class="sec">${g.title}</h3><div class="modes">${Object.entries(MODES).filter(([, M]) => M.group === g.id).map(([id, M]) => `
-      <a class="mcard" href="#${M.kind === 'offline' ? 'play/' : 'new/'}${id}"><span class="mi">${M.icon}</span><span class="mt"><b>${M.name}</b><small>${M.tag}</small></span><span class="go">←</span></a>`).join('')}</div></section>`).join('')}
-    <p class="fine">🔒 كل شي مشفر من جوالك، والجلسات تبقى ${KEEP_HOURS} ساعة. ألعاب «جوال واحد» ما تحتاج نت.</p>`;
+    ${GROUPS.map(g => `<section class="mgroup" data-g="${g.id}"><h3 class="sec">${g.title}</h3><div class="modes">${Object.entries(MODES).filter(([, M]) => M.group === g.id).map(([id, M]) => card(id, M)).join('')}</div></section>`).join('')}
+    <div class="card center" id="noRes" hidden><p>ما لقينا لعبة بهالاسم 🤔</p><small class="muted">جرّب كلمة ثانية، مثل: أسئلة، رسم، تصويت</small></div>
+    <p class="fine">🔒 كل شي مشفر من جوالك، ${keepText()}. ألعاب «جوال واحد» ما تحتاج نت.</p>`;
   $$('[data-del]').forEach(b => {
     b.onclick = () => { if (confirm('تبي تحذف الجلسة من القائمة؟')) { store.remove(b.dataset.del); viewHome(); } };
   });
+  let group = '';
+  const filter = () => {
+    const words = normAr($('#q').value).split(/\s+/).filter(Boolean);
+    let shown = 0;
+    $$('.mgroup').forEach(sec => {
+      const g = sec.dataset.g;
+      let any = false;
+      $$('.mwrap', sec).forEach(w => {
+        const id = w.dataset.id, hay = modeHay(id, MODES[id]);
+        const ok = words.every(x => hay.includes(x));
+        w.hidden = !ok; if (ok) any = true;
+      });
+      // المفضلة تختفي وقت البحث أو الفلترة عشان ما تتكرر النتائج
+      sec.hidden = !any || (g === 'fav' ? !!(group || words.length) : !!group && g !== group);
+      if (!sec.hidden && g !== 'fav') shown += $$('.mwrap:not([hidden])', sec).length;
+    });
+    $('#noRes').hidden = shown > 0;
+  };
+  $('#q').oninput = filter;
   $('#gf').onclick = e => {
     const b = e.target.closest('[data-g]'); if (!b) return;
+    group = b.dataset.g;
     $$('#gf .chip').forEach(c => c.classList.toggle('on', c === b));
-    $$('.mgroup').forEach(sec => { sec.hidden = !!b.dataset.g && sec.dataset.g !== b.dataset.g; });
+    filter();
   };
+  app.querySelectorAll('[data-fav]').forEach(b => {
+    b.onclick = () => {
+      const on = Favs.toggle(b.dataset.fav), y = scrollY, q = $('#q').value;
+      toast(on ? 'أضفناها للمفضلة ⭐' : 'شلناها من المفضلة');
+      viewHome();
+      $('#q').value = q; if (q) filter();
+      scrollTo(0, y);
+    };
+  });
+  $('#thBtn').onclick = () => { Theme.set(Theme.resolve(Theme.get()) === 'light' ? 'dark' : 'light'); viewHome(); };
 }
 function sessItem(s) {
   const M = MODES[s.mode || 'saraha'] || MODES.saraha;
   const href = s.caplink ? s.caplink : s.d ? `#h=${s.topic}.${s.key}.${s.d}` : s.token ? `#p=${s.topic}.${s.key}.${s.token}` : `#j=${s.topic}.${s.key}`;
-  const expired = !s.results && M.kind !== 'santa' && M.kind !== 'board' && Date.now() - (s.created || 0) > KEEP_HOURS * 3600e3;
+  const expired = !s.results && !isFb(s.topic) && M.kind !== 'santa' && M.kind !== 'board' && Date.now() - (s.created || 0) > KEEP_HOURS * 3600e3;
   const cap = s.mode === 'capsule' && s.results && s.results.cfg;
   const cdLeft = s.mode === 'countdown' && s.at ? Math.ceil((s.at - Date.now()) / 864e5) : null;
   const st = cdLeft !== null ? (cdLeft > 0 ? `⏳ باقي ${cdLeft} يوم` : '🎉 جا اليوم') : cap ? (capLocked(cap.open) ? `🔒 تنفتح ${fmtDay(cap.open, { day: 'numeric', month: 'short', year: 'numeric' })}` : '🔓 مفتوحة')
@@ -1245,6 +1309,9 @@ function viewMode(id) {
         <div class="addrow"><input id="po" maxlength="200" placeholder="اكتب خيار واضغط إضافة" enterkeyhint="done"><button class="btn" id="poAdd" type="button">إضافة</button></div>
         <div class="chips" id="pchips"></div>` : ''}
       ${F.note ? `<label for="note">ملاحظة للكل (اختياري)</label><input id="note" maxlength="200" placeholder="مثلًا: الميزانية 100 ريال، والتسليم يوم الخميس">` : ''}
+      ${F.pack ? `<label>نوع الأسئلة</label><div class="chips" id="dpack"><button type="button" class="chip${Season.hijri().m === 9 ? '' : ' on'}" data-p="">☀️ عامة</button><button type="button" class="chip${Season.hijri().m === 9 ? ' on' : ''}" data-p="ramadan">🌙 رمضان (30 سؤال)</button></div>` : ''}
+      ${CONF.fb ? `<label class="qrow" style="margin-top:16px"><input type="checkbox" id="optLong" checked><span>💾 جلسة طويلة<br><small class="muted">تبقى محفوظة على السيرفر أكثر من ${KEEP_HOURS} ساعة.</small></span></label>` : ''}
+      ${CONF.ai && aiable(M) ? `<label class="qrow"><input type="checkbox" id="optAi"><span>✨ إعادة الصياغة بالذكاء الاصطناعي<br><small class="muted">كل كتابة تُرسل لخادم الذكاء الاصطناعي قبل التشفير عشان يعيد صياغتها بأسلوب محايد ما يكشف كاتبها. الكاتب يشوف النتيجة قبل الإرسال ويقدر يرجع للتصحيح العادي.</small></span></label>` : ''}
     </div>
     <button class="btn primary big" id="create">إنشاء الجلسة</button>`;
 
@@ -1252,6 +1319,8 @@ function viewMode(id) {
   const namesCtl = F.names && chipList($('#nm'), $('#add'), $('#chips'), names, { max: MAX_NAMES, len: NAME_LEN, empty: 'ما أضفت أحد للحين' });
   const optsCtl = F.poll && chipList($('#po'), $('#poAdd'), $('#pchips'), opts, { max: MAX_OPTS, len: OPT_LEN, empty: 'ما أضفت خيارات للحين' });
 
+  const dp = $('#dpack');
+  if (dp) dp.onclick = e => { const b = e.target.closest('[data-p]'); if (b) $$('.chip', dp).forEach(c => c.classList.toggle('on', c === b)); };
   let promptSel = 0;
   if (F.prompt) {
     $('#prompts').onclick = e => {
@@ -1272,7 +1341,7 @@ function viewMode(id) {
     $('#qlist').onchange = e => {
       const i = e.target.dataset.i; if (i === undefined) return;
       if (e.target.checked && qs.filter(q => q.on).length >= MAX_Q) { e.target.checked = false; return toast(`الحد ${MAX_Q} أسئلة`, true); }
-      qs[+i].on = e.target.checked;
+      qs[+i].on = e.target.checked; qs[+i].mine = true;
     };
     $('#qadd').onclick = () => {
       let v;
@@ -1307,8 +1376,8 @@ function viewMode(id) {
       $('#packs').onclick = e => {
         const b = e.target.closest('[data-k]'); if (!b) return;
         $$('#packs .chip').forEach(c => c.classList.toggle('on', c === b));
-        // المختار من قبل يبقى، وتنضاف أسئلة الباقة الجديدة تحته (مختارة لو ما فيه شي مختار)
-        const keep = qs.filter(q => q.on || q.custom), have = new Set(keep.map(q => JSON.stringify(q.v)));
+        // اللي اخترته بنفسك يبقى، والاختيار التلقائي يروح، وتُضاف أسئلة الباقة الجديدة (مختارة لو ما فيه شي اخترته)
+        const keep = qs.filter(q => q.custom || (q.on && q.mine)), have = new Set(keep.map(q => JSON.stringify(q.v)));
         const pack = F.questions.packs[+b.dataset.k][1].filter(v => !have.has(JSON.stringify(v)));
         const auto = keep.some(q => q.on) ? 0 : F.questions.pick;
         qs = [...keep, ...pack.map((v, i) => ({ v, on: i < auto }))];
@@ -1375,6 +1444,8 @@ function viewMode(id) {
       cfg.days = [...days].sort();
     }
     if (F.prompt) cfg.prompt = ($('#promptCustom').value.trim() || F.prompt.presets[promptSel]).slice(0, Q_LEN);
+    if (F.pack) cfg.pack = ($('#dpack .chip.on') || {}).dataset?.p || '';
+    if ($('#optAi') && $('#optAi').checked) cfg.ai = true;
     if (F.questions) {
       const chosen = qs.filter(q => q.on).map(q => q.v);
       if (!chosen.length) return toast('اختر سؤال واحد على الأقل', true);
@@ -1402,7 +1473,7 @@ function viewMode(id) {
     }
     const btn = e.currentTarget;
     btn.disabled = true; btn.textContent = 'جاري الإنشاء…';
-    try { await createSession(id, ($('#title').value.trim() || M.name).slice(0, TITLE_LEN), cfg); }
+    try { await createSession(id, ($('#title').value.trim() || M.name).slice(0, TITLE_LEN), cfg, { long: !!($('#optLong') && $('#optLong').checked) }); }
     catch (err) {
       console.error(err);
       toast(err.big ? 'الإعدادات كبيرة، قلّل الأسئلة أو الأسماء' : 'ما قدرنا ننشئ الجلسة، تأكد من النت وجرّب مرة ثانية', true);
@@ -1423,6 +1494,10 @@ function route() {
   scrollTo(0, 0);
   let h = location.hash.slice(1);
   try { h = decodeURIComponent(h); } catch {}
+  Theme.apply();
+  TV.topic = null;
+  document.body.classList.toggle('tv', h.startsWith('tv='));
+  if (h === 'settings') return viewSettings();
   if (h === 'tod') return OFFLINE.tod();
   if (h.startsWith('play/')) { const id = h.slice(5).replace(/[^a-z]/g, ''); return OFFLINE[id] ? OFFLINE[id]() : viewHome(); }
   if (h.startsWith('bill=')) return OFFLINE.bill(h.slice(5).replace(/[^\w-]/g, ''));
@@ -1432,6 +1507,12 @@ function route() {
   }
   if (h.startsWith('cd=')) return OFFLINE.countdown(h.slice(3).replace(/[^\w-]/g, ''));
   if (h.startsWith('c=')) return openCapsuleLink(h.slice(2).replace(/[^\w-]/g, ''));
+  if (h.startsWith('tv=')) {
+    const t = h.slice(3).replace(/[^\w.-]/g, '').match(/^([\w-]{8,64})\.([\w-]{43})/);
+    if (!t) { document.body.classList.remove('tv'); return brokenLink(); }
+    TV.topic = t[1];
+    return openSession(t[1], t[2], null, null, true).catch(e => { console.error(e); brokenLink(); });
+  }
   if (h.startsWith('new/')) {
     const id = h.slice(4).replace(/[^a-z]/g, '');
     if (OFFLINE[id]) return OFFLINE[id]();

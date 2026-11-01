@@ -4,6 +4,14 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#0f0c1a">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="صراحة">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<script>try{var t=localStorage.getItem('saraha.theme')||'dark';if(t==='auto')t=matchMedia('(prefers-color-scheme: light)').matches?'light':'dark';document.documentElement.dataset.theme=t;if(t==='light')document.querySelector('meta[name=theme-color]').content='#f6f3ff'}catch(e){}</script>
 <meta name="referrer" content="no-referrer">
 <meta name="description" content="ألعاب وسوالف للشلة: صراحة، تصويت سري، الكرسي الساخن، الصديق الخفي وغيرها">
 <title>صراحة</title>
@@ -323,22 +331,82 @@ details.month.now{border-color:var(--pink)}
 .coin{font-size:44px;font-weight:800;margin:10px 0;min-height:70px}
 .coin.spin3d{animation:flip3d .6s ease}
 @keyframes flip3d{50%{transform:rotateY(90deg) scale(.8)}}
+/* الإضافات: الشريط العلوي، البحث، المفضلة، المواسم، QR */
+.topbar{display:flex;justify-content:flex-end;gap:8px;margin-bottom:-18px;position:relative;z-index:2}
+.iconbtn{width:42px;height:42px;display:grid;place-items:center;background:var(--card);border:1px solid var(--line);border-radius:14px;font-size:19px;text-decoration:none;cursor:pointer;color:var(--text)}
+.search{margin-top:22px}
+.search input{border-radius:16px;padding:13px 16px}
+.mwrap{position:relative}
+.mwrap .mcard{padding-inline-end:56px}
+.fav{position:absolute;inset-inline-end:8px;top:50%;transform:translateY(-50%);width:42px;height:42px;border:0;background:none;color:var(--muted);font-size:23px;cursor:pointer;border-radius:12px}
+.fav.on{color:#fbbf24}
+.season{display:flex;gap:14px;align-items:center;text-decoration:none;color:var(--text);background:linear-gradient(135deg,rgba(139,92,246,.18),rgba(236,72,153,.14));border-color:rgba(236,72,153,.35)}
+.season b{display:block;font-size:18px}
+.season small{display:block;color:var(--muted);font-size:14px;line-height:1.6}
+.qrbig{background:#fff;border-radius:18px;padding:10px;margin:14px auto;max-width:280px;aspect-ratio:1}
+.qrbig svg{display:block;width:100%;height:100%}
+.qrbig svg path{fill:#000}
+/* شاشة العرض */
+body.tv .wrap{max-width:1400px;padding:24px 32px}
+body.tv .wrap:not(:has(.tvgrid)){max-width:900px;zoom:1.35}
+.tvgrid{display:grid;grid-template-columns:1fr 330px;gap:28px;align-items:start}
+.tvmain{min-width:0}
+.tvtitle{font-size:clamp(28px,3.4vw,44px);font-weight:800;line-height:1.3}
+.tvside{position:sticky;top:24px;background:var(--card);border:1px solid var(--line);border-radius:24px;padding:20px;text-align:center}
+.tvside b{display:block;font-size:22px}
+.tvside .live{justify-content:center;margin:10px 0 0}
+.tvside #tvcount{font-size:20px}
+.tvside #tvcount b{color:var(--text)}
+.tvbig{font-size:clamp(80px,12vw,150px);font-weight:800;line-height:1.1;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+body.tv .tvmain{font-size:22px}
+body.tv .tvmain .card h3{font-size:30px}
+body.tv .tvmain .qq{font-size:clamp(28px,3.2vw,46px)}
+body.tv .tvmain .qopt{font-size:clamp(22px,2.4vw,32px);padding:20px 24px}
+body.tv .tvmain .bigl{font-size:clamp(90px,12vw,170px)}
+body.tv .tvmain .brow{font-size:24px}
+body.tv .tvmain .msg{font-size:26px}
+body.tv .tvmain .auc{font-size:clamp(30px,3.6vw,48px)}
+body.tv .tvmain .prompt{font-size:30px}
+body.tv .tvmain .qbar{height:14px}
+body.tv .tvmain .big-ic{font-size:72px}
+@media (max-width:820px){.tvgrid{grid-template-columns:1fr}.tvside{position:static}}
+/* الوضع الفاتح */
+html[data-theme=light]{--bg:#f6f3ff;--card:#ffffff;--card2:#f1ecfb;--line:#e1d9f2;--text:#1d1530;--muted:#6b6386;--accent:#7c3aed;--pink:#db2777;--ok:#059669;--bad:#e11d48;color-scheme:light}
+html[data-theme=dark]{color-scheme:dark}
+html[data-theme=light] body{background:radial-gradient(900px 500px at 100% -10%,#e9ddff 0,transparent 60%),radial-gradient(800px 500px at -10% 110%,#fde4f1 0,transparent 60%),var(--bg);background-attachment:fixed}
+html[data-theme=light] ::placeholder{color:#9b93b6}
+html[data-theme=light] .role{color:#9d174d}
+html[data-theme=light] .btn.danger{background:#ffe4ea;color:#9f1239;border-color:#fda4af}
+html[data-theme=light] .toast{background:#1d1530;color:#fff}
+html[data-theme=light] .toast.bad{background:#9f1239;color:#fff}
+html[data-theme=light] .present{background:radial-gradient(700px 500px at 50% 0,#e9ddff 0,transparent 70%),var(--bg)}
+html[data-theme=light] .mcard:hover{border-color:#c4b5fd}
+html[data-theme=light] .stars button{color:#d6cfe8}
+html[data-theme=light] .ban span{color:#9f1239}
+html[data-theme=light] .modal{background:rgba(29,21,48,.45)}
+html[data-theme=light] .card,html[data-theme=light] .mcard,html[data-theme=light] .list .item{box-shadow:0 2px 10px rgba(76,29,149,.05)}
+html[data-theme=light] .pod.p0{border-color:#eab308}
+html[data-theme=light] .qopt.ok,html[data-theme=light] .qopt.picked{outline-color:#1d1530}
 </style>
 </head>
 <body>
 <main class="wrap" id="app"></main>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
-<script src="polish.js?v=5"></script>
-<script src="banks.js?v=5"></script>
-<script src="banks2.js?v=5"></script>
-<script src="banks3.js?v=5"></script>
-<script src="modes.js?v=5"></script>
-<script src="games.js?v=5"></script>
-<script src="games2.js?v=5"></script>
-<script src="games3.js?v=5"></script>
-<script src="offline.js?v=5"></script>
-<script src="offline2.js?v=5"></script>
-<script src="offline3.js?v=5"></script>
-<script src="app.js?v=5"></script>
+<script src="config.js?v=6"></script>
+<script src="vendor/qrcode.js?v=6"></script>
+<script src="polish.js?v=6"></script>
+<script src="banks.js?v=6"></script>
+<script src="banks2.js?v=6"></script>
+<script src="banks3.js?v=6"></script>
+<script src="modes.js?v=6"></script>
+<script src="banks4.js?v=6"></script>
+<script src="games.js?v=6"></script>
+<script src="games2.js?v=6"></script>
+<script src="games3.js?v=6"></script>
+<script src="offline.js?v=6"></script>
+<script src="offline2.js?v=6"></script>
+<script src="offline3.js?v=6"></script>
+<script src="extras.js?v=6"></script>
+<script src="app.js?v=6"></script>
 </body>
 </html>

@@ -70,7 +70,8 @@ const DAILY_EXTRA = [
   'كيف تصف يومك بكلمة وحدة؟', 'وش الشي اللي أتعبك اليوم؟', 'لو تقدر تكون في أي مكان الحين، وين؟',
   'وش آخر صورة صورتها، وليش؟', 'وش العادة اللي تبي تبدأها؟', 'مين تبي تشكر اليوم؟'
 ];
-const dailyQuestions = () => [...DAILY_EXTRA, ...DEEP_Q.light, ...DEEP_Q.mid];
+// باقة رمضان (RAMADAN_DAILY) في banks4.js: سؤال لكل يوم من الشهر
+const dailyQuestions = pack => pack === 'ramadan' ? RAMADAN_DAILY : [...DAILY_EXTRA, ...DEEP_Q.light, ...DEEP_Q.mid];
 
 const CHALLENGE_GOALS = [
   ['🚶 المشي', 'خطوة', 8000], ['📖 القراءة', 'صفحة', 10], ['📿 حفظ القرآن', 'آية', 5], ['💧 شرب الماي', 'كوب', 8], ['🏋️ التمرين', 'دقيقة', 30]

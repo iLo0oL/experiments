@@ -50,7 +50,7 @@ function teamTimer(id, list, cardHtml, taboo) {
     offTimer = setInterval(() => {
       left--; const t = $('#tm'); if (t) t.textContent = left;
       if (left <= 0) {
-        clearInterval(offTimer);
+        clearInterval(offTimer); Sound.play('alarm');
         stage.innerHTML = `<div class="card center"><h3>⏰ انتهى الوقت!</h3><p>${esc(teams[turn].n)} جاب <b>${got}</b> هالدور</p></div><button class="btn primary big" id="nt">الدور اللي بعده ←</button>`;
         $('#nt').onclick = () => { turn = 1 - turn; idle(); };
       }
@@ -79,7 +79,7 @@ Object.assign(OFFLINE, {
       let k = 0;
       clearInterval(offTimer);
       offTimer = setInterval(() => { t.textContent = names[k++ % names.length]; }, 70);
-      setTimeout(() => { clearInterval(offTimer); t.textContent = '👉 ' + pick; last = pick; }, 1100);
+      setTimeout(() => { clearInterval(offTimer); t.textContent = '👉 ' + pick; last = pick; Sound.play('pop'); }, 1100);
     };
     const show = k => {
       kind = k;

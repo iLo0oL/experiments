@@ -51,7 +51,7 @@ const OFFLINE = {
       let k = 0;
       clearInterval(offTimer);
       offTimer = setInterval(() => { t.textContent = names[k++ % names.length]; }, 70);
-      setTimeout(() => { clearInterval(offTimer); t.textContent = '👉 ' + pick; last = pick; }, 1100);
+      setTimeout(() => { clearInterval(offTimer); t.textContent = '👉 ' + pick; last = pick; Sound.play('pop'); }, 1100);
     };
     const show = k => {
       kind = k;
@@ -200,7 +200,7 @@ const OFFLINE = {
       stop(); left = 60; $('#tm').textContent = left;
       offTimer = setInterval(() => {
         left--; $('#tm').textContent = left;
-        if (left <= 0) { stop(); dw.innerHTML = `⏰ انتهى الوقت! الكلمة كانت: <b class="pink">${esc(word)}</b>`; word = null; $('#peek').disabled = true; }
+        if (left <= 0) { stop(); Sound.play('alarm'); dw.innerHTML = `⏰ انتهى الوقت! الكلمة كانت: <b class="pink">${esc(word)}</b>`; word = null; $('#peek').disabled = true; }
       }, 1000);
     };
     $('#ok').onclick = () => {
@@ -328,7 +328,7 @@ const OFFLINE = {
         const p = Math.min(1, (now - t0) / T), e = 1 - Math.pow(1 - p, 3);
         rot = from + (to - from) * e; draw();
         if (p < 1) return requestAnimationFrame(step);
-        rot = to % (2 * Math.PI); spinning = false;
+        rot = to % (2 * Math.PI); spinning = false; Sound.play('win');
         const res = $('#res'); res.hidden = false; res.innerHTML = `<small>الدولاب اختار</small><div class="gname">${esc(items[win])}</div>`;
         res.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
       };

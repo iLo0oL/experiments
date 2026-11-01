@@ -28,7 +28,7 @@ Object.assign(OFFLINE, {
       const done = got => { clearInterval(offTimer); if (got && who) score[who] = (score[who] || 0) + 1; turn++; scores(); idle(); };
       $('#ok').onclick = () => done(true);
       $('#no').onclick = () => done(false);
-      offTimer = setInterval(() => { left--; const t = $('#tm'); if (t) t.textContent = Math.max(0, left); if (left <= 0) { clearInterval(offTimer); if (t) t.textContent = '⏰'; } }, 1000);
+      offTimer = setInterval(() => { left--; const t = $('#tm'); if (t) t.textContent = Math.max(0, left); if (left <= 0) { clearInterval(offTimer); Sound.play('alarm'); if (t) t.textContent = '⏰'; } }, 1000);
     };
     scores(); idle();
   },
@@ -69,7 +69,7 @@ Object.assign(OFFLINE, {
         $('#ok').onclick = ok;
         $('#cw').onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); ok(); } };
         $('#cw').focus();
-        offTimer = setInterval(() => { left--; const t = $('#tm'); if (t) t.textContent = left; if (left <= 0) kick(); }, 1000);
+        offTimer = setInterval(() => { left--; const t = $('#tm'); if (t) t.textContent = left; if (left <= 0) { Sound.play('alarm'); kick(); } }, 1000);
       };
       draw();
     };
@@ -173,13 +173,13 @@ Object.assign(OFFLINE, {
           clearInterval(offTimer);
           const sum = v.reduce((s, x) => s + x + 1, 0);
           $('#dsum').innerHTML = n > 1 ? `المجموع: <b>${sum}</b> (${v.map(x => x + 1).join(' + ')})` : `<b>${sum}</b>`;
-          addHist(`🎲 ${v.map(x => DIE[x]).join(' ')} = ${sum}`);
+          addHist(`🎲 ${v.map(x => DIE[x]).join(' ')} = ${sum}`); Sound.play('roll');
         }
       }, 70);
     };
     $('#flip').onclick = () => {
       const c = $('#cv'); c.classList.remove('spin3d'); void c.offsetWidth; c.classList.add('spin3d');
-      setTimeout(() => { const r = rnd(2) ? 'صورة 👑' : 'كتابة ✍️'; c.textContent = r; addHist(`🪙 ${r}`); }, 600);
+      setTimeout(() => { const r = rnd(2) ? 'صورة 👑' : 'كتابة ✍️'; c.textContent = r; addHist(`🪙 ${r}`); Sound.play('pop'); }, 600);
     };
     pickN();
   },
