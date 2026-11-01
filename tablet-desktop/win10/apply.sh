@@ -15,6 +15,7 @@
 #
 #  Usage:  bash apply.sh
 #  Testing with local copies:  WIN10_THEME_SRC=dir WIN10_ICONS_SRC=dir
+#                              WINXP_THEME_SRC=dir WINXP_ICONS_SRC=dir
 #                              WIN10_WALLPAPER=file bash apply.sh
 # =============================================================
 set -u
@@ -22,6 +23,8 @@ set -u
 BASE="${DESKTOP_BASE:-https://ilo0ol.github.io/experiments/tablet-desktop}"
 THEME_URL="https://github.com/B00merang-Project/windows-10/archive/refs/heads/master.tar.gz"
 ICONS_URL="https://github.com/B00merang-Artwork/windows-10/archive/refs/heads/master.tar.gz"
+XP_THEME_URL="https://github.com/B00merang-Project/windows-xp/archive/refs/heads/master.tar.gz"
+XP_ICONS_URL="https://github.com/B00merang-Artwork/windows-xp/archive/refs/heads/master.tar.gz"
 
 THEMES="$HOME/.themes"
 ICONS="$HOME/.icons"
@@ -87,16 +90,41 @@ else
   fail "Windows 10 icons (check internet)"
 fi
 
-# Big-screen copy of the window borders/buttons
-if [ -d "$THEMES/Windows-10/xfwm4" ]; then
-  rm -rf "$THEMES/Windows-10-hidpi"; mkdir -p "$THEMES/Windows-10-hidpi/xfwm4"
-  for f in "$THEMES/Windows-10/xfwm4"/*; do
+# Big-screen copy of the window borders/buttons: make_hidpi <theme dir name>
+make_hidpi() {
+  [ -d "$THEMES/$1/xfwm4" ] || return 1
+  rm -rf "$THEMES/$1-hidpi"; mkdir -p "$THEMES/$1-hidpi/xfwm4"
+  for f in "$THEMES/$1/xfwm4"/*; do
     case "$f" in
-      *.xpm) xpm2x "$f" > "$THEMES/Windows-10-hidpi/xfwm4/$(basename "$f")" ;;
-      *) cp "$f" "$THEMES/Windows-10-hidpi/xfwm4/" ;;
+      *.xpm) xpm2x "$f" > "$THEMES/$1-hidpi/xfwm4/$(basename "$f")" ;;
+      *) cp "$f" "$THEMES/$1-hidpi/xfwm4/" ;;
     esac
   done
-  ok "Large window buttons"
+}
+make_hidpi Windows-10 && ok "Large window buttons"
+
+# ---------- Windows XP look (switch with: desktop-theme xp / desktop-theme 10) ----------
+# Only the "Windows XP Luna" (blue) variant of the B00merang XP themes is kept.
+get_xp_theme() {
+  local dest="$THEMES/Windows-XP-Luna" tmp
+  if [ -n "${WINXP_THEME_SRC:-}" ]; then
+    rm -rf "$dest"; mkdir -p "$dest"; cp -r "$WINXP_THEME_SRC/Windows XP Luna"/. "$dest"/; return 0
+  fi
+  tmp="$(mktemp -d)"
+  if curl -fsSL "$XP_THEME_URL" | tar -xz -C "$tmp" --wildcards '*/Windows XP Luna/*'; then
+    rm -rf "$dest"; mkdir -p "$dest"; cp -r "$tmp"/*/"Windows XP Luna"/. "$dest"/
+    rm -rf "$tmp"; return 0
+  fi
+  rm -rf "$tmp"; return 1
+}
+if get_xp_theme; then make_hidpi Windows-XP-Luna; ok "Windows XP theme"; else fail "Windows XP theme (check internet)"; fi
+if get "${WINXP_ICONS_SRC:-$XP_ICONS_URL}" "$ICONS/Windows-XP"; then
+  grep -q '^Inherits=' "$ICONS/Windows-XP/index.theme" 2>/dev/null \
+    || sed -i 's/^\[Icon Theme\]$/[Icon Theme]\nInherits=Adwaita,hicolor/' "$ICONS/Windows-XP/index.theme"
+  command -v gtk-update-icon-cache >/dev/null 2>&1 && gtk-update-icon-cache -q -f "$ICONS/Windows-XP" 2>/dev/null
+  ok "Windows XP icons"
+else
+  fail "Windows XP icons (check internet)"
 fi
 
 # ---------- wallpaper ----------
@@ -115,16 +143,21 @@ asset() {
 # ---------- startup sound (an original chime) ----------
 if asset startup.oga "$HOME/.local/share/sounds/tablet-startup.oga"; then ok "Startup sound"; else fail "Startup sound"; fi
 
-# ---------- Windows 7 style Start menu ----------
-# Kept in its own file and imported, so the user's own gtk.css is left alone.
-# To undo: delete ~/.config/gtk-3.0/win7-menu.css
-if asset win7-menu.css "$HOME/.config/gtk-3.0/win7-menu.css"; then
-  grep -qs 'win7-menu.css' "$HOME/.config/gtk-3.0/gtk.css" \
-    || echo '@import url("win7-menu.css");' >> "$HOME/.config/gtk-3.0/gtk.css"
-  ok "Windows 7 style Start menu"
-else
-  fail "Windows 7 style Start menu"
-fi
+# ---------- look styles ----------
+# win7-menu.css = Windows 10 look with a Windows 7 style Start menu
+# xp-style.css  = Windows XP look (blue taskbar, green Start button)
+# The current one is copied to look.css, which gtk.css imports (the user's own
+# gtk.css is otherwise left alone).
+G="$HOME/.config/gtk-3.0"
+asset win7-menu.css "$G/win7-menu.css" && ok "Windows 7 style Start menu" || fail "Windows 7 style Start menu"
+asset xp-style.css  "$G/xp-style.css"  && ok "Windows XP style"          || fail "Windows XP style"
+asset xp-wallpaper.jpg "$HOME/.local/share/backgrounds/xp-wallpaper.jpg" || fail "Windows XP wallpaper"
+LOOK_FILE="$CONF/.desktop-look"
+look="$(cat "$LOOK_FILE" 2>/dev/null)"; [ "$look" = xp ] || look=10
+[ "$look" = xp ] && cp "$G/xp-style.css" "$G/look.css" || cp "$G/win7-menu.css" "$G/look.css"
+touch "$G/gtk.css"
+sed -i '/@import url("win7-menu.css");/d' "$G/gtk.css"
+grep -q 'look.css' "$G/gtk.css" || echo '@import url("look.css");' >> "$G/gtk.css"
 
 # ---------- settings ----------
 # Written only on the first install (or with WIN10_RESET=1), so updates never
@@ -134,6 +167,8 @@ mkdir -p "$XML"
 APPLIED="$CONF/.win10-applied"
 [ ! -f "$APPLIED" ] && [ -f "$XML/xfce4-panel.xml" ] && touch "$APPLIED"
 if [ ! -f "$APPLIED" ] || [ "${WIN10_RESET:-0}" = 1 ]; then
+# a fresh start is always the Windows 10 look
+rm -f "$LOOK_FILE"; cp "$G/win7-menu.css" "$G/look.css"
 
 cat > "$XML/xsettings.xml" <<'EOF'
 <?xml version="1.0" encoding="UTF-8"?>
@@ -377,8 +412,10 @@ cat > "$BIN/desktop-tweaks" <<'EOF'
 # Runs each time the desktop starts (from ~/.config/autostart).
 scale="${GDK_SCALE:-1}"
 # window borders: big ones on a scaled-up screen
-if [ -d "$HOME/.themes/Windows-10/xfwm4" ]; then
-  if [ "$scale" -ge 2 ] 2>/dev/null; then theme=Windows-10-hidpi; else theme=Windows-10; fi
+base=Windows-10
+[ "$(cat "$HOME/.config/xfce4/.desktop-look" 2>/dev/null)" = xp ] && [ -d "$HOME/.themes/Windows-XP-Luna/xfwm4" ] && base=Windows-XP-Luna
+if [ -d "$HOME/.themes/$base/xfwm4" ]; then
+  if [ "$scale" -ge 2 ] 2>/dev/null && [ -d "$HOME/.themes/$base-hidpi" ]; then theme=$base-hidpi; else theme=$base; fi
 elif [ "$scale" -ge 2 ] 2>/dev/null; then theme=Default-xhdpi; else theme=Default; fi
 xfconf-query -c xfwm4 -p /general/theme -s "$theme" 2>/dev/null \
   || xfconf-query -c xfwm4 -p /general/theme -n -t string -s "$theme"
@@ -455,5 +492,57 @@ Exec=$BIN/desktop-tweaks
 OnlyShowIn=XFCE;
 EOF
 ok "Startup tweaks"
+
+# ---------- desktop-theme: switch between the Windows 10 and Windows XP looks ----------
+cat > "$BIN/desktop-theme" <<'EOF'
+#!/usr/bin/env bash
+# Switch the look:   desktop-theme xp   |   desktop-theme 10
+case "${1:-}" in
+  xp|XP)      look=xp ;;
+  10|win10)   look=10 ;;
+  *) echo "Usage: desktop-theme xp|10   (now: $(cat ~/.config/xfce4/.desktop-look 2>/dev/null || echo 10))"; exit 1 ;;
+esac
+G="$HOME/.config/gtk-3.0"
+if [ "$look" = xp ]; then
+  gtk=Windows-XP-Luna; icons=Windows-XP; css=xp-style.css; wall=xp-wallpaper.jpg; bg=0; title=true; name=XP
+else
+  gtk=Windows-10; icons=Windows-10; css=win7-menu.css; wall=win10.jpg; bg=1; title=false; name=10
+fi
+[ -d "$HOME/.themes/$gtk" ] || { echo "The $look look is not installed yet. Run the update first."; exit 1; }
+mkdir -p "$HOME/.config/xfce4"; echo "$look" > "$HOME/.config/xfce4/.desktop-look"
+cp "$G/$css" "$G/look.css"
+q() { xfconf-query "$@" 2>/dev/null; }
+q -c xsettings -p /Net/ThemeName -n -t string -s "$gtk"
+q -c xsettings -p /Net/IconThemeName -n -t string -s "$icons"
+q -c xfce4-panel -p /panels/panel-1/background-style -n -t uint -s "$bg"
+q -c xfce4-panel -p /plugins/plugin-1/show-button-title -n -t bool -s "$title"
+case "${LANG:-}" in ar*) start="ابدأ" ;; *) start="start" ;; esac
+q -c xfce4-panel -p /plugins/plugin-1/button-title -n -t string -s "$start"
+# window borders: big ones on a scaled-up screen (same rule as desktop-tweaks)
+if [ "${GDK_SCALE:-1}" -ge 2 ] 2>/dev/null && [ -d "$HOME/.themes/$gtk-hidpi" ]; then wm="$gtk-hidpi"; else wm="$gtk"; fi
+q -c xfwm4 -p /general/theme -n -t string -s "$wm"
+# wallpaper on every monitor
+for p in $(xfconf-query -c xfce4-desktop -l 2>/dev/null | grep 'workspace0/last-image$'); do
+  q -c xfce4-desktop -p "$p" -s "$HOME/.local/share/backgrounds/$wall"
+done
+xfce4-panel -r >/dev/null 2>&1 &
+echo "Done: Windows $name look."
+EOF
+chmod +x "$BIN/desktop-theme"
+mkdir -p "$APPS"
+for l in xp 10; do
+  if [ "$l" = xp ]; then en="Windows XP look"; ar="شكل ويندوز XP"; else en="Windows 10 look"; ar="شكل ويندوز 10"; fi
+  cat > "$APPS/desktop-look-$l.desktop" <<EOF
+[Desktop Entry]
+Type=Application
+Name=$en
+Name[ar]=$ar
+Comment=Switch the desktop look
+Exec=$BIN/desktop-theme $l
+Icon=preferences-desktop-theme
+Categories=Settings;DesktopSettings;
+EOF
+done
+ok "Look switcher (Start menu > Settings, or: desktop-theme xp|10)"
 
 echo "Done. Restart the desktop to see it: desktop-stop, then desktop"

@@ -1,0 +1,91 @@
+/* Windows XP look: blue taskbar, green Start button, XP style Start menu.
+   Used by "desktop-theme xp" (copied to ~/.config/gtk-3.0/look.css). */
+
+/* ---------- taskbar ---------- */
+#XfcePanelWindow {
+  background-image: linear-gradient(to bottom, #3c81f3 0%, #245edb 9%, #1f56d0 50%, #1941a5 92%, #1a3d96 100%);
+  border: none;
+}
+#XfcePanelWindow label { color: #ffffff; }
+
+/* ---------- green Start button ---------- */
+#whiskermenu-button {
+  background-image: linear-gradient(to bottom, #6dbb5f 0%, #3f9a3f 14%, #2f852f 50%, #3a923a 86%, #2a6b2a 100%);
+  border: none;
+  border-radius: 0 14px 14px 0;
+  padding: 0 18px 0 10px;
+  box-shadow: none;
+}
+#whiskermenu-button:dir(rtl) { border-radius: 14px 0 0 14px; padding: 0 10px 0 18px; }
+#whiskermenu-button:hover { background-image: linear-gradient(to bottom, #82cf73, #4fae4f 14%, #3f9a3f 50%, #4aa64a 86%, #347c34); }
+#whiskermenu-button label {
+  color: #ffffff;
+  font-weight: bold;
+  font-style: italic;
+  text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.6);
+}
+
+/* ---------- XP Start menu ---------- */
+#whiskermenu-window {
+  background-color: #d3e5fa;
+  border: 2px solid #1854c8;
+  border-radius: 7px 7px 0 0;
+  padding: 0;
+}
+/* blue header with the user name */
+#whiskermenu-window .title-area {
+  background-image: linear-gradient(to bottom, #1f5fd1 0%, #3c86f0 12%, #2565da 60%, #1f5fd1 100%);
+  padding: 8px;
+}
+#whiskermenu-window .profile-username {
+  color: #ffffff;
+  font-weight: bold;
+  text-shadow: 1px 1px 1px #0a246a;
+}
+/* programs list: white */
+#whiskermenu-window .launchers-pane,
+#whiskermenu-window .launchers-pane scrolledwindow,
+#whiskermenu-window .launchers-pane viewport,
+#whiskermenu-window treeview.launchers,
+#whiskermenu-window iconview.launchers {
+  background-color: #ffffff;
+  color: #000000;
+}
+#whiskermenu-window treeview.launchers:selected,
+#whiskermenu-window iconview.launchers:selected,
+#whiskermenu-window treeview.launchers:hover {
+  background-color: #316ac5;
+  color: #ffffff;
+}
+/* links column: light blue */
+#whiskermenu-window .categories { background-color: #d3e5fa; }
+#whiskermenu-window .category-button,
+#whiskermenu-window .category-button label {
+  color: #0b2d7a;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+}
+#whiskermenu-window .category-button:hover,
+#whiskermenu-window .category-button:checked { background-color: #316ac5; border-radius: 2px; }
+#whiskermenu-window .category-button:hover label,
+#whiskermenu-window .category-button:checked label { color: #ffffff; }
+/* blue bottom bar with search and the log off button */
+#whiskermenu-window .search-area,
+#whiskermenu-window .commands-area {
+  background-image: linear-gradient(to bottom, #3c86f0 0%, #2565da 40%, #1f5fd1 100%);
+  padding: 6px;
+}
+#whiskermenu-window .search-area entry {
+  background-color: #ffffff;
+  color: #000000;
+  border: 1px solid #0b2d7a;
+  border-radius: 2px;
+}
+#whiskermenu-window .command-button {
+  background-image: linear-gradient(to bottom, #f6a35c, #e2621b);
+  border: 1px solid #ffffff;
+  border-radius: 3px;
+  color: #ffffff;
+}
+#whiskermenu-window .command-button:hover { background-image: linear-gradient(to bottom, #ffc08a, #f07a33); }
