@@ -96,7 +96,7 @@ code{direction:ltr;unicode-bidi:isolate;white-space:nowrap;background:#2c2c2e;bo
 <script>
 const fallback='https://ilo0ol.github.io/experiments/tablet-desktop/setup.sh';
 const url=/^https?:$/.test(location.protocol)?new URL('setup.sh',location.href).href:fallback;
-const text='pkg install -y curl && curl -fsSL '+url+' -o setup.sh && bash setup.sh';
+const text='pkg upgrade -y && curl -fsSL '+url+' -o setup.sh && bash setup.sh';
 const pre=document.getElementById('cmd'),btn=document.getElementById('copy');
 pre.textContent=text;
 btn.onclick=async()=>{
