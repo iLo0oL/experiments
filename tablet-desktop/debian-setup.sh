@@ -57,6 +57,26 @@ want vlc                     "Media Player"
 # Read aloud (Web Speech in the browser): Firefox needs libspeechd (speech-dispatcher)
 want speech-dispatcher           "Read aloud in the browser"
 want speech-dispatcher-espeak-ng "Read aloud voices (Arabic and English)"
+want pulseaudio-utils            "Sound player (startup sound)"
+
+step "Debian: VS Code (code editor)"
+# Microsoft's official arm64 package. Electron can't use its sandbox or the GPU
+# inside proot, so the menu entries start it with --no-sandbox --disable-gpu.
+if ! command -v code >/dev/null 2>&1; then
+  printf "${C}  downloading VS Code (about 100 MB) ...${N}\n"
+  if curl -fL "https://code.visualstudio.com/sha/download?build=stable&os=linux-deb-arm64" -o /tmp/code.deb \
+     && apt-get "${APT[@]}" install /tmp/code.deb; then
+    ok "VS Code"
+  else
+    warn "VS Code (download failed, everything else still works)"
+  fi
+  rm -f /tmp/code.deb
+else
+  ok "VS Code (already installed)"
+fi
+for f in /usr/share/applications/code.desktop /usr/share/applications/code-url-handler.desktop; do
+  [ -f "$f" ] && sed -i -E 's#^(Exec=/usr/share/code/code)( --no-sandbox --disable-gpu)?#\1 --no-sandbox --disable-gpu#' "$f"
+done
 want libreoffice-writer      "Word Documents"
 want libreoffice-calc        "Excel Spreadsheets"
 want libreoffice-impress     "PowerPoint Slides"

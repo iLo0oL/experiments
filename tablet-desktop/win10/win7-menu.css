@@ -1,0 +1,54 @@
+/* Windows 7 style Start menu (Whisker Menu).
+   Left/right panes follow the language: programs list (white) and
+   the links column (dark blue glass). Delete this file to undo. */
+#whiskermenu-window {
+  background-image: linear-gradient(to bottom, #3a6ea5 0%, #1f4a7d 45%, #163a66 100%);
+  border: 1px solid #0b2140;
+  border-radius: 8px;
+  padding: 6px;
+}
+#whiskermenu-window .title-area,
+#whiskermenu-window .commands-area,
+#whiskermenu-window .categories { background: transparent; }
+#whiskermenu-window .profile-username { color: #ffffff; font-weight: bold; }
+
+/* programs list: white like Windows 7 */
+#whiskermenu-window .launchers-pane,
+#whiskermenu-window .launchers-pane scrolledwindow,
+#whiskermenu-window .launchers-pane viewport,
+#whiskermenu-window treeview.launchers,
+#whiskermenu-window iconview.launchers {
+  background-color: #ffffff;
+  color: #1e1e1e;
+}
+#whiskermenu-window .launchers-pane { border: 1px solid #8fa8c8; border-radius: 4px; }
+#whiskermenu-window treeview.launchers:selected,
+#whiskermenu-window iconview.launchers:selected,
+#whiskermenu-window treeview.launchers:hover {
+  background-color: #d4e6fa;
+  color: #000000;
+}
+
+/* links column: white text on the blue glass */
+#whiskermenu-window .category-button,
+#whiskermenu-window .category-button label { color: #ffffff; background: transparent; border: none; box-shadow: none; }
+#whiskermenu-window .category-button:hover,
+#whiskermenu-window .category-button:checked {
+  background-color: rgba(255, 255, 255, 0.20);
+  border-radius: 4px;
+}
+
+/* search box and buttons at the bottom */
+#whiskermenu-window .search-area entry {
+  background-color: #ffffff;
+  color: #333333;
+  border: 1px solid #6f8db3;
+  border-radius: 4px;
+}
+#whiskermenu-window .command-button {
+  color: #ffffff;
+  background-image: linear-gradient(to bottom, #5a86b8, #2b5a8f);
+  border: 1px solid #0f2c52;
+  border-radius: 4px;
+}
+#whiskermenu-window .command-button:hover { background-image: linear-gradient(to bottom, #7aa4d4, #3a6ea5); }
