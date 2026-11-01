@@ -106,7 +106,13 @@ else curl -fsSL "$BASE/win10/wallpaper.jpg" -o "$WALL" || fail "Wallpaper"; fi
 [ -s "$WALL" ] && ok "Wallpaper"
 
 # ---------- settings ----------
+# Written only on the first install (or with WIN10_RESET=1), so updates never
+# undo the user's own changes to the taskbar, desktop and windows. Older
+# installs have no marker yet; an existing taskbar config counts as installed.
 mkdir -p "$XML"
+APPLIED="$CONF/.win10-applied"
+[ ! -f "$APPLIED" ] && [ -f "$XML/xfce4-panel.xml" ] && touch "$APPLIED"
+if [ ! -f "$APPLIED" ] || [ "${WIN10_RESET:-0}" = 1 ]; then
 
 cat > "$XML/xsettings.xml" <<'EOF'
 <?xml version="1.0" encoding="UTF-8"?>
@@ -301,7 +307,11 @@ EOF
 launcher 2 files.desktop    "File Explorer"    "مستكشف الملفات"  "thunar"         system-file-manager
 launcher 3 browser.desktop  "Internet Browser" "متصفح الإنترنت" "x-www-browser"  web-browser
 launcher 4 terminal.desktop "Command Prompt"   "موجه الأوامر"    "xfce4-terminal" utilities-terminal
+touch "$APPLIED"
 ok "Taskbar, Start menu and settings"
+else
+ok "Taskbar, Start menu and settings (kept your own changes; WIN10_RESET=1 to reset)"
+fi
 
 # ---------- Windows names for the programs ----------
 # rename "<desktop ids>" "English" "Arabic" [icon]
@@ -392,10 +402,6 @@ if [ -f "$wall" ] && [ ! -f "$mark" ]; then
   done
   [ -n "$paths" ] && touch "$mark"
 fi
-# Desktop icons start at the top right in Arabic (like Arabic Windows), top left in English
-# (xfdesktop gravity flags: 1 = horizontal, 2 = right, 4 = bottom)
-case "${LANG:-}" in ar*) gravity=2 ;; *) gravity=0 ;; esac
-xfconf-query -c xfce4-desktop -p /desktop-icons/gravity -n -t int -s "$gravity" 2>/dev/null
 # Windows keyboard shortcuts. Added once the keyboard settings have copied the
 # defaults into "custom" (override=true); before that they would be reset.
 for i in 1 2 3 4 5 6 7 8 9 10; do
