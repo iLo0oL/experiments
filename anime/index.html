@@ -374,6 +374,7 @@ textarea.big{min-height:200px;margin-top:4px}
 .varole img{width:100%;aspect-ratio:2/3;border-radius:10px;object-fit:cover;background:var(--panel2)}
 .varole b{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .varole span{color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.admuser{background:var(--panel2);border-radius:14px;padding:12px 14px;margin-top:12px}
 .foot{color:var(--muted);font-size:12.5px;text-align:center;margin:28px 0 8px;line-height:1.9}
 .foot a{color:var(--acc)}
 </style>
@@ -565,16 +566,16 @@ function tagHistory(){const st=history.state;if(st&&st.app){depth=st.d;started=t
 function replaceHash(h){replacing=true;location.replace(h)}
 function route(){tagHistory();if(!sheetEl.hidden)closeSheet();const{parts,q}=parseHash();const p0=parts[0]||'home';
   if(p0==='anime'&&+parts[1]>0){if(!curKey)showTab('home',new URLSearchParams());openDetail(+parts[1]);return}
-  closeDetailUI();const tab=['home','list','schedule','me','search','import','sync','friend','friends','tier','wrapped'].includes(p0)?p0:'home';lastTabHash=location.hash||'#/';showTab(tab,q)}
+  closeDetailUI();const tab=['home','list','schedule','me','search','import','sync','friend','friends','tier','wrapped','admin'].includes(p0)?p0:'home';lastTabHash=location.hash||'#/';showTab(tab,q)}
 window.addEventListener('hashchange',route);
 function closeDetail(){if(history.state&&history.state.d>0)history.back();else replaceHash(lastTabHash&&!lastTabHash.startsWith('#/anime')?lastTabHash:'#/')}
-function showTab(tab,q){const key=tab+'?'+q.toString();document.querySelectorAll('nav.tabs a').forEach(a=>a.classList.toggle('on',a.dataset.tab===(['import','sync','friend','friends','tier','wrapped'].includes(tab)?'me':tab)));
+function showTab(tab,q){const key=tab+'?'+q.toString();document.querySelectorAll('nav.tabs a').forEach(a=>a.classList.toggle('on',a.dataset.tab===(['import','sync','friend','friends','tier','wrapped','admin'].includes(tab)?'me':tab)));
   if(tab!=='search'&&document.activeElement!==qInput)qInput.value='';
   if(key===curKey){rerender();return}
   curKey=key;TAB=tab;TABQ=q;window.scrollTo(0,0);renderTab(true)}
 let TABQ=new URLSearchParams();
-function renderTab(fresh){({home:renderHome,list:renderList,schedule:renderSchedule,me:renderMe,search:renderSearch,import:renderImport,sync:renderSync,friend:renderFriend,friends:renderFriends,tier:renderTier,wrapped:renderWrapped})[TAB](TABQ,fresh)}
-function rerender(){if(!curKey||TAB==='import'||TAB==='sync'||TAB==='friend')return;if(TAB==='friends'&&document.activeElement&&['myName','frCode'].includes(document.activeElement.id))return;if(TAB==='me'&&document.activeElement&&['setSrv','goalInANIME','goalInMANGA'].includes(document.activeElement.id))return;const y=window.scrollY;if(document.activeElement&&document.activeElement.matches('[data-lfilter]')&&TAB==='list'){paintListItems();return}renderTab(false);window.scrollTo(0,y)}
+function renderTab(fresh){({home:renderHome,list:renderList,schedule:renderSchedule,me:renderMe,search:renderSearch,import:renderImport,sync:renderSync,friend:renderFriend,friends:renderFriends,tier:renderTier,wrapped:renderWrapped,admin:renderAdmin})[TAB](TABQ,fresh)}
+function rerender(){if(!curKey||TAB==='import'||TAB==='sync'||TAB==='friend'||TAB==='admin')return;if(TAB==='friends'&&document.activeElement&&['myName','frCode'].includes(document.activeElement.id))return;if(TAB==='me'&&document.activeElement&&['setSrv','goalInANIME','goalInMANGA'].includes(document.activeElement.id))return;const y=window.scrollY;if(document.activeElement&&document.activeElement.matches('[data-lfilter]')&&TAB==='list'){paintListItems();return}renderTab(false);window.scrollTo(0,y)}
 
 /* ============ الرئيسية ============ */
 const HOMES={ANIME:{t:0,d:null,err:null,loading:false},MANGA:{t:0,d:null,err:null,loading:false}};
@@ -1157,13 +1158,17 @@ function openAuth(mode){const t={signup:'سوّ حساب',login:'سجّل دخو
   <div class="fld"><label for="auPass">${mode==='reset'?'كلمة السر الجديدة':'كلمة السر'}</label><input id="auPass" type="password" dir="ltr" autocomplete="${mode==='login'?'current-password':'new-password'}"></div>
   <div class="bbtns"><button class="btn" data-act="authgo" data-v="${mode}">${t}</button></div>
   <p class="small">${mode==='login'?'<button class="lnkbtn" data-act="auth" data-v="signup">ما عندك حساب؟ سوّ واحد</button> · <button class="lnkbtn" data-act="auth" data-v="reset">نسيت كلمة السر؟</button>':'<button class="lnkbtn" data-act="auth" data-v="login">عندك حساب؟ سجّل دخول</button>'}</p>
-  ${mode==='signup'?'<p class="muted small">قائمتك اللي بهالجهاز تنضاف لحسابك تلقائي.</p>':''}`)}
+  ${mode==='signup'?'<p class="muted small">قائمتك اللي بهالجهاز تنضاف لحسابك تلقائي.</p>':''}${mode==='reset'?'<p class="muted small">ضيّعت رمز الاسترجاع بعد؟ كلّم صاحب الموقع، يتأكد إنك أنت ويطلّع لك رمز جديد.</p>':''}`)}
 async function authGo(mode){const g=id=>((($('#'+id)||{}).value)||'').trim();const body={username:g('auUser'),password:(($('#auPass')||{}).value)||''};if(mode==='signup')body.name=g('auName');if(mode==='reset')body.recovery=g('auRec');
   const btn=$('[data-act="authgo"]');if(btn)btn.disabled=true;
   try{const r=await api('/api/'+mode,{method:'POST',body});DB.settings.token=r.token;DB.settings.user=r.user;if(r.user.name)DB.settings.name=r.user.name;delete DB.settings.syncRev;save();
-    if(r.recovery)openSheet(`<h3>🔑 احفظ رمز الاسترجاع</h3><p>إذا نسيت كلمة السر، تحتاج هالرمز عشان ترجع حسابك. انسخه أو صوّره واحفظه بمكان آمن، لأنه ما يطلع لك مرة ثانية.</p><div class="reccode" dir="ltr">${esc(r.recovery)}</div><div class="bbtns"><button class="btn" data-act="copytxt" data-v="${esc(r.recovery)}">📋 انسخه</button><button class="btn ghost" data-act="sheetclose">حفظته ✓</button></div>`);else closeSheet();
+    if(r.recovery)showRecovery(r.recovery);else closeSheet();
     toast(mode==='login'?`هلا ${r.user.name} 👋`:mode==='signup'?'انسوى حسابك ✓':'تغيّرت كلمة السر ✓');await syncNow({pull:true});loadSrvFriends(true);loadParties(true);rerender()}
   catch(e){toast(apiErr(e));if(btn)btn.disabled=false}}
+function showRecovery(rec){openSheet(`<h3>🔑 احفظ رمز الاسترجاع</h3><p>إذا نسيت كلمة السر، تحتاج هالرمز عشان ترجع حسابك. انسخه أو صوّره واحفظه بمكان آمن، لأنه ما يطلع لك مرة ثانية.</p><div class="reccode" dir="ltr">${esc(rec)}</div><div class="bbtns"><button class="btn" data-act="copytxt" data-v="${esc(rec)}">📋 انسخه</button><button class="btn ghost" data-act="sheetclose">حفظته ✓</button></div>`)}
+async function newRecovery(){if(!confirm('بيطلع لك رمز استرجاع جديد، والقديم يوقف. تكمل؟'))return;try{const r=await api('/api/me/recovery',{method:'POST'});showRecovery(r.recovery)}catch(e){toast(apiErr(e))}}
+function openChangePw(){openSheet(`<h3>🔒 غيّر كلمة السر</h3><div class="fld"><label for="cpCur">كلمة السر الحالية</label><input id="cpCur" type="password" dir="ltr" autocomplete="current-password"></div><div class="fld"><label for="cpNew">كلمة السر الجديدة</label><input id="cpNew" type="password" dir="ltr" autocomplete="new-password"></div><div class="bbtns"><button class="btn" data-act="chpwgo">غيّرها</button></div><p class="muted small">ناسي كلمة السر الحالية؟ سكّر هذي واضغط «رمز استرجاع جديد»، وبعدين سجّل خروج وادخل من «نسيت كلمة السر».</p>`)}
+async function changePw(){const cur=(($('#cpCur')||{}).value)||'',pw=(($('#cpNew')||{}).value)||'';try{await api('/api/me/password',{method:'POST',body:{current:cur,password:pw}});closeSheet();toast('تغيّرت كلمة السر ✓ وطلعت من أجهزتك الثانية')}catch(e){toast(apiErr(e))}}
 function b64uToU8(s){const p='='.repeat((4-s.length%4)%4);const b=atob((s+p).replace(/-/g,'+').replace(/_/g,'/'));return Uint8Array.from(b,c=>c.charCodeAt(0))}
 async function enablePush(){if(!('serviceWorker'in navigator)||!('PushManager'in window)||!window.Notification){toast(isIOS()?'بالآيفون: ثبّت أنميتي على الشاشة الرئيسية أول، وافتحه من هناك وفعّل التنبيهات':'متصفحك ما يدعم التنبيهات');return}
   if(await Notification.requestPermission()!=='granted'){toast('ما سمحت بالتنبيهات. تقدر تسمح لها من إعدادات المتصفح');return}
@@ -1178,6 +1183,7 @@ function accountBoxHTML(){if(!SRV())return'';const u=DB.settings.user;
   return`<div class="box acct"><h3>☁️ حسابك <span class="muted small" dir="ltr">@${esc(u&&u.username)}</span></h3><p class="muted small">${st}</p>
   <div class="bbtns"><button class="btn sm" data-act="syncnow">🔄 زامن الحين</button>${DB.settings.push?'<button class="btn ghost sm" data-act="pushtest">🔔 جرّب التنبيه</button>':'<button class="btn ghost sm" data-act="push">🔔 فعّل تنبيهات الحلقات</button>'}</div>
   <div class="field"><span>رمز صداقتك</span><span><b class="code" dir="ltr">${esc(u&&u.code)}</b> <button class="lnkbtn" data-act="copytxt" data-v="${esc(u&&u.code)}">انسخه</button></span></div>
+  <div class="bbtns"><button class="btn ghost sm" data-act="newrec">🔑 رمز استرجاع جديد</button><button class="btn ghost sm" data-act="chpw">🔒 غيّر كلمة السر</button></div>
   <div class="bbtns"><button class="btn ghost sm" data-act="logout">تسجيل خروج</button><button class="btn ghost sm danger" data-act="delacct">احذف حسابي</button></div></div>`}
 function serverFieldHTML(){if(SERVER_DEFAULT&&!DB.settings.server)return'';return`<div class="fld" style="margin-top:12px"><label for="setSrv">رابط السيرفر <small class="muted">(للمزامنة والتنبيهات)</small></label><div class="inrow" style="margin-top:6px"><input id="setSrv" dir="ltr" placeholder="https://….up.railway.app" value="${esc(DB.settings.server||'')}"><button class="btn sm" data-act="srvset">حفظ</button></div></div>`}
 
@@ -1271,6 +1277,25 @@ async function openChar(id){const c=CHARS_CUR.get(id);if(!c)return;const n=c.nod
     el.innerHTML=edges.length?`<div class="varoles">${edges.map(e=>{MEDIA.set(e.node.id,e.node);const ch=(e.characters||[])[0];return`<a class="varole" href="#/anime/${e.node.id}"><img src="${imgSrc(e.node)}" alt=""><b>${esc(title(e.node))}</b><span>${ch&&ch.name?esc(ch.name.full||''):''}</span></a>`}).join('')}</div>`:'<p class="muted small">ما لقيت أدوار ثانية.</p>'}
   catch(e){const el=$('#vaRoles');if(el)el.innerHTML=`<p class="muted small">${esc(errMsg(e))}</p>`}}
 
+/* ============ إدارة الحسابات (للمدير بس) ============ */
+const ADMIN={key:'',stats:null,user:null,rec:'',busy:false};try{ADMIN.key=sessionStorage.getItem('animeti.admin')||''}catch(e){}
+const ADMIN_ERR={admin_off:'صلاحية المدير مو مفعّلة. ضيف ADMIN_KEY في متغيرات Railway (12 حرف أو أكثر)، واستنى لين يعيد التشغيل.',bad_admin:'المفتاح غلط',no_user:'ما فيه مستخدم بهالاسم',rate:'محاولات كثيرة، استنى شوي',net:'ما قدرت أوصل للسيرفر',noserver:'السيرفر مو مربوط'};
+async function adminApi(path,opt={}){const base=SRV();if(!base)throw new Error('noserver');let r;try{r=await fetch(base+path,{method:opt.method||'GET',headers:{'Content-Type':'application/json','X-Admin-Key':ADMIN.key},body:opt.body?JSON.stringify(opt.body):undefined})}catch(e){throw new Error('net')}
+  let j=null;try{j=await r.json()}catch(e){}if(!r.ok)throw new Error((j&&j.error)||'server');return j}
+const admErr=e=>ADMIN_ERR[e&&e.message]||'صار خطأ بالسيرفر';
+function renderAdmin(){let h=`<div class="sec-h"><h2>🛠️ إدارة الحسابات</h2><a href="#/me">إحصائياتي ←</a></div><p class="muted small">هالصفحة لصاحب السيرفر بس. تحتاج المفتاح اللي حطيته في Railway باسم <span dir="ltr">ADMIN_KEY</span>.</p>`;
+  if(!ADMIN.stats){view.innerHTML=h+`<div class="box"><div class="fld"><label for="admKey">مفتاح المدير</label><input id="admKey" type="password" dir="ltr" autocomplete="off" value="${esc(ADMIN.key)}"></div><div class="bbtns"><button class="btn" data-act="admlogin" ${ADMIN.busy?'disabled':''}>دخول</button></div></div>`;return}
+  const st=ADMIN.stats,u=ADMIN.user;
+  h+=`<div class="stats"><div class="stat"><b>${num(st.users)||0}</b><span>حساب</span></div><div class="stat"><b>${num(st.active)||0}</b><span>نشطين هالأسبوع</span></div><div class="stat"><b>${num(st.push)||0}</b><span>مفعّلين التنبيهات</span></div></div>
+  <div class="box"><h3>🔑 رجّع حساب واحد نسي كل شي</h3><p class="muted small">قبل لا تطلّع له رمز، تأكد إنه هو صاحب الحساب.</p><div class="inrow"><input id="admUser" dir="ltr" placeholder="اسم المستخدم" autocapitalize="off" spellcheck="false" value="${esc(u?u.username:'')}"><button class="btn sm" data-act="admfind">ابحث</button></div>
+  ${u?`<div class="admuser"><b>${esc(u.name)}</b> <span class="muted" dir="ltr">@${esc(u.username)}</span><div class="muted small">سجّل: ${u.createdAt?FDATE.format(u.createdAt):'—'} · آخر دخول: ${u.lastSeen?dayLabel(u.lastSeen):'—'} · ${num(u.entries)||0} بقائمته</div>
+    ${ADMIN.rec?`<div class="reccode" dir="ltr">${esc(ADMIN.rec)}</div><div class="bbtns"><button class="btn sm" data-act="copytxt" data-v="${esc(ADMIN.rec)}">📋 انسخه</button></div><p class="small">أرسله له، وخلّه يفتح أنميتي ← إحصائياتي ← سجّل دخول ← <b>نسيت كلمة السر</b>، ويكتب اسم المستخدم والرمز وكلمة سر جديدة.</p>`:`<div class="bbtns"><button class="btn sm" data-act="admrec">طلّع له رمز استرجاع جديد</button></div>`}</div>`:''}</div>
+  <div class="bbtns"><button class="btn ghost sm" data-act="admout">اطلع من الإدارة</button></div>`;view.innerHTML=h}
+async function adminLogin(){ADMIN.key=((($('#admKey')||{}).value)||'').trim();if(!ADMIN.key){toast('اكتب المفتاح');return}ADMIN.busy=true;renderAdmin();
+  try{ADMIN.stats=await adminApi('/api/admin/stats');try{sessionStorage.setItem('animeti.admin',ADMIN.key)}catch(e){}}catch(e){toast(admErr(e))}ADMIN.busy=false;renderAdmin()}
+async function adminFind(){const n=((($('#admUser')||{}).value)||'').trim();if(!n)return;ADMIN.user=null;ADMIN.rec='';try{ADMIN.user=(await adminApi('/api/admin/user?u='+encodeURIComponent(n))).user}catch(e){toast(admErr(e))}renderAdmin()}
+async function adminRec(){const u=ADMIN.user;if(!u||!confirm(`تطلّع رمز استرجاع جديد لـ @${u.username}؟ الرمز القديم حقه بيوقف.`))return;try{ADMIN.rec=(await adminApi('/api/admin/recovery',{method:'POST',body:{username:u.username}})).recovery;renderAdmin()}catch(e){toast(admErr(e))}}
+
 /* ============ تثبيت التطبيق ============ */
 let INSTALL_EVT=null;
 const isStandalone=()=>matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;
@@ -1324,6 +1349,13 @@ function act(a,t){const v=t.dataset.v,did=+t.dataset.id||DET.id;let e;
   case'cardshare':if(CARD_BLOB)navigator.share({files:[new File([CARD_BLOB],'animeti.png',{type:'image/png'})],text:'سجلّي بالأنمي 📺'}).catch(()=>{});break;
   case'month':{MONTH_SEL=v;const b=$('#mbox');if(b)b.outerHTML=monthlyHTML();break}
   case'mode':setMode(v);break;
+  case'newrec':newRecovery();break;
+  case'chpw':openChangePw();break;
+  case'chpwgo':changePw();break;
+  case'admlogin':adminLogin();break;
+  case'admfind':adminFind();break;
+  case'admrec':adminRec();break;
+  case'admout':ADMIN.key='';ADMIN.stats=null;ADMIN.user=null;ADMIN.rec='';try{sessionStorage.removeItem('animeti.admin')}catch(e){}renderAdmin();break;
   case'install':if(INSTALL_EVT){const ev=INSTALL_EVT;ev.prompt();ev.userChoice.then(c=>{if(c&&c.outcome==='accepted')INSTALL_EVT=null;rerender()}).catch(()=>{})}break;
   case'auth':openAuth(v);break;
   case'authgo':authGo(v);break;
@@ -1390,7 +1422,7 @@ document.addEventListener('input',ev=>{const t=ev.target;
   if(t.id==='myName'){DB.settings.name=t.value.slice(0,30);clearTimeout(notesT);notesT=setTimeout(save,500);return}
   if(t.matches('[data-notes]')){const e=DB.list[DET.id];if(!e)return;e.notes=t.value.slice(0,3000);e.updatedAt=Date.now();clearTimeout(notesT);notesT=setTimeout(save,400);return}
   if(t.matches('[data-lfilter]')){LFILTER=t.value;paintListItems()}});
-document.addEventListener('keydown',ev=>{if((ev.key==='Enter'||ev.key===' ')&&ev.target.matches&&ev.target.matches('.chc[data-act]')){ev.preventDefault();openChar(+ev.target.dataset.v);return}if(ev.key!=='Escape')return;if(!sheetEl.hidden)closeSheet();else if(!detailEl.hidden)closeDetail()});
+document.addEventListener('keydown',ev=>{if(ev.key==='Enter'&&ev.target.id==='admKey'){adminLogin();return}if(ev.key==='Enter'&&ev.target.id==='admUser'){adminFind();return}if((ev.key==='Enter'||ev.key===' ')&&ev.target.matches&&ev.target.matches('.chc[data-act]')){ev.preventDefault();openChar(+ev.target.dataset.v);return}if(ev.key!=='Escape')return;if(!sheetEl.hidden)closeSheet();else if(!detailEl.hidden)closeDetail()});
 $('#importFile').addEventListener('change',async ev=>{const f=ev.target.files[0];ev.target.value='';if(!f)return;
   try{const d=JSON.parse(await f.text());if(!d||typeof d.list!=='object')throw 0;let n=0;
     for(const[k,ne]of Object.entries(d.list)){const id=num(k);if(!id||!ne||typeof ne.media!=='object'||!ne.media||!STATUS[ne.status])continue;const cur=DB.list[id];const ent=cleanEntry(id,ne);if(!cur||ent.updatedAt>(cur.updatedAt||0)){ent.updatedAt=Math.max(ent.updatedAt,Date.now());DB.list[id]=ent;n++}}
