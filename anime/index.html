@@ -16,8 +16,8 @@
 <title>أنميتي</title>
 <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#0b0c12;--bg2:#10121a;--panel:#161925;--panel2:#1f2332;--hover:#2a2f43;--line:#262b3c;--text:#eef0f7;--muted:#9399ae;--acc:#a78bfa;--acc2:#ec4899;--grad:linear-gradient(135deg,#8b5cf6,#ec4899);--shadow:rgba(0,0,0,.45);--nav:rgba(14,16,24,.94);--new:#22c55e}
-body.light{--bg:#f5f6fb;--bg2:#fff;--panel:#fff;--panel2:#eceef5;--hover:#dfe2ec;--line:#e1e3ec;--text:#141724;--muted:#5c6277;--acc:#7c3aed;--shadow:rgba(30,30,70,.12);--nav:rgba(255,255,255,.95);--new:#16a34a}
+:root{--bar:#8b5cf6;--bar2:#3b3363;--bg:#0b0c12;--bg2:#10121a;--panel:#161925;--panel2:#1f2332;--hover:#2a2f43;--line:#262b3c;--text:#eef0f7;--muted:#9399ae;--acc:#a78bfa;--acc2:#ec4899;--grad:linear-gradient(135deg,#8b5cf6,#ec4899);--shadow:rgba(0,0,0,.45);--nav:rgba(14,16,24,.94);--new:#22c55e}
+body.light{--bar:#7c3aed;--bar2:#d9cdf7;--bg:#f5f6fb;--bg2:#fff;--panel:#fff;--panel2:#eceef5;--hover:#dfe2ec;--line:#e1e3ec;--text:#141724;--muted:#5c6277;--acc:#7c3aed;--shadow:rgba(30,30,70,.12);--nav:rgba(255,255,255,.95);--new:#16a34a}
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html,body{overflow-x:hidden}
 body{font-family:'Tajawal',system-ui,-apple-system,'Segoe UI',Tahoma,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;line-height:1.5;padding-bottom:calc(84px + env(safe-area-inset-bottom))}
@@ -252,6 +252,26 @@ textarea.big{min-height:200px;margin-top:4px}
 .irc input{width:78px;background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:7px 8px;direction:ltr;outline:none}
 .ibar{position:sticky;bottom:calc(74px + env(safe-area-inset-bottom));display:flex;gap:8px;justify-content:space-between;align-items:center;background:var(--nav);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:1px solid var(--line);border-radius:16px;padding:10px 12px;margin-top:14px;z-index:5}
 .empty .btn.ghost{margin-top:8px}
+.sheet{position:fixed;inset:0;z-index:70;background:rgba(0,0,0,.55);display:flex;align-items:flex-end;justify-content:center}
+.sheet[hidden]{display:none}
+.sheet-box{background:var(--bg2);width:100%;max-width:520px;max-height:92vh;overflow:auto;border-radius:22px 22px 0 0;padding:20px 16px calc(22px + env(safe-area-inset-bottom));position:relative;animation:up .2s ease-out;line-height:1.7}
+@media(min-width:600px){.sheet{align-items:center}.sheet-box{border-radius:22px}}
+.sheet-x{position:absolute;top:12px;inset-inline-end:12px;width:36px;height:36px;border-radius:50%;background:var(--panel2)}
+.sheet h3{font-size:18px;font-weight:800;margin-bottom:8px;padding-inline-end:44px}
+.sheet .bbtns{margin:12px 0}
+.qrbox{background:#fff;border-radius:16px;padding:10px;width:min(270px,100%);margin:14px auto}
+.qrbox svg,.qrbox img{width:100%;height:auto;display:block}
+.cardimg{width:100%;border-radius:14px;display:block;margin:10px 0;box-shadow:0 8px 24px var(--shadow)}
+.mchart{display:grid;grid-template-columns:repeat(6,1fr);gap:2px;align-items:end;height:170px;margin-top:4px}
+.mb{display:flex;flex-direction:column;align-items:center;height:100%;gap:4px;padding:4px 0 2px;border-radius:10px;min-width:0}
+.mb:hover,.mb:focus-visible{background:var(--panel2);outline:none}
+.mv{font-size:13px;font-weight:800;color:var(--text);height:18px;line-height:18px}
+.mt{flex:1;width:100%;display:flex;align-items:flex-end;justify-content:center;border-bottom:1px solid var(--line)}
+.mt i{display:block;width:min(24px,55%);background:var(--bar2);border-radius:4px 4px 0 0}
+.mb.on .mt i{background:var(--bar)}
+.ml{font-size:11.5px;color:var(--muted);font-weight:600;white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis}
+.mb.on .ml{color:var(--text);font-weight:800}
+.msum{margin-top:12px;font-size:14px;line-height:1.9}
 .foot{color:var(--muted);font-size:12.5px;text-align:center;margin:28px 0 8px;line-height:1.9}
 .foot a{color:var(--acc)}
 </style>
@@ -279,6 +299,7 @@ textarea.big{min-height:200px;margin-top:4px}
 </nav>
 
 <section id="detail" class="detail" hidden aria-modal="true" role="dialog"></section>
+<div id="sheet" class="sheet" hidden><div class="sheet-box" role="dialog" aria-modal="true"><button class="sheet-x" data-act="sheetclose" aria-label="سكّر">✕</button><div id="sheetBody"></div></div></div>
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
 <input type="file" id="importFile" accept="application/json,.json" hidden>
 <noscript><p style="padding:20px">لازم تشغّل JavaScript عشان يشتغل الموقع.</p></noscript>
@@ -427,18 +448,18 @@ function parseHash(){const h=location.hash.replace(/^#\/?/,'');const i=h.indexOf
 let depth=0,started=false,replacing=false;
 function tagHistory(){const st=history.state;if(st&&st.app){depth=st.d;started=true;return}if(started&&!replacing)depth++;started=true;replacing=false;history.replaceState({app:1,d:depth},'')}
 function replaceHash(h){replacing=true;location.replace(h)}
-function route(){tagHistory();const{parts,q}=parseHash();const p0=parts[0]||'home';
+function route(){tagHistory();if(!sheetEl.hidden)closeSheet();const{parts,q}=parseHash();const p0=parts[0]||'home';
   if(p0==='anime'&&+parts[1]>0){if(!curKey)showTab('home',new URLSearchParams());openDetail(+parts[1]);return}
-  closeDetailUI();const tab=['home','list','schedule','me','search','import'].includes(p0)?p0:'home';lastTabHash=location.hash||'#/';showTab(tab,q)}
+  closeDetailUI();const tab=['home','list','schedule','me','search','import','sync'].includes(p0)?p0:'home';lastTabHash=location.hash||'#/';showTab(tab,q)}
 window.addEventListener('hashchange',route);
 function closeDetail(){if(history.state&&history.state.d>0)history.back();else replaceHash(lastTabHash&&!lastTabHash.startsWith('#/anime')?lastTabHash:'#/')}
-function showTab(tab,q){const key=tab+'?'+q.toString();document.querySelectorAll('nav.tabs a').forEach(a=>a.classList.toggle('on',a.dataset.tab===(tab==='import'?'me':tab)));
+function showTab(tab,q){const key=tab+'?'+q.toString();document.querySelectorAll('nav.tabs a').forEach(a=>a.classList.toggle('on',a.dataset.tab===(tab==='import'||tab==='sync'?'me':tab)));
   if(tab!=='search'&&document.activeElement!==qInput)qInput.value='';
   if(key===curKey){rerender();return}
   curKey=key;TAB=tab;TABQ=q;window.scrollTo(0,0);renderTab(true)}
 let TABQ=new URLSearchParams();
-function renderTab(fresh){({home:renderHome,list:renderList,schedule:renderSchedule,me:renderMe,search:renderSearch,import:renderImport})[TAB](TABQ,fresh)}
-function rerender(){if(!curKey||TAB==='import')return;const y=window.scrollY;if(document.activeElement&&document.activeElement.matches('[data-lfilter]')&&TAB==='list'){paintListItems();return}renderTab(false);window.scrollTo(0,y)}
+function renderTab(fresh){({home:renderHome,list:renderList,schedule:renderSchedule,me:renderMe,search:renderSearch,import:renderImport,sync:renderSync})[TAB](TABQ,fresh)}
+function rerender(){if(!curKey||TAB==='import'||TAB==='sync')return;const y=window.scrollY;if(document.activeElement&&document.activeElement.matches('[data-lfilter]')&&TAB==='list'){paintListItems();return}renderTab(false);window.scrollTo(0,y)}
 
 /* ============ الرئيسية ============ */
 let HOME={t:0,d:null,err:null,loading:false};
@@ -511,7 +532,7 @@ function paintListItems(){const el=$('#litems');if(!el)return;const st=el.datase
 const SCH={};
 function schedIds(){return Object.values(DB.list).filter(e=>e.status!=='DROPPED'&&e.status!=='COMPLETED'&&(e.media.next||e.media.status==='RELEASING'||e.media.status==='NOT_YET_RELEASED'||e.media.status==='HIATUS')).map(e=>e.id)}
 function renderSchedule(q){const ids=schedIds();const mode=q.get('m')||(ids.length?'mine':'all');
-  view.innerHTML=`<div class="segc"><button class="${mode==='mine'?'on':''}" data-act="smode" data-v="mine">قائمتي</button><button class="${mode==='all'?'on':''}" data-act="smode" data-v="all">كل اللي يُعرض</button></div><p class="muted small" style="margin-top:8px">مواعيد الحلقات بتوقيتك، لـ ٧ أيام الجاية</p><div id="sch"></div>`;
+  view.innerHTML=`<div class="segc"><button class="${mode==='mine'?'on':''}" data-act="smode" data-v="mine">قائمتي</button><button class="${mode==='all'?'on':''}" data-act="smode" data-v="all">كل اللي يُعرض</button></div><p class="muted small" style="margin-top:8px">مواعيد الحلقات بتوقيتك، لـ ٧ أيام الجاية</p>${ids.length?'<button class="btn ghost sm" data-act="cal" style="margin-top:10px">🔔 ضيف مواعيد حلقاتي لتقويم جوالك</button>':''}<div id="sch"></div>`;
   if(mode==='mine'&&!ids.length){$('#sch').innerHTML=`<div class="empty"><div class="big">🗓️</div>ما عندك أنمي يُعرض الحين بقائمتك.<br><button class="btn ghost" data-act="smode" data-v="all">شوف كل اللي يُعرض</button></div>`;return}
   const k=mode+':'+(mode==='mine'?ids.slice().sort().join(','):'');const c=SCH[k];
   if(c&&c.items&&Date.now()-c.t<10*60e3){paintSched(c.items,mode);return}
@@ -533,12 +554,14 @@ function paintSched(items,mode){const el=$('#sch');if(!el)return;if(!items.lengt
   el.innerHTML=h}
 
 /* ============ إحصائياتي ============ */
-function renderMe(){const all=Object.values(DB.list);const cnt={};SORDER.forEach(s=>cnt[s]=0);all.forEach(e=>cnt[e.status]++);
+function calcStats(){const all=Object.values(DB.list);const cnt={};SORDER.forEach(s=>cnt[s]=0);all.forEach(e=>cnt[e.status]++);
   const watched=e=>(e.progress||0)+(e.repeat||0)*(e.media.episodes||0);
   const eps=all.reduce((s,e)=>s+watched(e),0);const mins=all.reduce((s,e)=>s+watched(e)*(e.media.duration||24),0);const hrs=Math.round(mins/60);
   const weekAgo=Date.now()-7*864e5;const weekEps=DB.log.filter(x=>x.t>=weekAgo&&x.b!=null&&x.b-x.a<=JUMP).reduce((s,x)=>s+(x.b-x.a),0);
   const scored=all.filter(e=>e.score);const avg=scored.length?(scored.reduce((s,e)=>s+e.score,0)/scored.length).toFixed(1):'—';
-  const gc={};all.filter(e=>e.status!=='PLANNING'&&e.status!=='DROPPED').forEach(e=>(e.media.genres||[]).forEach(g=>gc[g]=(gc[g]||0)+1));const gtop=Object.entries(gc).sort((a,b)=>b[1]-a[1]).slice(0,6);const gmax=gtop.length?gtop[0][1]:1;
+  const gc={};all.filter(e=>e.status!=='PLANNING'&&e.status!=='DROPPED').forEach(e=>(e.media.genres||[]).forEach(g=>gc[g]=(gc[g]||0)+1));const gtop=Object.entries(gc).sort((a,b)=>b[1]-a[1]).slice(0,6);
+  return{all,cnt,eps,hrs,weekEps,avg,gtop}}
+function renderMe(){const{all,cnt,eps,hrs,weekEps,avg,gtop}=calcStats();const gmax=gtop.length?gtop[0][1]:1;
   const acts=DB.log.slice(-40).reverse().filter(x=>DB.list[x.id]);let ah='',lastDay='';
   for(const x of acts){const e=DB.list[x.id];const mv=e.media.episodes===1;if(mv&&x.s)continue;const dl=dayLabel(x.t);if(dl!==lastDay){ah+=`<div class="dayl">${dl}</div>`;lastDay=dl}const t=esc(title(e.media));
     const txt=mv?`شفت <b>${t}</b> 🎬`:x.s==='COMPLETED'?`خلّصت <b>${t}</b> 🎉`:x.b-x.a===1?`شفت الحلقة ${x.b} من <b>${t}</b>`:x.b-x.a>JUMP?`وصلت للحلقة ${x.b} في <b>${t}</b>`:`شفت الحلقات ${x.a+1}–${x.b} من <b>${t}</b>`;
@@ -550,6 +573,8 @@ function renderMe(){const all=Object.values(DB.list);const cnt={};SORDER.forEach
     <div class="stat"><b>${weekEps}</b><span>حلقة هالأسبوع</span></div>
     <div class="stat"><b>${avg}</b><span>متوسط تقييمك</span></div>
     </div><div class="srow">${SORDER.map(s=>`<a href="#/list?s=${s}"><b style="color:${STATUS[s].c}">${cnt[s]}</b><span>${STATUS[s].t}</span></a>`).join('')}</div>
+  ${all.length?'<button class="btn sm" data-act="card" style="margin-top:12px;width:100%">🖼️ طلّع بطاقة بإحصائياتك وشاركها</button>':''}
+  ${monthlyHTML()}
   ${gtop.length?`<div class="box"><h3>الأنواع اللي تحبها</h3>${gtop.map(([g,n])=>`<div class="gbar"><span>${esc(GENRES[g]||g)}</span><div><i style="width:${n/gmax*100}%"></i></div><b>${n}</b></div>`).join('')}</div>`:''}
   <div class="box"><h3>آخر اللي شفته</h3>${ah||'<p class="muted small">لما تعلّم حلقات بتطلع هنا.</p>'}</div>
   <div class="box"><h3>الإعدادات</h3>
@@ -557,6 +582,8 @@ function renderMe(){const all=Object.values(DB.list);const cnt={};SORDER.forEach
     <div class="field"><label for="setTheme">الشكل</label><select id="setTheme" data-set="theme"><option value="dark"${DB.settings.theme==='dark'?' selected':''}>داكن</option><option value="light"${DB.settings.theme==='light'?' selected':''}>فاتح</option><option value="auto"${DB.settings.theme==='auto'?' selected':''}>مثل الجهاز</option></select></div></div>
   <div class="box"><h3>نسخة احتياطية</h3><p class="muted small">قائمتك محفوظة بهالجهاز وهالمتصفح بس. إذا بتغيّر جوالك أو بتمسح بيانات المتصفح، خذ نسخة واحفظها، وبعدين رجّعها بالجهاز الجديد.</p>
     <div class="bbtns"><button class="btn sm" data-act="export">⬇️ نزّل نسخة</button>${canShare?'<button class="btn ghost sm" data-act="sharebk">📤 شارك النسخة</button>':''}<button class="btn ghost sm" data-act="import">⬆️ رجّع نسخة</button></div></div>
+  <div class="box"><h3>📲 انقل قائمتك لجهاز ثاني</h3><p class="muted small">تبي نفس القائمة بجوالك واللابتوب؟ طلّع رابط أو QR وافتحه بالجهاز الثاني، وتندمج القائمتين (الأحدث يغلب). كرر الخطوة كل ما تبي تحدّثهم.</p><div class="bbtns"><button class="btn sm" data-act="transfer">📲 طلّع الرابط</button></div>
+    <div class="inrow"><input id="trIn" placeholder="عندك رابط نقل؟ الصقه هنا" autocomplete="off"><button class="btn sm ghost" data-act="opentransfer">افتحه</button></div></div>
   <div class="box"><h3>انقل قائمتك من تطبيق ثاني</h3><p class="muted small">كنت تتابع في مكان ثاني؟ الصق أسماء الأنميات ورقم آخر حلقة شفتها، وأنا أضيفهم لك.</p><a class="btn sm" href="#/import" style="margin-top:10px">📋 الصق قائمة</a></div>
   <div class="box"><h3>جيب قائمتك من AniList</h3><p class="muted small">إذا عندك حساب في AniList وقائمتك عامة، اكتب اسم المستخدم وأجيبها لك.</p>
     <div class="inrow"><input id="alUser" placeholder="username" autocomplete="off" autocapitalize="off" spellcheck="false"><button class="btn sm" data-act="anilist">جيبها</button></div></div>
@@ -579,7 +606,7 @@ function paintDetail(){const m=DET.m;
   let h=`${dbar()}<div class="bwrap"><div class="bimg ${ban?'':'blur'}" style="background-image:url('${esc(bimg.replace(/["'()\\\s]/g,encodeURIComponent))}');background-color:${colorOf(m)||'var(--panel2)'}"></div></div><div class="dwrap">
   <div class="dhead"><img class="dcover" src="${esc(cover(m))}" alt="" style="background:${colorOf(m)||'var(--panel2)'}"><div style="min-width:0;padding-bottom:4px"><h1>${esc(t)}</h1>${alts.length?`<div class="alt">${alts.map(esc).join(' · ')}</div>`:''}</div></div>
   <div class="tags">${tags}</div>
-  ${n&&n.airingAt>nowS()?`<div class="nexta">📅 الحلقة <b>${n.episode}</b> تنزل <b data-cd="${n.airingAt}">${countdown(n.airingAt-nowS())}</b> — ${dayLabel(n.airingAt*1000)} الساعة ${fTime(n.airingAt*1000)}</div>`:''}
+  ${n&&n.airingAt>nowS()?`<div class="nexta">📅 الحلقة <b>${n.episode}</b> تنزل <b data-cd="${n.airingAt}">${countdown(n.airingAt-nowS())}</b> — ${dayLabel(n.airingAt*1000)} الساعة ${fTime(n.airingAt*1000)}<br><button class="btn ghost sm" data-act="cal1" style="margin-top:8px">🔔 ضيف حلقاته لتقويم جوالي</button></div>`:''}
   <div class="box" id="myPanel"></div>`;
   if(!DET.full){h+=DET.err?errBox(DET.err,'dretry'):'<div class="sk" style="height:120px;margin-top:16px;border-radius:18px"></div><div class="sk" style="height:160px;margin-top:16px;border-radius:18px"></div>'}
   else{
@@ -684,8 +711,118 @@ function renderImport(){
 function backupNag(){const s=DB.settings;if(Object.keys(DB.list).length<5)return'';const base=s.lastBackup||s.since||Date.now();if(Date.now()-base<14*864e5||Date.now()-(s.snooze||0)<7*864e5)return'';
   return`<div class="note" style="margin-top:14px">💾 صار لك فترة ما أخذت نسخة احتياطية. قائمتك محفوظة بهالجهاز بس، فإذا ضاع الجوال أو انمسحت بيانات المتصفح تروح.<div class="bbtns"><button class="btn sm" data-act="export">خذ نسخة الحين</button><button class="btn ghost sm" data-act="snooze">بعدين</button></div></div>`}
 
+/* ============ نافذة سفلية ============ */
+const sheetEl=$('#sheet');
+function openSheet(html){$('#sheetBody').innerHTML=html;sheetEl.hidden=false}
+function closeSheet(){sheetEl.hidden=true;$('#sheetBody').innerHTML=''}
+function canShareFiles(){try{return!!(navigator.canShare&&window.File&&navigator.canShare({files:[new File(['x'],'a.png',{type:'image/png'})]}))}catch(e){return false}}
+function download(blob,name){const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1500)}
+const isIOS=()=>/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+
+/* ============ مواعيد الحلقات للتقويم (.ics) ============ */
+const Q_UPCOMING='query($ids:[Int],$page:Int,$to:Int){Page(page:$page,perPage:50){pageInfo{hasNextPage}airingSchedules(mediaId_in:$ids,notYetAired:true,airingAt_lesser:$to,sort:TIME){id airingAt episode media{id duration episodes isAdult title{romaji english native}}}}}';
+let CAL=null;
+const icsEsc=s=>String(s).replace(/\\/g,'\\\\').replace(/;/g,'\;').replace(/,/g,'\\,').replace(/\r?\n/g,'\\n');
+const icsDate=sec=>new Date(sec*1000).toISOString().replace(/[-:]/g,'').replace(/\.\d{3}/,'');
+function icsFold(line){const enc=new TextEncoder();if(enc.encode(line).length<=74)return line;const out=[];let cur='',len=0;for(const ch of line){const b=enc.encode(ch).length;if(len+b>(out.length?73:74)){out.push(cur);cur='';len=0}cur+=ch;len+=b}out.push(cur);return out.join('\r\n ')}
+function buildICS(items){const base=location.origin+location.pathname,stamp=icsDate(nowS());const L=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//animeti//anime tracker//AR','CALSCALE:GREGORIAN','METHOD:PUBLISH','X-WR-CALNAME:أنميتي - مواعيد الحلقات'];
+  for(const x of items){const m=x.media,t=title(m),dur=Math.max(5,Math.min(m.duration||24,180));
+    L.push('BEGIN:VEVENT',`UID:animeti-${m.id}-${x.episode}@animeti`,`DTSTAMP:${stamp}`,`DTSTART:${icsDate(x.airingAt)}`,`DTEND:${icsDate(x.airingAt+dur*60)}`,`SUMMARY:${icsEsc(`📺 ${t} - الحلقة ${x.episode}`)}`,`DESCRIPTION:${icsEsc(`نزلت الحلقة ${x.episode}${m.episodes?' من '+m.episodes:''}. علّمها بأنميتي إذا شفتها.`)}`,`URL:${base}#/anime/${m.id}`,'BEGIN:VALARM','ACTION:DISPLAY',`DESCRIPTION:${icsEsc(`نزلت الحلقة ${x.episode} من ${t}`)}`,'TRIGGER:PT0M','END:VALARM','END:VEVENT')}
+  L.push('END:VCALENDAR');return L.map(icsFold).join('\r\n')+'\r\n'}
+async function calExport(ids){const list=ids||schedIds();CAL={ids:list};if(!list.length){toast('ما عندك أنمي يُعرض الحين بقائمتك');return}
+  openSheet('<h3>🔔 أجهّز المواعيد…</h3><div class="sk" style="height:70px;margin-top:10px"></div>');
+  let out=[],page=1;try{while(page<=8){const d=await gql(Q_UPCOMING,{ids:list,page,to:nowS()+90*86400},600);out=out.concat(d.Page.airingSchedules||[]);if(!d.Page.pageInfo.hasNextPage)break;page++}}
+  catch(e){if(!sheetEl.hidden)openSheet(`<h3>🔔 مواعيد الحلقات</h3>${errBox(e,'calretry')}`);return}
+  if(sheetEl.hidden)return;out=out.filter(x=>x.media&&!x.media.isAdult);
+  if(!out.length){openSheet('<h3>🔔 مواعيد الحلقات</h3><p class="muted">ما فيه مواعيد معروفة للحلقات الجاية حالياً. جرّب بعدين.</p>');return}
+  const shows=new Set(out.map(x=>x.media.id)).size;CAL={ids:list,ics:buildICS(out)};
+  openSheet(`<h3>🔔 مواعيد الحلقات</h3><p>جهّزت مواعيد <b>${pl(out.length,W_EP)}</b> ${shows>1?`لـ ${shows} أنميات`:`من «${esc(title(out[0].media))}»`} للثلاث شهور الجاية، وكل حلقة معها تنبيه وقت نزولها.</p>
+  <div class="bbtns"><button class="btn" data-act="caldl">📅 ضيفها للتقويم</button>${canShareFiles()?'<button class="btn ghost" data-act="calshare">📤 شارك الملف</button>':''}</div>
+  <div class="note small"><b>آيفون:</b> اضغط «ضيفها للتقويم» وبعدين «إضافة الكل».<br><b>أندرويد:</b> افتح الملف اللي نزل بتطبيق التقويم (مثل تقويم سامسونج)، أو من Google Calendar بالكمبيوتر: الإعدادات ← استيراد.</div>
+  <p class="muted small">المواعيد ممكن تتغيّر أو تتأخر. إذا ضفت أنمي جديد أو تغيّر شي، نزّل الملف مرة ثانية.</p>`)}
+function calDownload(){if(!CAL||!CAL.ics)return;if(isIOS()){const u='data:text/calendar;charset=utf-8,'+encodeURIComponent(CAL.ics);if(!window.open(u,'_blank'))location.href=u;return}download(new Blob([CAL.ics],{type:'text/calendar;charset=utf-8'}),'animeti-episodes.ics');toast('نزل الملف ✓ افتحه بتطبيق التقويم')}
+
+/* ============ انقل قائمتك لجهاز ثاني (رابط / QR) ============ */
+const b64u={enc:u8=>{let s='';for(let i=0;i<u8.length;i+=0x8000)s+=String.fromCharCode.apply(null,u8.subarray(i,i+0x8000));return btoa(s).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'')},dec:str=>{const s=atob(str.replace(/-/g,'+').replace(/_/g,'/'));return Uint8Array.from(s,c=>c.charCodeAt(0))}};
+async function zpipe(u8,S){const cs=new S('deflate');const w=cs.writable.getWriter();w.write(u8).catch(()=>{});w.close().catch(()=>{});return new Uint8Array(await new Response(cs.readable).arrayBuffer())}
+async function packList(){const e=Object.values(DB.list).map(x=>{const r=[x.id,SORDER.indexOf(x.status),x.progress||0,x.score||0,x.repeat||0,Math.floor((x.updatedAt||0)/1000)];if(x.notes)r.push(x.notes);return r});
+  const raw=new TextEncoder().encode(JSON.stringify({v:1,e}));if(window.CompressionStream){try{return'z'+b64u.enc(await zpipe(raw,CompressionStream))}catch(_){}}return'j'+b64u.enc(raw)}
+async function unpackList(d){if(!/^[zj][\w-]{4,}$/.test(d||''))throw new Error('bad');const u8=b64u.dec(d.slice(1));const raw=d[0]==='z'?await zpipe(u8,DecompressionStream):u8;const o=JSON.parse(new TextDecoder().decode(raw));if(!o||!Array.isArray(o.e))throw new Error('bad');
+  const out=[];for(const r of o.e.slice(0,5000)){if(!Array.isArray(r))continue;const id=num(r[0]),st=SORDER[r[1]];if(!id||!st)continue;out.push({id,status:st,progress:num(r[2])||0,score:Math.min(10,num(r[3])||0),repeat:num(r[4])||0,updatedAt:(num(r[5])||0)*1000,notes:typeof r[6]==='string'?r[6].slice(0,3000):null})}return out}
+let QRP=null;
+function loadQR(){return QRP||(QRP=new Promise((res,rej)=>{if(window.qrcode)return res();const s=document.createElement('script');s.src='vendor/qrcode.js';s.onload=()=>res();s.onerror=()=>{QRP=null;rej(new Error('qr'))};document.head.appendChild(s)}))}
+let TRANSFER_URL='';
+async function shareTransfer(){const n=Object.keys(DB.list).length;if(!n){toast('قائمتك فاضية');return}const d=await packList();const url=location.origin+location.pathname+'#/sync?d='+d;TRANSFER_URL=url;
+  let qr='';try{await loadQR();const q=qrcode(0,'L');q.addData(url);q.make();qr=q.createSvgTag({cellSize:4,margin:4,scalable:true,alt:'QR'})}catch(e){qr=''}
+  openSheet(`<h3>📲 انقل قائمتك لجهاز ثاني</h3><p class="small muted">افتح هالرابط بالجهاز الثاني أو صوّر الـQR بكاميرته، وتندمج قائمتك (${n} أنمي) مع اللي فيه. إذا نفس الأنمي موجود بالجهازين، ينحفظ الأحدث.</p>
+  ${qr?`<div class="qrbox">${qr}</div>`:'<p class="note small">قائمتك كبيرة على الـQR، استخدم الرابط.</p>'}
+  <div class="bbtns"><button class="btn" data-act="copylink">📋 انسخ الرابط</button>${navigator.share?'<button class="btn ghost" data-act="sharelink">📤 أرسله لنفسك</button>':''}</div>
+  <p class="muted small" style="margin-top:10px">الرابط فيه قائمتك، فلا ترسله لأحد ما تبيه يشوفها. سجل «آخر اللي شفته» يبقى بكل جهاز لحاله.<br>إذا مثبّت أنميتي على الشاشة الرئيسية بالآيفون، افتح التطبيق والصق الرابط في «إحصائياتي ← عندك رابط نقل؟».</p>`)}
+function openTransferLink(v){const m=String(v||'').match(/[?&]d=([zj][\w-]+)/);if(!m){toast('هذا مو رابط نقل من أنميتي');return}location.hash='#/sync?d='+m[1]}
+let SYNC={d:'',items:null,err:false,busy:false};
+async function renderSync(q){const d=q.get('d')||'';
+  if(d!==SYNC.d){SYNC={d,items:null,err:false,busy:false};view.innerHTML='<div class="empty"><div class="big">📲</div>أفتح القائمة…</div>';try{SYNC.items=await unpackList(d)}catch(e){SYNC.err=true}if(TAB!=='sync'||SYNC.d!==d)return}
+  if(SYNC.err||!SYNC.items||!SYNC.items.length){view.innerHTML='<div class="empty"><div class="big">😕</div>الرابط هذا ناقص أو خربان.<br>جرّب تنسخه كامل مرة ثانية.<br><a class="btn ghost" href="#/me">رجوع</a></div>';return}
+  const n=SYNC.items.length,newer=SYNC.items.filter(x=>!DB.list[x.id]||x.updatedAt>(DB.list[x.id].updatedAt||0)).length;
+  view.innerHTML=`<div class="empty"><div class="big">📲</div>وصلتك قائمة فيها <b>${n}</b> أنمي من جهازك الثاني.<br>${newer?`بينضاف أو يتحدّث <b>${newer}</b> منها هنا، والباقي عندك نفسه أو أحدث.<br><button class="btn" data-act="syncgo" ${SYNC.busy?'disabled':''}>${SYNC.busy?'أدمجها…':'ادمجها مع قائمتي'}</button><br>`:'كل اللي فيها موجود عندك هنا بنفس التحديث أو أحدث. 👌<br>'}<a class="btn ghost" href="#/">رجوع للرئيسية</a></div>`}
+const Q_MEDIA='query($ids:[Int],$page:Int){Page(page:$page,perPage:50){media(id_in:$ids,type:ANIME){...card}}}'+CARD;
+async function syncApply(){if(!SYNC.items||SYNC.busy)return;const todo=SYNC.items.filter(x=>!DB.list[x.id]||x.updatedAt>(DB.list[x.id].updatedAt||0));const need=todo.filter(x=>!DB.list[x.id]).map(x=>x.id);SYNC.busy=true;renderSync(TABQ);
+  const got=new Map();try{for(let i=0;i<need.length;i+=50){const d=await gql(Q_MEDIA,{ids:need.slice(i,i+50),page:1},1800);for(const m of d.Page.media||[])got.set(m.id,m)}}catch(e){SYNC.busy=false;toast(errMsg(e));renderSync(TABQ);return}
+  let n=0;for(const x of todo){const ex=DB.list[x.id];const media=ex?ex.media:got.has(x.id)?snap(got.get(x.id)):null;if(!media)continue;
+    DB.list[x.id]={id:x.id,status:x.status,progress:x.progress,score:x.score,repeat:x.repeat,notes:x.notes??(ex?ex.notes:''),updatedAt:x.updatedAt||Date.now(),addedAt:ex?ex.addedAt:(x.updatedAt||Date.now()),startedAt:ex?ex.startedAt:null,finishedAt:ex?ex.finishedAt:null,seenAired:aired(media),media};n++}
+  save();SYNC={d:'',items:null,err:false,busy:false};replaceHash('#/list');setTimeout(()=>toast(`اندمجت قائمتك ✓ (${n} أنمي)`),60)}
+
+/* ============ بطاقة المشاركة ============ */
+let CARD_BLOB=null;
+function loadImg(src){return new Promise(res=>{if(!src)return res(null);const i=new Image();i.crossOrigin='anonymous';let done=false;const fin=v=>{if(!done){done=true;res(v)}};i.onload=()=>fin(i);i.onerror=()=>fin(null);setTimeout(()=>fin(null),6000);i.src=src})}
+function rr(x,X,Y,w,h,r){x.beginPath();x.moveTo(X+r,Y);x.arcTo(X+w,Y,X+w,Y+h,r);x.arcTo(X+w,Y+h,X,Y+h,r);x.arcTo(X,Y+h,X,Y,r);x.arcTo(X,Y,X+w,Y,r);x.closePath()}
+function fitText(x,t,w){t=String(t);if(x.measureText(t).width<=w)return t;while(t.length>1&&x.measureText(t+'…').width>w)t=t.slice(0,-1);return t+'…'}
+function drawLogo(x,X,Y,s){x.save();x.translate(X,Y);const g=x.createLinearGradient(0,0,s,s);g.addColorStop(0,'#8b5cf6');g.addColorStop(1,'#ec4899');x.fillStyle=g;rr(x,0,0,s,s,s*.22);x.fill();x.scale(s/512,s/512);x.strokeStyle='#fff';x.fillStyle='#fff';x.lineCap='round';x.lineJoin='round';
+  x.lineWidth=26;x.stroke(new Path2D('M196 132l60 58 60-58'));x.lineWidth=28;rr(x,118,190,276,200,44);x.stroke();x.lineWidth=14;const p=new Path2D('M230 246l76 44-76 44z');x.fill(p);x.stroke(p);x.restore()}
+function glow(x,cx,cy,r,c){const g=x.createRadialGradient(cx,cy,0,cx,cy,r);g.addColorStop(0,c);g.addColorStop(1,'rgba(0,0,0,0)');x.fillStyle=g;x.fillRect(cx-r,cy-r,r*2,r*2)}
+async function makeCard(){const all=Object.values(DB.list);if(!all.length){toast('ضيف أنميات أول عشان تطلع البطاقة');return}
+  openSheet('<h3>🖼️ بطاقة المشاركة</h3><div class="sk" style="aspect-ratio:4/5;margin-top:10px"></div>');
+  try{await Promise.all(['800 72px Tajawal,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif','700 30px Tajawal,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif','500 30px Tajawal,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif'].map(f=>document.fonts.load(f)))}catch(e){}
+  const S=calcStats(),W=1080,H=1350,P=80,c=document.createElement('canvas');c.width=W;c.height=H;const x=c.getContext('2d');
+  const top=all.filter(e=>e.status!=='PLANNING'&&e.status!=='DROPPED').sort((a,b)=>b.score-a.score||(b.status==='COMPLETED')-(a.status==='COMPLETED')||b.updatedAt-a.updatedAt).slice(0,5);
+  const imgs=await Promise.all(top.map(e=>loadImg(cover(e.media))));if(sheetEl.hidden)return;
+  const bg=x.createLinearGradient(0,0,W,H);bg.addColorStop(0,'#15112a');bg.addColorStop(1,'#0b0c12');x.fillStyle=bg;x.fillRect(0,0,W,H);glow(x,W-120,90,460,'rgba(139,92,246,.38)');glow(x,90,H-120,520,'rgba(236,72,153,.22)');
+  x.direction='rtl';x.textBaseline='alphabetic';
+  drawLogo(x,W-P-76,56,76);x.textAlign='right';x.fillStyle='#fff';x.font='800 46px Tajawal,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif';x.fillText('أنميتي',W-P-96,110);
+  x.textAlign='left';x.fillStyle='#9ca2b8';x.font='500 30px Tajawal,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif';x.fillText(FMONTH.format(new Date()),P,108);
+  x.textAlign='right';x.fillStyle='#fff';x.font='800 76px Tajawal,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif';x.fillText('سجلّي بالأنمي',W-P,250);
+  const tiles=[[S.eps,'حلقة شفتها'],[S.hrs,'ساعة مشاهدة'],[S.cnt.COMPLETED,'أنمي خلّصته'],[S.cnt.CURRENT,'أتابعه الحين']],tw=(W-2*P-28)/2,th=168;
+  tiles.forEach(([v,l],i)=>{const col=i%2,row=Math.floor(i/2),tx=W-P-tw-col*(tw+28),ty=300+row*(th+26);x.fillStyle='rgba(255,255,255,.06)';rr(x,tx,ty,tw,th,30);x.fill();x.strokeStyle='rgba(255,255,255,.09)';x.lineWidth=2;x.stroke();
+    x.textAlign='right';x.fillStyle='#fff';x.font='800 78px Tajawal,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif';x.fillText(String(v),tx+tw-36,ty+96);x.fillStyle='#b9bed1';x.font='500 32px Tajawal,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif';x.fillText(l,tx+tw-36,ty+142)});
+  let y=740;x.textAlign='right';x.fillStyle='#fff';x.font='700 40px Tajawal,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif';x.fillText(top.length?'أفضل اللي شفته':'لسا ما شفت شي… بس ناوي 😄',W-P,y);
+  const cw=164,ch=246,gap=(W-2*P-5*cw)/4;
+  top.forEach((e,i)=>{const cx=W-P-cw-i*(cw+gap),cy=y+36,img=imgs[i];x.save();rr(x,cx,cy,cw,ch,18);x.clip();
+    if(img){const r=Math.max(cw/img.width,ch/img.height),sw=cw/r,sh=ch/r;x.drawImage(img,(img.width-sw)/2,(img.height-sh)/2,sw,sh,cx,cy,cw,ch)}else{x.fillStyle=colorOf(e.media)||'#2a2f43';x.fillRect(cx,cy,cw,ch);x.fillStyle='rgba(255,255,255,.85)';x.font='800 64px Tajawal,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif';x.textAlign='center';x.fillText(title(e.media).trim().charAt(0)||'?',cx+cw/2,cy+ch/2+22)}
+    x.restore();x.direction=/[\u0600-\u06FF]/.test(title(e.media))?'rtl':'ltr';x.textAlign='center';x.fillStyle='#fff';x.font='700 25px Tajawal,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif';x.fillText(fitText(x,title(e.media),cw),cx+cw/2,cy+ch+40);
+    x.direction='rtl';if(e.score){x.fillStyle='#fbbf24';x.font='700 25px Tajawal,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif';x.fillText('★ '+e.score+'/10',cx+cw/2,cy+ch+76)}});
+  y=1172;if(S.gtop.length){x.textAlign='right';x.fillStyle='#b9bed1';x.font='500 32px Tajawal,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif';x.fillText(fitText(x,'أكثر الأنواع: '+S.gtop.slice(0,4).map(([g])=>GENRES[g]||g).join(' · '),W-2*P),W-P,y)}
+  x.strokeStyle='rgba(255,255,255,.1)';x.lineWidth=2;x.beginPath();x.moveTo(P,1226);x.lineTo(W-P,1226);x.stroke();
+  x.direction='ltr';x.textAlign='center';x.fillStyle='#8b90a6';x.font='500 28px Tajawal,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif';x.fillText('ilo0ol.github.io/experiments/anime',W/2,1290);
+  let blob;try{blob=await new Promise((res,rej)=>c.toBlob(b=>b?res(b):rej(new Error('blob')),'image/png'))}catch(e){openSheet('<h3>🖼️ بطاقة المشاركة</h3><p class="muted">ما قدرت أطلّع الصورة بهالمتصفح.</p>');return}
+  if(sheetEl.hidden)return;CARD_BLOB=blob;const sh=canShareFiles();
+  openSheet(`<h3>🖼️ بطاقة المشاركة</h3><img class="cardimg" src="${URL.createObjectURL(blob)}" alt="بطاقة إحصائياتك"><div class="bbtns">${sh?'<button class="btn" data-act="cardshare">📤 شاركها</button>':''}<button class="btn ${sh?'ghost':''}" data-act="carddl">⬇️ نزّلها</button></div>`)}
+
+/* ============ ملخص الشهور ============ */
+let MONTH_SEL='';const FMN=new Intl.DateTimeFormat('ar-u-nu-latn',{month:'long'});
+const monthKey=t=>{const d=new Date(t);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')};
+function monthlyHTML(){const now=new Date(),months=[];for(let i=5;i>=0;i--){const d=new Date(now.getFullYear(),now.getMonth()-i,1);months.push({k:monthKey(d),d})}
+  const agg={};for(const x of DB.log){if(!DB.list[x.id])continue;const k=monthKey(x.t);const a=agg[k]||(agg[k]={eps:0,mins:0,done:new Set(),per:{}});if(x.s==='COMPLETED')a.done.add(x.id);else if(x.b!=null&&x.b-x.a<=JUMP){a.eps+=x.b-x.a;a.mins+=(x.b-x.a)*(DB.list[x.id].media.duration||24);a.per[x.id]=(a.per[x.id]||0)+(x.b-x.a)}}
+  const max=Math.max(1,...months.map(m=>(agg[m.k]||{}).eps||0));const sel=months.some(m=>m.k===MONTH_SEL)?MONTH_SEL:months[5].k;
+  const bars=months.map(m=>{const v=(agg[m.k]||{}).eps||0,h=v?Math.max(3,Math.round(v/max*100)):0,lab=`${FMONTH.format(m.d)}: ${pl(v,W_EP)}`;
+    return`<button class="mb ${m.k===sel?'on':''}" data-act="month" data-v="${m.k}" aria-label="${esc(lab)}" title="${esc(lab)}" aria-pressed="${m.k===sel}"><span class="mv">${m.k===sel?v:''}</span><span class="mt"><i style="height:${h}%"></i></span><span class="ml">${FMN.format(m.d)}</span></button>`}).join('');
+  const a=agg[sel]||{eps:0,mins:0,done:new Set(),per:{}};const hh=Math.round(a.mins/60);const topId=Object.keys(a.per).sort((p,q)=>a.per[q]-a.per[p])[0];const sd=months.find(m=>m.k===sel).d;
+  const lines=[`شفت <b>${pl(a.eps,W_EP)}</b>${hh?` (تقريباً ${pl(hh,W_HR)})`:''}`];
+  if(topId&&DB.list[topId])lines.push(`أكثر شي تابعته: <b>${esc(title(DB.list[topId].media))}</b> (${pl(a.per[topId],W_EP)})`);
+  if(a.done.size)lines.push(`خلّصت <b>${a.done.size}</b> أنمي`);
+  return`<div class="box" id="mbox"><h3>ملخص الشهور</h3><div class="mchart" role="group" aria-label="الحلقات اللي شفتها بآخر ٦ شهور">${bars}</div><div class="msum"><b>${FMONTH.format(sd)}</b><br>${a.eps||a.done.size?lines.join('<br>'):'ما سجلت حلقات بهالشهر.'}</div><p class="muted small" style="margin-top:6px">اضغط على أي شهر تشوف ملخصه. الحلقات اللي تعلّمها دفعة وحدة (أكثر من موسم) ما تنحسب هنا.</p></div>`}
+
 /* ============ الأحداث ============ */
-document.addEventListener('click',ev=>{const t=ev.target.closest('[data-act]');if(t){ev.preventDefault();ev.stopPropagation();act(t.dataset.act,t);return}
+document.addEventListener('click',ev=>{if(ev.target===sheetEl){closeSheet();return}const t=ev.target.closest('[data-act]');if(t){ev.preventDefault();ev.stopPropagation();act(t.dataset.act,t);return}
   const o=ev.target.closest('[data-open]');if(o){location.hash='#/anime/'+o.dataset.open}});
 function act(a,t){const v=t.dataset.v,did=+t.dataset.id||DET.id;let e;
   switch(a){
@@ -714,6 +851,21 @@ function act(a,t){const v=t.dataset.v,did=+t.dataset.id||DET.id;let e;
   case'sharebk':exportBackup(true);break;
   case'import':$('#importFile').click();break;
   case'anilist':importAniList();break;
+  case'sheetclose':closeSheet();break;
+  case'cal':calExport(null);break;
+  case'cal1':calExport([DET.id]);break;
+  case'calretry':calExport(CAL&&CAL.ids);break;
+  case'caldl':calDownload();break;
+  case'calshare':if(CAL&&CAL.ics)navigator.share({files:[new File([CAL.ics],'animeti-episodes.ics',{type:'text/calendar'})],title:'مواعيد الحلقات'}).catch(()=>{});break;
+  case'transfer':shareTransfer();break;
+  case'copylink':(navigator.clipboard?navigator.clipboard.writeText(TRANSFER_URL):Promise.reject()).then(()=>toast('نسخت الرابط ✓ افتحه بالجهاز الثاني')).catch(()=>prompt('انسخ الرابط:',TRANSFER_URL));break;
+  case'sharelink':navigator.share({title:'قائمتي في أنميتي',url:TRANSFER_URL}).catch(()=>{});break;
+  case'opentransfer':openTransferLink(($('#trIn')||{}).value);break;
+  case'syncgo':syncApply();break;
+  case'card':makeCard();break;
+  case'carddl':if(CARD_BLOB){download(CARD_BLOB,'animeti-card.png');toast('نزلت الصورة ✓')}break;
+  case'cardshare':if(CARD_BLOB)navigator.share({files:[new File([CARD_BLOB],'animeti.png',{type:'image/png'})],text:'سجلّي بالأنمي 📺'}).catch(()=>{});break;
+  case'month':{MONTH_SEL=v;const b=$('#mbox');if(b)b.outerHTML=monthlyHTML();break}
   case'imp-go':impStart();break;
   case'imp-back':IMP.phase='input';IMP.err=null;renderImport();break;
   case'imp-add':impCommit();break;
@@ -736,7 +888,7 @@ document.addEventListener('input',ev=>{const t=ev.target;
   if(t.matches('[data-imp-name]')){const r=IMP.rows[+t.dataset.impName];if(r)r.name=t.value;return}
   if(t.matches('[data-notes]')){const e=DB.list[DET.id];if(!e)return;e.notes=t.value.slice(0,3000);clearTimeout(notesT);notesT=setTimeout(save,400);return}
   if(t.matches('[data-lfilter]')){LFILTER=t.value;paintListItems()}});
-document.addEventListener('keydown',ev=>{if(ev.key==='Escape'&&!detailEl.hidden)closeDetail()});
+document.addEventListener('keydown',ev=>{if(ev.key!=='Escape')return;if(!sheetEl.hidden)closeSheet();else if(!detailEl.hidden)closeDetail()});
 $('#importFile').addEventListener('change',async ev=>{const f=ev.target.files[0];ev.target.value='';if(!f)return;
   try{const d=JSON.parse(await f.text());if(!d||typeof d.list!=='object')throw 0;let n=0;
     for(const[k,ne]of Object.entries(d.list)){const id=num(k);if(!id||!ne||typeof ne.media!=='object'||!ne.media||!STATUS[ne.status])continue;const cur=DB.list[id];const ent=cleanEntry(id,ne);if(!cur||ent.updatedAt>(cur.updatedAt||0)){DB.list[id]=ent;n++}}
