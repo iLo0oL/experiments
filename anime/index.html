@@ -602,7 +602,7 @@ async function loadHome(mode){const secs=homeSections(mode);let d={};
 function homeRowsHTML(mode){const H=HOMES[mode];if(H.d)return homeSections(mode).map(s=>{const a=clean(H.d[s[0]]);if(!a.length)return'';return`<div class="sec-h"><h2>${esc(s[1])}</h2><a href="${s[3]}">شوف الكل ←</a></div><div class="row">${a.map(m=>poster(m)).join('')}</div>`}).join('');
   if(H.err)return errBox(H.err);return homeSections(mode).slice(0,3).map(s=>`<div class="sec-h"><h2>${esc(s[1])}</h2></div>${skRow()}`).join('')}
 function renderHome(q,fresh){const mode=MODE(),H=HOMES[mode];
-  view.innerHTML=`${modeSwitch()}${Object.keys(DB.list).length?'':`<div class="note" style="margin-top:14px">👋 هلا! دوّر على أي أنمي أو مانجا وضيفه لقائمتك، وعلّم كل حلقة أو فصل. كل شي ينحفظ بجهازك تلقائي.</div>`}${backupNag()}${goalStripHTML(mode)}${logged()?partiesHTML(true):''}${mode==='ANIME'?sequelHTML():''}${continueHTML()}${recsHTML(mode)}<div id="hrows">${homeRowsHTML(mode)}</div><div class="sec-h"><h2>تصفّح حسب النوع</h2></div><div class="chips wrap">${Object.entries(GENRES).filter(([k])=>k!=='Ecchi').map(([k,v])=>`<a class="chip" href="#/search?g=${encodeURIComponent(k)}&t=${mode}">${v}</a>`).join('')}</div><div class="foot">المعلومات من <a href="https://anilist.co" target="_blank" rel="noopener">AniList</a> · قائمتك محفوظة بهالجهاز بس</div>`;
+  view.innerHTML=`${installHTML()}${modeSwitch()}${Object.keys(DB.list).length?'':`<div class="note" style="margin-top:14px">👋 هلا! دوّر على أي أنمي أو مانجا وضيفه لقائمتك، وعلّم كل حلقة أو فصل. كل شي ينحفظ بجهازك تلقائي.</div>`}${backupNag()}${goalStripHTML(mode)}${logged()?partiesHTML(true):''}${mode==='ANIME'?sequelHTML():''}${continueHTML()}${recsHTML(mode)}<div id="hrows">${homeRowsHTML(mode)}</div><div class="sec-h"><h2>تصفّح حسب النوع</h2></div><div class="chips wrap">${Object.entries(GENRES).filter(([k])=>k!=='Ecchi').map(([k,v])=>`<a class="chip" href="#/search?g=${encodeURIComponent(k)}&t=${mode}">${v}</a>`).join('')}</div><div class="foot">المعلومات من <a href="https://anilist.co" target="_blank" rel="noopener">AniList</a> · قائمتك محفوظة بهالجهاز بس</div>`;
   if((!H.d||Date.now()-H.t>15*60e3)&&!H.loading){H.loading=true;H.err=null;if(fresh&&!H.d){const h=$('#hrows');if(h)h.innerHTML=homeRowsHTML(mode)}
     setTimeout(()=>renderHomeAfter(mode),1500);loadHome(mode).then(d=>{Object.assign(H,{t:Date.now(),d,err:null,loading:false})}).catch(e=>{H.loading=false;H.err=H.d?null:e}).finally(()=>{if(TAB==='home'&&MODE()===mode){const h=$('#hrows');if(h)h.innerHTML=homeRowsHTML(mode)}})}}
 function renderHomeAfter(mode){loadRecs(mode)}
@@ -695,7 +695,7 @@ function renderMe(){const{all,cnt,eps,hrs,weekEps,avg,gtop}=calcStats();const gm
     const txt=mv?`شفت <b>${t}</b> 🎬`:x.s==='COMPLETED'?`خلّصت <b>${t}</b> 🎉`:x.b-x.a===1?`${W.did} ${W.the} ${x.b} من <b>${t}</b>`:x.b-x.a>JUMP?`وصلت ${lil(W.the)} ${x.b} في <b>${t}</b>`:`${W.did} ${W.pl} ${x.a+1}–${x.b} من <b>${t}</b>`;
     ah+=`<div class="act" data-open="${x.id}"><img loading="lazy" src="${imgSrc(e.media)}" alt=""><div class="ab"><div>${txt}</div><time>${fTime(x.t)}</time></div></div>`}
   const canShare=!!(navigator.canShare&&window.File&&(()=>{try{return navigator.canShare({files:[new File(['{}'],'a.json',{type:'application/json'})]})}catch(e){return false}})());
-  view.innerHTML=`${accountBoxHTML()}<div class="stats">
+  view.innerHTML=`${installHTML()}${accountBoxHTML()}<div class="stats">
     <div class="stat"><b>${eps}</b><span>حلقة شفتها</span></div>
     <div class="stat"><b>${hrs}</b><span>ساعة مشاهدة</span>${hrs>=24?`<small>يعني ${pl(Math.floor(hrs/24),W_DAY)}${hrs%24?' و'+pl(hrs%24,W_HR):''}</small>`:''}</div>
     <div class="stat"><b>${weekEps}</b><span>حلقة هالأسبوع</span></div>
@@ -1271,6 +1271,13 @@ async function openChar(id){const c=CHARS_CUR.get(id);if(!c)return;const n=c.nod
     el.innerHTML=edges.length?`<div class="varoles">${edges.map(e=>{MEDIA.set(e.node.id,e.node);const ch=(e.characters||[])[0];return`<a class="varole" href="#/anime/${e.node.id}"><img src="${imgSrc(e.node)}" alt=""><b>${esc(title(e.node))}</b><span>${ch&&ch.name?esc(ch.name.full||''):''}</span></a>`}).join('')}</div>`:'<p class="muted small">ما لقيت أدوار ثانية.</p>'}
   catch(e){const el=$('#vaRoles');if(el)el.innerHTML=`<p class="muted small">${esc(errMsg(e))}</p>`}}
 
+/* ============ تثبيت التطبيق ============ */
+let INSTALL_EVT=null;
+const isStandalone=()=>matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;
+window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();INSTALL_EVT=e;if(TAB==='home'||TAB==='me')rerender()});
+window.addEventListener('appinstalled',()=>{INSTALL_EVT=null;toast('📲 تثبّت أنميتي ✓ افتحه من أيقونته');rerender()});
+function installHTML(){if(!INSTALL_EVT||isStandalone())return'';return`<div class="note" style="margin-top:14px">📲 ثبّت أنميتي كتطبيق بجوالك، يفتح أسرع وبدون شريط المتصفح، وتجيك فيه التنبيهات.<div class="bbtns"><button class="btn sm" data-act="install">ثبّته الحين</button></div></div>`}
+
 /* ============ الأحداث ============ */
 document.addEventListener('click',ev=>{if(ev.target===sheetEl){closeSheet();return}const t=ev.target.closest('[data-act]');if(t){ev.preventDefault();ev.stopPropagation();act(t.dataset.act,t);return}
   const o=ev.target.closest('[data-open]');if(o){location.hash='#/anime/'+o.dataset.open}});
@@ -1317,6 +1324,7 @@ function act(a,t){const v=t.dataset.v,did=+t.dataset.id||DET.id;let e;
   case'cardshare':if(CARD_BLOB)navigator.share({files:[new File([CARD_BLOB],'animeti.png',{type:'image/png'})],text:'سجلّي بالأنمي 📺'}).catch(()=>{});break;
   case'month':{MONTH_SEL=v;const b=$('#mbox');if(b)b.outerHTML=monthlyHTML();break}
   case'mode':setMode(v);break;
+  case'install':if(INSTALL_EVT){const ev=INSTALL_EVT;ev.prompt();ev.userChoice.then(c=>{if(c&&c.outcome==='accepted')INSTALL_EVT=null;rerender()}).catch(()=>{})}break;
   case'auth':openAuth(v);break;
   case'authgo':authGo(v);break;
   case'logout':if(confirm('تسجّل خروج؟ قائمتك تبقى بهالجهاز.')){api('/api/logout',{method:'POST'}).catch(()=>{});logoutLocal();toast('سجّلت خروج')}break;
