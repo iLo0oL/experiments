@@ -299,6 +299,27 @@ textarea.big{min-height:200px;margin-top:4px}
 .st5{color:#f59e0b;font-size:13px;letter-spacing:1px}
 .st5 em{color:var(--muted);opacity:.35;font-style:normal}
 .epnt{width:100%;font-size:13.5px;color:var(--muted);white-space:pre-line;line-height:1.6}
+.goal{margin-top:6px}
+.goal+.goal{margin-top:16px;padding-top:14px;border-top:1px solid var(--line)}
+.goal label{font-weight:700;font-size:14px}
+.goalh{display:flex;justify-content:space-between;align-items:baseline;font-size:15px}
+.bar.big{height:10px;margin:8px 0 6px}
+.lnkbtn{color:var(--acc);font-weight:700;font-size:13.5px}
+.gstrip{display:flex;align-items:center;gap:10px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:10px 14px;margin-top:14px;font-size:14px;font-weight:700}
+.gstrip .bar{flex:1;margin:0}
+.gstrip b{direction:ltr;font-size:13.5px}
+.spoilw{position:relative}
+.desc.spoil{filter:blur(6px);user-select:none;pointer-events:none;max-height:6em}
+.spoilw .btn{position:absolute;inset:0;margin:auto;width:max-content;max-width:90%;height:max-content;box-shadow:0 4px 18px var(--shadow)}
+.chrow>.chc{width:96px;flex-shrink:0}
+.chc{display:flex;flex-direction:column;align-items:center;text-align:center;gap:2px;min-width:0;cursor:pointer}
+.chimg{position:relative;width:84px;height:84px}
+.chimg img{width:100%;height:100%;border-radius:50%;object-fit:cover;background:var(--panel2)}
+.chfav{position:absolute;bottom:-2px;inset-inline-end:-2px;width:30px;height:30px;border-radius:50%;background:var(--bg2);box-shadow:0 2px 8px var(--shadow);font-size:15px;display:grid;place-items:center}
+.chc b{font-size:12.5px;line-height:1.3;margin-top:4px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;max-width:100%}
+.chc span{font-size:11.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.chgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:14px 8px;margin-top:8px}
+.snaprow{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)}
 .foot{color:var(--muted);font-size:12.5px;text-align:center;margin:28px 0 8px;line-height:1.9}
 .foot a{color:var(--acc)}
 </style>
@@ -395,7 +416,7 @@ const SUGG=['ون بيس','هجوم العمالقة','قاتل الشياطين
 const KEY='animeti.v1';
 const DEF={theme:'dark',lang:'english',lsort:'smart'};
 let DB=load();
-function load(){try{const d=JSON.parse(localStorage.getItem(KEY)||'null');if(d&&d.list&&typeof d.list==='object')return{list:d.list,log:Array.isArray(d.log)?d.log:[],settings:{...DEF,...(d.settings||{})},friends:d.friends&&typeof d.friends==='object'?d.friends:{},seq:Array.isArray(d.seq)?d.seq:[]}}catch(e){}return{list:{},log:[],settings:{...DEF},friends:{},seq:[]}}
+function load(){try{const d=JSON.parse(localStorage.getItem(KEY)||'null');if(d&&d.list&&typeof d.list==='object')return{list:d.list,log:Array.isArray(d.log)?d.log:[],settings:{...DEF,...(d.settings||{})},friends:d.friends&&typeof d.friends==='object'?d.friends:{},seq:Array.isArray(d.seq)?d.seq:[],chars:d.chars&&typeof d.chars==='object'?d.chars:{},recs:d.recs&&typeof d.recs==='object'?d.recs:{}}}catch(e){}return{list:{},log:[],settings:{...DEF},friends:{},seq:[],chars:{},recs:{}}}
 let persistAsked=false;
 function save(){if(!DB.settings.since&&Object.keys(DB.list).length)DB.settings.since=Date.now();if(DB.log.length>3000)DB.log.splice(0,DB.log.length-3000);try{localStorage.setItem(KEY,JSON.stringify(DB))}catch(e){toast('ما قدرت أحفظ! يمكن مساحة المتصفح مليانة')}if(!persistAsked){persistAsked=true;try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(e){}}updateBadges();clearTimeout(achT);achT=setTimeout(checkAch,350)}
 window.addEventListener('storage',e=>{if(e.key===KEY){DB=load();applyTheme();rerender();if(DET.id)renderPanel()}});
@@ -419,14 +440,14 @@ function fresh(e){if(e.status!=='CURRENT'||e.seenAired==null)return 0;const a=ai
 const JUMP=26;
 const W_CH=['فصل','فصلين','فصول','فصل'];
 const VOC={ANIME:{u:W_EP,one:'حلقة وحدة',the:'الحلقة',pl:'الحلقات',did:'شفت',mark:'المشاهدة',noun:'أنمي',where:'وين أشوفه؟',done:'شفته كامل',again:'🔁 بعيده من أول',none:'ما نزلت حلقات للحين',sofar:'حلقة شفتها',nxt:'الجاية',pick:'وش أشوف',plus:'زوّد حلقة',minus:'نقّص حلقة'},
-  MANGA:{u:W_CH,one:'فصل واحد',the:'الفصل',pl:'الفصول',did:'قريت',mark:'القراءة',noun:'مانجا',where:'وين أقراه؟',done:'قريته كامل',again:'🔁 بعيد قراءته',none:'ما نزلت فصول للحين',sofar:'فصل قريته',nxt:'الجاي',pick:'وش أقرا',plus:'زوّد فصل',minus:'نقّص فصل'}};
+  MANGA:{u:W_CH,one:'فصل واحد',the:'الفصل',pl:'الفصول',did:'قريت',mark:'القراءة',noun:'مانجا',where:'وين أقرأه؟',done:'قريته كامل',again:'🔁 بعيد قراءته',none:'ما نزلت فصول للحين',sofar:'فصل قريته',nxt:'الجاي',pick:'وش أقرأ',plus:'زوّد فصل',minus:'نقّص فصل'}};
 const typeOf=m=>m&&m.type==='MANGA'?'MANGA':'ANIME';
 const V=m=>VOC[typeof m==='string'?m:typeOf(m)];
 const MODE=()=>DB.settings.mode==='MANGA'?'MANGA':'ANIME';
 const lil=w=>'ل'+w.slice(1);
-function stT(s,m){const t=typeof m==='string'?m:typeOf(m);if(t==='MANGA'){if(s==='CURRENT')return'أقراه';if(s==='PLANNING')return'ناوي أقراه'}return STATUS[s].t}
+function stT(s,m){const t=typeof m==='string'?m:typeOf(m);if(t==='MANGA'){if(s==='CURRENT')return'أقرأه';if(s==='PLANNING')return'ناوي أقرأه'}return STATUS[s].t}
 const totalOf=m=>typeOf(m)==='MANGA'?(m.chapters!==undefined?m.chapters:m.episodes):m.episodes;
-function fmtLabel(m){if(typeOf(m)==='MANGA'){if(m.format==='NOVEL')return'رواية خفيفة';if(m.format==='ONE_SHOT')return'ون شوت';const c=m.countryOfOrigin||m.country;return c==='KR'?'مانهوا':c==='CN'||c==='TW'?'مانهوا صينية':'مانجا'}return FORMAT[m.format]||''}
+function fmtLabel(m){if(typeOf(m)==='MANGA'){if(m.format==='NOVEL')return'رواية خفيفة';if(m.format==='ONE_SHOT')return'ون شوت';const c=m.countryOfOrigin||m.country;return c==='KR'?'مانهوا':c==='CN'||c==='TW'?'مانها صينية':'مانجا'}return FORMAT[m.format]||''}
 function msT(m){if(typeOf(m)==='MANGA')return({RELEASING:'تُنشر الحين',FINISHED:'انتهت',NOT_YET_RELEASED:'ما نزلت للحين',CANCELLED:'انلغت',HIATUS:'متوقفة مؤقتاً'})[m.status]||'';return MSTATUS[m.status]||''}
 const epText=(n,m)=>n===1?V(m).one:pl(n,V(m).u);
 function metaLine(m){const tot=totalOf(m);return[fmtLabel(m),tot?epText(tot,m):'',m.seasonYear||m.year||(m.startDate&&m.startDate.year)].filter(Boolean).join(' · ')}
@@ -461,7 +482,7 @@ function errMsg(e){return({net:'ما قدرت أوصل للسيرفر. تأكد 
 const errBox=(e,act='retry')=>`<div class="err">😕 ${esc(errMsg(e))}<br><button class="btn ghost sm" data-act="${act}">جرّب مرة ثانية</button></div>`;
 const CARD='fragment card on Media{id type isAdult title{romaji english native} coverImage{large extraLarge color} episodes chapters volumes countryOfOrigin startDate{year} format status averageScore popularity season seasonYear duration genres nextAiringEpisode{episode airingAt}}';
 const Q_SEARCH='query($q:String,$page:Int,$type:MediaType,$genre:String,$format:MediaFormat,$sort:[MediaSort],$season:MediaSeason,$year:Int,$status:MediaStatus,$country:CountryCode){Page(page:$page,perPage:30){pageInfo{hasNextPage}media(type:$type,isAdult:false,search:$q,genre:$genre,format:$format,sort:$sort,season:$season,seasonYear:$year,status:$status,countryOfOrigin:$country){...card}}}'+CARD;
-const Q_DETAIL='query($id:Int){Media(id:$id){...card idMal bannerImage description(asHtml:false) synonyms source startDate{year month day} endDate{year month day} studios(isMain:true){nodes{name}} trailer{id site} externalLinks{site url type color} relations{edges{relationType(version:2) node{id type format status episodes chapters countryOfOrigin seasonYear averageScore isAdult title{romaji english native} coverImage{large color}}}} recommendations(perPage:14,sort:RATING_DESC){nodes{mediaRecommendation{...card}}}}}'+CARD;
+const Q_DETAIL='query($id:Int){Media(id:$id){...card idMal bannerImage description(asHtml:false) synonyms source startDate{year month day} endDate{year month day} studios(isMain:true){nodes{name}} trailer{id site} externalLinks{site url type color} relations{edges{relationType(version:2) node{id type format status episodes chapters countryOfOrigin seasonYear averageScore isAdult title{romaji english native} coverImage{large color}}}} recommendations(perPage:14,sort:RATING_DESC){nodes{mediaRecommendation{...card}}} characters(sort:[ROLE,RELEVANCE],perPage:12){edges{role node{id name{full native} image{large}}}}}}'+CARD;
 const Q_REFRESH='query($ids:[Int]){Page(perPage:50){media(id_in:$ids,type:ANIME){id episodes status duration nextAiringEpisode{episode airingAt}}}}';
 const Q_SCHED='query($from:Int,$to:Int,$page:Int,$ids:[Int]){Page(page:$page,perPage:50){pageInfo{hasNextPage}airingSchedules(airingAt_greater:$from,airingAt_lesser:$to,mediaId_in:$ids,sort:TIME){id airingAt episode media{id isAdult popularity episodes format status title{romaji english native} coverImage{large color}}}}}';
 const Q_IMPORT='query($u:String,$type:MediaType){MediaListCollection(userName:$u,type:$type){lists{entries{status progress repeat score(format:POINT_10) notes updatedAt media{...card}}}}}'+CARD;
@@ -470,8 +491,8 @@ function nextSeason(c){const o=['WINTER','SPRING','SUMMER','FALL'],i=o.indexOf(c
 const clean=a=>(a||[]).filter(m=>m&&!m.isAdult);
 
 /* ============ قطع الواجهة ============ */
-function poster(m,label){MEDIA.set(m.id,m);const e=DB.list[m.id];const sc=m.averageScore;const col=colorOf(m)||'var(--panel2)';
-  return`<a class="pc" href="#/anime/${m.id}"><div class="pimg" style="background:${col}"><img loading="lazy" decoding="async" src="${imgSrc(m)}" alt="">${sc?`<span class="psc">★ ${(sc/10).toFixed(1)}</span>`:''}${label?`<span class="prel">${esc(label)}</span>`:''}${e?`<span class="pst" style="background:${STATUS[e.status].c}" title="${stT(e.status,m)}">${STATUS[e.status].i}</span>`:`<button class="padd" data-act="quick" data-id="${m.id}" aria-label="ضيفه لـ${stT('PLANNING',m)}" title="ضيفه لـ${stT('PLANNING',m)}">+</button>`}</div><div class="pt">${esc(title(m))}</div><div class="pm">${esc(metaLine(m))}</div></a>`}
+function poster(m,label,sub){MEDIA.set(m.id,m);const e=DB.list[m.id];const sc=m.averageScore;const col=colorOf(m)||'var(--panel2)';
+  return`<a class="pc" href="#/anime/${m.id}"><div class="pimg" style="background:${col}"><img loading="lazy" decoding="async" src="${imgSrc(m)}" alt="">${sc?`<span class="psc">★ ${(sc/10).toFixed(1)}</span>`:''}${label?`<span class="prel">${esc(label)}</span>`:''}${e?`<span class="pst" style="background:${STATUS[e.status].c}" title="${stT(e.status,m)}">${STATUS[e.status].i}</span>`:`<button class="padd" data-act="quick" data-id="${m.id}" aria-label="ضيفه لـ${stT('PLANNING',m)}" title="ضيفه لـ${stT('PLANNING',m)}">+</button>`}</div><div class="pt">${esc(title(m))}</div><div class="pm">${esc(sub||metaLine(m))}</div></a>`}
 const skRow=(n=8)=>`<div class="row">${Array.from({length:n},()=>'<div class="pc"><div class="sk skp"></div><div class="sk" style="height:12px;margin-top:8px;width:80%"></div></div>').join('')}</div>`;
 const skGrid=(n=12)=>`<div class="grid">${Array.from({length:n},()=>'<div class="pc"><div class="sk skp"></div><div class="sk" style="height:12px;margin-top:8px;width:80%"></div></div>').join('')}</div>`;
 function pctOf(e){const tot=e.media.episodes||aired(e.media);return tot?Math.min(100,e.progress/tot*100):0}
@@ -527,9 +548,10 @@ async function loadHome(mode){const secs=homeSections(mode);let d={};
 function homeRowsHTML(mode){const H=HOMES[mode];if(H.d)return homeSections(mode).map(s=>{const a=clean(H.d[s[0]]);if(!a.length)return'';return`<div class="sec-h"><h2>${esc(s[1])}</h2><a href="${s[3]}">شوف الكل ←</a></div><div class="row">${a.map(m=>poster(m)).join('')}</div>`}).join('');
   if(H.err)return errBox(H.err);return homeSections(mode).slice(0,3).map(s=>`<div class="sec-h"><h2>${esc(s[1])}</h2></div>${skRow()}`).join('')}
 function renderHome(q,fresh){const mode=MODE(),H=HOMES[mode];
-  view.innerHTML=`${modeSwitch()}${Object.keys(DB.list).length?'':`<div class="note" style="margin-top:14px">👋 هلا! دوّر على أي أنمي أو مانجا وضيفه لقائمتك، وعلّم كل حلقة أو فصل. كل شي ينحفظ بجهازك تلقائي.</div>`}${backupNag()}${mode==='ANIME'?sequelHTML():''}${continueHTML()}<div id="hrows">${homeRowsHTML(mode)}</div><div class="sec-h"><h2>تصفّح حسب النوع</h2></div><div class="chips wrap">${Object.entries(GENRES).filter(([k])=>k!=='Ecchi').map(([k,v])=>`<a class="chip" href="#/search?g=${encodeURIComponent(k)}&t=${mode}">${v}</a>`).join('')}</div><div class="foot">المعلومات من <a href="https://anilist.co" target="_blank" rel="noopener">AniList</a> · قائمتك محفوظة بهالجهاز بس</div>`;
+  view.innerHTML=`${modeSwitch()}${Object.keys(DB.list).length?'':`<div class="note" style="margin-top:14px">👋 هلا! دوّر على أي أنمي أو مانجا وضيفه لقائمتك، وعلّم كل حلقة أو فصل. كل شي ينحفظ بجهازك تلقائي.</div>`}${backupNag()}${goalStripHTML(mode)}${mode==='ANIME'?sequelHTML():''}${continueHTML()}${recsHTML(mode)}<div id="hrows">${homeRowsHTML(mode)}</div><div class="sec-h"><h2>تصفّح حسب النوع</h2></div><div class="chips wrap">${Object.entries(GENRES).filter(([k])=>k!=='Ecchi').map(([k,v])=>`<a class="chip" href="#/search?g=${encodeURIComponent(k)}&t=${mode}">${v}</a>`).join('')}</div><div class="foot">المعلومات من <a href="https://anilist.co" target="_blank" rel="noopener">AniList</a> · قائمتك محفوظة بهالجهاز بس</div>`;
   if((!H.d||Date.now()-H.t>15*60e3)&&!H.loading){H.loading=true;H.err=null;if(fresh&&!H.d){const h=$('#hrows');if(h)h.innerHTML=homeRowsHTML(mode)}
-    loadHome(mode).then(d=>{Object.assign(H,{t:Date.now(),d,err:null,loading:false})}).catch(e=>{H.loading=false;H.err=H.d?null:e}).finally(()=>{if(TAB==='home'&&MODE()===mode){const h=$('#hrows');if(h)h.innerHTML=homeRowsHTML(mode)}})}}
+    setTimeout(()=>renderHomeAfter(mode),1500);loadHome(mode).then(d=>{Object.assign(H,{t:Date.now(),d,err:null,loading:false})}).catch(e=>{H.loading=false;H.err=H.d?null:e}).finally(()=>{if(TAB==='home'&&MODE()===mode){const h=$('#hrows');if(h)h.innerHTML=homeRowsHTML(mode)}})}}
+function renderHomeAfter(mode){loadRecs(mode)}
 function applyMode(){qInput.placeholder=MODE()==='MANGA'?'دوّر على مانجا…':'دوّر على أنمي…'}
 
 /* ============ البحث ============ */
@@ -584,7 +606,7 @@ function paintListItems(){const el=$('#litems');if(!el)return;const st=el.datase
 const SCH={};
 function schedIds(){return Object.values(DB.list).filter(e=>typeOf(e.media)==='ANIME'&&e.status!=='DROPPED'&&e.status!=='COMPLETED'&&(e.media.next||e.media.status==='RELEASING'||e.media.status==='NOT_YET_RELEASED'||e.media.status==='HIATUS')).map(e=>e.id)}
 function renderSchedule(q){const ids=schedIds();const mode=q.get('m')||(ids.length?'mine':'all');
-  view.innerHTML=`<div class="segc"><button class="${mode==='mine'?'on':''}" data-act="smode" data-v="mine">قائمتي</button><button class="${mode==='all'?'on':''}" data-act="smode" data-v="all">كل اللي يُعرض</button></div><p class="muted small" style="margin-top:8px">مواعيد الحلقات بتوقيتك، لـ ٧ أيام الجاية</p>${ids.length?'<button class="btn ghost sm" data-act="cal" style="margin-top:10px">🔔 ضيف مواعيد حلقاتي لتقويم جوالك</button>':''}<div id="sch"></div>`;
+  view.innerHTML=`<div class="segc"><button class="${mode==='mine'?'on':''}" data-act="smode" data-v="mine">قائمتي</button><button class="${mode==='all'?'on':''}" data-act="smode" data-v="all">كل اللي يُعرض</button></div><p class="muted small" style="margin-top:8px">مواعيد الحلقات بتوقيتك للسبع أيام الجاية</p>${ids.length?'<button class="btn ghost sm" data-act="cal" style="margin-top:10px">🔔 ضيف مواعيد حلقاتي لتقويم جوالك</button>':''}<div id="sch"></div>`;
   if(mode==='mine'&&!ids.length){$('#sch').innerHTML=`<div class="empty"><div class="big">🗓️</div>ما عندك أنمي يُعرض الحين بقائمتك.<br><button class="btn ghost" data-act="smode" data-v="all">شوف كل اللي يُعرض</button></div>`;return}
   const k=mode+':'+(mode==='mine'?ids.slice().sort().join(','):'');const c=SCH[k];
   if(c&&c.items&&Date.now()-c.t<10*60e3){paintSched(c.items,mode);return}
@@ -625,19 +647,22 @@ function renderMe(){const{all,cnt,eps,hrs,weekEps,avg,gtop}=calcStats();const gm
     <div class="stat"><b>${weekEps}</b><span>حلقة هالأسبوع</span></div>
     <div class="stat"><b>${avg}</b><span>متوسط تقييمك</span></div>
     </div><div class="srow">${SORDER.map(s=>`<a href="#/list?s=${s}"><b style="color:${STATUS[s].c}">${cnt[s]}</b><span>${STATUS[s].t}</span></a>`).join('')}</div>
+  ${goalBoxHTML()}
   ${mangaStatsHTML()}
   ${all.length?'<button class="btn sm" data-act="card" style="margin-top:12px;width:100%">🖼️ طلّع بطاقة بإحصائياتك وشاركها</button>':''}
   ${achHTML()}
+  ${charsBoxHTML()}
   ${monthlyHTML()}
   ${gtop.length?`<div class="box"><h3>الأنواع اللي تحبها</h3>${gtop.map(([g,n])=>`<div class="gbar"><span>${esc(GENRES[g]||g)}</span><div><i style="width:${n/gmax*100}%"></i></div><b>${n}</b></div>`).join('')}</div>`:''}
   <div class="box"><h3>آخر اللي شفته</h3>${ah||'<p class="muted small">لما تعلّم حلقات بتطلع هنا.</p>'}</div>
   <div class="box"><h3>الإعدادات</h3>
     <div class="field"><label for="setLang">أسماء الأنمي</label><select id="setLang" data-set="lang"><option value="english"${DB.settings.lang==='english'?' selected':''}>إنجليزي (Attack on Titan)</option><option value="romaji"${DB.settings.lang==='romaji'?' selected':''}>روماجي (Shingeki no Kyojin)</option><option value="native"${DB.settings.lang==='native'?' selected':''}>ياباني (進撃の巨人)</option></select></div>
-    <div class="field"><label for="setTheme">الشكل</label><select id="setTheme" data-set="theme"><option value="dark"${DB.settings.theme==='dark'?' selected':''}>داكن</option><option value="light"${DB.settings.theme==='light'?' selected':''}>فاتح</option><option value="auto"${DB.settings.theme==='auto'?' selected':''}>مثل الجهاز</option></select></div></div>
+    <div class="field"><label for="setTheme">الشكل</label><select id="setTheme" data-set="theme"><option value="dark"${DB.settings.theme==='dark'?' selected':''}>داكن</option><option value="light"${DB.settings.theme==='light'?' selected':''}>فاتح</option><option value="auto"${DB.settings.theme==='auto'?' selected':''}>مثل الجهاز</option></select></div>
+    <div class="field"><label for="setSpoil">لا تحرق علي<small class="muted" style="display:block;font-weight:400">يخفي القصة لين تخلّص الأنمي</small></label><select id="setSpoil" data-set="nospoil"><option value="0"${spoilOn()?'':' selected'}>طافي</option><option value="1"${spoilOn()?' selected':''}>شغّال</option></select></div></div>
   <div class="box"><h3>نسخة احتياطية</h3><p class="muted small">قائمتك محفوظة بهالجهاز وهالمتصفح بس. إذا بتغيّر جوالك أو بتمسح بيانات المتصفح، خذ نسخة واحفظها، وبعدين رجّعها بالجهاز الجديد.</p>
-    <div class="bbtns"><button class="btn sm" data-act="export">⬇️ نزّل نسخة</button>${canShare?'<button class="btn ghost sm" data-act="sharebk">📤 شارك النسخة</button>':''}<button class="btn ghost sm" data-act="import">⬆️ رجّع نسخة</button></div></div>
+    <div class="bbtns"><button class="btn sm" data-act="export">⬇️ نزّل نسخة</button>${canShare?'<button class="btn ghost sm" data-act="sharebk">📤 شارك النسخة</button>':''}<button class="btn ghost sm" data-act="import">⬆️ رجّع نسخة</button><button class="btn ghost sm" data-act="snaps">🕒 النسخ التلقائية</button></div></div>
   ${friendsBoxHTML()}
-  <div class="box"><h3>📲 انقل قائمتك لجهاز ثاني</h3><p class="muted small">تبي نفس القائمة بجوالك واللابتوب؟ طلّع رابط أو QR وافتحه بالجهاز الثاني، وتندمج القائمتين (الأحدث يغلب). كرر الخطوة كل ما تبي تحدّثهم.</p><div class="bbtns"><button class="btn sm" data-act="transfer">📲 طلّع الرابط</button></div>
+  <div class="box"><h3>📲 انقل قائمتك لجهاز ثاني</h3><p class="muted small">تبي نفس القائمة بجوالك واللابتوب؟ طلّع رابط أو QR وافتحه بالجهاز الثاني، وتندمج القائمتين (الأحدث يغلب). كرّر الخطوة كل ما تبي تحدّثهم.</p><div class="bbtns"><button class="btn sm" data-act="transfer">📲 طلّع الرابط</button></div>
     <div class="inrow"><input id="trIn" placeholder="عندك رابط نقل؟ الصقه هنا" autocomplete="off"><button class="btn sm ghost" data-act="opentransfer">افتحه</button></div></div>
   <div class="box"><h3>انقل قائمتك من تطبيق ثاني</h3><p class="muted small">كنت تتابع في مكان ثاني؟ الصق أسماء الأنميات ورقم آخر حلقة شفتها، وأنا أضيفهم لك.</p><a class="btn sm" href="#/import" style="margin-top:10px">📋 الصق قائمة</a></div>
   <div class="box"><h3>جيب قائمتك من AniList</h3><p class="muted small">إذا عندك حساب في AniList وقائمتك عامة، اكتب اسم المستخدم وأجيبها لك.</p>
@@ -669,10 +694,13 @@ function paintDetail(){const m=DET.m;
     const streams=(m.externalLinks||[]).filter(l=>(isM?l.type!=='SOCIAL':l.type==='STREAMING')&&safeUrl(l.url));
     h+=`<div class="box"><h3>${W.where}</h3>${streams.length?`<div class="links">${streams.map(l=>`<a class="lnk" href="${esc(l.url)}" target="_blank" rel="noopener" style="--c:${/^#[0-9a-f]{3,8}$/i.test(l.color||'')?l.color:'#888'}"><i></i><span class="ltr">${esc(l.site)}</span></a>`).join('')}</div><p class="muted small" style="margin-top:8px">${isM?'الروابط الرسمية':'المنصات الرسمية'} حسب AniList (يمكن تختلف حسب بلدك)</p>`:`<p class="muted small">ما لقيت ${isM?'رابط رسمي':'منصة رسمية'} مسجّل له في AniList.</p>`}</div>`;
     const desc=m.description?new DOMParser().parseFromString(m.description.replace(/<br\s*\/?>/gi,'\n'),'text/html').body.textContent.replace(/\n{3,}/g,'\n\n').trim():'';
-    if(desc)h+=`<div class="box"><h3>القصة</h3><p class="desc" id="desc">${esc(desc)}</p><div class="dmore"><button data-act="dmore">اقرأ كامل</button><a href="https://translate.google.com/?sl=en&tl=ar&op=translate&text=${encodeURIComponent(desc.slice(0,4500))}" target="_blank" rel="noopener">ترجمها للعربي ↗</a></div></div>`;
+    const me0=DB.list[m.id],hideStory=spoilOn()&&!(me0&&me0.status==='COMPLETED')&&!UNSPOIL[m.id];
+    if(desc)h+=`<div class="box"><h3>القصة</h3>${hideStory?`<div class="spoilw"><p class="desc spoil" aria-hidden="true">${esc(desc.slice(0,400))}</p><button class="btn ghost sm" data-act="unspoil">🙈 خفيتها عشان ما تنحرق عليك، اضغط وتطلع</button></div>`:`<p class="desc" id="desc">${esc(desc)}</p><div class="dmore"><button data-act="dmore">اقرأ كامل</button><a href="https://translate.google.com/?sl=en&tl=ar&op=translate&text=${encodeURIComponent(desc.slice(0,4500))}" target="_blank" rel="noopener">ترجمها للعربي ↗</a></div>`}</div>`;
     const studio=m.studios&&m.studios.nodes&&m.studios.nodes.map(s=>s.name).join('، ');
     const rows=[['الشكل',fmtLabel(m)],[isM?'الفصول':'الحلقات',tot?String(tot):(m.status==='RELEASING'?(isM?'للحين تُنشر':'للحين يُعرض'):'')],['المجلدات',isM&&m.volumes?String(m.volumes):''],['مدة الحلقة',m.duration?pl(m.duration,W_MIN):''],['الحالة',msT(m)],['بدأ',fuzzy(m.startDate)],['انتهى',fuzzy(m.endDate)],['الاستوديو',studio],['المصدر',SOURCE[m.source]],['التقييم',sc?`${sc}%`:''],['المتابعين على AniList',m.popularity?m.popularity.toLocaleString('en'):'']].filter(r=>r[1]);
     h+=`<div class="box"><h3>معلومات</h3><dl class="info">${rows.map(r=>`<dt>${r[0]}</dt><dd>${esc(r[1])}</dd>`).join('')}</dl>${(m.genres||[]).length?`<div class="gtags">${m.genres.map(g=>`<a href="#/search?g=${encodeURIComponent(g)}&t=${typeOf(m)}">${esc(GENRES[g]||g)}</a>`).join('')}</div>`:''}</div>`;
+    const chars=((m.characters&&m.characters.edges)||[]).filter(c=>c&&c.node&&c.node.id);CHARS_CUR=new Map(chars.map(c=>[c.node.id,c]));
+    if(chars.length)h+=`<div class="sec-h"><h2>الشخصيات</h2><span class="muted small">اضغط 🤍 وتنحفظ بمفضلتك</span></div><div class="row chrow">${chars.map(charCard).join('')}</div>`;
     const rel=((m.relations&&m.relations.edges)||[]).filter(r=>r.node&&(r.node.type==='ANIME'||r.node.type==='MANGA')&&!r.node.isAdult).sort((a,b)=>(a.node.type!==m.type)-(b.node.type!==m.type)||RELORDER.indexOf(a.relationType)-RELORDER.indexOf(b.relationType));
     if(rel.length)h+=`<div class="sec-h"><h2>الأجزاء والقصص المرتبطة</h2></div><div class="row">${rel.map(r=>poster(r.node,r.node.type!==m.type?(r.node.type==='MANGA'?'📖 '+fmtLabel(r.node):'📺 الأنمي'):(REL[r.relationType]||''))).join('')}</div>`;
     const recs=clean(((m.recommendations&&m.recommendations.nodes)||[]).map(r=>r.mediaRecommendation));
@@ -850,7 +878,7 @@ async function makeCard(){const all=Object.values(DB.list);if(!all.length){toast
   const tiles=[[S.eps,'حلقة شفتها'],[S.hrs,'ساعة مشاهدة'],[S.cnt.COMPLETED,'أنمي خلّصته'],[S.cnt.CURRENT,'أتابعه الحين']],tw=(W-2*P-28)/2,th=168;
   tiles.forEach(([v,l],i)=>{const col=i%2,row=Math.floor(i/2),tx=W-P-tw-col*(tw+28),ty=300+row*(th+26);x.fillStyle='rgba(255,255,255,.06)';rr(x,tx,ty,tw,th,30);x.fill();x.strokeStyle='rgba(255,255,255,.09)';x.lineWidth=2;x.stroke();
     x.textAlign='right';x.fillStyle='#fff';x.font='800 78px Tajawal,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif';x.fillText(String(v),tx+tw-36,ty+96);x.fillStyle='#b9bed1';x.font='500 32px Tajawal,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif';x.fillText(l,tx+tw-36,ty+142)});
-  let y=740;x.textAlign='right';x.fillStyle='#fff';x.font='700 40px Tajawal,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif';x.fillText(top.length?'أفضل اللي شفته':'لسا ما شفت شي… بس ناوي 😄',W-P,y);
+  let y=740;x.textAlign='right';x.fillStyle='#fff';x.font='700 40px Tajawal,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif';x.fillText(top.length?'أفضل اللي شفته':'للحين ما شفت شي… بس ناوي 😄',W-P,y);
   const cw=164,ch=246,gap=(W-2*P-5*cw)/4;
   top.forEach((e,i)=>{const cx=W-P-cw-i*(cw+gap),cy=y+36,img=imgs[i];x.save();rr(x,cx,cy,cw,ch,18);x.clip();
     if(img){const r=Math.max(cw/img.width,ch/img.height),sw=cw/r,sh=ch/r;x.drawImage(img,(img.width-sw)/2,(img.height-sh)/2,sw,sh,cx,cy,cw,ch)}else{x.fillStyle=colorOf(e.media)||'#2a2f43';x.fillRect(cx,cy,cw,ch);x.fillStyle='rgba(255,255,255,.85)';x.font='800 64px Tajawal,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif';x.textAlign='center';x.fillText(title(e.media).trim().charAt(0)||'?',cx+cw/2,cy+ch/2+22)}
@@ -875,7 +903,7 @@ function monthlyHTML(){const now=new Date(),months=[];for(let i=5;i>=0;i--){cons
   const lines=[`شفت <b>${pl(a.eps,W_EP)}</b>${hh?` (تقريباً ${pl(hh,W_HR)})`:''}`];if(a.ch)lines.push(`وقريت <b>${pl(a.ch,W_CH)}</b> مانجا`);
   if(topId&&DB.list[topId])lines.push(`أكثر شي تابعته: <b>${esc(title(DB.list[topId].media))}</b> (${pl(a.per[topId],W_EP)})`);
   if(a.done.size)lines.push(`خلّصت <b>${a.done.size}</b> أنمي`);
-  return`<div class="box" id="mbox"><h3>ملخص الشهور</h3><div class="mchart" role="group" aria-label="الحلقات اللي شفتها بآخر ٦ شهور">${bars}</div><div class="msum"><b>${FMONTH.format(sd)}</b><br>${a.eps||a.done.size||a.ch?lines.join('<br>'):'ما سجلت حلقات بهالشهر.'}</div><p class="muted small" style="margin-top:6px">اضغط على أي شهر تشوف ملخصه. الحلقات اللي تعلّمها دفعة وحدة (أكثر من موسم) ما تنحسب هنا.</p></div>`}
+  return`<div class="box" id="mbox"><h3>ملخص الشهور</h3><div class="mchart" role="group" aria-label="الحلقات اللي شفتها بآخر 6 شهور">${bars}</div><div class="msum"><b>${FMONTH.format(sd)}</b><br>${a.eps||a.done.size||a.ch?lines.join('<br>'):'ما سجلت حلقات بهالشهر.'}</div><p class="muted small" style="margin-top:6px">اضغط على أي شهر تشوف ملخصه. الحلقات اللي تعلّمها دفعة وحدة (أكثر من موسم) ما تنحسب هنا.</p></div>`}
 
 /* ============ تكملات ومواسم جديدة ============ */
 const Q_SEQ='query($ids:[Int]){Page(perPage:50){media(id_in:$ids,type:ANIME){id relations{edges{relationType(version:2) node{id type format status episodes seasonYear isAdult averageScore title{romaji english native} coverImage{large color} nextAiringEpisode{episode airingAt} startDate{year month}}}}}}}';
@@ -899,7 +927,7 @@ const ACH=[
   {id:'epcritic',i:'✍️',t:'ناقد الحلقات',d:'قيّمت 10 حلقات',v:s=>s.epRated,g:10},{id:'genres',i:'🧭',t:'مستكشف',d:'شفت من 8 أنواع مختلفة',v:s=>s.genres,g:8},
   {id:'movies',i:'🍿',t:'ليلة أفلام',d:'شفت 5 أفلام أنمي',v:s=>s.movies,g:5},{id:'rewatch',i:'🔁',t:'وفي',d:'أعدت أنمي من أوله',v:s=>s.rewatch,g:1},
   {id:'night',i:'🦉',t:'سهران',d:'سجّلت حلقة بين 2 و5 الفجر',v:s=>s.night,g:1},{id:'manga100',i:'📖',t:'قارئ',d:'قريت 100 فصل مانجا',v:s=>s.chapters,g:100},
-  {id:'friend',i:'👥',t:'مع الشلة',d:'ضفت أول واحد للشلة',v:s=>s.friends,g:1},{id:'backup',i:'💾',t:'حريص',d:'أخذت نسخة احتياطية',v:s=>s.backup,g:1}];
+  {id:'friend',i:'👥',t:'مع الشلة',d:'ضفت أول واحد للشلة',v:s=>s.friends,g:1},{id:'goal',i:'🎯',t:'قدّها',d:'حققت هدف شهر',v:s=>s.goalWins,g:1},{id:'chars',i:'❤️',t:'قلبي معهم',d:'حفظت 5 شخصيات مفضلة',v:s=>s.chars,g:5},{id:'backup',i:'💾',t:'حريص',d:'أخذت نسخة احتياطية',v:s=>s.backup,g:1}];
 const dayNo=t=>{const d=new Date(t);return Math.round(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate())/864e5)};
 function achStats(){const all=Object.values(DB.list),an=all.filter(e=>typeOf(e.media)==='ANIME'),mg=all.filter(e=>typeOf(e.media)==='MANGA');
   const tot=e=>(e.progress||0)+(e.repeat||0)*(e.media.episodes||0);const done=an.filter(e=>e.status==='COMPLETED');
@@ -908,17 +936,18 @@ function achStats(){const all=Object.values(DB.list),an=all.filter(e=>typeOf(e.m
   let cur=0;if(ds.length&&ds[ds.length-1]>=dayNo(Date.now())-1){cur=1;for(let i=ds.length-2;i>=0&&ds[i]===ds[i+1]-1;i--)cur++}
   return{eps:an.reduce((s,e)=>s+tot(e),0),done:done.length,long:done.some(e=>(e.media.episodes||0)>=100)?1:0,bestDay:Math.max(0,...Object.values(days)),bestStreak:best,curStreak:cur,
     rated:all.filter(e=>e.score).length,epRated:all.reduce((s,e)=>s+Object.keys(e.eps||{}).length,0),genres:new Set(an.filter(e=>e.status!=='PLANNING'&&e.progress>0).flatMap(e=>e.media.genres||[])).size,
-    movies:an.filter(e=>e.media.format==='MOVIE'&&e.progress>0).length,rewatch:all.some(e=>e.repeat>0)?1:0,night,chapters:mg.reduce((s,e)=>s+tot(e),0),friends:Object.keys(DB.friends||{}).length,backup:DB.settings.lastBackup?1:0}}
+    movies:an.filter(e=>e.media.format==='MOVIE'&&e.progress>0).length,rewatch:all.some(e=>e.repeat>0)?1:0,night,chapters:mg.reduce((s,e)=>s+tot(e),0),friends:Object.keys(DB.friends||{}).length,backup:DB.settings.lastBackup?1:0,goalWins:num(DB.settings.goalWins)||0,chars:Object.keys(DB.chars||{}).length}}
 let achT;
-function checkAch(){const st=DB.settings,s=achStats(),got=st.ach&&typeof st.ach==='object'?st.ach:null,acc=got?{...got}:{},now=Date.now(),neu=[];
+function checkAch(){const gh=checkGoal(),st=DB.settings,s=achStats(),got=st.ach&&typeof st.ach==='object'?st.ach:null,acc=got?{...got}:{},now=Date.now(),neu=[];
   for(const a of ACH)if(!acc[a.id]&&a.v(s)>=a.g){acc[a.id]=now;if(got)neu.push(a)}
-  if(!got||neu.length){st.ach=acc;try{localStorage.setItem(KEY,JSON.stringify(DB))}catch(e){}}
+  if(gh.length){const msg=gh.length>1?'🎯 حققت هدفك بالأنمي والمانجا هالشهر! كفو':'🎯 حققت هدف الشهر! كفو';setTimeout(()=>toast(msg),$('#toast').classList.contains('show')?5200:0);if(TAB==='me'||TAB==='home')setTimeout(rerender,50)}
+  if(!got||neu.length||gh.length){st.ach=acc;try{localStorage.setItem(KEY,JSON.stringify(DB))}catch(e){}}
   if(neu.length){const show=()=>toast(`🏆 إنجاز جديد: ${neu[0].i} ${neu[0].t}${neu.length>1?` (+${neu.length-1})`:''}`);$('#toast').classList.contains('show')?setTimeout(show,5200):show();if(TAB==='me')rerender()}}
 function achHTML(){const s=achStats(),got=DB.settings.ach||{};const ok=a=>got[a.id]||a.v(s)>=a.g;const n=ACH.filter(ok).length;
   const strk=s.curStreak?`<div class="streak">🔥 سلسلتك الحين: <b>${pl(s.curStreak,W_DAY)}</b> ورا بعض${s.bestStreak>s.curStreak?` · أطول سلسلة: ${pl(s.bestStreak,W_DAY)}`:''}</div>`:s.bestStreak?`<div class="streak">أطول سلسلة لك: ${pl(s.bestStreak,W_DAY)} · سجّل حلقة اليوم وابدأ سلسلة جديدة 🔥</div>`:'';
   return`<div class="box"><h3>🏆 إنجازاتي <span class="muted small">${n} من ${ACH.length}</span></h3>${strk}<div class="achs">${[...ACH.filter(ok),...ACH.filter(a=>!ok(a))].map(a=>{const v=a.v(s),y=ok(a);return`<div class="ach ${y?'ok':''}"><i>${a.i}</i><b>${a.t}</b><span>${a.d}</span>${y?'':`<div class="bar"><i style="width:${Math.min(100,v/a.g*100)}%"></i></div><small>${Math.min(v,a.g)} من ${a.g}</small>`}</div>`}).join('')}</div></div>`}
 function mangaStatsHTML(){const mg=Object.values(DB.list).filter(e=>typeOf(e.media)==='MANGA');if(!mg.length)return'';const ch=mg.reduce((s,e)=>s+(e.progress||0)+(e.repeat||0)*(e.media.episodes||0),0);
-  return`<div class="note" style="margin-top:12px">📖 <b>المانجا:</b> قريت <b>${ch}</b> فصل · ${mg.length} بقائمتك · ${mg.filter(e=>e.status==='CURRENT').length} أقراها الحين · ${mg.filter(e=>e.status==='COMPLETED').length} خلّصتها</div>`}
+  return`<div class="note" style="margin-top:12px">📖 <b>المانجا:</b> قريت <b>${ch}</b> فصل · ${mg.length} بقائمتك · ${mg.filter(e=>e.status==='CURRENT').length} أقرأها الحين · ${mg.filter(e=>e.status==='COMPLETED').length} خلّصتها</div>`}
 
 /* ============ تقييم الحلقات ============ */
 let RATE_MODE=false,EPED=null;const EPN_ALL={};
@@ -971,6 +1000,66 @@ function setMode(v){if(v!=='ANIME'&&v!=='MANGA')return;DB.settings.mode=v;save()
   if(TAB==='list'){LFILTER='';history.replaceState(history.state,'','#/list');TABQ=new URLSearchParams();curKey='list?'}
   window.scrollTo(0,0);renderTab(true)}
 
+/* ============ مرشّح لك ============ */
+const Q_RECS='query($ids:[Int]){Page(perPage:10){media(id_in:$ids){id recommendations(perPage:10,sort:RATING_DESC){nodes{rating mediaRecommendation{...card}}}}}}'+CARD;
+function recSeeds(mode){const es=Object.values(DB.list).filter(e=>typeOf(e.media)===mode&&e.status!=='PLANNING'&&e.status!=='DROPPED');
+  let s=es.filter(e=>e.score>=7).sort((a,b)=>b.score-a.score||b.updatedAt-a.updatedAt);
+  if(s.length<4)s=s.concat(es.filter(e=>!(e.score>=7)&&(e.status==='COMPLETED'||e.progress>=3)).sort((a,b)=>b.updatedAt-a.updatedAt));return s.slice(0,10)}
+function favGenres(){const gc={};Object.values(DB.list).filter(e=>e.status!=='PLANNING'&&e.status!=='DROPPED').forEach(e=>(e.media.genres||[]).forEach(g=>gc[g]=(gc[g]||0)+(e.score||5)));return Object.entries(gc).sort((a,b)=>b[1]-a[1]).slice(0,3).map(x=>x[0])}
+const RECS_BUSY={};
+async function loadRecs(mode,force){const seeds=recSeeds(mode);if(!seeds.length||RECS_BUSY[mode]||!navigator.onLine)return;const key=seeds.map(e=>e.id+':'+e.score).join(','),cur=(DB.recs||{})[mode];
+  if(!force&&cur&&cur.key===key&&Date.now()-cur.at<24*3600e3)return;RECS_BUSY[mode]=true;
+  try{const d=await gql(Q_RECS,{ids:seeds.map(e=>e.id)},3600);const w={};seeds.forEach(e=>w[e.id]=e.score?e.score/10:.6);const agg=new Map();
+    for(const m of d.Page.media||[])for(const n of(m.recommendations&&m.recommendations.nodes)||[]){const r=n.mediaRecommendation;if(!r||r.isAdult||DB.list[r.id]||typeOf(r)!==mode)continue;
+      const a=agg.get(r.id)||{m:{id:r.id,...snap(r),averageScore:num(r.averageScore)},s:0,from:[]};a.s+=(w[m.id]||.5)*Math.log2(2+Math.max(0,n.rating||0));if(!a.from.includes(m.id))a.from.push(m.id);agg.set(r.id,a)}
+    const fav=new Set(favGenres());for(const a of agg.values())a.s+=.15*(a.m.genres||[]).filter(g=>fav.has(g)).length;
+    DB.recs=DB.recs||{};DB.recs[mode]={key,at:Date.now(),items:[...agg.values()].sort((a,b)=>b.s-a.s).slice(0,20).map(a=>({m:a.m,from:a.from.slice(0,3)}))};save();if(TAB==='home'&&MODE()===mode)rerender()}catch(e){}
+  RECS_BUSY[mode]=false}
+function recsHTML(mode){const r=(DB.recs||{})[mode];if(!r||!Array.isArray(r.items))return'';const items=r.items.filter(x=>x&&x.m&&!DB.list[x.m.id]).slice(0,16);if(!items.length)return'';
+  return`<div class="sec-h"><h2>✨ مرشّح لك</h2></div><div class="row">${items.map(x=>{const src=DB.list[x.from&&x.from[0]];const why=src?(src.score>=7?'لأنك حبيت ':mode==='MANGA'?'لأنك قريت ':'لأنك شفت ')+title(src.media):'';return poster(x.m,'',why)}).join('')}</div>`}
+
+/* ============ هدف الشهر ============ */
+const GOAL_EDIT={};
+function monthCount(type,k){k=k||monthKey(Date.now());let n=0;for(const x of DB.log){if(x.b==null||!DB.list[x.id]||typeOf(DB.list[x.id].media)!==type||monthKey(x.t)!==k)continue;if(x.b-x.a>(type==='MANGA'?200:JUMP))continue;n+=x.b-x.a}return n}
+function goalRow(type){const key=type==='MANGA'?'goalM':'goal',g=num(DB.settings[key]),W=V(type),done=monthCount(type);
+  if(!g||GOAL_EDIT[type])return`<div class="goal"><label for="goalIn${type}">${type==='MANGA'?'كم فصل مانجا تبي تقرأ هالشهر؟':'كم حلقة تبي تشوف هالشهر؟'}</label><div class="inrow"><input id="goalIn${type}" type="number" inputmode="numeric" min="1" max="5000" value="${g||''}" placeholder="${type==='MANGA'?'مثلاً 100':'مثلاً 40'}"><button class="btn sm" data-act="goalset" data-v="${type}">احفظ</button>${g?`<button class="btn ghost sm" data-act="goaloff" data-v="${type}">شيل الهدف</button>`:''}</div></div>`;
+  const d=new Date(),last=new Date(d.getFullYear(),d.getMonth()+1,0).getDate(),left=last-d.getDate()+1,need=Math.max(0,g-done),per=Math.ceil(need/left);
+  return`<div class="goal"><div class="goalh"><b>${done} من ${pl(g,W.u)}</b><button class="lnkbtn" data-act="goaledit" data-v="${type}">غيّره</button></div><div class="bar big"><i style="width:${Math.min(100,done/g*100)}%"></i></div><div class="muted small">${done>=g?'🎉 حققت هدفك هالشهر! كفو':`باقي ${pl(need,W.u)} و${pl(left,W_DAY)}، يعني تقريباً ${per} ${type==='MANGA'?(per===1?'فصل':'فصول'):(per===1?'حلقة':'حلقات')} باليوم`}</div></div>`}
+function goalBoxHTML(){const hasM=Object.values(DB.list).some(e=>typeOf(e.media)==='MANGA');return`<div class="box"><h3>🎯 هدف الشهر</h3>${goalRow('ANIME')}${hasM?goalRow('MANGA'):''}</div>`}
+function goalStripHTML(mode){const g=num(DB.settings[mode==='MANGA'?'goalM':'goal']);if(!g)return'';const done=monthCount(mode);
+  return`<a class="gstrip" href="#/me"><span>🎯 هدف الشهر</span><div class="bar"><i style="width:${Math.min(100,done/g*100)}%"></i></div><b>${done}/${g}</b></a>`}
+function checkGoal(){const k=monthKey(Date.now()),st=DB.settings,hits=[];for(const[type,key]of[['ANIME','goal'],['MANGA','goalM']]){const g=num(st[key]),hk=key+'Hit';if(g&&st[hk]!==k&&monthCount(type,k)>=g){st[hk]=k;st.goalWins=(num(st.goalWins)||0)+1;hits.push(type)}}return hits}
+
+/* ============ لا تحرق علي ============ */
+const UNSPOIL={};
+const spoilOn=()=>DB.settings.nospoil==='1';
+
+/* ============ شخصياتي المفضلة ============ */
+let CHARS_CUR=new Map();
+const ROLE={MAIN:'رئيسية',SUPPORTING:'ثانوية',BACKGROUND:'خلفية'};
+function charCard(c){const n=c.node,fav=(DB.chars||{})[n.id];return`<div class="chc"><div class="chimg"><img loading="lazy" src="${esc(safeUrl(n.image&&n.image.large))||BLANK}" alt=""><button class="chfav ${fav?'on':''}" data-act="charfav" data-v="${n.id}" aria-label="${fav?'شيلها من المفضلة':'ضيفها للمفضلة'}">${fav?'❤️':'🤍'}</button></div><b>${esc((n.name&&n.name.full)||'')}</b><span>${ROLE[c.role]||''}</span></div>`}
+function charFav(id,btn){DB.chars=DB.chars||{};if(DB.chars[id]){delete DB.chars[id];save();toast('انشالت من المفضلة')}
+  else{const c=CHARS_CUR.get(id);if(!c||!DET.m)return;const n=c.node,t=DET.m.title||{};DB.chars[id]={id,name:str(n.name&&n.name.full),native:str(n.name&&n.name.native),img:safeUrl(n.image&&n.image.large),mid:DET.id,mtitle:{romaji:str(t.romaji),english:str(t.english),native:str(t.native)},at:Date.now()};save();toast('❤️ انضافت لشخصياتك المفضلة')}
+  if(btn){const on=!!DB.chars[id];btn.classList.toggle('on',on);btn.textContent=on?'❤️':'🤍';btn.setAttribute('aria-label',on?'شيلها من المفضلة':'ضيفها للمفضلة')}if(TAB==='me'&&detailEl.hidden)rerender()}
+function charsBoxHTML(){const L=Object.values(DB.chars||{}).sort((a,b)=>b.at-a.at);if(!L.length)return'';
+  return`<div class="box"><h3>❤️ شخصياتي المفضلة <span class="muted small">${L.length}</span></h3><div class="chgrid">${L.map(c=>`<div class="chc" data-open="${c.mid}"><div class="chimg"><img loading="lazy" src="${esc(c.img)||BLANK}" alt=""><button class="chfav on" data-act="charfav" data-v="${c.id}" aria-label="شيلها من المفضلة">❤️</button></div><b>${esc(c.name)}</b><span>${esc(title({title:c.mtitle}))}</span></div>`).join('')}</div></div>`}
+function cleanChars(o){const out={};if(!o||typeof o!=='object')return out;for(const v of Object.values(o).slice(0,2000)){const id=num(v&&v.id);if(!id)continue;out[id]={id,name:str(v.name),native:str(v.native),img:safeUrl(v.img),mid:num(v.mid)||0,mtitle:{romaji:str(v.mtitle&&v.mtitle.romaji),english:str(v.mtitle&&v.mtitle.english),native:str(v.mtitle&&v.mtitle.native)},at:num(v.at)||Date.now()}}return out}
+
+/* ============ نسخ تلقائية بالجهاز ============ */
+function idb(){return new Promise((res,rej)=>{if(!window.indexedDB)return rej(new Error('noidb'));const r=indexedDB.open('animeti-snaps',1);r.onupgradeneeded=()=>r.result.createObjectStore('snaps',{keyPath:'day'});r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)})}
+async function autoSnap(){if(!Object.keys(DB.list).length)return;const day=new Date().toISOString().slice(0,10);if(DB.settings.snapDay===day)return;
+  try{const db=await idb();const tx=db.transaction('snaps','readwrite'),st=tx.objectStore('snaps');st.put({day,at:Date.now(),n:Object.keys(DB.list).length,data:JSON.stringify({list:DB.list,log:DB.log,friends:DB.friends,chars:DB.chars})});
+    const keys=await new Promise(r=>{const q=st.getAllKeys();q.onsuccess=()=>r(q.result||[]);q.onerror=()=>r([])});keys.sort();for(const k of keys.slice(0,Math.max(0,keys.length-7)))st.delete(k);
+    await new Promise((r,j)=>{tx.oncomplete=r;tx.onerror=()=>j(tx.error)});DB.settings.snapDay=day;save()}catch(e){}}
+async function snapList(){try{const db=await idb();return await new Promise(r=>{const q=db.transaction('snaps').objectStore('snaps').getAll();q.onsuccess=()=>r((q.result||[]).sort((a,b)=>b.at-a.at));q.onerror=()=>r([])})}catch(e){return null}}
+async function openSnaps(){const L=await snapList();if(L===null){toast('متصفحك ما يدعم النسخ التلقائية');return}
+  openSheet(`<h3>🕒 النسخ التلقائية</h3><p class="muted small">كل يوم تفتح فيه أنميتي تنحفظ نسخة من قائمتك بهالجهاز، وتبقى آخر 7 أيام. تفيدك إذا مسحت شي بالغلط أو رجّعت نسخة غلط، بس ما تحميك إذا ضاع الجوال أو انمسحت بيانات المتصفح، فنزّل نسخة بين فترة وفترة.</p>
+  ${L.length?L.map(x=>`<div class="snaprow"><div><b>${dayLabel(x.at)}</b> <span class="muted small">${fTime(x.at)} · ${x.n} بالقائمة</span></div><button class="btn ghost sm" data-act="snaprestore" data-v="${esc(x.day)}">رجّعها</button></div>`).join(''):'<p class="note small">ما فيه نسخ للحين. أول نسخة تنحفظ لما تضيف شي لقائمتك.</p>'}`)}
+async function snapRestore(day){const L=await snapList();const x=L&&L.find(s=>s.day===day);if(!x)return;if(!confirm(`ترجّع قائمتك مثل ما كانت ${dayLabel(x.at)}؟`))return;
+  let d;try{d=JSON.parse(x.data)}catch(e){toast('النسخة هذي خربانة');return}const before=clone({list:DB.list,log:DB.log,friends:DB.friends,chars:DB.chars});
+  DB.list=d.list||{};DB.log=Array.isArray(d.log)?d.log:[];DB.friends=d.friends||{};DB.chars=d.chars||{};save();closeSheet();rerender();
+  toast('رجّعت النسخة ✓','تراجع',()=>{Object.assign(DB,before);save();rerender();toast('رجعت مثل ما كانت')})}
+
 /* ============ الأحداث ============ */
 document.addEventListener('click',ev=>{if(ev.target===sheetEl){closeSheet();return}const t=ev.target.closest('[data-act]');if(t){ev.preventDefault();ev.stopPropagation();act(t.dataset.act,t);return}
   const o=ev.target.closest('[data-open]');if(o){location.hash='#/anime/'+o.dataset.open}});
@@ -1017,6 +1106,13 @@ function act(a,t){const v=t.dataset.v,did=+t.dataset.id||DET.id;let e;
   case'cardshare':if(CARD_BLOB)navigator.share({files:[new File([CARD_BLOB],'animeti.png',{type:'image/png'})],text:'سجلّي بالأنمي 📺'}).catch(()=>{});break;
   case'month':{MONTH_SEL=v;const b=$('#mbox');if(b)b.outerHTML=monthlyHTML();break}
   case'mode':setMode(v);break;
+  case'goalset':{const i=$('#goalIn'+v),g=num(i&&i.value);if(!g||g>5000){toast('اكتب رقم بين 1 و5000');break}DB.settings[v==='MANGA'?'goalM':'goal']=g;GOAL_EDIT[v]=0;save();rerender();toast('🎯 انحفظ هدفك');break}
+  case'goaledit':GOAL_EDIT[v]=1;rerender();{const i=$('#goalIn'+v);if(i)i.focus()}break;
+  case'goaloff':delete DB.settings[v==='MANGA'?'goalM':'goal'];GOAL_EDIT[v]=0;save();rerender();break;
+  case'unspoil':UNSPOIL[DET.id]=1;{const y=detailEl.scrollTop;paintDetail();detailEl.scrollTop=y}break;
+  case'charfav':charFav(+v,t);break;
+  case'snaps':openSnaps();break;
+  case'snaprestore':snapRestore(v);break;
   case'seqhide':{DB.settings.seqHide=DB.settings.seqHide||{};for(const x of seqVisible())DB.settings.seqHide[x.m.id]=1;save();rerender();toast('خفيتها، وبتطلع لك التكملات الجديدة بس');break}
   case'ratemode':RATE_MODE=!RATE_MODE;renderPanel();break;
   case'epr':if(EPED){EPED.r=EPED.r===+v?0:+v;document.querySelectorAll('.stars5 button').forEach((b,i)=>b.classList.toggle('on',i<EPED.r))}break;
@@ -1032,15 +1128,15 @@ function act(a,t){const v=t.dataset.v,did=+t.dataset.id||DET.id;let e;
   case'imp-back':IMP.phase='input';IMP.err=null;renderImport();break;
   case'imp-add':impCommit();break;
   case'imp-re':impResearch(+v);break;
-  case'rand':{const a=Object.values(DB.list).filter(x=>x.status==='PLANNING'&&ofMode(x));if(!a.length)break;const pick=a[Math.floor(Math.random()*a.length)];toast(`وش رايك بـ «${title(pick.media)}»؟ 🎲`);location.hash='#/anime/'+pick.id;break}
+  case'rand':{const a=Object.values(DB.list).filter(x=>x.status==='PLANNING'&&ofMode(x));if(!a.length)break;const pick=a[Math.floor(Math.random()*a.length)];toast(`وش رأيك بـ «${title(pick.media)}»؟ 🎲`);location.hash='#/anime/'+pick.id;break}
   case'snooze':DB.settings.snooze=Date.now();save();rerender();break;
-  case'wipe':if(confirm('متأكد؟ بتنمسح قائمتك وكل اللي شفته من هالجهاز.')&&confirm('آخر تأكيد: أمسح كل شي؟ (خذ نسخة احتياطية قبل إذا تبي)')){DB={list:{},log:[],settings:{...DB.settings,ach:{},seqHide:{}},friends:{},seq:[]};save();rerender();toast('انمسح كل شي')}break}}
+  case'wipe':if(confirm('متأكد؟ بتنمسح قائمتك وكل اللي شفته من هالجهاز.')&&confirm('آخر تأكيد: أمسح كل شي؟ (خذ نسخة احتياطية قبل إذا تبي)')){DB={list:{},log:[],settings:{...DB.settings,ach:{},seqHide:{},goalWins:0},friends:{},seq:[],chars:{},recs:{}};save();rerender();toast('انمسح كل شي')}break}}
 document.addEventListener('change',ev=>{const t=ev.target;
   if(t.matches('[data-imp-def]')){IMP.def=t.value;return}
   if(t.matches('[data-imp-inc]')){const r=IMP.rows[+t.dataset.impInc];if(r){r.inc=t.checked;t.closest('.ir').classList.toggle('off',!t.checked);updImpCount()}return}
   if(t.matches('[data-imp-pick]')){const i=+t.dataset.impPick,r=IMP.rows[i];if(r){r.pick=+t.value;r.inc=true;t.closest('.ir').outerHTML=impRow(r,i);updImpCount()}return}
   if(t.matches('[data-imp-st]')){const r=IMP.rows[+t.dataset.impSt];if(r)r.status=t.value;return}
-  if(t.dataset.set){DB.settings[t.dataset.set]=t.value;save();applyTheme();rerender();return}
+  if(t.dataset.set){DB.settings[t.dataset.set]=t.value;save();applyTheme();rerender();if(t.dataset.set==='nospoil')toast(t.value==='1'?'🙈 ما راح تنحرق عليك':'رجعت القصص تطلع');return}
   if(t.dataset.sf){const p=sParams(TABQ);p[t.dataset.sf]=t.value;replaceHash(sHash(p));return}
   if(t.matches('[data-lsort]')){DB.settings.lsort=t.value;save();paintListItems()}});
 let notesT;
@@ -1056,12 +1152,13 @@ $('#importFile').addEventListener('change',async ev=>{const f=ev.target.files[0]
   try{const d=JSON.parse(await f.text());if(!d||typeof d.list!=='object')throw 0;let n=0;
     for(const[k,ne]of Object.entries(d.list)){const id=num(k);if(!id||!ne||typeof ne.media!=='object'||!ne.media||!STATUS[ne.status])continue;const cur=DB.list[id];const ent=cleanEntry(id,ne);if(!cur||ent.updatedAt>(cur.updatedAt||0)){DB.list[id]=ent;n++}}
     if(Array.isArray(d.log)){const seen=new Set(DB.log.map(x=>[x.id,x.t,x.a,x.b,x.s].join('|')));for(const r of d.log){const x=cleanLog(r);if(!x)continue;const k=[x.id,x.t,x.a,x.b,x.s].join('|');if(!seen.has(k)){seen.add(k);DB.log.push(x)}}DB.log.sort((a,b)=>a.t-b.t)}
-    save();rerender();toast(n?`رجّعت ${n} أنمي من النسخة ✓`:'قائمتك نفس اللي بالنسخة، ما تغيّر شي')}
+    if(d.chars&&typeof d.chars==='object'){DB.chars={...cleanChars(d.chars),...(DB.chars||{})}}
+    save();rerender();toast(n?`رجّعت ${n} من النسخة ✓`:'قائمتك نفس اللي بالنسخة، ما تغيّر شي')}
   catch(e){toast('الملف هذا مو نسخة من أنميتي')}});
 function cleanEntry(id,ne){const ts=x=>num(x)||null;return{id,status:ne.status,progress:num(ne.progress)||0,score:Math.min(10,num(ne.score)||0),notes:typeof ne.notes==='string'?ne.notes.slice(0,3000):'',repeat:num(ne.repeat)||0,addedAt:ts(ne.addedAt)||Date.now(),updatedAt:ts(ne.updatedAt)||0,startedAt:ts(ne.startedAt),finishedAt:ts(ne.finishedAt),seenAired:num(ne.seenAired),eps:cleanEps(ne.eps),media:snap(ne.media)}}
 function cleanLog(x){if(!x||!num(x.id)||!num(x.t))return null;if(x.s==='COMPLETED')return{id:num(x.id),s:'COMPLETED',t:num(x.t)};const a=num(x.a),b=num(x.b);return a!=null&&b!=null&&b>a?{id:num(x.id),a,b,t:num(x.t)}:null}
 function markBackup(){DB.settings.lastBackup=Date.now();save();if(TAB==='home')rerender()}
-function exportBackup(share){const data=JSON.stringify({app:'animeti',v:1,exportedAt:new Date().toISOString(),list:DB.list,log:DB.log,settings:DB.settings,friends:DB.friends});const name=`animeti-backup-${new Date().toISOString().slice(0,10)}.json`;
+function exportBackup(share){const data=JSON.stringify({app:'animeti',v:1,exportedAt:new Date().toISOString(),list:DB.list,log:DB.log,settings:DB.settings,friends:DB.friends,chars:DB.chars});const name=`animeti-backup-${new Date().toISOString().slice(0,10)}.json`;
   if(share){const file=new File([data],name,{type:'application/json'});navigator.share({files:[file],title:'نسخة أنميتي'}).then(markBackup).catch(()=>{});return}
   const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([data],{type:'application/json'}));a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1000);markBackup();toast('نزّلت النسخة ✓ احفظها بمكان آمن')}
 async function importAniList(){const inp=$('#alUser');const u=(inp&&inp.value||'').trim();if(!/^[\w-]{2,30}$/.test(u)){toast('اكتب اسم المستخدم صح');return}toast('جاري الجلب…');
@@ -1091,6 +1188,8 @@ window.addEventListener('online',()=>{const H=HOMES[MODE()];if(TAB==='home'&&!H.
 applyTheme();applyMode();updateBadges();route();
 if(Date.now()-(DB.settings.lastRefresh||0)>10*60e3)setTimeout(refreshAiring,1200);
 setTimeout(()=>checkSequels(),5000);
+setTimeout(autoSnap,3000);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)autoSnap()});
 if('serviceWorker'in navigator&&location.protocol==='https:')navigator.serviceWorker.register('sw.js').catch(()=>{});
 </script>
 </body>
