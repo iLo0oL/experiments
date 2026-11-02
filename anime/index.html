@@ -13,6 +13,7 @@
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
 <link rel="preconnect" href="https://graphql.anilist.co">
+<link rel="preconnect" href="https://experiments-production-66e6.up.railway.app">
 <title>أنميتي</title>
 <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
 <style>
@@ -1116,7 +1117,7 @@ async function snapRestore(day){const L=await snapList();const x=L&&L.find(s=>s.
   toast('رجّعت النسخة ✓','تراجع',()=>{Object.assign(DB,before);save();rerender();toast('رجعت مثل ما كانت')})}
 
 /* ============ السيرفر: الحساب والمزامنة ============ */
-const SERVER_DEFAULT='';
+const SERVER_DEFAULT='https://experiments-production-66e6.up.railway.app';
 const SRV=()=>String(DB.settings.server||SERVER_DEFAULT).trim().replace(/\/+$/,'');
 const logged=()=>!!(DB.settings.token&&SRV());
 const SRV_ERR={taken:'اسم المستخدم محجوز، جرّب غيره',bad_username:'اسم المستخدم لازم يكون من 3 لين 20 حرف إنجليزي أو أرقام',weak_password:'كلمة السر لازم تكون 6 أحرف أو أكثر',bad_login:'اسم المستخدم أو كلمة السر غلط',bad_recovery:'رمز الاسترجاع غلط',rate:'محاولات كثيرة، استنى شوي وجرّب',bad_code:'رمز الصداقة غلط، تأكد منه',self:'هذا رمزك أنت 😄',unauth:'انتهت جلستك، سجّل دخول مرة ثانية',net:'ما قدرت أوصل للسيرفر، تأكد من النت',noserver:'المزامنة مو مفعّلة',bad_time:'الموعد لازم يكون بالمستقبل',too_big:'بياناتك كبيرة مرة على السيرفر',bad_name:'اكتب اسمك'};
