@@ -5,7 +5,7 @@
   - مزامنة القائمة بين الأجهزة
   - تنبيهات Web Push لما تنزل حلقة، وتذكير السهرات
   - الشلة المباشرة (برمز صداقة) والسهرات
-  يحتاج: DATABASE_URL (Postgres). اختياري: PORT, ALLOW_ORIGINS, APP_URL, PGSSL, ANILIST_URL
+  يحتاج: DATABASE_URL (Postgres). اختياري: PORT, ALLOW_ORIGINS, APP_URL, PGSSL, ANILIST_URL, ADMIN_KEY (12 حرف أو أكثر)
 */
 const http = require('node:http');
 const crypto = require('node:crypto');
@@ -68,7 +68,7 @@ setInterval(() => { const t = now(); for (const [k, a] of hits) if (!a.some(x =>
 
 /* ---------- HTTP ---------- */
 function cors(origin) {
-  if (origin && ORIGINS.includes(origin)) return { 'Access-Control-Allow-Origin': origin, 'Vary': 'Origin', 'Access-Control-Allow-Headers': 'Content-Type, Authorization', 'Access-Control-Allow-Methods': 'GET, POST, PUT, PATCH, DELETE, OPTIONS', 'Access-Control-Max-Age': '600' };
+  if (origin && ORIGINS.includes(origin)) return { 'Access-Control-Allow-Origin': origin, 'Vary': 'Origin', 'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Admin-Key', 'Access-Control-Allow-Methods': 'GET, POST, PUT, PATCH, DELETE, OPTIONS', 'Access-Control-Max-Age': '600' };
   return { 'Vary': 'Origin' };
 }
 function send(res, status, obj, origin) { const b = JSON.stringify(obj); res.writeHead(status, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store', ...cors(origin) }); res.end(b); }
@@ -134,6 +134,50 @@ route('POST', '/api/me/code', async req => {
   for (let i = 0; i < 5; i++) { c = code(); try { await q('update users set friend_code=$1 where id=$2', [c, u.id]); break; } catch (e) { if (e.code !== '23505') throw e; } }
   await q('delete from follows where friend_id=$1', [u.id]);
   return { user: userOut({ ...u, friend_code: c }) };
+});
+/* رمز استرجاع جديد وتغيير كلمة السر (وأنت مسجّل دخول) */
+route('POST', '/api/me/recovery', async req => {
+  const u = await auth(req); limit(req, 'recovery', 10, 3600e3);
+  const rec = recoveryCode(); await q('update users set recovery_hash=$1 where id=$2', [await hashPw(rec), u.id]);
+  return { recovery: rec };
+});
+route('POST', '/api/me/password', async (req, b) => {
+  const u = await auth(req); limit(req, 'chpw', 10, 3600e3);
+  if (!(await checkPw(str(b.current, 200), u.pass_hash))) fail(401, 'bad_login');
+  const password = str(b.password, 200); if (password.length < 6) fail(400, 'weak_password');
+  await q('update users set pass_hash=$1 where id=$2', [await hashPw(password), u.id]);
+  const m = /^Bearer\s+(\S+)$/.exec(req.headers.authorization || '');
+  await q('delete from sessions where user_id=$1 and token_hash<>$2', [u.id, sha(m ? m[1] : '')]);
+  return { ok: true };
+});
+
+/* صلاحية المدير: تحتاج ADMIN_KEY في متغيرات Railway */
+function adminCheck(req) {
+  const key = process.env.ADMIN_KEY || ''; if (key.length < 12) fail(403, 'admin_off');
+  limit(req, 'admin', 30, 600e3);
+  if (!crypto.timingSafeEqual(Buffer.from(sha(String(req.headers['x-admin-key'] || ''))), Buffer.from(sha(key)))) fail(401, 'bad_admin');
+}
+route('GET', '/api/admin/stats', async req => {
+  adminCheck(req);
+  const r = await q('select (select count(*)::int from users) as users, (select count(distinct user_id)::int from sessions where last_seen > $1) as active, (select count(distinct user_id)::int from push_subs) as push', [now() - 7 * 864e5]);
+  return r.rows[0];
+});
+route('GET', '/api/admin/user', async req => {
+  adminCheck(req);
+  const name = str(new URL(req.url, 'http://x').searchParams.get('u') || '', 40).trim().toLowerCase();
+  const r = await q(`select u.username, u.name, u.created_at, (select max(last_seen) from sessions s where s.user_id=u.id) as last_seen,
+    case when jsonb_typeof(d.body->'list')='object' then (select count(*)::int from jsonb_object_keys(d.body->'list')) else 0 end as entries
+    from users u left join data d on d.user_id=u.id where u.username=$1`, [name]);
+  const x = r.rows[0]; if (!x) fail(404, 'no_user');
+  return { user: { username: x.username, name: x.name || x.username, createdAt: +x.created_at, lastSeen: +x.last_seen || 0, entries: x.entries } };
+});
+route('POST', '/api/admin/recovery', async (req, b) => {
+  adminCheck(req);
+  const name = str(b.username, 40).trim().toLowerCase(); const r = await q('select id from users where username=$1', [name]);
+  if (!r.rows[0]) fail(404, 'no_user');
+  const rec = recoveryCode(); await q('update users set recovery_hash=$1 where id=$2', [await hashPw(rec), r.rows[0].id]);
+  console.log('المدير طلّع رمز استرجاع جديد لـ ' + name);
+  return { username: name, recovery: rec };
 });
 route('DELETE', '/api/me', async (req, b) => { const u = await auth(req); if (!(await checkPw(str(b.password, 200), u.pass_hash))) fail(401, 'bad_login'); await q('delete from users where id=$1', [u.id]); return { ok: true }; });
 
