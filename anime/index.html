@@ -236,6 +236,22 @@ dl.info dd{font-weight:600;min-width:0;overflow-wrap:anywhere}
 .inrow input{flex:1;min-width:0;background:var(--panel2);border:1.5px solid transparent;border-radius:12px;padding:9px 12px;outline:none;direction:ltr;text-align:right}
 .inrow input:focus{border-color:var(--acc)}
 .small{font-size:13px;line-height:1.8}
+.ex{background:var(--panel);border:1px dashed var(--line);border-radius:12px;padding:10px 14px;margin:12px 0;font-size:14px;line-height:1.7}
+textarea.big{min-height:200px;margin-top:4px}
+.ir{display:flex;gap:10px;align-items:flex-start;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:10px;margin-top:8px}
+.ir.off{opacity:.55}
+.ir input[type=checkbox]{width:20px;height:20px;margin-top:28px;accent-color:#8b5cf6;flex-shrink:0}
+.ir img{width:52px;height:74px;border-radius:8px;object-fit:cover;flex-shrink:0;background:var(--panel2)}
+.irb{flex:1;min-width:0;display:grid;grid-template-columns:minmax(0,1fr);gap:6px}
+.irb .inrow input{width:0}
+.iph{width:52px;height:74px;border-radius:8px;background:var(--panel2);display:grid;place-items:center;flex-shrink:0;font-size:20px}
+.irl{font-size:12.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.irb select{width:100%}
+.irc{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.irc select{width:auto}
+.irc input{width:78px;background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:7px 8px;direction:ltr;outline:none}
+.ibar{position:sticky;bottom:calc(74px + env(safe-area-inset-bottom));display:flex;gap:8px;justify-content:space-between;align-items:center;background:var(--nav);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:1px solid var(--line);border-radius:16px;padding:10px 12px;margin-top:14px;z-index:5}
+.empty .btn.ghost{margin-top:8px}
 .foot{color:var(--muted);font-size:12.5px;text-align:center;margin:28px 0 8px;line-height:1.9}
 .foot a{color:var(--acc)}
 </style>
@@ -333,7 +349,7 @@ const DEF={theme:'dark',lang:'english',lsort:'smart'};
 let DB=load();
 function load(){try{const d=JSON.parse(localStorage.getItem(KEY)||'null');if(d&&d.list&&typeof d.list==='object')return{list:d.list,log:Array.isArray(d.log)?d.log:[],settings:{...DEF,...(d.settings||{})}}}catch(e){}return{list:{},log:[],settings:{...DEF}}}
 let persistAsked=false;
-function save(){if(DB.log.length>3000)DB.log.splice(0,DB.log.length-3000);try{localStorage.setItem(KEY,JSON.stringify(DB))}catch(e){toast('ما قدرت أحفظ! يمكن مساحة المتصفح مليانة')}if(!persistAsked){persistAsked=true;try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(e){}}updateBadges()}
+function save(){if(!DB.settings.since&&Object.keys(DB.list).length)DB.settings.since=Date.now();if(DB.log.length>3000)DB.log.splice(0,DB.log.length-3000);try{localStorage.setItem(KEY,JSON.stringify(DB))}catch(e){toast('ما قدرت أحفظ! يمكن مساحة المتصفح مليانة')}if(!persistAsked){persistAsked=true;try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(e){}}updateBadges()}
 window.addEventListener('storage',e=>{if(e.key===KEY){DB=load();applyTheme();rerender();if(DET.id)renderPanel()}});
 
 /* ============ الأنمي ============ */
@@ -413,16 +429,16 @@ function tagHistory(){const st=history.state;if(st&&st.app){depth=st.d;started=t
 function replaceHash(h){replacing=true;location.replace(h)}
 function route(){tagHistory();const{parts,q}=parseHash();const p0=parts[0]||'home';
   if(p0==='anime'&&+parts[1]>0){if(!curKey)showTab('home',new URLSearchParams());openDetail(+parts[1]);return}
-  closeDetailUI();const tab=['home','list','schedule','me','search'].includes(p0)?p0:'home';lastTabHash=location.hash||'#/';showTab(tab,q)}
+  closeDetailUI();const tab=['home','list','schedule','me','search','import'].includes(p0)?p0:'home';lastTabHash=location.hash||'#/';showTab(tab,q)}
 window.addEventListener('hashchange',route);
 function closeDetail(){if(history.state&&history.state.d>0)history.back();else replaceHash(lastTabHash&&!lastTabHash.startsWith('#/anime')?lastTabHash:'#/')}
-function showTab(tab,q){const key=tab+'?'+q.toString();document.querySelectorAll('nav.tabs a').forEach(a=>a.classList.toggle('on',a.dataset.tab===tab));
+function showTab(tab,q){const key=tab+'?'+q.toString();document.querySelectorAll('nav.tabs a').forEach(a=>a.classList.toggle('on',a.dataset.tab===(tab==='import'?'me':tab)));
   if(tab!=='search'&&document.activeElement!==qInput)qInput.value='';
   if(key===curKey){rerender();return}
   curKey=key;TAB=tab;TABQ=q;window.scrollTo(0,0);renderTab(true)}
 let TABQ=new URLSearchParams();
-function renderTab(fresh){({home:renderHome,list:renderList,schedule:renderSchedule,me:renderMe,search:renderSearch})[TAB](TABQ,fresh)}
-function rerender(){if(!curKey)return;const y=window.scrollY;if(document.activeElement&&document.activeElement.matches('[data-lfilter]')&&TAB==='list'){paintListItems();return}renderTab(false);window.scrollTo(0,y)}
+function renderTab(fresh){({home:renderHome,list:renderList,schedule:renderSchedule,me:renderMe,search:renderSearch,import:renderImport})[TAB](TABQ,fresh)}
+function rerender(){if(!curKey||TAB==='import')return;const y=window.scrollY;if(document.activeElement&&document.activeElement.matches('[data-lfilter]')&&TAB==='list'){paintListItems();return}renderTab(false);window.scrollTo(0,y)}
 
 /* ============ الرئيسية ============ */
 let HOME={t:0,d:null,err:null,loading:false};
@@ -442,7 +458,7 @@ async function loadHome(){const secs=homeSections();let d={};
 function homeRowsHTML(){if(HOME.d)return homeSections().map(s=>{const a=clean(HOME.d[s[0]]);if(!a.length)return'';return`<div class="sec-h"><h2>${esc(s[1])}</h2><a href="${s[3]}">شوف الكل ←</a></div><div class="row">${a.map(m=>poster(m)).join('')}</div>`}).join('');
   if(HOME.err)return errBox(HOME.err);return homeSections().slice(0,3).map(s=>`<div class="sec-h"><h2>${esc(s[1])}</h2></div>${skRow()}`).join('')}
 function renderHome(q,fresh){
-  view.innerHTML=`${Object.keys(DB.list).length?'':`<div class="note" style="margin-top:14px">👋 هلا! دوّر على أي أنمي وضيفه لقائمتك، وعلّم كل حلقة تشوفها. كل شي ينحفظ بجهازك تلقائي.</div>`}${continueHTML()}<div id="hrows">${homeRowsHTML()}</div><div class="sec-h"><h2>تصفّح حسب النوع</h2></div><div class="chips wrap">${Object.entries(GENRES).filter(([k])=>k!=='Ecchi').map(([k,v])=>`<a class="chip" href="#/search?g=${encodeURIComponent(k)}">${v}</a>`).join('')}</div><div class="foot">المعلومات من <a href="https://anilist.co" target="_blank" rel="noopener">AniList</a> · قائمتك محفوظة بهالجهاز بس</div>`;
+  view.innerHTML=`${Object.keys(DB.list).length?'':`<div class="note" style="margin-top:14px">👋 هلا! دوّر على أي أنمي وضيفه لقائمتك، وعلّم كل حلقة تشوفها. كل شي ينحفظ بجهازك تلقائي.</div>`}${backupNag()}${continueHTML()}<div id="hrows">${homeRowsHTML()}</div><div class="sec-h"><h2>تصفّح حسب النوع</h2></div><div class="chips wrap">${Object.entries(GENRES).filter(([k])=>k!=='Ecchi').map(([k,v])=>`<a class="chip" href="#/search?g=${encodeURIComponent(k)}">${v}</a>`).join('')}</div><div class="foot">المعلومات من <a href="https://anilist.co" target="_blank" rel="noopener">AniList</a> · قائمتك محفوظة بهالجهاز بس</div>`;
   if((!HOME.d||Date.now()-HOME.t>15*60e3)&&!HOME.loading){HOME.loading=true;HOME.err=null;if(fresh&&!HOME.d){const h=$('#hrows');if(h)h.innerHTML=homeRowsHTML()}
     loadHome().then(d=>{HOME={t:Date.now(),d,err:null,loading:false}}).catch(e=>{HOME.loading=false;HOME.err=HOME.d?null:e}).finally(()=>{if(TAB==='home'){const h=$('#hrows');if(h)h.innerHTML=homeRowsHTML()}})}}
 
@@ -481,9 +497,9 @@ $('#sform').addEventListener('submit',e=>{e.preventDefault();clearTimeout(sTimer
 let LFILTER='';
 function listStatus(q){const counts={};SORDER.forEach(s=>counts[s]=0);Object.values(DB.list).forEach(e=>counts[e.status]=(counts[e.status]||0)+1);let st=q.get('s');if(!STATUS[st])st=counts.CURRENT?'CURRENT':(SORDER.find(s=>counts[s])||'CURRENT');return{st,counts}}
 function renderList(q){const{st,counts}=listStatus(q);const total=Object.keys(DB.list).length;
-  if(!total){view.innerHTML=`<div class="empty"><div class="big">📚</div>قائمتك فاضية للحين.<br>دوّر على أنمي وضيفه، وبعدين علّم كل حلقة تشوفها.<br><a class="btn" href="#/">اكتشف أنميات</a></div>`;return}
+  if(!total){view.innerHTML=`<div class="empty"><div class="big">📚</div>قائمتك فاضية للحين.<br>دوّر على أنمي وضيفه، وبعدين علّم كل حلقة تشوفها.<br><a class="btn" href="#/">اكتشف أنميات</a><br><a class="btn ghost" href="#/import">📋 عندك قائمة بمكان ثاني؟ انقلها</a></div>`;return}
   const srt=DB.settings.lsort;
-  view.innerHTML=`<div class="chips" style="margin-top:14px">${SORDER.map(s=>`<button class="chip ${s===st?'on':''}" data-act="ltab" data-v="${s}">${STATUS[s].t} <small>${counts[s]||0}</small></button>`).join('')}</div><div class="toolbar"><input data-lfilter type="search" placeholder="فلتر قائمتك…" value="${esc(LFILTER)}" aria-label="فلتر"><select data-lsort aria-label="الترتيب">${[['smart','الأهم أول'],['updated','آخر تحديث'],['added','آخر إضافة'],['title','الاسم'],['score','تقييمي'],['progress','الأقل تقدّم']].map(([v,l])=>`<option value="${v}"${v===srt?' selected':''}>${l}</option>`).join('')}</select></div><div id="litems" data-st="${st}"></div>`;
+  view.innerHTML=`<div class="chips" style="margin-top:14px">${SORDER.map(s=>`<button class="chip ${s===st?'on':''}" data-act="ltab" data-v="${s}">${STATUS[s].t} <small>${counts[s]||0}</small></button>`).join('')}</div><div class="toolbar"><input data-lfilter type="search" placeholder="فلتر قائمتك…" value="${esc(LFILTER)}" aria-label="فلتر"><select data-lsort aria-label="الترتيب">${[['smart','الأهم أول'],['updated','آخر تحديث'],['added','آخر إضافة'],['title','الاسم'],['score','تقييمي'],['progress','الأقل تقدّم']].map(([v,l])=>`<option value="${v}"${v===srt?' selected':''}>${l}</option>`).join('')}</select></div>${st==='PLANNING'&&counts.PLANNING>=2?'<button class="btn ghost sm" data-act="rand" style="margin-bottom:12px">🎲 محتار؟ اختار لي وش أشوف</button>':''}<div id="litems" data-st="${st}"></div>`;
   paintListItems()}
 function paintListItems(){const el=$('#litems');if(!el)return;const st=el.dataset.st;const f=norm(LFILTER);const srt=DB.settings.lsort;
   let items=Object.values(DB.list).filter(e=>e.status===st&&(!f||[e.media.title.romaji,e.media.title.english,e.media.title.native].some(t=>norm(t).includes(f))));
@@ -541,6 +557,7 @@ function renderMe(){const all=Object.values(DB.list);const cnt={};SORDER.forEach
     <div class="field"><label for="setTheme">الشكل</label><select id="setTheme" data-set="theme"><option value="dark"${DB.settings.theme==='dark'?' selected':''}>داكن</option><option value="light"${DB.settings.theme==='light'?' selected':''}>فاتح</option><option value="auto"${DB.settings.theme==='auto'?' selected':''}>مثل الجهاز</option></select></div></div>
   <div class="box"><h3>نسخة احتياطية</h3><p class="muted small">قائمتك محفوظة بهالجهاز وهالمتصفح بس. إذا بتغيّر جوالك أو بتمسح بيانات المتصفح، خذ نسخة واحفظها، وبعدين رجّعها بالجهاز الجديد.</p>
     <div class="bbtns"><button class="btn sm" data-act="export">⬇️ نزّل نسخة</button>${canShare?'<button class="btn ghost sm" data-act="sharebk">📤 شارك النسخة</button>':''}<button class="btn ghost sm" data-act="import">⬆️ رجّع نسخة</button></div></div>
+  <div class="box"><h3>انقل قائمتك من تطبيق ثاني</h3><p class="muted small">كنت تتابع في مكان ثاني؟ الصق أسماء الأنميات ورقم آخر حلقة شفتها، وأنا أضيفهم لك.</p><a class="btn sm" href="#/import" style="margin-top:10px">📋 الصق قائمة</a></div>
   <div class="box"><h3>جيب قائمتك من AniList</h3><p class="muted small">إذا عندك حساب في AniList وقائمتك عامة، اكتب اسم المستخدم وأجيبها لك.</p>
     <div class="inrow"><input id="alUser" placeholder="username" autocomplete="off" autocapitalize="off" spellcheck="false"><button class="btn sm" data-act="anilist">جيبها</button></div></div>
   <div class="box"><h3>منطقة خطر</h3><button class="btn ghost sm danger" data-act="wipe">🗑️ امسح كل بياناتي</button></div>
@@ -551,7 +568,7 @@ let DET={id:0,m:null,full:false,err:null};const RANGE={};
 function openDetail(id){document.body.classList.add('dopen');const wasHidden=detailEl.hidden;detailEl.hidden=false;if(wasHidden){detailEl.classList.remove('anim');void detailEl.offsetWidth;detailEl.classList.add('anim')}
   if(DET.id!==id){const e=DB.list[id];DET={id,m:MEDIA.get(id)||(e?{id,...e.media}:null),full:false,err:null};detailEl.scrollTop=0;paintDetail();loadDetail(id)}else paintDetail()}
 function closeDetailUI(){if(detailEl.hidden)return;detailEl.hidden=true;document.body.classList.remove('dopen');DET.id=0;detailEl.innerHTML=''}
-async function loadDetail(id){try{const d=await gql(Q_DETAIL,{id},1800);if(DET.id!==id)return;DET.m=d.Media;DET.full=true;DET.err=null;MEDIA.set(id,d.Media);const e=DB.list[id];if(e){e.media=snap(d.Media);save()}}catch(err){if(DET.id!==id)return;DET.err=err}const y=detailEl.scrollTop;paintDetail();detailEl.scrollTop=y}
+async function loadDetail(id){try{const d=await gql(Q_DETAIL,{id},1800);if(DET.id!==id)return;if(!d.Media)throw new Error('notfound');DET.m=d.Media;DET.full=true;DET.err=null;MEDIA.set(id,d.Media);const e=DB.list[id];if(e){e.media=snap(d.Media);save()}}catch(err){if(DET.id!==id)return;DET.err=err}const y=detailEl.scrollTop;paintDetail();detailEl.scrollTop=y}
 const dbar=()=>`<div class="dbar"><button data-act="close" aria-label="رجوع">→</button>${navigator.share?'<button data-act="share" aria-label="شارك">⤴</button>':'<span></span>'}</div>`;
 function paintDetail(){const m=DET.m;
   if(!m){detailEl.innerHTML=`${dbar()}<div class="dwrap" style="padding-top:8px">${DET.err?errBox(DET.err,'dretry'):'<div class="sk" style="height:180px;border-radius:18px"></div><div style="display:flex;gap:14px;margin-top:-60px;padding:0 10px"><div class="sk" style="width:116px;aspect-ratio:2/3"></div></div><div class="sk" style="height:200px;margin-top:16px;border-radius:18px"></div>'}</div>`;return}
@@ -602,6 +619,71 @@ function epGrid(e){const em=e.media,tot=em.episodes,a=aired(em);let count=Math.m
   let c='';for(let k=start+1;k<=Math.min(start+per,count);k++){let cls=k<=e.progress?'w':'';if(k===e.progress+1)cls+=' nx';if(a!=null&&k>a)cls+=' up';c+=`<button class="ep ${cls}" data-act="ep" data-v="${k}"${a!=null&&k>a?' title="ما نزلت للحين"':''}>${k}</button>`}
   return`${rh}<div class="eps">${c}</div>`}
 
+/* ============ انقل قائمتك (لصق أسماء) ============ */
+let IMP={phase:'input',text:'',def:'COMPLETED',rows:[],done:0,msg:'',err:null};
+const KW_DONE=new Set(['خلصته','خلصت','خلصتها','شفته','شفتها','كامل','كامله','مكتمل','انتهيت','completed','complete','finished','done','✓','✔','✅','✔️']);
+const KW_PLAN=new Set(['ناوي','بشوفه','اشوفه','plan','planning','ptw']);
+const KW_DROP=new Set(['تركته','تركتها','dropped']);
+function parseLine(raw){let s=raw.replace(/[٠-٩]/g,d=>'٠١٢٣٤٥٦٧٨٩'.indexOf(d)).replace(/[۰-۹]/g,d=>'۰۱۲۳۴۵۶۷۸۹'.indexOf(d));
+  s=s.replace(/^\s*(?:[-–•*▪●·]+|\d{1,3}\s*[.)]|\d{1,3}\s*[-–]\s)\s*/,'');
+  let status='';s=s.split(/\s+/).filter(t=>{const k=norm(t).replace(/[()[\]،,.:!؟?]/g,'');if(KW_DONE.has(k)){status='COMPLETED';return false}if(KW_PLAN.has(k)){status=status||'PLANNING';return false}if(KW_DROP.has(k)){status=status||'DROPPED';return false}return true}).join(' ');
+  s=s.replace(/(?:ال)?موسم\s*(\d+)/g,'season $1').replace(/(?:ال)?جزء\s*(\d+)/g,'part $1').replace(/\s+/g,' ').trim();
+  let ep=null,explicit=false;
+  let m=s.match(/^(.*?)[\s\-–—:|,،(]+(?:(?:ep|eps|episode)\.?|الحلقه|الحلقة|حلقه|حلقة|ح)\s*(\d{1,5})(?:\s*(?:\/|من)\s*\d{1,5})?\)?\s*$/i);
+  if(m&&m[1].trim()){s=m[1];ep=+m[2];explicit=true}
+  else{m=s.match(/^(.*\S)(\s*[-–—:|,،(]\s*|\s+)(\d{1,5})(?:\s*(?:\/|من)\s*\d{1,5})?\)?\s*$/);
+    if(m&&m[1].trim().length>=2&&!/(?:season|part|cour|s)\s*$/i.test(m[1])){s=m[1];ep=+m[3];explicit=/\S/.test(m[2])||/[-–—:|,،(]\s*$/.test(m[1])}}
+  return{name:s.replace(/[\s\-–—:|,،(]+$/,'').trim(),ep,explicit,status}}
+function impQuery(name){if(!/[؀-ۿ]/.test(name))return name;const lat=name.replace(/[؀-ۿ]+/g,' ').replace(/\s+/g,' ').trim();if(/[a-z]{2}/i.test(lat))return lat;return arMap(name)||false}
+const impBatchQ=n=>`query(${Array.from({length:n},(_,i)=>`$s${i}:String`).join(',')}){${Array.from({length:n},(_,i)=>`r${i}:Page(perPage:6){media(type:ANIME,isAdult:false,search:$s${i},sort:SEARCH_MATCH){...card}}`).join(' ')}}${CARD}`;
+async function gqlRetry(q,v){for(let k=0;;k++){try{return await gql(q,v,1800)}catch(e){if(e.message!=='rate'||k>=3)throw e;IMP.msg='السيرفر زحمة، أستنى شوي وأكمّل…';if(TAB==='import')renderImport();await new Promise(r=>setTimeout(r,25000));IMP.msg=''}}}
+async function impSearch(){const todo=[];for(const r of IMP.rows){const q=impQuery(r.name);if(!q){r.err='arabic';IMP.done++;continue}todo.push([r,q])}
+  for(let i=0;i<todo.length;i+=8){const chunk=todo.slice(i,i+8);let res=null;
+    try{res=await gqlRetry(impBatchQ(chunk.length),Object.fromEntries(chunk.map(([,q],j)=>['s'+j,q])))}catch(e){if(e.message==='net'||e.message==='rate')throw e}
+    if(res)chunk.forEach(([r],j)=>{r.results=clean(res['r'+j]&&res['r'+j].media)});
+    else for(const[r,q]of chunk){try{const d=await gqlRetry(impBatchQ(1),{s0:q});r.results=clean(d.r0&&d.r0.media)}catch(e){if(e.message==='net'||e.message==='rate')throw e;r.err='api'}}
+    IMP.done+=chunk.length;if(TAB==='import'&&IMP.phase==='searching')renderImport()}}
+function impFix(r){const m=r.results[r.pick];if(!m){r.inc=false;return}
+  /* رقم من اسم الأنمي نفسه (مثل Mob Psycho 100) مو رقم حلقة */
+  if(r.ep!=null&&!r.explicit){const re=new RegExp('(^|\\D)'+r.ep+'(\\D|$)');if([m.title&&m.title.romaji,m.title&&m.title.english].some(t=>t&&re.test(t))){r.name+=' '+r.ep;r.ep=null}}
+  r.status=r.pst||(r.ep!=null?'CURRENT':IMP.def);if(r.ep!=null&&m.episodes&&r.ep>=m.episodes&&!r.pst)r.status='COMPLETED';r.inc=!DB.list[m.id]}
+async function impStart(){const lines=IMP.text.split(/\r?\n/).map(l=>l.trim()).filter(l=>l&&l.length<=200).slice(0,150);if(!lines.length){toast('الصق الأسماء أول');return}
+  IMP.rows=lines.map(l=>{const p=parseLine(l);return{line:l,name:p.name,ep:p.ep,explicit:p.explicit,pst:p.status,status:'',results:[],pick:0,inc:false,err:null,dup:false}}).filter(r=>r.name);
+  IMP.phase='searching';IMP.done=0;IMP.msg='';IMP.err=null;renderImport();
+  try{await impSearch()}catch(e){IMP.phase='input';IMP.err=e;if(TAB==='import')renderImport();return}
+  const seen=new Set();for(const r of IMP.rows){impFix(r);const m=r.results[r.pick];if(!m)continue;if(seen.has(m.id)){r.dup=true;r.inc=false}seen.add(m.id)}
+  IMP.phase='review';if(TAB==='import'){window.scrollTo(0,0);renderImport()}}
+async function impResearch(i){const r=IMP.rows[i];if(!r)return;const q=impQuery(r.name.trim());r.err=null;r.results=[];r.pick=0;r.ep=r.ep??null;r.explicit=true;
+  if(!q)r.err='arabic';else{try{const d=await gqlRetry(impBatchQ(1),{s0:q});r.results=clean(d.r0&&d.r0.media)}catch(e){r.err='api';toast(errMsg(e))}}
+  const st=r.status;impFix(r);if(st)r.status=st;const el=document.querySelector(`[data-ir="${i}"]`);if(el)el.outerHTML=impRow(r,i);updImpCount()}
+function importEntry(m,st,ep){const t=Date.now(),sn=snap(m),tot=sn.episodes,ex=DB.list[m.id];if(!STATUS[st])st='PLANNING';let p=Math.max(0,ep||0);
+  if(st==='COMPLETED')p=Math.max(p,tot||aired(sn)||0);if(tot)p=Math.min(p,tot);if(st==='CURRENT'&&tot&&p>=tot&&sn.status==='FINISHED')st='COMPLETED';
+  DB.list[m.id]={id:m.id,status:st,progress:p,score:ex?ex.score:0,notes:ex?ex.notes:'',repeat:ex?ex.repeat:0,addedAt:ex?ex.addedAt:t,updatedAt:t,startedAt:ex?ex.startedAt:null,finishedAt:ex?ex.finishedAt:null,seenAired:aired(sn),media:sn}}
+function impCommit(){const sel=IMP.rows.filter(r=>r.inc&&r.results[r.pick]);if(!sel.length)return;const before={list:clone(DB.list),log:clone(DB.log)};
+  for(const r of sel)importEntry(r.results[r.pick],r.status||IMP.def,r.ep);save();const n=sel.length;IMP={phase:'input',text:'',def:IMP.def,rows:[],done:0,msg:'',err:null};
+  location.hash='#/list';setTimeout(()=>toast(`انضاف ${n} أنمي لقائمتك ✓`,'تراجع',()=>{DB.list=before.list;DB.log=before.log;save();rerender();toast('رجّعتها مثل ما كانت')}),60)}
+function impRow(r,i){const m=r.results[r.pick];const ex=m&&DB.list[m.id];
+  return`<div class="ir ${r.inc&&m?'':'off'}" data-ir="${i}"><input type="checkbox" data-imp-inc="${i}" ${r.inc&&m?'checked':''} ${m?'':'disabled'} aria-label="ضيفه">${m?`<img src="${esc(cover(m))}" alt="" style="background:${colorOf(m)||'var(--panel2)'}">`:'<div class="iph">❔</div>'}<div class="irb"><div class="irl" dir="auto">${esc(r.line)}</div>
+  ${m?`<select data-imp-pick="${i}" aria-label="الأنمي">${r.results.map((x,j)=>`<option value="${j}"${j===r.pick?' selected':''}>${esc(title(x))}${FORMAT[x.format]?' · '+FORMAT[x.format]:''}${x.seasonYear?' · '+x.seasonYear:''}</option>`).join('')}</select>
+    <div class="irc"><select data-imp-st="${i}" aria-label="الحالة">${SORDER.map(s=>`<option value="${s}"${s===r.status?' selected':''}>${STATUS[s].t}</option>`).join('')}</select><label class="small">الحلقة <input type="number" inputmode="numeric" min="0" data-imp-ep="${i}" value="${r.ep??''}" placeholder="—"></label>${m.episodes?`<span class="small muted">من ${m.episodes}</span>`:''}</div>
+    ${ex?`<div class="small" style="color:#f59e0b">موجود بقائمتك (${STATUS[ex.status].t}${ex.progress?`، الحلقة ${ex.progress}`:''}) — إذا علّمته بيتحدّث</div>`:''}${r.dup?'<div class="small muted">مكرر فوق</div>':''}`
+  :`<div class="small" style="color:#ef4444">${r.err==='arabic'?'ما عرفت هالاسم بالعربي، اكتبه بالإنجليزي':r.err?'ما قدرت أدوّر عليه':'ما لقيته، جرّب تكتبه بطريقة ثانية'}</div><div class="inrow" style="margin-top:0"><input data-imp-name="${i}" value="${esc(r.name)}" placeholder="اسمه بالإنجليزي"><button class="btn sm ghost" data-act="imp-re" data-v="${i}">دوّر</button></div>`}</div></div>`}
+function updImpCount(){const n=IMP.rows.filter(r=>r.inc&&r.results[r.pick]).length;const c=$('#icount'),b=$('[data-act="imp-add"]');if(c)c.textContent=n?`${n} مختار`:'ما اخترت شي';if(b)b.disabled=!n}
+function renderImport(){
+  if(IMP.phase==='searching'){const tot=IMP.rows.length;view.innerHTML=`<div class="empty"><div class="big">🔍</div>أدوّر عليهم… ${IMP.done} من ${tot}<div class="bar" style="max-width:280px;margin:14px auto 0"><i style="width:${tot?IMP.done/tot*100:0}%"></i></div>${IMP.msg?`<p class="small" style="margin-top:10px">${esc(IMP.msg)}</p>`:''}</div>`;return}
+  if(IMP.phase==='review'){const found=IMP.rows.filter(r=>r.results.length).length;
+    view.innerHTML=`<div class="sec-h"><h2>راجع قبل ما أضيف</h2><button data-act="imp-back">تعديل القائمة</button></div><p class="muted small">لقيت ${found} من ${IMP.rows.length}. إذا طلع أنمي غلط اختار الصح من القائمة، وعدّل الحلقة أو الحالة إذا تبي.</p><div id="irows">${IMP.rows.map(impRow).join('')}</div><div class="ibar"><span id="icount" class="small"></span><button class="btn" data-act="imp-add">ضيفهم لقائمتي</button></div>`;updImpCount();return}
+  view.innerHTML=`<div class="sec-h"><h2>انقل قائمتك من مكان ثاني</h2></div><p class="muted small">كنت تتابع في تطبيق أو موقع ثاني؟ اكتب أو الصق أسماء الأنميات هنا، <b>كل أنمي بسطر</b>، وجنبه رقم آخر حلقة شفتها إذا تبي. أدوّر عليهم وأوريك اللي لقيته قبل ما أضيف شي.</p>
+  <div class="ex"><div class="muted small" style="margin-bottom:4px">مثال:</div><div dir="auto">One Piece 1050</div><div dir="auto">Solo Leveling - 12</div><div dir="auto">هجوم العمالقة خلصته</div><div dir="auto">Frieren الحلقة 5</div><div dir="auto">Dandadan ناوي</div></div>
+  <textarea class="big" data-imp-text dir="auto" placeholder="الصق القائمة هنا…" aria-label="القائمة">${esc(IMP.text)}</textarea>
+  <div class="field"><label for="impDef">اللي ما كتبت جنبه رقم حلقة</label><select id="impDef" data-imp-def>${['COMPLETED','PLANNING','CURRENT'].map(s=>`<option value="${s}"${IMP.def===s?' selected':''}>${STATUS[s].t}</option>`).join('')}</select></div>
+  ${IMP.err?errBox(IMP.err,'imp-go'):''}<div class="bbtns" style="margin-top:12px"><button class="btn" data-act="imp-go">🔍 دوّر عليهم</button><a class="btn ghost" href="#/me">رجوع</a></div>
+  <p class="muted small" style="margin-top:14px">💡 تقدر تكتب جنب الاسم «خلصته» أو «ناوي» أو «تركته»، وأفهمها.</p>`}
+
+/* ============ تذكير النسخة الاحتياطية ============ */
+function backupNag(){const s=DB.settings;if(Object.keys(DB.list).length<5)return'';const base=s.lastBackup||s.since||Date.now();if(Date.now()-base<14*864e5||Date.now()-(s.snooze||0)<7*864e5)return'';
+  return`<div class="note" style="margin-top:14px">💾 صار لك فترة ما أخذت نسخة احتياطية. قائمتك محفوظة بهالجهاز بس، فإذا ضاع الجوال أو انمسحت بيانات المتصفح تروح.<div class="bbtns"><button class="btn sm" data-act="export">خذ نسخة الحين</button><button class="btn ghost sm" data-act="snooze">بعدين</button></div></div>`}
+
 /* ============ الأحداث ============ */
 document.addEventListener('click',ev=>{const t=ev.target.closest('[data-act]');if(t){ev.preventDefault();ev.stopPropagation();act(t.dataset.act,t);return}
   const o=ev.target.closest('[data-open]');if(o){location.hash='#/anime/'+o.dataset.open}});
@@ -632,13 +714,26 @@ function act(a,t){const v=t.dataset.v,did=+t.dataset.id||DET.id;let e;
   case'sharebk':exportBackup(true);break;
   case'import':$('#importFile').click();break;
   case'anilist':importAniList();break;
+  case'imp-go':impStart();break;
+  case'imp-back':IMP.phase='input';IMP.err=null;renderImport();break;
+  case'imp-add':impCommit();break;
+  case'imp-re':impResearch(+v);break;
+  case'rand':{const a=Object.values(DB.list).filter(x=>x.status==='PLANNING');if(!a.length)break;const pick=a[Math.floor(Math.random()*a.length)];toast(`وش رايك بـ «${title(pick.media)}»؟ 🎲`);location.hash='#/anime/'+pick.id;break}
+  case'snooze':DB.settings.snooze=Date.now();save();rerender();break;
   case'wipe':if(confirm('متأكد؟ بتنمسح قائمتك وكل اللي شفته من هالجهاز.')&&confirm('آخر تأكيد: أمسح كل شي؟ (خذ نسخة احتياطية قبل إذا تبي)')){DB={list:{},log:[],settings:DB.settings};save();rerender();toast('انمسح كل شي')}break}}
 document.addEventListener('change',ev=>{const t=ev.target;
+  if(t.matches('[data-imp-def]')){IMP.def=t.value;return}
+  if(t.matches('[data-imp-inc]')){const r=IMP.rows[+t.dataset.impInc];if(r){r.inc=t.checked;t.closest('.ir').classList.toggle('off',!t.checked);updImpCount()}return}
+  if(t.matches('[data-imp-pick]')){const i=+t.dataset.impPick,r=IMP.rows[i];if(r){r.pick=+t.value;r.inc=true;t.closest('.ir').outerHTML=impRow(r,i);updImpCount()}return}
+  if(t.matches('[data-imp-st]')){const r=IMP.rows[+t.dataset.impSt];if(r)r.status=t.value;return}
   if(t.dataset.set){DB.settings[t.dataset.set]=t.value;save();applyTheme();rerender();return}
   if(t.dataset.sf){const p=sParams(TABQ);p[t.dataset.sf]=t.value;replaceHash(sHash(p));return}
   if(t.matches('[data-lsort]')){DB.settings.lsort=t.value;save();paintListItems()}});
 let notesT;
 document.addEventListener('input',ev=>{const t=ev.target;
+  if(t.matches('[data-imp-text]')){IMP.text=t.value.slice(0,20000);return}
+  if(t.matches('[data-imp-ep]')){const r=IMP.rows[+t.dataset.impEp];if(r)r.ep=t.value===''?null:num(t.value);return}
+  if(t.matches('[data-imp-name]')){const r=IMP.rows[+t.dataset.impName];if(r)r.name=t.value;return}
   if(t.matches('[data-notes]')){const e=DB.list[DET.id];if(!e)return;e.notes=t.value.slice(0,3000);clearTimeout(notesT);notesT=setTimeout(save,400);return}
   if(t.matches('[data-lfilter]')){LFILTER=t.value;paintListItems()}});
 document.addEventListener('keydown',ev=>{if(ev.key==='Escape'&&!detailEl.hidden)closeDetail()});
@@ -650,9 +745,10 @@ $('#importFile').addEventListener('change',async ev=>{const f=ev.target.files[0]
   catch(e){toast('الملف هذا مو نسخة من أنميتي')}});
 function cleanEntry(id,ne){const ts=x=>num(x)||null;return{id,status:ne.status,progress:num(ne.progress)||0,score:Math.min(10,num(ne.score)||0),notes:typeof ne.notes==='string'?ne.notes.slice(0,3000):'',repeat:num(ne.repeat)||0,addedAt:ts(ne.addedAt)||Date.now(),updatedAt:ts(ne.updatedAt)||0,startedAt:ts(ne.startedAt),finishedAt:ts(ne.finishedAt),seenAired:num(ne.seenAired),media:snap(ne.media)}}
 function cleanLog(x){if(!x||!num(x.id)||!num(x.t))return null;if(x.s==='COMPLETED')return{id:num(x.id),s:'COMPLETED',t:num(x.t)};const a=num(x.a),b=num(x.b);return a!=null&&b!=null&&b>a?{id:num(x.id),a,b,t:num(x.t)}:null}
+function markBackup(){DB.settings.lastBackup=Date.now();save();if(TAB==='home')rerender()}
 function exportBackup(share){const data=JSON.stringify({app:'animeti',v:1,exportedAt:new Date().toISOString(),list:DB.list,log:DB.log,settings:DB.settings});const name=`animeti-backup-${new Date().toISOString().slice(0,10)}.json`;
-  if(share){const file=new File([data],name,{type:'application/json'});navigator.share({files:[file],title:'نسخة أنميتي'}).catch(()=>{});return}
-  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([data],{type:'application/json'}));a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1000);toast('نزّلت النسخة ✓ احفظها بمكان آمن')}
+  if(share){const file=new File([data],name,{type:'application/json'});navigator.share({files:[file],title:'نسخة أنميتي'}).then(markBackup).catch(()=>{});return}
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([data],{type:'application/json'}));a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1000);markBackup();toast('نزّلت النسخة ✓ احفظها بمكان آمن')}
 async function importAniList(){const inp=$('#alUser');const u=(inp&&inp.value||'').trim();if(!/^[\w-]{2,30}$/.test(u)){toast('اكتب اسم المستخدم صح');return}toast('جاري الجلب…');
   try{const d=await gql(Q_IMPORT,{u},0);const lists=(d.MediaListCollection&&d.MediaListCollection.lists)||[];let n=0;
     for(const l of lists)for(const en of l.entries||[]){const m=en.media;if(!m||m.isAdult)continue;const st=en.status==='REPEATING'?'CURRENT':en.status;if(!STATUS[st])continue;const ex=DB.list[m.id];const up=en.updatedAt?en.updatedAt*1000:Date.now();if(ex&&ex.updatedAt>up)continue;
