@@ -320,6 +320,59 @@ textarea.big{min-height:200px;margin-top:4px}
 .chc span{font-size:11.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
 .chgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:14px 8px;margin-top:8px}
 .snaprow{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)}
+.fld{margin:10px 0}
+.fld label{display:block;font-weight:700;font-size:14px;margin-bottom:6px}
+.fld input{width:100%;background:var(--panel2);border:1.5px solid transparent;border-radius:12px;padding:10px 12px;outline:none;font-size:15px}
+.fld input:focus{border-color:var(--acc)}
+.reccode{font-size:26px;font-weight:800;letter-spacing:2px;text-align:center;background:var(--panel2);border-radius:14px;padding:16px;margin:14px 0;font-family:ui-monospace,Menlo,Consolas,monospace}
+.code{font-family:ui-monospace,Menlo,Consolas,monospace;letter-spacing:1px;font-size:15px}
+.acct .field{border-bottom:none;padding:8px 0}
+.livedot{font-size:10px;vertical-align:middle}
+.party{display:flex;gap:12px;padding:10px 0;border-bottom:1px solid var(--line)}
+.party:last-child{border-bottom:none}
+.party img{width:56px;height:80px;border-radius:10px;object-fit:cover;flex-shrink:0;background:var(--panel2);cursor:pointer}
+.party .pb{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px;font-size:14px}
+.party .bbtns{margin-top:6px}
+.ptfs{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px}
+.ptf{display:inline-flex;gap:6px;align-items:center;background:var(--panel2);border-radius:10px;padding:8px 12px;font-weight:700;font-size:14px}
+.ptf input{accent-color:#8b5cf6;width:18px;height:18px}
+.fld input[type=datetime-local]{direction:ltr;text-align:right}
+.bbtns.two{display:grid;grid-template-columns:1fr 1fr}
+.tiers{display:grid;gap:6px;margin-top:10px}
+.trow{display:flex;min-height:96px;background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden;cursor:pointer}
+.trow.target{border-style:dashed;border-color:var(--acc)}
+.tlab{width:54px;flex-shrink:0;display:grid;place-items:center;font-size:26px;font-weight:800;color:#fff;direction:ltr}
+.titems{display:flex;flex-wrap:wrap;gap:6px;padding:6px;flex:1;align-content:flex-start;min-height:60px}
+.titems.pool{background:var(--panel);border:1px dashed var(--line);border-radius:14px;cursor:pointer}
+.titems.pool.target{border-color:var(--acc)}
+.ti{width:56px;height:84px;border-radius:8px;overflow:hidden;padding:0;border:2px solid transparent;flex-shrink:0;background:var(--panel2)}
+.ti img{width:100%;height:100%;object-fit:cover}
+.ti.sel{border-color:var(--acc);transform:scale(1.06);box-shadow:0 4px 14px var(--shadow)}
+.wcards{display:grid;gap:12px;margin-top:12px}
+.wcard{border-radius:22px;padding:22px 20px;color:#fff;display:flex;flex-direction:column;gap:4px;min-height:150px;justify-content:center;box-shadow:0 8px 24px var(--shadow)}
+.wcard small{font-size:15px;opacity:.85;font-weight:700}
+.wcard span{font-size:15px;opacity:.9}
+.wbig{font-size:64px;font-weight:800;line-height:1.05}
+.wmid{font-size:36px;font-weight:800}
+.w1{background:linear-gradient(135deg,#7c3aed,#db2777)}.w2{background:linear-gradient(135deg,#2563eb,#7c3aed)}.w3{background:linear-gradient(135deg,#db2777,#f59e0b)}.w4{background:linear-gradient(135deg,#059669,#2563eb)}.w5{background:linear-gradient(135deg,#ea580c,#db2777)}.w6{background:linear-gradient(135deg,#7c3aed,#0891b2)}.w7{background:linear-gradient(135deg,#334155,#7c3aed)}
+.w7 p{font-size:17px;margin:4px 0}
+.wtop{display:flex;gap:14px;align-items:center;margin-top:8px}
+.wtop img{width:90px;height:135px;border-radius:12px;object-fit:cover;cursor:pointer;background:rgba(255,255,255,.15)}
+.wtop b{font-size:22px;display:block}
+.wlist{margin:10px 0 0;padding-inline-start:22px;font-size:15px;line-height:1.9}
+.wlist li{cursor:pointer}
+.wlist span{opacity:.75}
+.wcovers{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.wcovers img{width:52px;height:78px;border-radius:8px;object-fit:cover;cursor:pointer;background:rgba(255,255,255,.15)}
+.chhead{display:flex;gap:14px;align-items:flex-start;padding-inline-end:40px}
+.chhead img{width:96px;height:140px;border-radius:14px;object-fit:cover;flex-shrink:0;background:var(--panel2)}
+.vahead{display:flex;gap:12px;align-items:center}
+.vahead img{width:56px;height:56px;border-radius:50%;object-fit:cover;background:var(--panel2)}
+.varoles{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:12px 8px}
+.varole{display:flex;flex-direction:column;gap:3px;font-size:12.5px;min-width:0}
+.varole img{width:100%;aspect-ratio:2/3;border-radius:10px;object-fit:cover;background:var(--panel2)}
+.varole b{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.varole span{color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .foot{color:var(--muted);font-size:12.5px;text-align:center;margin:28px 0 8px;line-height:1.9}
 .foot a{color:var(--acc)}
 </style>
@@ -416,9 +469,9 @@ const SUGG=['ون بيس','هجوم العمالقة','قاتل الشياطين
 const KEY='animeti.v1';
 const DEF={theme:'dark',lang:'english',lsort:'smart'};
 let DB=load();
-function load(){try{const d=JSON.parse(localStorage.getItem(KEY)||'null');if(d&&d.list&&typeof d.list==='object')return{list:d.list,log:Array.isArray(d.log)?d.log:[],settings:{...DEF,...(d.settings||{})},friends:d.friends&&typeof d.friends==='object'?d.friends:{},seq:Array.isArray(d.seq)?d.seq:[],chars:d.chars&&typeof d.chars==='object'?d.chars:{},recs:d.recs&&typeof d.recs==='object'?d.recs:{}}}catch(e){}return{list:{},log:[],settings:{...DEF},friends:{},seq:[],chars:{},recs:{}}}
+function load(){try{const d=JSON.parse(localStorage.getItem(KEY)||'null');if(d&&d.list&&typeof d.list==='object')return{list:d.list,log:Array.isArray(d.log)?d.log:[],settings:{...DEF,...(d.settings||{})},friends:d.friends&&typeof d.friends==='object'?d.friends:{},seq:Array.isArray(d.seq)?d.seq:[],chars:d.chars&&typeof d.chars==='object'?d.chars:{},recs:d.recs&&typeof d.recs==='object'?d.recs:{},tomb:d.tomb&&typeof d.tomb==='object'?d.tomb:{},tiers:d.tiers&&typeof d.tiers==='object'?d.tiers:{}}}catch(e){}return{list:{},log:[],settings:{...DEF},friends:{},seq:[],chars:{},recs:{},tomb:{},tiers:{}}}
 let persistAsked=false;
-function save(){if(!DB.settings.since&&Object.keys(DB.list).length)DB.settings.since=Date.now();if(DB.log.length>3000)DB.log.splice(0,DB.log.length-3000);try{localStorage.setItem(KEY,JSON.stringify(DB))}catch(e){toast('ما قدرت أحفظ! يمكن مساحة المتصفح مليانة')}if(!persistAsked){persistAsked=true;try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(e){}}updateBadges();clearTimeout(achT);achT=setTimeout(checkAch,350)}
+function save(){if(!DB.settings.since&&Object.keys(DB.list).length)DB.settings.since=Date.now();if(DB.log.length>3000)DB.log.splice(0,DB.log.length-3000);try{localStorage.setItem(KEY,JSON.stringify(DB))}catch(e){toast('ما قدرت أحفظ! يمكن مساحة المتصفح مليانة')}if(!persistAsked){persistAsked=true;try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(e){}}updateBadges();clearTimeout(achT);achT=setTimeout(checkAch,350);if(!SYNC_APPLYING)scheduleSync()}
 window.addEventListener('storage',e=>{if(e.key===KEY){DB=load();applyTheme();rerender();if(DET.id)renderPanel()}});
 
 /* ============ الأنمي ============ */
@@ -455,7 +508,7 @@ function metaLine(m){const tot=totalOf(m);return[fmtLabel(m),tot?epText(tot,m):'
 /* ============ التعديل على القائمة ============ */
 let undoState=null;
 function checkpoint(id){undoState={id,entry:DB.list[id]?clone(DB.list[id]):null,log:clone(DB.log)}}
-function undo(){if(!undoState)return;const{id,entry,log}=undoState;if(entry)DB.list[id]=entry;else delete DB.list[id];DB.log=log;undoState=null;save();changed(id);toast('رجّعتها مثل ما كانت')}
+function undo(){if(!undoState)return;const{id,entry,log}=undoState;DB.tomb=DB.tomb||{};if(entry){entry.updatedAt=Date.now();DB.list[id]=entry}else{delete DB.list[id];DB.tomb['e:'+id]=Date.now()}DB.log=log;undoState=null;save();changed(id);toast('رجّعتها مثل ما كانت')}
 function addEntry(m,status){const t=Date.now();const e=DB.list[m.id]={id:m.id,status,progress:0,score:0,notes:'',repeat:0,addedAt:t,updatedAt:t,startedAt:status==='CURRENT'?t:null,finishedAt:null,media:snap(m)};e.seenAired=aired(e.media);if(status==='COMPLETED'){e.progress=e.media.episodes||aired(e.media)||0;e.finishedAt=t;e.startedAt=t;DB.log.push({id:m.id,s:'COMPLETED',t})}return e}
 function setStatus(id,st){const e=DB.list[id];if(!e||e.status===st)return;const t=Date.now();e.status=st;e.updatedAt=t;e.seenAired=aired(e.media);if(st==='CURRENT'&&!e.startedAt)e.startedAt=t;if(st==='COMPLETED'){const tot=e.media.episodes||aired(e.media);if(tot&&e.progress<tot)e.progress=tot;e.finishedAt=t;if(!e.startedAt)e.startedAt=t;DB.log.push({id,s:'COMPLETED',t})}}
 function trimLog(id,p){for(let i=DB.log.length-1;i>=0;i--){const x=DB.log[i];if(x.id!==id)continue;if(x.s){DB.log.splice(i,1);continue}if(x.b<=p)break;if(x.a>=p)DB.log.splice(i,1);else x.b=p}}
@@ -482,7 +535,7 @@ function errMsg(e){return({net:'ما قدرت أوصل للسيرفر. تأكد 
 const errBox=(e,act='retry')=>`<div class="err">😕 ${esc(errMsg(e))}<br><button class="btn ghost sm" data-act="${act}">جرّب مرة ثانية</button></div>`;
 const CARD='fragment card on Media{id type isAdult title{romaji english native} coverImage{large extraLarge color} episodes chapters volumes countryOfOrigin startDate{year} format status averageScore popularity season seasonYear duration genres nextAiringEpisode{episode airingAt}}';
 const Q_SEARCH='query($q:String,$page:Int,$type:MediaType,$genre:String,$format:MediaFormat,$sort:[MediaSort],$season:MediaSeason,$year:Int,$status:MediaStatus,$country:CountryCode){Page(page:$page,perPage:30){pageInfo{hasNextPage}media(type:$type,isAdult:false,search:$q,genre:$genre,format:$format,sort:$sort,season:$season,seasonYear:$year,status:$status,countryOfOrigin:$country){...card}}}'+CARD;
-const Q_DETAIL='query($id:Int){Media(id:$id){...card idMal bannerImage description(asHtml:false) synonyms source startDate{year month day} endDate{year month day} studios(isMain:true){nodes{name}} trailer{id site} externalLinks{site url type color} relations{edges{relationType(version:2) node{id type format status episodes chapters countryOfOrigin seasonYear averageScore isAdult title{romaji english native} coverImage{large color}}}} recommendations(perPage:14,sort:RATING_DESC){nodes{mediaRecommendation{...card}}} characters(sort:[ROLE,RELEVANCE],perPage:12){edges{role node{id name{full native} image{large}}}}}}'+CARD;
+const Q_DETAIL='query($id:Int){Media(id:$id){...card idMal bannerImage description(asHtml:false) synonyms source startDate{year month day} endDate{year month day} studios(isMain:true){nodes{name}} trailer{id site} externalLinks{site url type color} relations{edges{relationType(version:2) node{id type format status episodes chapters countryOfOrigin seasonYear averageScore isAdult title{romaji english native} coverImage{large color}}}} recommendations(perPage:14,sort:RATING_DESC){nodes{mediaRecommendation{...card}}} characters(sort:[ROLE,RELEVANCE],perPage:12){edges{role node{id name{full native} image{large}} voiceActors(language:JAPANESE,sort:[RELEVANCE,ID]){id name{full native} image{large}}}}}}'+CARD;
 const Q_REFRESH='query($ids:[Int]){Page(perPage:50){media(id_in:$ids,type:ANIME){id episodes status duration nextAiringEpisode{episode airingAt}}}}';
 const Q_SCHED='query($from:Int,$to:Int,$page:Int,$ids:[Int]){Page(page:$page,perPage:50){pageInfo{hasNextPage}airingSchedules(airingAt_greater:$from,airingAt_lesser:$to,mediaId_in:$ids,sort:TIME){id airingAt episode media{id isAdult popularity episodes format status title{romaji english native} coverImage{large color}}}}}';
 const Q_IMPORT='query($u:String,$type:MediaType){MediaListCollection(userName:$u,type:$type){lists{entries{status progress repeat score(format:POINT_10) notes updatedAt media{...card}}}}}'+CARD;
@@ -511,16 +564,16 @@ function tagHistory(){const st=history.state;if(st&&st.app){depth=st.d;started=t
 function replaceHash(h){replacing=true;location.replace(h)}
 function route(){tagHistory();if(!sheetEl.hidden)closeSheet();const{parts,q}=parseHash();const p0=parts[0]||'home';
   if(p0==='anime'&&+parts[1]>0){if(!curKey)showTab('home',new URLSearchParams());openDetail(+parts[1]);return}
-  closeDetailUI();const tab=['home','list','schedule','me','search','import','sync','friend','friends'].includes(p0)?p0:'home';lastTabHash=location.hash||'#/';showTab(tab,q)}
+  closeDetailUI();const tab=['home','list','schedule','me','search','import','sync','friend','friends','tier','wrapped'].includes(p0)?p0:'home';lastTabHash=location.hash||'#/';showTab(tab,q)}
 window.addEventListener('hashchange',route);
 function closeDetail(){if(history.state&&history.state.d>0)history.back();else replaceHash(lastTabHash&&!lastTabHash.startsWith('#/anime')?lastTabHash:'#/')}
-function showTab(tab,q){const key=tab+'?'+q.toString();document.querySelectorAll('nav.tabs a').forEach(a=>a.classList.toggle('on',a.dataset.tab===(['import','sync','friend','friends'].includes(tab)?'me':tab)));
+function showTab(tab,q){const key=tab+'?'+q.toString();document.querySelectorAll('nav.tabs a').forEach(a=>a.classList.toggle('on',a.dataset.tab===(['import','sync','friend','friends','tier','wrapped'].includes(tab)?'me':tab)));
   if(tab!=='search'&&document.activeElement!==qInput)qInput.value='';
   if(key===curKey){rerender();return}
   curKey=key;TAB=tab;TABQ=q;window.scrollTo(0,0);renderTab(true)}
 let TABQ=new URLSearchParams();
-function renderTab(fresh){({home:renderHome,list:renderList,schedule:renderSchedule,me:renderMe,search:renderSearch,import:renderImport,sync:renderSync,friend:renderFriend,friends:renderFriends})[TAB](TABQ,fresh)}
-function rerender(){if(!curKey||TAB==='import'||TAB==='sync'||TAB==='friend')return;if(TAB==='friends'&&document.activeElement&&document.activeElement.id==='myName')return;const y=window.scrollY;if(document.activeElement&&document.activeElement.matches('[data-lfilter]')&&TAB==='list'){paintListItems();return}renderTab(false);window.scrollTo(0,y)}
+function renderTab(fresh){({home:renderHome,list:renderList,schedule:renderSchedule,me:renderMe,search:renderSearch,import:renderImport,sync:renderSync,friend:renderFriend,friends:renderFriends,tier:renderTier,wrapped:renderWrapped})[TAB](TABQ,fresh)}
+function rerender(){if(!curKey||TAB==='import'||TAB==='sync'||TAB==='friend')return;if(TAB==='friends'&&document.activeElement&&['myName','frCode'].includes(document.activeElement.id))return;if(TAB==='me'&&document.activeElement&&['setSrv','goalInANIME','goalInMANGA'].includes(document.activeElement.id))return;const y=window.scrollY;if(document.activeElement&&document.activeElement.matches('[data-lfilter]')&&TAB==='list'){paintListItems();return}renderTab(false);window.scrollTo(0,y)}
 
 /* ============ الرئيسية ============ */
 const HOMES={ANIME:{t:0,d:null,err:null,loading:false},MANGA:{t:0,d:null,err:null,loading:false}};
@@ -548,7 +601,7 @@ async function loadHome(mode){const secs=homeSections(mode);let d={};
 function homeRowsHTML(mode){const H=HOMES[mode];if(H.d)return homeSections(mode).map(s=>{const a=clean(H.d[s[0]]);if(!a.length)return'';return`<div class="sec-h"><h2>${esc(s[1])}</h2><a href="${s[3]}">شوف الكل ←</a></div><div class="row">${a.map(m=>poster(m)).join('')}</div>`}).join('');
   if(H.err)return errBox(H.err);return homeSections(mode).slice(0,3).map(s=>`<div class="sec-h"><h2>${esc(s[1])}</h2></div>${skRow()}`).join('')}
 function renderHome(q,fresh){const mode=MODE(),H=HOMES[mode];
-  view.innerHTML=`${modeSwitch()}${Object.keys(DB.list).length?'':`<div class="note" style="margin-top:14px">👋 هلا! دوّر على أي أنمي أو مانجا وضيفه لقائمتك، وعلّم كل حلقة أو فصل. كل شي ينحفظ بجهازك تلقائي.</div>`}${backupNag()}${goalStripHTML(mode)}${mode==='ANIME'?sequelHTML():''}${continueHTML()}${recsHTML(mode)}<div id="hrows">${homeRowsHTML(mode)}</div><div class="sec-h"><h2>تصفّح حسب النوع</h2></div><div class="chips wrap">${Object.entries(GENRES).filter(([k])=>k!=='Ecchi').map(([k,v])=>`<a class="chip" href="#/search?g=${encodeURIComponent(k)}&t=${mode}">${v}</a>`).join('')}</div><div class="foot">المعلومات من <a href="https://anilist.co" target="_blank" rel="noopener">AniList</a> · قائمتك محفوظة بهالجهاز بس</div>`;
+  view.innerHTML=`${modeSwitch()}${Object.keys(DB.list).length?'':`<div class="note" style="margin-top:14px">👋 هلا! دوّر على أي أنمي أو مانجا وضيفه لقائمتك، وعلّم كل حلقة أو فصل. كل شي ينحفظ بجهازك تلقائي.</div>`}${backupNag()}${goalStripHTML(mode)}${logged()?partiesHTML(true):''}${mode==='ANIME'?sequelHTML():''}${continueHTML()}${recsHTML(mode)}<div id="hrows">${homeRowsHTML(mode)}</div><div class="sec-h"><h2>تصفّح حسب النوع</h2></div><div class="chips wrap">${Object.entries(GENRES).filter(([k])=>k!=='Ecchi').map(([k,v])=>`<a class="chip" href="#/search?g=${encodeURIComponent(k)}&t=${mode}">${v}</a>`).join('')}</div><div class="foot">المعلومات من <a href="https://anilist.co" target="_blank" rel="noopener">AniList</a> · قائمتك محفوظة بهالجهاز بس</div>`;
   if((!H.d||Date.now()-H.t>15*60e3)&&!H.loading){H.loading=true;H.err=null;if(fresh&&!H.d){const h=$('#hrows');if(h)h.innerHTML=homeRowsHTML(mode)}
     setTimeout(()=>renderHomeAfter(mode),1500);loadHome(mode).then(d=>{Object.assign(H,{t:Date.now(),d,err:null,loading:false})}).catch(e=>{H.loading=false;H.err=H.d?null:e}).finally(()=>{if(TAB==='home'&&MODE()===mode){const h=$('#hrows');if(h)h.innerHTML=homeRowsHTML(mode)}})}}
 function renderHomeAfter(mode){loadRecs(mode)}
@@ -641,7 +694,7 @@ function renderMe(){const{all,cnt,eps,hrs,weekEps,avg,gtop}=calcStats();const gm
     const txt=mv?`شفت <b>${t}</b> 🎬`:x.s==='COMPLETED'?`خلّصت <b>${t}</b> 🎉`:x.b-x.a===1?`${W.did} ${W.the} ${x.b} من <b>${t}</b>`:x.b-x.a>JUMP?`وصلت ${lil(W.the)} ${x.b} في <b>${t}</b>`:`${W.did} ${W.pl} ${x.a+1}–${x.b} من <b>${t}</b>`;
     ah+=`<div class="act" data-open="${x.id}"><img loading="lazy" src="${imgSrc(e.media)}" alt=""><div class="ab"><div>${txt}</div><time>${fTime(x.t)}</time></div></div>`}
   const canShare=!!(navigator.canShare&&window.File&&(()=>{try{return navigator.canShare({files:[new File(['{}'],'a.json',{type:'application/json'})]})}catch(e){return false}})());
-  view.innerHTML=`<div class="stats">
+  view.innerHTML=`${accountBoxHTML()}<div class="stats">
     <div class="stat"><b>${eps}</b><span>حلقة شفتها</span></div>
     <div class="stat"><b>${hrs}</b><span>ساعة مشاهدة</span>${hrs>=24?`<small>يعني ${pl(Math.floor(hrs/24),W_DAY)}${hrs%24?' و'+pl(hrs%24,W_HR):''}</small>`:''}</div>
     <div class="stat"><b>${weekEps}</b><span>حلقة هالأسبوع</span></div>
@@ -650,6 +703,7 @@ function renderMe(){const{all,cnt,eps,hrs,weekEps,avg,gtop}=calcStats();const gm
   ${goalBoxHTML()}
   ${mangaStatsHTML()}
   ${all.length?'<button class="btn sm" data-act="card" style="margin-top:12px;width:100%">🖼️ طلّع بطاقة بإحصائياتك وشاركها</button>':''}
+  <div class="bbtns two" style="margin-top:8px"><a class="btn ghost sm" href="#/tier">🏅 ترتيبك (Tier List)</a><a class="btn ghost sm" href="#/wrapped">🎁 ملخص سنتك</a></div>
   ${achHTML()}
   ${charsBoxHTML()}
   ${monthlyHTML()}
@@ -658,7 +712,7 @@ function renderMe(){const{all,cnt,eps,hrs,weekEps,avg,gtop}=calcStats();const gm
   <div class="box"><h3>الإعدادات</h3>
     <div class="field"><label for="setLang">أسماء الأنمي</label><select id="setLang" data-set="lang"><option value="english"${DB.settings.lang==='english'?' selected':''}>إنجليزي (Attack on Titan)</option><option value="romaji"${DB.settings.lang==='romaji'?' selected':''}>روماجي (Shingeki no Kyojin)</option><option value="native"${DB.settings.lang==='native'?' selected':''}>ياباني (進撃の巨人)</option></select></div>
     <div class="field"><label for="setTheme">الشكل</label><select id="setTheme" data-set="theme"><option value="dark"${DB.settings.theme==='dark'?' selected':''}>داكن</option><option value="light"${DB.settings.theme==='light'?' selected':''}>فاتح</option><option value="auto"${DB.settings.theme==='auto'?' selected':''}>مثل الجهاز</option></select></div>
-    <div class="field"><label for="setSpoil">لا تحرق علي<small class="muted" style="display:block;font-weight:400">يخفي القصة لين تخلّص الأنمي</small></label><select id="setSpoil" data-set="nospoil"><option value="0"${spoilOn()?'':' selected'}>طافي</option><option value="1"${spoilOn()?' selected':''}>شغّال</option></select></div></div>
+    <div class="field"><label for="setSpoil">لا تحرق علي<small class="muted" style="display:block;font-weight:400">يخفي القصة لين تخلّص الأنمي</small></label><select id="setSpoil" data-set="nospoil"><option value="0"${spoilOn()?'':' selected'}>طافي</option><option value="1"${spoilOn()?' selected':''}>شغّال</option></select></div>${serverFieldHTML()}</div>
   <div class="box"><h3>نسخة احتياطية</h3><p class="muted small">قائمتك محفوظة بهالجهاز وهالمتصفح بس. إذا بتغيّر جوالك أو بتمسح بيانات المتصفح، خذ نسخة واحفظها، وبعدين رجّعها بالجهاز الجديد.</p>
     <div class="bbtns"><button class="btn sm" data-act="export">⬇️ نزّل نسخة</button>${canShare?'<button class="btn ghost sm" data-act="sharebk">📤 شارك النسخة</button>':''}<button class="btn ghost sm" data-act="import">⬆️ رجّع نسخة</button><button class="btn ghost sm" data-act="snaps">🕒 النسخ التلقائية</button></div></div>
   ${friendsBoxHTML()}
@@ -700,7 +754,7 @@ function paintDetail(){const m=DET.m;
     const rows=[['الشكل',fmtLabel(m)],[isM?'الفصول':'الحلقات',tot?String(tot):(m.status==='RELEASING'?(isM?'للحين تُنشر':'للحين يُعرض'):'')],['المجلدات',isM&&m.volumes?String(m.volumes):''],['مدة الحلقة',m.duration?pl(m.duration,W_MIN):''],['الحالة',msT(m)],['بدأ',fuzzy(m.startDate)],['انتهى',fuzzy(m.endDate)],['الاستوديو',studio],['المصدر',SOURCE[m.source]],['التقييم',sc?`${sc}%`:''],['المتابعين على AniList',m.popularity?m.popularity.toLocaleString('en'):'']].filter(r=>r[1]);
     h+=`<div class="box"><h3>معلومات</h3><dl class="info">${rows.map(r=>`<dt>${r[0]}</dt><dd>${esc(r[1])}</dd>`).join('')}</dl>${(m.genres||[]).length?`<div class="gtags">${m.genres.map(g=>`<a href="#/search?g=${encodeURIComponent(g)}&t=${typeOf(m)}">${esc(GENRES[g]||g)}</a>`).join('')}</div>`:''}</div>`;
     const chars=((m.characters&&m.characters.edges)||[]).filter(c=>c&&c.node&&c.node.id);CHARS_CUR=new Map(chars.map(c=>[c.node.id,c]));
-    if(chars.length)h+=`<div class="sec-h"><h2>الشخصيات</h2><span class="muted small">اضغط 🤍 وتنحفظ بمفضلتك</span></div><div class="row chrow">${chars.map(charCard).join('')}</div>`;
+    if(chars.length)h+=`<div class="sec-h"><h2>الشخصيات</h2><span class="muted small">اضغط على الشخصية تشوف مين يؤدي صوتها</span></div><div class="row chrow">${chars.map(charCard).join('')}</div>`;
     const rel=((m.relations&&m.relations.edges)||[]).filter(r=>r.node&&(r.node.type==='ANIME'||r.node.type==='MANGA')&&!r.node.isAdult).sort((a,b)=>(a.node.type!==m.type)-(b.node.type!==m.type)||RELORDER.indexOf(a.relationType)-RELORDER.indexOf(b.relationType));
     if(rel.length)h+=`<div class="sec-h"><h2>الأجزاء والقصص المرتبطة</h2></div><div class="row">${rel.map(r=>poster(r.node,r.node.type!==m.type?(r.node.type==='MANGA'?'📖 '+fmtLabel(r.node):'📺 الأنمي'):(REL[r.relationType]||''))).join('')}</div>`;
     const recs=clean(((m.recommendations&&m.recommendations.nodes)||[]).map(r=>r.mediaRecommendation));
@@ -979,21 +1033,22 @@ async function friendAdd(){const q=TABQ,u=frUid(q),name=frName(q);if(!FR.items||
   try{for(let i=0;i<need.length;i+=50){const d=await gql(Q_MEDIA,{ids:need.slice(i,i+50),page:1},1800);for(const m of d.Page.media||[])if(!m.isAdult)media[m.id]=liteMedia(snap(m))}}catch(e){FR.busy=false;toast(errMsg(e));renderFriend(q);return}
   DB.friends=DB.friends||{};DB.friends[u]={name,at:Date.now(),items:FR.items.filter(x=>media[x.id]).map(x=>[x.id,SORDER.indexOf(x.status),x.progress,x.score,x.updatedAt]),media};save();
   FR={key:'',items:null,err:false,busy:false};replaceHash('#/friends?u='+u);setTimeout(()=>toast(old?`تحدّثت قائمة ${name} ✓`:`انضاف ${name} للشلة 👥`),60)}
-function renderFriends(q){const F=DB.friends||{},u=q.get('u');if(u&&F[u])return renderFriendView(u,q);const ids=Object.keys(F);
-  view.innerHTML=`<div class="sec-h"><h2>👥 الشلة</h2><a href="#/me">إحصائياتي ←</a></div><div class="box" style="margin-top:0"><h3>شارك قائمتك مع ربعك</h3><p class="muted small">اكتب اسمك وأرسل رابطك لربعك. لما يفتحونه تنضاف لشلتهم ويشوفون وين وصلت، وإذا أرسلوا لك رابطهم يطلعون هنا.</p><div class="inrow"><input id="myName" value="${esc(DB.settings.name||'')}" placeholder="اسمك" maxlength="30" style="direction:rtl;text-align:right"><button class="btn sm" data-act="frshare">📤 شارك رابطي</button></div><p class="muted small" style="margin-top:8px">الرابط فيه قائمتك وتقييماتك بس، بدون ملاحظاتك. وما يتحدّث تلقائي: كل ما تبي ربعك يشوفون آخر شي، أرسل لهم رابط جديد.</p></div>
+function renderFriends(q){const F=DB.friends||{},u=q.get('u');if(u&&(F[u]||SRVF.list.some(f=>f.key===u)))return renderFriendView(u,q);const ids=Object.keys(F);loadSrvFriends();loadParties();
+  const live=SRV()?(logged()?`<div class="box" style="margin-top:0"><h3>🟢 الشلة المباشرة</h3><p class="muted small">أعطِ ربعك رمز صداقتك عشان يضيفونك فيه، وتشوفون وين وصل كل واحد مباشرة بدون روابط.</p><div class="field"><span>رمز صداقتك</span><span><b class="code" dir="ltr">${esc(DB.settings.user&&DB.settings.user.code)}</b> <button class="lnkbtn" data-act="copytxt" data-v="${esc(DB.settings.user&&DB.settings.user.code)}">انسخه</button></span></div><div class="inrow"><input id="frCode" dir="ltr" maxlength="12" placeholder="رمز صديقك" autocapitalize="characters"><button class="btn sm" data-act="frcode">ضيفه</button></div>${SRVF.list.length?`<div class="litems" style="margin-top:12px">${SRVF.list.map(f=>`<a class="li" href="#/friends?u=${esc(f.key)}"><div class="av">${esc(f.name.trim().charAt(0)||'؟')}</div><div class="lb"><div class="lt">${esc(f.name)} <span class="livedot">🟢</span></div><div class="lm">${f.items.length} بقائمته · ${f.items.filter(x=>DB.list[x[0]]).length} مشترك معك</div><div class="lnext">آخر تحديث: ${f.at?dayLabel(f.at):'—'}</div></div></a>`).join('')}</div>`:''}</div>${partiesHTML()}`:`<div class="box" style="margin-top:0"><h3>🟢 الشلة المباشرة</h3><p class="muted small">سوّ حساب عشان تشوف شلتك مباشرة، وتسوون سهرات مع تذكير.</p><button class="btn sm" data-act="auth" data-v="signup">سوّ حساب</button></div>`):'';
+  view.innerHTML=`<div class="sec-h"><h2>👥 الشلة</h2><a href="#/me">إحصائياتي ←</a></div>${live}<div class="box"${live?'':' style="margin-top:0"'}><h3>${live?'أو شارك برابط (لربعك اللي ما عندهم حساب)':'شارك قائمتك مع ربعك'}</h3><p class="muted small">اكتب اسمك وأرسل رابطك لربعك. لما يفتحونه تنضاف لشلتهم ويشوفون وين وصلت، وإذا أرسلوا لك رابطهم يطلعون هنا.</p><div class="inrow"><input id="myName" value="${esc(DB.settings.name||'')}" placeholder="اسمك" maxlength="30" style="direction:rtl;text-align:right"><button class="btn sm" data-act="frshare">📤 شارك رابطي</button></div><p class="muted small" style="margin-top:8px">الرابط فيه قائمتك وتقييماتك بس، بدون ملاحظاتك. وما يتحدّث تلقائي: كل ما تبي ربعك يشوفون آخر شي، أرسل لهم رابط جديد.</p></div>
   ${ids.length?`<div class="litems" style="margin-top:14px">${ids.sort((a,b)=>F[b].at-F[a].at).map(id=>{const f=F[id],common=f.items.filter(x=>DB.list[x[0]]).length,cur=f.items.filter(x=>x[1]===0).length;return`<a class="li" href="#/friends?u=${esc(id)}"><div class="av">${esc(f.name.trim().charAt(0)||'؟')}</div><div class="lb"><div class="lt">${esc(f.name)}</div><div class="lm">${f.items.length} بقائمته · ${common} مشترك معك · يتابع ${cur}</div><div class="lnext">آخر تحديث: ${dayLabel(f.at)}</div></div></a>`}).join('')}</div>`:'<div class="empty"><div class="big">👥</div>شلتك فاضية للحين.<br>أرسل رابطك لربعك، واطلب منهم يرسلون رابطهم.</div>'}`}
-function renderFriendView(u,q){const f=DB.friends[u],tab=q.get('v')||'common';
+function renderFriendView(u,q){const f=(DB.friends||{})[u]||SRVF.list.find(x=>x.key===u),tab=q.get('v')||'common';
   let items=f.items.map(x=>({id:x[0],st:SORDER[x[1]]||'PLANNING',p:num(x[2])||0,sc:num(x[3])||0,at:num(x[4])||0,m:f.media[x[0]],mine:DB.list[x[0]]})).filter(x=>x.m);
   const counts={common:items.filter(x=>x.mine).length,CURRENT:items.filter(x=>x.st==='CURRENT').length,COMPLETED:items.filter(x=>x.st==='COMPLETED').length,top:items.filter(x=>x.sc>=8).length,all:items.length};
   if(tab==='common')items=items.filter(x=>x.mine);else if(tab==='top')items=items.filter(x=>x.sc>=8);else if(tab!=='all')items=items.filter(x=>x.st===tab);
   items.sort(tab==='top'?(a,b)=>b.sc-a.sc:(a,b)=>b.at-a.at);
   const tabs=[['common','المشترك'],['CURRENT','يتابعه'],['COMPLETED','خلّصه'],['top','أعلى تقييماته'],['all','الكل']];
-  view.innerHTML=`<div class="sec-h"><h2>👤 ${esc(f.name)}</h2><a href="#/friends">الشلة ←</a></div><p class="muted small">آخر تحديث لقائمته: ${dayLabel(f.at)}</p><div class="chips" style="margin-top:10px">${tabs.map(([k,l])=>`<button class="chip ${k===tab?'on':''}" data-act="frtab" data-v="${k}">${l} <small>${counts[k]}</small></button>`).join('')}</div>
+  view.innerHTML=`<div class="sec-h"><h2>👤 ${esc(f.name)}</h2><a href="#/friends">الشلة ←</a></div><p class="muted small">${f.live?'🟢 مباشر · ':''}آخر تحديث لقائمته: ${f.at?dayLabel(f.at):'—'}</p><div class="chips" style="margin-top:10px">${tabs.map(([k,l])=>`<button class="chip ${k===tab?'on':''}" data-act="frtab" data-v="${k}">${l} <small>${counts[k]}</small></button>`).join('')}</div>
   <div class="litems" style="margin-top:12px">${items.map(x=>{const m=x.m,W=V(m),tot=m.episodes,me=x.mine;const race=me&&x.st==='CURRENT'&&me.status==='CURRENT'&&me.progress!==x.p?(me.progress>x.p?' · أنت قدّامه 💪':' · هو قدّامك 👀'):'';
     return`<div class="li" data-open="${x.id}"><img loading="lazy" src="${imgSrc(m)}" alt="" style="background:${colorOf(m)||'var(--panel2)'}"><div class="lb"><div class="lt">${esc(title(m))}</div><div class="lm"><span>عنده: ${stT(x.st,m)}${x.p?` · ${W.the} ${x.p}${tot?' من '+tot:''}`:''}</span>${x.sc?`<span class="stars">★ ${x.sc}</span>`:''}</div>${me?`<div class="lnext">عندك: ${stT(me.status,m)}${me.progress?` · ${W.the} ${me.progress}`:''}${race}</div>`:''}</div></div>`}).join('')||'<div class="empty">ما فيه شي هنا</div>'}</div>
   <div style="text-align:center;margin-top:22px"><button class="btn ghost sm danger" data-act="frdel" data-v="${esc(u)}">شيله من الشلة</button></div>`}
-function friendsOnHTML(id){const rows=[];for(const f of Object.values(DB.friends||{})){const x=f.items.find(i=>i[0]===id);if(x)rows.push([f.name,x])}if(!rows.length)return'';const m=DET.m,W=V(m);
-  return`<div class="box"><h3>👥 الشلة</h3>${rows.map(([n,x])=>`<div class="frrow"><span class="av sm">${esc(n.charAt(0))}</span><b>${esc(n)}</b><span class="muted">${stT(SORDER[x[1]]||'PLANNING',m)}${num(x[2])?` · ${W.the} ${num(x[2])}`:''}${num(x[3])?` · ★ ${num(x[3])}`:''}</span></div>`).join('')}</div>`}
+function friendsOnHTML(id){const rows=[];for(const[,f]of allFriends()){const x=f.items.find(i=>i[0]===id);if(x)rows.push([f.name,x])}const pt=logged()&&SRVF.list.length&&typeOf(DET.m)==='ANIME';if(!rows.length&&!pt)return'';const m=DET.m,W=V(m);
+  return`<div class="box"><h3>👥 الشلة</h3>${rows.map(([n,x])=>`<div class="frrow"><span class="av sm">${esc(n.charAt(0))}</span><b>${esc(n)}</b><span class="muted">${stT(SORDER[x[1]]||'PLANNING',m)}${num(x[2])?` · ${W.the} ${num(x[2])}`:''}${num(x[3])?` · ★ ${num(x[3])}`:''}</span></div>`).join('')}${pt?'<button class="btn ghost sm" data-act="ptnew" style="margin-top:8px">🍿 سهرة مع الشلة</button>':''}</div>`}
 function friendsBoxHTML(){const n=Object.keys(DB.friends||{}).length;return`<div class="box"><h3>👥 الشلة</h3><p class="muted small">${n?`عندك ${n} بالشلة. شوف وين وصلوا بالأنميات اللي تتابعونها سوا.`:'أرسل قائمتك لربعك وخذ قائمتهم، وتشوفون مين وصل لوين.'}</p><a class="btn sm" href="#/friends" style="margin-top:10px">👥 افتح الشلة</a></div>`}
 function setMode(v){if(v!=='ANIME'&&v!=='MANGA')return;DB.settings.mode=v;save();applyMode();
   if(TAB==='search'){const p=sParams(TABQ);if(p.t!==v)replaceHash(sHash({...p,t:v,f:'',sea:'',y:'',st:'',c:''}));return}
@@ -1037,8 +1092,8 @@ const spoilOn=()=>DB.settings.nospoil==='1';
 /* ============ شخصياتي المفضلة ============ */
 let CHARS_CUR=new Map();
 const ROLE={MAIN:'رئيسية',SUPPORTING:'ثانوية',BACKGROUND:'خلفية'};
-function charCard(c){const n=c.node,fav=(DB.chars||{})[n.id];return`<div class="chc"><div class="chimg"><img loading="lazy" src="${esc(safeUrl(n.image&&n.image.large))||BLANK}" alt=""><button class="chfav ${fav?'on':''}" data-act="charfav" data-v="${n.id}" aria-label="${fav?'شيلها من المفضلة':'ضيفها للمفضلة'}">${fav?'❤️':'🤍'}</button></div><b>${esc((n.name&&n.name.full)||'')}</b><span>${ROLE[c.role]||''}</span></div>`}
-function charFav(id,btn){DB.chars=DB.chars||{};if(DB.chars[id]){delete DB.chars[id];save();toast('انشالت من المفضلة')}
+function charCard(c){const n=c.node,fav=(DB.chars||{})[n.id];return`<div class="chc" data-act="charopen" data-v="${n.id}" role="button" tabindex="0"><div class="chimg"><img loading="lazy" src="${esc(safeUrl(n.image&&n.image.large))||BLANK}" alt=""><button class="chfav ${fav?'on':''}" data-act="charfav" data-v="${n.id}" aria-label="${fav?'شيلها من المفضلة':'ضيفها للمفضلة'}">${fav?'❤️':'🤍'}</button></div><b>${esc((n.name&&n.name.full)||'')}</b><span>${ROLE[c.role]||''}</span></div>`}
+function charFav(id,btn){DB.chars=DB.chars||{};DB.tomb=DB.tomb||{};if(DB.chars[id]){delete DB.chars[id];DB.tomb['c:'+id]=Date.now();save();toast('انشالت من المفضلة')}
   else{const c=CHARS_CUR.get(id);if(!c||!DET.m)return;const n=c.node,t=DET.m.title||{};DB.chars[id]={id,name:str(n.name&&n.name.full),native:str(n.name&&n.name.native),img:safeUrl(n.image&&n.image.large),mid:DET.id,mtitle:{romaji:str(t.romaji),english:str(t.english),native:str(t.native)},at:Date.now()};save();toast('❤️ انضافت لشخصياتك المفضلة')}
   if(btn){const on=!!DB.chars[id];btn.classList.toggle('on',on);btn.textContent=on?'❤️':'🤍';btn.setAttribute('aria-label',on?'شيلها من المفضلة':'ضيفها للمفضلة')}if(TAB==='me'&&detailEl.hidden)rerender()}
 function charsBoxHTML(){const L=Object.values(DB.chars||{}).sort((a,b)=>b.at-a.at);if(!L.length)return'';
@@ -1057,8 +1112,163 @@ async function openSnaps(){const L=await snapList();if(L===null){toast('متصف
   ${L.length?L.map(x=>`<div class="snaprow"><div><b>${dayLabel(x.at)}</b> <span class="muted small">${fTime(x.at)} · ${x.n} بالقائمة</span></div><button class="btn ghost sm" data-act="snaprestore" data-v="${esc(x.day)}">رجّعها</button></div>`).join(''):'<p class="note small">ما فيه نسخ للحين. أول نسخة تنحفظ لما تضيف شي لقائمتك.</p>'}`)}
 async function snapRestore(day){const L=await snapList();const x=L&&L.find(s=>s.day===day);if(!x)return;if(!confirm(`ترجّع قائمتك مثل ما كانت ${dayLabel(x.at)}؟`))return;
   let d;try{d=JSON.parse(x.data)}catch(e){toast('النسخة هذي خربانة');return}const before=clone({list:DB.list,log:DB.log,friends:DB.friends,chars:DB.chars});
-  DB.list=d.list||{};DB.log=Array.isArray(d.log)?d.log:[];DB.friends=d.friends||{};DB.chars=d.chars||{};save();closeSheet();rerender();
+  const tn=Date.now();for(const e of Object.values(d.list||{}))if(e)e.updatedAt=tn;DB.tomb=DB.tomb||{};for(const id of Object.keys(DB.list))if(!(d.list||{})[id])DB.tomb['e:'+id]=tn;DB.list=d.list||{};DB.log=Array.isArray(d.log)?d.log:[];DB.friends=d.friends||{};DB.chars=d.chars||{};save();closeSheet();rerender();
   toast('رجّعت النسخة ✓','تراجع',()=>{Object.assign(DB,before);save();rerender();toast('رجعت مثل ما كانت')})}
+
+/* ============ السيرفر: الحساب والمزامنة ============ */
+const SERVER_DEFAULT='';
+const SRV=()=>String(DB.settings.server||SERVER_DEFAULT).trim().replace(/\/+$/,'');
+const logged=()=>!!(DB.settings.token&&SRV());
+const SRV_ERR={taken:'اسم المستخدم محجوز، جرّب غيره',bad_username:'اسم المستخدم لازم يكون من 3 لين 20 حرف إنجليزي أو أرقام',weak_password:'كلمة السر لازم تكون 6 أحرف أو أكثر',bad_login:'اسم المستخدم أو كلمة السر غلط',bad_recovery:'رمز الاسترجاع غلط',rate:'محاولات كثيرة، استنى شوي وجرّب',bad_code:'رمز الصداقة غلط، تأكد منه',self:'هذا رمزك أنت 😄',unauth:'انتهت جلستك، سجّل دخول مرة ثانية',net:'ما قدرت أوصل للسيرفر، تأكد من النت',noserver:'المزامنة مو مفعّلة',bad_time:'الموعد لازم يكون بالمستقبل',too_big:'بياناتك كبيرة مرة على السيرفر',bad_name:'اكتب اسمك'};
+const apiErr=e=>SRV_ERR[e&&e.message]||'صار خطأ بالسيرفر، جرّب بعد شوي';
+async function api(path,opt={}){const base=SRV();if(!base)throw new Error('noserver');let r;
+  try{r=await fetch(base+path,{method:opt.method||'GET',headers:{'Content-Type':'application/json',...(DB.settings.token?{Authorization:'Bearer '+DB.settings.token}:{})},body:opt.body?JSON.stringify(opt.body):undefined})}catch(e){throw new Error('net')}
+  let j=null;try{j=await r.json()}catch(e){}
+  if(!r.ok){const e=new Error((j&&j.error)||'server');e.status=r.status;e.data=j;if(j&&j.error==='unauth'&&DB.settings.token)logoutLocal(true);throw e}return j}
+const SYNC_SET=['goal','goalM','nospoil','lang','ach','goalWins','goalHit','goalMHit','seqHide'];
+let SYNC_APPLYING=false,syncT=0,syncBusy=false,syncAgain=false,SYNC_STATE='';
+function scheduleSync(){if(!logged())return;clearTimeout(syncT);syncT=setTimeout(()=>syncNow(),2500)}
+function localBody(){const s={};for(const k of SYNC_SET)if(DB.settings[k]!==undefined)s[k]=DB.settings[k];return{v:1,list:DB.list,log:DB.log,tomb:DB.tomb||{},chars:DB.chars||{},friends:DB.friends||{},tiers:DB.tiers||{},s,sAt:DB.settings.sAt||0}}
+function mergeBodies(a,b){b=b&&typeof b==='object'?b:{};const tomb={...(b.tomb&&typeof b.tomb==='object'?b.tomb:{})};for(const[k,t]of Object.entries(a.tomb||{}))if(!(tomb[k]>=t))tomb[k]=t;
+  const cut=Date.now()-120*864e5;for(const k of Object.keys(tomb))if(!(num(tomb[k])>cut))delete tomb[k];
+  const list={};for(const src of[b.list||{},a.list||{}])for(const[id,e]of Object.entries(src)){if(!e||typeof e!=='object')continue;const c=list[id];if(!c||(num(e.updatedAt)||0)>=(num(c.updatedAt)||0))list[id]=e}
+  for(const id of Object.keys(list))if((tomb['e:'+id]||0)>=(num(list[id].updatedAt)||0))delete list[id];
+  const seen=new Set(),log=[];for(const x of[...(Array.isArray(b.log)?b.log:[]),...(a.log||[])]){const c=cleanLog(x);if(!c)continue;const k=[c.id,c.t,c.a,c.b,c.s].join('|');if(!seen.has(k)){seen.add(k);log.push(c)}}log.sort((p,q)=>p.t-q.t);
+  const chars=cleanChars(b.chars);for(const[id,c]of Object.entries(a.chars||{}))if(!chars[id]||(c.at||0)>=(chars[id].at||0))chars[id]=c;for(const id of Object.keys(chars))if((tomb['c:'+id]||0)>=(chars[id].at||0))delete chars[id];
+  const friends={...(b.friends&&typeof b.friends==='object'?b.friends:{})};for(const[u,f]of Object.entries(a.friends||{}))if(!friends[u]||(f.at||0)>=(friends[u].at||0))friends[u]=f;for(const u of Object.keys(friends))if(!friends[u]||(tomb['f:'+u]||0)>=(friends[u].at||0))delete friends[u];
+  const tiers={...(b.tiers&&typeof b.tiers==='object'?b.tiers:{})};for(const[k,t]of Object.entries(a.tiers||{}))if(!tiers[k]||(t.at||0)>=(tiers[k].at||0))tiers[k]=t;
+  const rn=(num(b.sAt)||0)>(num(a.sAt)||0),bs=b.s&&typeof b.s==='object'?b.s:{};const s=rn?{...a.s,...bs}:{...bs,...a.s};const ach={...(bs.ach||{})};for(const[k,t]of Object.entries((a.s||{}).ach||{}))if(!ach[k]||t<ach[k])ach[k]=t;s.ach=ach;
+  return{v:1,list,log:log.slice(-3000),tomb,chars,friends,tiers,s,sAt:Math.max(num(a.sAt)||0,num(b.sAt)||0)}}
+function applyBody(m){const list={};for(const[id,e]of Object.entries(m.list||{})){const n=num(id);if(!n||!e||typeof e.media!=='object'||!e.media||!STATUS[e.status])continue;list[n]=cleanEntry(n,e)}
+  SYNC_APPLYING=true;DB.list=list;DB.log=m.log||[];DB.tomb=m.tomb||{};DB.chars=m.chars||{};DB.friends=m.friends||{};DB.tiers=m.tiers||{};for(const k of SYNC_SET)if(m.s&&m.s[k]!==undefined)DB.settings[k]=m.s[k];DB.settings.sAt=m.sAt||0;save();SYNC_APPLYING=false}
+async function syncNow(opt={}){if(!logged())return;if(syncBusy){syncAgain=opt.pull?'pull':(syncAgain||true);return}syncBusy=true;SYNC_STATE='busy';
+  try{let rev=DB.settings.syncRev,remote=null;if(opt.pull||!rev){const r=await api('/api/data');rev=r.rev||0;remote=r.body}
+    for(let i=0;i<4;i++){if(remote)applyBody(mergeBodies(localBody(),remote));try{const w=await api('/api/data',{method:'PUT',body:{rev:rev||0,body:localBody()}});DB.settings.syncRev=w.rev;break}catch(e){if(e.status!==409||i===3)throw e;rev=e.data.rev;remote=e.data.body}}
+    DB.settings.syncAt=Date.now();SYNC_APPLYING=true;save();SYNC_APPLYING=false;SYNC_STATE='ok';if(opt.manual)toast('☁️ تزامنت قائمتك');
+    if(!(document.activeElement&&document.activeElement.matches('textarea,input')))rerender()}
+  catch(e){SYNC_STATE='err';if(opt.manual||e.message==='unauth')toast(apiErr(e))}
+  syncBusy=false;if(syncAgain){const p=syncAgain==='pull';syncAgain=false;p?syncNow({pull:true}):scheduleSync()}}
+function logoutLocal(expired){for(const k of['token','user','syncRev','syncAt','push'])delete DB.settings[k];SYNC_APPLYING=true;save();SYNC_APPLYING=false;SRVF={at:0,list:[],busy:false};PARTIES={at:0,list:[]};if(expired)toast(SRV_ERR.unauth);rerender()}
+function openAuth(mode){const t={signup:'سوّ حساب',login:'سجّل دخول',reset:'نسيت كلمة السر'}[mode];
+  openSheet(`<h3>☁️ ${t}</h3>${mode==='signup'?`<div class="fld"><label for="auName">اسمك (يشوفه ربعك)</label><input id="auName" maxlength="30" value="${esc(DB.settings.name||'')}"></div>`:''}
+  <div class="fld"><label for="auUser">اسم المستخدم</label><input id="auUser" dir="ltr" autocomplete="username" autocapitalize="off" spellcheck="false" placeholder="saud_99"></div>
+  ${mode==='reset'?'<div class="fld"><label for="auRec">رمز الاسترجاع</label><input id="auRec" dir="ltr" autocapitalize="characters" spellcheck="false" placeholder="XXXX-XXXX-XXXX"></div>':''}
+  <div class="fld"><label for="auPass">${mode==='reset'?'كلمة السر الجديدة':'كلمة السر'}</label><input id="auPass" type="password" dir="ltr" autocomplete="${mode==='login'?'current-password':'new-password'}"></div>
+  <div class="bbtns"><button class="btn" data-act="authgo" data-v="${mode}">${t}</button></div>
+  <p class="small">${mode==='login'?'<button class="lnkbtn" data-act="auth" data-v="signup">ما عندك حساب؟ سوّ واحد</button> · <button class="lnkbtn" data-act="auth" data-v="reset">نسيت كلمة السر؟</button>':'<button class="lnkbtn" data-act="auth" data-v="login">عندك حساب؟ سجّل دخول</button>'}</p>
+  ${mode==='signup'?'<p class="muted small">قائمتك اللي بهالجهاز تنضاف لحسابك تلقائي.</p>':''}`)}
+async function authGo(mode){const g=id=>((($('#'+id)||{}).value)||'').trim();const body={username:g('auUser'),password:(($('#auPass')||{}).value)||''};if(mode==='signup')body.name=g('auName');if(mode==='reset')body.recovery=g('auRec');
+  const btn=$('[data-act="authgo"]');if(btn)btn.disabled=true;
+  try{const r=await api('/api/'+mode,{method:'POST',body});DB.settings.token=r.token;DB.settings.user=r.user;if(r.user.name)DB.settings.name=r.user.name;delete DB.settings.syncRev;save();
+    if(r.recovery)openSheet(`<h3>🔑 احفظ رمز الاسترجاع</h3><p>إذا نسيت كلمة السر، تحتاج هالرمز عشان ترجع حسابك. انسخه أو صوّره واحفظه بمكان آمن، لأنه ما يطلع لك مرة ثانية.</p><div class="reccode" dir="ltr">${esc(r.recovery)}</div><div class="bbtns"><button class="btn" data-act="copytxt" data-v="${esc(r.recovery)}">📋 انسخه</button><button class="btn ghost" data-act="sheetclose">حفظته ✓</button></div>`);else closeSheet();
+    toast(mode==='login'?`هلا ${r.user.name} 👋`:mode==='signup'?'انسوى حسابك ✓':'تغيّرت كلمة السر ✓');await syncNow({pull:true});loadSrvFriends(true);loadParties(true);rerender()}
+  catch(e){toast(apiErr(e));if(btn)btn.disabled=false}}
+function b64uToU8(s){const p='='.repeat((4-s.length%4)%4);const b=atob((s+p).replace(/-/g,'+').replace(/_/g,'/'));return Uint8Array.from(b,c=>c.charCodeAt(0))}
+async function enablePush(){if(!('serviceWorker'in navigator)||!('PushManager'in window)||!window.Notification){toast(isIOS()?'بالآيفون: ثبّت أنميتي على الشاشة الرئيسية أول، وافتحه من هناك وفعّل التنبيهات':'متصفحك ما يدعم التنبيهات');return}
+  if(await Notification.requestPermission()!=='granted'){toast('ما سمحت بالتنبيهات. تقدر تسمح لها من إعدادات المتصفح');return}
+  try{const reg=await navigator.serviceWorker.ready;const{key}=await api('/api/push/key');let sub=await reg.pushManager.getSubscription();if(!sub)sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:b64uToU8(key)});
+    await api('/api/push/sub',{method:'POST',body:{sub:sub.toJSON()}});DB.settings.push=1;save();toast('🔔 تفعّلت التنبيهات');rerender()}catch(e){toast(e.message&&SRV_ERR[e.message]?apiErr(e):'ما قدرت أفعّل التنبيهات بهالمتصفح')}}
+async function srvSet(){const v=((($('#setSrv')||{}).value)||'').trim().replace(/\/+$/,'');if(!v){delete DB.settings.server;save();rerender();return}
+  if(!/^https:\/\/[\w.-]+(:\d+)?$/.test(v)&&!/^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(v)){toast('الرابط لازم يبدأ بـ https://');return}
+  try{const r=await fetch(v+'/health');if(!r.ok)throw 0;DB.settings.server=v;save();toast('✓ وصلت للسيرفر');rerender()}catch(e){toast('ما قدرت أوصل لهالسيرفر، تأكد من الرابط')}}
+function accountBoxHTML(){if(!SRV())return'';const u=DB.settings.user;
+  if(!logged())return`<div class="box acct"><h3>☁️ حسابك</h3><p class="muted small">سوّ حساب عشان تنحفظ قائمتك بالسيرفر وتتزامن بين أجهزتك، ويجيك تنبيه لما تنزل حلقة، وتشوف شلتك مباشرة وتسوون سهرات.</p><div class="bbtns"><button class="btn sm" data-act="auth" data-v="signup">سوّ حساب</button><button class="btn ghost sm" data-act="auth" data-v="login">سجّل دخول</button></div></div>`;
+  const st=SYNC_STATE==='busy'?'أزامن الحين…':SYNC_STATE==='err'?'⚠️ آخر مزامنة ما نجحت':DB.settings.syncAt?`آخر مزامنة: ${dayLabel(DB.settings.syncAt)} ${fTime(DB.settings.syncAt)}`:'';
+  return`<div class="box acct"><h3>☁️ حسابك <span class="muted small" dir="ltr">@${esc(u&&u.username)}</span></h3><p class="muted small">${st}</p>
+  <div class="bbtns"><button class="btn sm" data-act="syncnow">🔄 زامن الحين</button>${DB.settings.push?'<button class="btn ghost sm" data-act="pushtest">🔔 جرّب التنبيه</button>':'<button class="btn ghost sm" data-act="push">🔔 فعّل تنبيهات الحلقات</button>'}</div>
+  <div class="field"><span>رمز صداقتك</span><span><b class="code" dir="ltr">${esc(u&&u.code)}</b> <button class="lnkbtn" data-act="copytxt" data-v="${esc(u&&u.code)}">انسخه</button></span></div>
+  <div class="bbtns"><button class="btn ghost sm" data-act="logout">تسجيل خروج</button><button class="btn ghost sm danger" data-act="delacct">احذف حسابي</button></div></div>`}
+function serverFieldHTML(){if(SERVER_DEFAULT&&!DB.settings.server)return'';return`<div class="fld" style="margin-top:12px"><label for="setSrv">رابط السيرفر <small class="muted">(للمزامنة والتنبيهات)</small></label><div class="inrow" style="margin-top:6px"><input id="setSrv" dir="ltr" placeholder="https://….up.railway.app" value="${esc(DB.settings.server||'')}"><button class="btn sm" data-act="srvset">حفظ</button></div></div>`}
+
+/* ============ الشلة المباشرة والسهرات ============ */
+let SRVF={at:0,list:[],busy:false},PARTIES={at:0,list:[]};
+function srvFriendObj(f){const media={};for(const[id,m]of Object.entries(f.media||{}))if(m&&typeof m==='object')media[id]=liteMedia(snap(m));
+  return{key:'s'+num(f.id),sid:num(f.id),live:1,name:str(f.name||f.username).slice(0,30)||'صديق',username:str(f.username),at:num(f.at)||0,items:(Array.isArray(f.items)?f.items:[]).filter(Array.isArray).map(x=>[num(x[0]),num(x[1])||0,num(x[2])||0,num(x[3])||0,num(x[4])||0]).filter(x=>x[0]&&media[x[0]]),media}}
+async function loadSrvFriends(force){if(!logged()||SRVF.busy)return;if(!force&&Date.now()-SRVF.at<60e3)return;SRVF.busy=true;
+  try{const r=await api('/api/friends');SRVF.list=(r.friends||[]).map(srvFriendObj);SRVF.at=Date.now();if(TAB==='friends')rerender()}catch(e){}SRVF.busy=false}
+async function loadParties(force){if(!logged())return;if(!force&&Date.now()-PARTIES.at<60e3)return;try{const r=await api('/api/parties');PARTIES={at:Date.now(),list:Array.isArray(r.parties)?r.parties:[]};if(TAB==='friends'||TAB==='home')rerender()}catch(e){}}
+function allFriends(){return[...SRVF.list.map(f=>[f.key,f]),...Object.entries(DB.friends||{})]}
+function partyCard(p){const me=DB.settings.user&&DB.settings.user.id,mine=p.ownerId===me,my=(p.members||[]).find(x=>x.id===me);const md=p.media||{},m={type:md.type,title:md.title,cover:md.cover,color:md.color};
+  return`<div class="party"><img src="${imgSrc(m)}" alt="" data-open="${num(p.mediaId)}"><div class="pb"><b>${esc(title(m))}${num(p.episode)?` · ${V(m).the} ${num(p.episode)}`:''}</b><span>🕘 ${dayLabel(p.startsAt)} ${fTime(p.startsAt)} · ${mine?'أنت العازم':'يعزمك '+esc(p.owner)}</span>${p.note?`<span class="muted">${esc(p.note)}</span>`:''}<span class="muted small">${(p.members||[]).map(x=>`${x.going===1?'✅':x.going===-1?'❌':'⏳'} ${esc(x.name)}`).join(' · ')}</span>
+  <div class="bbtns">${my?`<button class="btn sm ${my.going===1?'':'ghost'}" data-act="rsvp" data-v="${num(p.id)}:1">جاي ✓</button><button class="btn sm ghost" data-act="rsvp" data-v="${num(p.id)}:-1">ما أقدر</button>`:''}${mine?`<button class="btn ghost sm danger" data-act="ptdel" data-v="${num(p.id)}">ألغها</button>`:''}</div></div></div>`}
+function partiesHTML(soon){const L=(PARTIES.list||[]).filter(p=>p.startsAt>Date.now()-3*3600e3&&(!soon||p.startsAt<Date.now()+2*864e5));if(!L.length)return'';return`<div class="box"><h3>🍿 السهرات الجاية</h3>${L.map(partyCard).join('')}</div>`}
+function openPartySheet(){if(!SRVF.list.length){toast('ضيف ربعك بالشلة المباشرة (برمز الصداقة) أول');return}const e=DB.list[DET.id];const d=new Date(Date.now()+3600e3);d.setMinutes(0,0,0);const local=new Date(d.getTime()-d.getTimezoneOffset()*60e3).toISOString().slice(0,16);
+  openSheet(`<h3>🍿 سهرة مع الشلة</h3><p class="muted small">«${esc(title(DET.m))}»</p><div class="fld"><label for="ptAt">الموعد</label><input id="ptAt" type="datetime-local" value="${local}"></div><div class="fld"><label for="ptEp">${V(DET.m).the}</label><input id="ptEp" type="number" inputmode="numeric" min="1" value="${(e?e.progress:0)+1}"></div><div class="ph2">مين تعزم؟</div><div class="ptfs">${SRVF.list.map(f=>`<label class="ptf"><input type="checkbox" value="${f.sid}" checked> ${esc(f.name)}</label>`).join('')}</div><textarea id="ptNote" maxlength="300" placeholder="ملاحظة (اختياري): مثلاً نتقابل بالديسكورد"></textarea><div class="bbtns"><button class="btn" data-act="ptcreate">أرسل العزيمة</button></div><p class="muted small">يوصلهم تنبيه بالعزيمة، ويجيكم كلكم تذكير قبل الموعد بربع ساعة.</p>`)}
+async function partyCreate(){const at=new Date((($('#ptAt')||{}).value)||'').getTime();if(!at||at<Date.now()-60e3){toast('اختار موعد بالمستقبل');return}const invite=[...document.querySelectorAll('.ptf input:checked')].map(i=>+i.value);if(!invite.length){toast('اختار واحد على الأقل');return}
+  const m=DET.m;try{await api('/api/parties',{method:'POST',body:{mediaId:DET.id,media:{type:typeOf(m),title:m.title,cover:cover(m),color:colorOf(m)},episode:num((($('#ptEp')||{}).value)),startsAt:at,note:((($('#ptNote')||{}).value)||'').slice(0,300),invite}});closeSheet();toast('🍿 انرسلت العزيمة');loadParties(true)}catch(e){toast(apiErr(e))}}
+
+/* ============ ترتيبك (Tier List) ============ */
+const TIERS=[['S','#ef4444'],['A','#f59e0b'],['B','#eab308'],['C','#22c55e'],['D','#3b82f6']];let TIER_SEL=null;
+function tierData(mode){DB.tiers=DB.tiers||{};const t=DB.tiers[mode]&&typeof DB.tiers[mode]==='object'?DB.tiers[mode]:{};for(const[k]of TIERS)if(!Array.isArray(t[k]))t[k]=[];return t}
+function renderTier(){const mode=MODE(),t=tierData(mode);const pool=Object.values(DB.list).filter(e=>ofMode(e)&&e.status!=='PLANNING');const placed=new Set(TIERS.flatMap(([k])=>t[k]));
+  const item=e=>`<button class="ti ${TIER_SEL===e.id?'sel':''}" data-act="tiersel" data-v="${e.id}" title="${esc(title(e.media))}" aria-label="${esc(title(e.media))}"><img src="${imgSrc(e.media)}" alt=""></button>`;
+  const free=pool.filter(e=>!placed.has(e.id));
+  view.innerHTML=`${modeSwitch()}<div class="sec-h"><h2>🏅 ترتيبك</h2><a href="#/me">إحصائياتي ←</a></div><p class="muted small">${TIER_SEL?'👆 الحين اضغط على المستوى اللي تبيه (أو «مو مرتّبة» ترجّعه).':`اضغط على أي ${V(mode).noun} وبعدين اضغط على المستوى اللي تبيه.`}</p>
+  <div class="tiers">${TIERS.map(([k,c])=>`<div class="trow ${TIER_SEL?'target':''}" data-act="tierput" data-v="${k}"><div class="tlab" style="background:${c}">${k}</div><div class="titems">${t[k].filter(id=>DB.list[id]).map(id=>item(DB.list[id])).join('')}</div></div>`).join('')}</div>
+  <div class="sec-h"><h2>مو مرتّبة <small class="muted">${free.length}</small></h2></div><div class="titems pool ${TIER_SEL&&placed.has(TIER_SEL)?'target':''}" data-act="tierput" data-v="">${free.map(item).join('')||`<span class="muted small">${pool.length?'رتّبت كل شي 👌':'ضيف أنميات لقائمتك أول'}</span>`}</div>
+  <div class="bbtns" style="margin-top:14px"><button class="btn sm" data-act="tierimg">🖼️ طلّعها صورة</button><button class="btn ghost sm" data-act="tierauto">⭐ رتّبها من تقييماتي</button><button class="btn ghost sm" data-act="tierclear">فضّيها</button></div>`}
+function tierPut(k){const mode=MODE(),t=tierData(mode);if(!TIER_SEL){toast('اختار واحد أول');return}for(const[x]of TIERS)t[x]=t[x].filter(id=>id!==TIER_SEL);if(k)t[k].push(TIER_SEL);TIER_SEL=null;t.at=Date.now();DB.tiers[mode]=t;save();const y=scrollY;renderTier();scrollTo(0,y)}
+function tierAuto(){const mode=MODE(),t=tierData(mode);let n=0;const tierOf=s=>s>=9?'S':s===8?'A':s===7?'B':s>=5?'C':'D';
+  for(const e of Object.values(DB.list)){if(!ofMode(e)||!e.score)continue;for(const[x]of TIERS)t[x]=t[x].filter(id=>id!==e.id);t[tierOf(e.score)].push(e.id);n++}
+  if(!n){toast('قيّم كم أنمي أول (من 10)');return}t.at=Date.now();DB.tiers[mode]=t;save();renderTier();toast(`رتّبت ${n} حسب تقييماتك`)}
+async function shareImageSheet(titleTxt,blob,name,text){SHARE_IMG={blob,name,text};const sh=canShareFiles();openSheet(`<h3>${titleTxt}</h3><img class="cardimg" src="${URL.createObjectURL(blob)}" alt=""><div class="bbtns">${sh?'<button class="btn" data-act="imgshare">📤 شاركها</button>':''}<button class="btn ${sh?'ghost':''}" data-act="imgdl">⬇️ نزّلها</button></div>`)}
+let SHARE_IMG=null;
+function canvasBase(W,H){const c=document.createElement('canvas');c.width=W;c.height=H;const x=c.getContext('2d');const bg=x.createLinearGradient(0,0,W,H);bg.addColorStop(0,'#15112a');bg.addColorStop(1,'#0b0c12');x.fillStyle=bg;x.fillRect(0,0,W,H);glow(x,W-120,90,460,'rgba(139,92,246,.35)');glow(x,90,H-120,520,'rgba(236,72,153,.2)');x.direction='rtl';return[c,x]}
+const CF=(w,s)=>`${w} ${s}px Tajawal,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif`;
+function drawCover(x,img,e,cx,cy,cw,ch,r){x.save();rr(x,cx,cy,cw,ch,r);x.clip();if(img){const k=Math.max(cw/img.width,ch/img.height),sw=cw/k,sh=ch/k;x.drawImage(img,(img.width-sw)/2,(img.height-sh)/2,sw,sh,cx,cy,cw,ch)}else{x.fillStyle=colorOf(e.media)||'#2a2f43';x.fillRect(cx,cy,cw,ch);x.fillStyle='rgba(255,255,255,.85)';x.font=CF(800,Math.round(cw*.4));x.textAlign='center';x.fillText(title(e.media).trim().charAt(0)||'?',cx+cw/2,cy+ch/2+cw*.14)}x.restore()}
+function blobOf(c){return new Promise((res,rej)=>c.toBlob(b=>b?res(b):rej(new Error('blob')),'image/png'))}
+async function tierImage(){const mode=MODE(),t=tierData(mode);const rows=TIERS.map(([k,c])=>({k,c,ids:t[k].filter(id=>DB.list[id])}));if(!rows.some(r=>r.ids.length)){toast('رتّب شي أول');return}
+  openSheet('<h3>🖼️ ترتيبك</h3><div class="sk" style="aspect-ratio:3/4;margin-top:10px"></div>');try{await document.fonts.load(CF(800,60))}catch(e){}
+  const W=1080,P=48,L=120,cw=110,ch=165,gap=10,per=Math.floor((W-2*P-L-24+gap)/(cw+gap));const rowH=r=>Math.max(1,Math.ceil(r.ids.length/per))*(ch+gap)+gap;
+  const H=230+rows.reduce((s,r)=>s+rowH(r)+14,0)+90;const[c,x]=canvasBase(W,H);const imgs=new Map(await Promise.all(rows.flatMap(r=>r.ids).map(async id=>[id,await loadImg(cover(DB.list[id].media))])));if(sheetEl.hidden)return;
+  drawLogo(x,W-P-70,50,70);x.textAlign='right';x.fillStyle='#fff';x.font=CF(800,60);x.fillText(mode==='MANGA'?'ترتيبي للمانجا':'ترتيبي للأنمي',W-P-90,108);x.fillStyle='#9ca2b8';x.font=CF(500,28);x.fillText('سوّيته بأنميتي',W-P-90,152);
+  let y=200;for(const r of rows){const h=rowH(r);x.fillStyle='rgba(255,255,255,.05)';rr(x,P,y,W-2*P,h,18);x.fill();x.fillStyle=r.c;rr(x,W-P-L,y,L,h,18);x.fill();x.fillStyle='#fff';x.font=CF(800,64);x.textAlign='center';x.direction='ltr';x.fillText(r.k,W-P-L/2,y+h/2+22);x.direction='rtl';
+    r.ids.forEach((id,i)=>{const col=i%per,row=Math.floor(i/per);drawCover(x,imgs.get(id),DB.list[id],W-P-L-24-(col+1)*cw-col*gap,y+gap+row*(ch+gap),cw,ch,10)});y+=h+14}
+  x.direction='ltr';x.textAlign='center';x.fillStyle='#8b90a6';x.font=CF(500,26);x.fillText('ilo0ol.github.io/experiments/anime',W/2,H-40);
+  try{shareImageSheet('🖼️ ترتيبك',await blobOf(c),'animeti-tier.png','ترتيبي بأنميتي 🏅')}catch(e){openSheet('<h3>🖼️ ترتيبك</h3><p class="muted">ما قدرت أطلّع الصورة بهالمتصفح.</p>')}}
+
+/* ============ ملخص السنة ============ */
+const FDU=new Intl.DateTimeFormat('ar-u-nu-latn',{day:'numeric',month:'long',timeZone:'UTC'});
+function yearStats(y){const from=new Date(y,0,1).getTime(),to=new Date(y+1,0,1).getTime();let eps=0,mins=0,ch=0,night=0;const per={},months=Array(12).fill(0),days={},done=new Set(),gen={};
+  for(const x of DB.log){if(x.t<from||x.t>=to||!DB.list[x.id])continue;const e=DB.list[x.id],isM=typeOf(e.media)==='MANGA';if(x.s==='COMPLETED'){if(!isM)done.add(x.id);continue}if(x.b==null)continue;const n=x.b-x.a;
+    if(isM){if(n<=200)ch+=n;continue}if(n>JUMP)continue;eps+=n;mins+=n*(e.media.duration||24);per[x.id]=(per[x.id]||0)+n;const d=new Date(x.t);months[d.getMonth()]+=n;const dk=dayNo(x.t);days[dk]=(days[dk]||0)+n;for(const g of e.media.genres||[])gen[g]=(gen[g]||0)+n;if(d.getHours()<5)night+=n}
+  const ds=Object.keys(days).map(Number).sort((a,b)=>a-b);let best=0,run=0,prev=null;for(const n of ds){run=prev!=null&&n===prev+1?run+1:1;best=Math.max(best,run);prev=n}
+  const bm=months.indexOf(Math.max(...months)),bd=Object.entries(days).sort((a,b)=>b[1]-a[1])[0];
+  return{y,eps,hrs:Math.round(mins/60),ch,night,streak:best,top:Object.entries(per).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([id,n])=>({e:DB.list[id],n})),month:months[bm]?{i:bm,n:months[bm]}:null,day:bd?{t:+bd[0]*864e5,n:bd[1]}:null,done:[...done].map(id=>DB.list[id]).filter(Boolean),genre:(Object.entries(gen).sort((a,b)=>b[1]-a[1])[0]||[])[0]}}
+const MONTHS=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
+function wrappedYears(){const ys=new Set(DB.log.map(x=>new Date(x.t).getFullYear()));ys.add(new Date().getFullYear());return[...ys].sort((a,b)=>b-a)}
+function renderWrapped(q){const ys=wrappedYears();let y=+q.get('y')||ys[0];const s=yearStats(y);const cardImg=e=>`<img src="${imgSrc(e.media)}" alt="" data-open="${e.id}">`;
+  let h=`<div class="sec-h"><h2>🎁 ملخص سنتك</h2><a href="#/me">إحصائياتي ←</a></div><div class="chips">${ys.map(v=>`<button class="chip ${v===y?'on':''}" data-act="wyear" data-v="${v}">${v}</button>`).join('')}</div>`;
+  if(!s.eps&&!s.ch&&!s.done.length){view.innerHTML=h+`<div class="empty"><div class="big">🗓️</div>ما سجلت شي بـ${y}.<br>علّم الحلقات اللي تشوفها، وآخر السنة يطلع لك ملخص كامل.</div>`;return}
+  h+=`<div class="wcards"><div class="wcard w1"><small>سنتك بالأنمي</small><b class="wbig">${y}</b><span>خلنا نشوف وش سويت 👀</span></div>
+  <div class="wcard w2"><small>شفت</small><b class="wbig">${s.eps}</b><span>حلقة، يعني ${pl(s.hrs,W_HR)}${s.hrs>=24?` (${pl(Math.round(s.hrs/24),W_DAY)} كاملة!)`:''}</span></div>`;
+  if(s.top.length)h+=`<div class="wcard w3"><small>أكثر أنمي شفته</small><div class="wtop">${cardImg(s.top[0].e)}<div><b>${esc(title(s.top[0].e.media))}</b><span>${pl(s.top[0].n,W_EP)}</span></div></div>${s.top.length>1?`<ol class="wlist">${s.top.slice(1).map(x=>`<li data-open="${x.e.id}">${esc(title(x.e.media))} <span>${x.n}</span></li>`).join('')}</ol>`:''}</div>`;
+  if(s.genre)h+=`<div class="wcard w4"><small>النوع اللي ما شبعت منه</small><b class="wmid">${esc(GENRES[s.genre]||s.genre)}</b></div>`;
+  if(s.month)h+=`<div class="wcard w5"><small>أنشط شهر</small><b class="wmid">${MONTHS[s.month.i]}</b><span>${pl(s.month.n,W_EP)}${s.day?` · وأطول ماراثون ${pl(s.day.n,W_EP)} في ${FDU.format(s.day.t)}`:''}</span></div>`;
+  if(s.done.length)h+=`<div class="wcard w6"><small>خلّصت</small><b class="wbig">${s.done.length}</b><span>أنمي</span><div class="wcovers">${s.done.slice(0,8).map(cardImg).join('')}</div></div>`;
+  if(s.streak>1||s.night||s.ch)h+=`<div class="wcard w7">${s.streak>1?`<p>🔥 أطول سلسلة: <b>${pl(s.streak,W_DAY)}</b> ورا بعض</p>`:''}${s.night?`<p>🦉 شفت <b>${pl(s.night,W_EP)}</b> بعد نص الليل</p>`:''}${s.ch?`<p>📖 وقريت <b>${pl(s.ch,W_CH)}</b> مانجا</p>`:''}</div>`;
+  h+=`</div><div class="bbtns" style="margin-top:14px;justify-content:center"><button class="btn" data-act="wimg" data-v="${y}">🖼️ طلّع ملخصك صورة وشاركه</button></div>`;view.innerHTML=h}
+async function wrappedImage(y){const s=yearStats(y);openSheet('<h3>🎁 ملخص سنتك</h3><div class="sk" style="aspect-ratio:9/16;margin-top:10px"></div>');try{await document.fonts.load(CF(800,80))}catch(e){}
+  const W=1080,H=1920,P=80;const[c,x]=canvasBase(W,H);const tops=s.top.slice(0,3);const imgs=await Promise.all(tops.map(t=>loadImg(cover(t.e.media))));if(sheetEl.hidden)return;
+  drawLogo(x,W-P-76,70,76);x.textAlign='right';x.fillStyle='#fff';x.font=CF(800,46);x.fillText('أنميتي',W-P-96,124);
+  x.font=CF(800,96);x.fillText('سنتي بالأنمي',W-P,300);x.fillStyle='#c4b5fd';x.font=CF(800,150);x.direction='ltr';x.textAlign='right';x.fillText(String(y),W-P,460);x.direction='rtl';
+  const tiles=[[s.eps,'حلقة'],[s.hrs,'ساعة'],[s.done.length,'أنمي خلّصته'],[s.streak,'أطول سلسلة (يوم)']];const tw=(W-2*P-28)/2,th=190;
+  tiles.forEach(([v,l],i)=>{const col=i%2,row=Math.floor(i/2),tx=W-P-tw-col*(tw+28),ty=540+row*(th+26);x.fillStyle='rgba(255,255,255,.07)';rr(x,tx,ty,tw,th,30);x.fill();x.textAlign='right';x.fillStyle='#fff';x.font=CF(800,86);x.fillText(String(v),tx+tw-36,ty+108);x.fillStyle='#b9bed1';x.font=CF(500,34);x.fillText(l,tx+tw-36,ty+160)});
+  let yy=1010;if(tops.length){x.textAlign='right';x.fillStyle='#fff';x.font=CF(700,44);x.fillText('أكثر شي شفته',W-P,yy);const cw=270,ch=405,gap=(W-2*P-3*cw)/2;
+    tops.forEach((t,i)=>{const cx=W-P-cw-i*(cw+gap),cy=yy+40;drawCover(x,imgs[i],t.e,cx,cy,cw,ch,22);x.direction=/[؀-ۿ]/.test(title(t.e.media))?'rtl':'ltr';x.textAlign='center';x.fillStyle='#fff';x.font=CF(700,30);x.fillText(fitText(x,title(t.e.media),cw),cx+cw/2,cy+ch+48);x.direction='rtl';x.fillStyle='#c4b5fd';x.font=CF(700,28);x.fillText(pl(t.n,W_EP),cx+cw/2,cy+ch+90)});yy+=600}
+  x.textAlign='right';x.fillStyle='#b9bed1';x.font=CF(500,38);if(s.genre)x.fillText(`النوع المفضل: ${GENRES[s.genre]||s.genre}`,W-P,yy+20);if(s.month)x.fillText(`أنشط شهر: ${MONTHS[s.month.i]}`,W-P,yy+80);if(s.ch)x.fillText(`وقريت ${pl(s.ch,W_CH)} مانجا`,W-P,yy+140);
+  x.direction='ltr';x.textAlign='center';x.fillStyle='#8b90a6';x.font=CF(500,30);x.fillText('ilo0ol.github.io/experiments/anime',W/2,H-60);
+  try{shareImageSheet('🎁 ملخص سنتك',await blobOf(c),`animeti-${y}.png`,`سنتي بالأنمي ${y} 🎁`)}catch(e){openSheet('<h3>🎁 ملخص سنتك</h3><p class="muted">ما قدرت أطلّع الصورة بهالمتصفح.</p>')}}
+
+/* ============ المؤدين الصوتيين ============ */
+const Q_STAFF='query($id:Int){Staff(id:$id){id characterMedia(sort:POPULARITY_DESC,perPage:16){edges{node{id type isAdult title{romaji english native} coverImage{large color}} characters{id name{full} image{large}}}}}}';
+function refreshFavBtns(id){const on=!!(DB.chars||{})[id];document.querySelectorAll(`[data-act="charfav"][data-v="${id}"]`).forEach(b=>{if(b.classList.contains('chfav')){b.classList.toggle('on',on);b.textContent=on?'❤️':'🤍'}else b.textContent=on?'❤️ بالمفضلة':'🤍 ضيفها للمفضلة';b.setAttribute('aria-label',on?'شيلها من المفضلة':'ضيفها للمفضلة')})}
+async function openChar(id){const c=CHARS_CUR.get(id);if(!c)return;const n=c.node,va=(c.voiceActors||[])[0],fav=(DB.chars||{})[id];
+  openSheet(`<div class="chhead"><img src="${esc(safeUrl(n.image&&n.image.large))||BLANK}" alt=""><div><h3>${esc((n.name&&n.name.full)||'')}</h3><div class="muted">${esc((n.name&&n.name.native)||'')}</div><div class="muted small">${ROLE[c.role]||''} · ${esc(title(DET.m))}</div><button class="btn ghost sm" data-act="charfav" data-v="${id}" style="margin-top:8px">${fav?'❤️ بالمفضلة':'🤍 ضيفها للمفضلة'}</button></div></div>
+  ${va?`<div class="ph2">🎙️ المؤدي الصوتي (ياباني)</div><div class="vahead"><img src="${esc(safeUrl(va.image&&va.image.large))||BLANK}" alt=""><div><b>${esc((va.name&&va.name.full)||'')}</b><div class="muted">${esc((va.name&&va.name.native)||'')}</div></div></div><div class="ph2">أدواره الثانية</div><div id="vaRoles"><div class="sk" style="height:90px"></div></div>`:'<p class="muted small" style="margin-top:14px">ما فيه معلومات عن المؤدي الصوتي.</p>'}`);
+  if(!va)return;try{const d=await gql(Q_STAFF,{id:va.id},86400);const el=$('#vaRoles');if(!el)return;const edges=((d.Staff&&d.Staff.characterMedia&&d.Staff.characterMedia.edges)||[]).filter(e=>e&&e.node&&!e.node.isAdult&&e.node.id!==DET.id);
+    el.innerHTML=edges.length?`<div class="varoles">${edges.map(e=>{MEDIA.set(e.node.id,e.node);const ch=(e.characters||[])[0];return`<a class="varole" href="#/anime/${e.node.id}"><img src="${imgSrc(e.node)}" alt=""><b>${esc(title(e.node))}</b><span>${ch&&ch.name?esc(ch.name.full||''):''}</span></a>`}).join('')}</div>`:'<p class="muted small">ما لقيت أدوار ثانية.</p>'}
+  catch(e){const el=$('#vaRoles');if(el)el.innerHTML=`<p class="muted small">${esc(errMsg(e))}</p>`}}
 
 /* ============ الأحداث ============ */
 document.addEventListener('click',ev=>{if(ev.target===sheetEl){closeSheet();return}const t=ev.target.closest('[data-act]');if(t){ev.preventDefault();ev.stopPropagation();act(t.dataset.act,t);return}
@@ -1083,7 +1293,7 @@ function act(a,t){const v=t.dataset.v,did=+t.dataset.id||DET.id;let e;
   case'range':RANGE[DET.id]=+v;renderPanel();break;
   case'score':e=DB.list[DET.id];if(!e)break;e.score=e.score===+v?0:+v;e.updatedAt=Date.now();save();renderPanel();rerender();break;
   case'rewatch':e=DB.list[DET.id];if(!e)break;checkpoint(DET.id);e.repeat=(e.repeat||0)+1;e.progress=0;e.status='CURRENT';e.updatedAt=Date.now();e.seenAired=aired(e.media);save();changed(DET.id);toast('يلا من أول 🔁','تراجع',undo);break;
-  case'remove':e=DB.list[DET.id];if(!e||!confirm(`تبي تشيل «${title(e.media)}» من قائمتك؟`))break;checkpoint(DET.id);delete DB.list[DET.id];DB.log=DB.log.filter(x=>x.id!==DET.id);save();changed(DET.id);toast('انشال من قائمتك','تراجع',undo);break;
+  case'remove':e=DB.list[DET.id];if(!e||!confirm(`تبي تشيل «${title(e.media)}» من قائمتك؟`))break;checkpoint(DET.id);delete DB.list[DET.id];DB.tomb=DB.tomb||{};DB.tomb['e:'+DET.id]=Date.now();DB.log=DB.log.filter(x=>x.id!==DET.id);save();changed(DET.id);toast('انشال من قائمتك','تراجع',undo);break;
   case'dmore':{const d=$('#desc');if(d){d.classList.toggle('open');t.textContent=d.classList.contains('open')?'اختصر':'اقرأ كامل'}break}
   case'share':navigator.share({title:title(DET.m),text:`شوف «${title(DET.m)}»`,url:location.href}).catch(()=>{});break;
   case'export':exportBackup(false);break;
@@ -1106,14 +1316,38 @@ function act(a,t){const v=t.dataset.v,did=+t.dataset.id||DET.id;let e;
   case'cardshare':if(CARD_BLOB)navigator.share({files:[new File([CARD_BLOB],'animeti.png',{type:'image/png'})],text:'سجلّي بالأنمي 📺'}).catch(()=>{});break;
   case'month':{MONTH_SEL=v;const b=$('#mbox');if(b)b.outerHTML=monthlyHTML();break}
   case'mode':setMode(v);break;
-  case'goalset':{const i=$('#goalIn'+v),g=num(i&&i.value);if(!g||g>5000){toast('اكتب رقم بين 1 و5000');break}DB.settings[v==='MANGA'?'goalM':'goal']=g;GOAL_EDIT[v]=0;save();rerender();toast('🎯 انحفظ هدفك');break}
+  case'auth':openAuth(v);break;
+  case'authgo':authGo(v);break;
+  case'logout':if(confirm('تسجّل خروج؟ قائمتك تبقى بهالجهاز.')){api('/api/logout',{method:'POST'}).catch(()=>{});logoutLocal();toast('سجّلت خروج')}break;
+  case'delacct':{const pw=prompt('حذف الحساب نهائي، وتنمسح قائمتك من السيرفر (تبقى بهالجهاز). اكتب كلمة السر للتأكيد:');if(!pw)break;api('/api/me',{method:'DELETE',body:{password:pw}}).then(()=>{logoutLocal();toast('انحذف حسابك')}).catch(e=>toast(apiErr(e)));break}
+  case'syncnow':syncNow({pull:true,manual:true});break;
+  case'push':enablePush();break;
+  case'pushtest':api('/api/push/test',{method:'POST'}).then(r=>toast(r.sent?'🔔 أرسلت لك تنبيه تجربة':'ما لقيت جهاز مفعّل، فعّل التنبيهات مرة ثانية')).catch(e=>toast(apiErr(e)));break;
+  case'srvset':srvSet();break;
+  case'copytxt':(navigator.clipboard?navigator.clipboard.writeText(v):Promise.reject()).then(()=>toast('نسخته ✓')).catch(()=>prompt('انسخه:',v));break;
+  case'frcode':{const c=((($('#frCode')||{}).value)||'').trim();if(!c){toast('اكتب رمز صديقك');break}api('/api/friends',{method:'POST',body:{code:c}}).then(r=>{toast(`انضاف ${r.friend.name} للشلة 🟢`);loadSrvFriends(true)}).catch(e=>toast(apiErr(e)));break}
+  case'ptnew':openPartySheet();break;
+  case'ptcreate':partyCreate();break;
+  case'rsvp':{const[pid,g]=v.split(':');api(`/api/parties/${num(pid)}/rsvp`,{method:'POST',body:{going:+g}}).then(()=>{toast(+g===1?'أكّدت إنك جاي 🍿':'وصلهم إنك ما تقدر');loadParties(true)}).catch(e=>toast(apiErr(e)));break}
+  case'ptdel':if(confirm('تلغي السهرة؟'))api('/api/parties/'+num(v),{method:'DELETE'}).then(()=>{toast('انلغت السهرة');loadParties(true)}).catch(e=>toast(apiErr(e)));break;
+  case'tiersel':TIER_SEL=TIER_SEL===+v?null:+v;{const y=scrollY;renderTier();scrollTo(0,y)}break;
+  case'tierput':tierPut(v);break;
+  case'tierauto':tierAuto();break;
+  case'tierclear':if(confirm('تفضّي الترتيب كله؟')){const tt=tierData(MODE());for(const[k]of TIERS)tt[k]=[];tt.at=Date.now();DB.tiers[MODE()]=tt;TIER_SEL=null;save();renderTier()}break;
+  case'tierimg':tierImage();break;
+  case'wyear':replaceHash('#/wrapped?y='+v);break;
+  case'wimg':wrappedImage(+v);break;
+  case'imgdl':if(SHARE_IMG){download(SHARE_IMG.blob,SHARE_IMG.name);toast('نزلت الصورة ✓')}break;
+  case'imgshare':if(SHARE_IMG)navigator.share({files:[new File([SHARE_IMG.blob],SHARE_IMG.name,{type:'image/png'})],text:SHARE_IMG.text}).catch(()=>{});break;
+  case'goalset':{const i=$('#goalIn'+v),g=num(i&&i.value);if(!g||g>5000){toast('اكتب رقم بين 1 و5000');break}DB.settings[v==='MANGA'?'goalM':'goal']=g;DB.settings.sAt=Date.now();GOAL_EDIT[v]=0;save();rerender();toast('🎯 انحفظ هدفك');break}
   case'goaledit':GOAL_EDIT[v]=1;rerender();{const i=$('#goalIn'+v);if(i)i.focus()}break;
-  case'goaloff':delete DB.settings[v==='MANGA'?'goalM':'goal'];GOAL_EDIT[v]=0;save();rerender();break;
+  case'goaloff':delete DB.settings[v==='MANGA'?'goalM':'goal'];DB.settings.sAt=Date.now();GOAL_EDIT[v]=0;save();rerender();break;
   case'unspoil':UNSPOIL[DET.id]=1;{const y=detailEl.scrollTop;paintDetail();detailEl.scrollTop=y}break;
-  case'charfav':charFav(+v,t);break;
+  case'charfav':charFav(+v,null);refreshFavBtns(+v);break;
+  case'charopen':openChar(+v);break;
   case'snaps':openSnaps();break;
   case'snaprestore':snapRestore(v);break;
-  case'seqhide':{DB.settings.seqHide=DB.settings.seqHide||{};for(const x of seqVisible())DB.settings.seqHide[x.m.id]=1;save();rerender();toast('خفيتها، وبتطلع لك التكملات الجديدة بس');break}
+  case'seqhide':{DB.settings.seqHide=DB.settings.seqHide||{};for(const x of seqVisible())DB.settings.seqHide[x.m.id]=1;DB.settings.sAt=Date.now();save();rerender();toast('خفيتها، وبتطلع لك التكملات الجديدة بس');break}
   case'ratemode':RATE_MODE=!RATE_MODE;renderPanel();break;
   case'epr':if(EPED){EPED.r=EPED.r===+v?0:+v;document.querySelectorAll('.stars5 button').forEach((b,i)=>b.classList.toggle('on',i<EPED.r))}break;
   case'epsave':epSave(false);break;
@@ -1123,20 +1357,20 @@ function act(a,t){const v=t.dataset.v,did=+t.dataset.id||DET.id;let e;
   case'frshare':friendShare();break;
   case'fradd':friendAdd();break;
   case'frtab':replaceHash('#/friends?u='+encodeURIComponent(TABQ.get('u')||'')+'&v='+v);break;
-  case'frdel':{const f=(DB.friends||{})[v];if(!f||!confirm(`تبي تشيل ${f.name} من الشلة؟`))break;delete DB.friends[v];save();replaceHash('#/friends');toast('انشال من الشلة');break}
+  case'frdel':{if(v[0]==='s'){const f=SRVF.list.find(x=>x.key===v);if(!f||!confirm(`تبي تشيل ${f.name} من الشلة؟`))break;api('/api/friends/'+f.sid,{method:'DELETE'}).then(()=>{SRVF.list=SRVF.list.filter(x=>x.key!==v);replaceHash('#/friends');toast('انشال من الشلة')}).catch(e=>toast(apiErr(e)));break}const f=(DB.friends||{})[v];if(!f||!confirm(`تبي تشيل ${f.name} من الشلة؟`))break;delete DB.friends[v];DB.tomb=DB.tomb||{};DB.tomb['f:'+v]=Date.now();save();replaceHash('#/friends');toast('انشال من الشلة');break}
   case'imp-go':impStart();break;
   case'imp-back':IMP.phase='input';IMP.err=null;renderImport();break;
   case'imp-add':impCommit();break;
   case'imp-re':impResearch(+v);break;
   case'rand':{const a=Object.values(DB.list).filter(x=>x.status==='PLANNING'&&ofMode(x));if(!a.length)break;const pick=a[Math.floor(Math.random()*a.length)];toast(`وش رأيك بـ «${title(pick.media)}»؟ 🎲`);location.hash='#/anime/'+pick.id;break}
   case'snooze':DB.settings.snooze=Date.now();save();rerender();break;
-  case'wipe':if(confirm('متأكد؟ بتنمسح قائمتك وكل اللي شفته من هالجهاز.')&&confirm('آخر تأكيد: أمسح كل شي؟ (خذ نسخة احتياطية قبل إذا تبي)')){DB={list:{},log:[],settings:{...DB.settings,ach:{},seqHide:{},goalWins:0},friends:{},seq:[],chars:{},recs:{}};save();rerender();toast('انمسح كل شي')}break}}
+  case'wipe':if(confirm('متأكد؟ بتنمسح قائمتك وكل اللي شفته من هالجهاز.')&&confirm('آخر تأكيد: أمسح كل شي؟ (خذ نسخة احتياطية قبل إذا تبي)')){const tomb={},tn=Date.now();for(const id of Object.keys(DB.list))tomb['e:'+id]=tn;for(const id of Object.keys(DB.chars||{}))tomb['c:'+id]=tn;for(const u of Object.keys(DB.friends||{}))tomb['f:'+u]=tn;DB={list:{},log:[],settings:{...DB.settings,ach:{},seqHide:{},goalWins:0,sAt:tn},friends:{},seq:[],chars:{},recs:{},tomb,tiers:{}};save();rerender();toast('انمسح كل شي')}break}}
 document.addEventListener('change',ev=>{const t=ev.target;
   if(t.matches('[data-imp-def]')){IMP.def=t.value;return}
   if(t.matches('[data-imp-inc]')){const r=IMP.rows[+t.dataset.impInc];if(r){r.inc=t.checked;t.closest('.ir').classList.toggle('off',!t.checked);updImpCount()}return}
   if(t.matches('[data-imp-pick]')){const i=+t.dataset.impPick,r=IMP.rows[i];if(r){r.pick=+t.value;r.inc=true;t.closest('.ir').outerHTML=impRow(r,i);updImpCount()}return}
   if(t.matches('[data-imp-st]')){const r=IMP.rows[+t.dataset.impSt];if(r)r.status=t.value;return}
-  if(t.dataset.set){DB.settings[t.dataset.set]=t.value;save();applyTheme();rerender();if(t.dataset.set==='nospoil')toast(t.value==='1'?'🙈 ما راح تنحرق عليك':'رجعت القصص تطلع');return}
+  if(t.dataset.set){DB.settings[t.dataset.set]=t.value;if(SYNC_SET.includes(t.dataset.set))DB.settings.sAt=Date.now();save();applyTheme();rerender();if(t.dataset.set==='nospoil')toast(t.value==='1'?'🙈 ما راح تنحرق عليك':'رجعت القصص تطلع');return}
   if(t.dataset.sf){const p=sParams(TABQ);p[t.dataset.sf]=t.value;replaceHash(sHash(p));return}
   if(t.matches('[data-lsort]')){DB.settings.lsort=t.value;save();paintListItems()}});
 let notesT;
@@ -1145,12 +1379,12 @@ document.addEventListener('input',ev=>{const t=ev.target;
   if(t.matches('[data-imp-ep]')){const r=IMP.rows[+t.dataset.impEp];if(r)r.ep=t.value===''?null:num(t.value);return}
   if(t.matches('[data-imp-name]')){const r=IMP.rows[+t.dataset.impName];if(r)r.name=t.value;return}
   if(t.id==='myName'){DB.settings.name=t.value.slice(0,30);clearTimeout(notesT);notesT=setTimeout(save,500);return}
-  if(t.matches('[data-notes]')){const e=DB.list[DET.id];if(!e)return;e.notes=t.value.slice(0,3000);clearTimeout(notesT);notesT=setTimeout(save,400);return}
+  if(t.matches('[data-notes]')){const e=DB.list[DET.id];if(!e)return;e.notes=t.value.slice(0,3000);e.updatedAt=Date.now();clearTimeout(notesT);notesT=setTimeout(save,400);return}
   if(t.matches('[data-lfilter]')){LFILTER=t.value;paintListItems()}});
-document.addEventListener('keydown',ev=>{if(ev.key!=='Escape')return;if(!sheetEl.hidden)closeSheet();else if(!detailEl.hidden)closeDetail()});
+document.addEventListener('keydown',ev=>{if((ev.key==='Enter'||ev.key===' ')&&ev.target.matches&&ev.target.matches('.chc[data-act]')){ev.preventDefault();openChar(+ev.target.dataset.v);return}if(ev.key!=='Escape')return;if(!sheetEl.hidden)closeSheet();else if(!detailEl.hidden)closeDetail()});
 $('#importFile').addEventListener('change',async ev=>{const f=ev.target.files[0];ev.target.value='';if(!f)return;
   try{const d=JSON.parse(await f.text());if(!d||typeof d.list!=='object')throw 0;let n=0;
-    for(const[k,ne]of Object.entries(d.list)){const id=num(k);if(!id||!ne||typeof ne.media!=='object'||!ne.media||!STATUS[ne.status])continue;const cur=DB.list[id];const ent=cleanEntry(id,ne);if(!cur||ent.updatedAt>(cur.updatedAt||0)){DB.list[id]=ent;n++}}
+    for(const[k,ne]of Object.entries(d.list)){const id=num(k);if(!id||!ne||typeof ne.media!=='object'||!ne.media||!STATUS[ne.status])continue;const cur=DB.list[id];const ent=cleanEntry(id,ne);if(!cur||ent.updatedAt>(cur.updatedAt||0)){ent.updatedAt=Math.max(ent.updatedAt,Date.now());DB.list[id]=ent;n++}}
     if(Array.isArray(d.log)){const seen=new Set(DB.log.map(x=>[x.id,x.t,x.a,x.b,x.s].join('|')));for(const r of d.log){const x=cleanLog(r);if(!x)continue;const k=[x.id,x.t,x.a,x.b,x.s].join('|');if(!seen.has(k)){seen.add(k);DB.log.push(x)}}DB.log.sort((a,b)=>a.t-b.t)}
     if(d.chars&&typeof d.chars==='object'){DB.chars={...cleanChars(d.chars),...(DB.chars||{})}}
     save();rerender();toast(n?`رجّعت ${n} من النسخة ✓`:'قائمتك نفس اللي بالنسخة، ما تغيّر شي')}
@@ -1189,6 +1423,9 @@ applyTheme();applyMode();updateBadges();route();
 if(Date.now()-(DB.settings.lastRefresh||0)>10*60e3)setTimeout(refreshAiring,1200);
 setTimeout(()=>checkSequels(),5000);
 setTimeout(autoSnap,3000);
+if(logged()){setTimeout(()=>{syncNow({pull:true});loadSrvFriends();loadParties()},800)}
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&logged()&&Date.now()-(DB.settings.syncAt||0)>60e3){syncNow({pull:true});loadParties()}});
+setInterval(()=>{if(!document.hidden&&logged()&&!syncBusy)syncNow({pull:true})},60e3);
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)autoSnap()});
 if('serviceWorker'in navigator&&location.protocol==='https:')navigator.serviceWorker.register('sw.js').catch(()=>{});
 </script>
