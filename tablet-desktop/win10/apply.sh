@@ -494,6 +494,7 @@ rename "firefox-esr.desktop firefox.desktop"                 "Internet Browser" 
 rename "xfce-settings-manager.desktop"                       "Control Panel"      "لوحة التحكم"      preferences-desktop
 rename "org.xfce.ristretto.desktop ristretto.desktop"        "Photos"             "الصور"            eog
 rename "galculator.desktop"                                  "Calculator"         "الحاسبة"          accessories-calculator
+rename "com.github.maoschanz.drawing.desktop mtpaint.desktop" "Paint"            "الرسام"           applications-graphics
 rename "synaptic.desktop"                                    "Add or Remove Programs" "إضافة أو إزالة البرامج" system-software-install
 rename "onboard.desktop"                                     "On-Screen Keyboard" "لوحة المفاتيح على الشاشة" input-keyboard
 rename "onboard-settings.desktop"                            "On-Screen Keyboard Settings" "إعدادات لوحة المفاتيح على الشاشة" preferences-desktop-keyboard
@@ -668,24 +669,38 @@ fi
 # Once (a marker remembers it, so icons the user deletes or moves stay that
 # way): desktop icons like Windows, and the web apps and the on-screen
 # keyboard in the Start menu favourites.
+desk="$HOME/Desktop"; docs="$HOME/Documents"
+if [ -f "$HOME/.config/user-dirs.dirs" ]; then
+  desk="$(. "$HOME/.config/user-dirs.dirs"; echo "${XDG_DESKTOP_DIR:-$HOME/Desktop}")"
+  docs="$(. "$HOME/.config/user-dirs.dirs"; echo "${XDG_DOCUMENTS_DIR:-$HOME/Documents}")"
+fi
+# A launcher opens without the "untrusted launcher" question when it is
+# executable and carries its own checksum (what "Mark executable" does).
+icon_launcher() {  # icon_launcher <file> <English name> <Arabic name> <command> <icon>
+  local f="$desk/$1.desktop"
+  [ -e "$f" ] && return 0
+  mkdir -p "$desk"
+  printf '[Desktop Entry]\nType=Application\nName=%s\nName[ar]=%s\nExec=%s\nIcon=%s\n' "$2" "$3" "$4" "$5" > "$f"
+  chmod +x "$f"
+  command -v gio >/dev/null 2>&1 && \
+    gio set -t string "$f" metadata::xfce-exe-checksum "$(sha256sum "$f" | cut -d' ' -f1)" 2>/dev/null
+}
+# fav_add <id>...: add programs at the end of the Start menu favourites,
+# keeping the user's own list (and skipping ones that aren't installed)
+fav_add() {
+  local fav args=() x
+  fav="$(xfconf-query -c xfce4-panel -p /plugins/plugin-1/favorites 2>/dev/null | tail -n +3)"
+  [ -n "$fav" ] || return 0
+  while IFS= read -r x; do [ -n "$x" ] && args+=(-t string -s "$x"); done <<< "$fav"
+  for x in "$@"; do
+    printf '%s\n' "$fav" | grep -qxF "$x" && continue
+    [ -f "$HOME/.local/share/applications/$x" ] || [ -f "/usr/share/applications/$x" ] || continue
+    args+=(-t string -s "$x")
+  done
+  xfconf-query -c xfce4-panel -p /plugins/plugin-1/favorites "${args[@]}" 2>/dev/null
+}
 extras="$HOME/.config/xfce4/.desktop-extras-v1"
 if [ ! -f "$extras" ]; then
-  desk="$HOME/Desktop"; docs="$HOME/Documents"
-  if [ -f "$HOME/.config/user-dirs.dirs" ]; then
-    desk="$(. "$HOME/.config/user-dirs.dirs"; echo "${XDG_DESKTOP_DIR:-$HOME/Desktop}")"
-    docs="$(. "$HOME/.config/user-dirs.dirs"; echo "${XDG_DOCUMENTS_DIR:-$HOME/Documents}")"
-  fi
-  mkdir -p "$desk"
-  # A launcher opens without the "untrusted launcher" question when it is
-  # executable and carries its own checksum (what "Mark executable" does).
-  icon_launcher() {  # icon_launcher <file> <English name> <Arabic name> <command> <icon>
-    local f="$desk/$1.desktop"
-    [ -e "$f" ] && return 0
-    printf '[Desktop Entry]\nType=Application\nName=%s\nName[ar]=%s\nExec=%s\nIcon=%s\n' "$2" "$3" "$4" "$5" > "$f"
-    chmod +x "$f"
-    command -v gio >/dev/null 2>&1 && \
-      gio set -t string "$f" metadata::xfce-exe-checksum "$(sha256sum "$f" | cut -d' ' -f1)" 2>/dev/null
-  }
   icon_launcher this-pc       "This PC"       "هذا الكمبيوتر" "thunar computer:///"     computer
   icon_launcher control-panel "Control Panel" "لوحة التحكم"   "xfce4-settings-manager" preferences-desktop
   case "${LANG:-}" in ar*) dn="المستندات"; tn="ملفات التابلت" ;; *) dn="Documents"; tn="Tablet files" ;; esac
@@ -694,25 +709,27 @@ if [ ! -f "$extras" ]; then
   # "This PC" and "Documents" take the place of the Home and File System icons
   xfconf-query -c xfce4-desktop -p /desktop-icons/file-icons/show-home -n -t bool -s false 2>/dev/null
   xfconf-query -c xfce4-desktop -p /desktop-icons/file-icons/show-filesystem -n -t bool -s false 2>/dev/null
-  # Start menu favourites: add the new ones at the end, keep the user's own
-  fav="$(xfconf-query -c xfce4-panel -p /plugins/plugin-1/favorites 2>/dev/null | tail -n +3)"
-  if [ -n "$fav" ]; then
-    args=()
-    while IFS= read -r x; do [ -n "$x" ] && args+=(-t string -s "$x"); done <<< "$fav"
-    for x in webapp-youtube.desktop webapp-whatsapp.desktop webapp-gmail.desktop onboard.desktop matchbox-keyboard.desktop; do
-      printf '%s\n' "$fav" | grep -qxF "$x" && continue
-      [ -f "$HOME/.local/share/applications/$x" ] || [ -f "/usr/share/applications/$x" ] || continue
-      args+=(-t string -s "$x")
-    done
-    xfconf-query -c xfce4-panel -p /plugins/plugin-1/favorites "${args[@]}" 2>/dev/null
-  fi
+  fav_add webapp-youtube.desktop webapp-whatsapp.desktop webapp-gmail.desktop onboard.desktop matchbox-keyboard.desktop
   touch "$extras"
+fi
+# Once more for what came later: "Start here" and the Google Drive folder on
+# the desktop, and Paint in the favourites
+extras2="$HOME/.config/xfce4/.desktop-extras-v2"
+if [ ! -f "$extras2" ]; then
+  icon_launcher start-here "Start here" "ابدأ هنا" \
+    "firefox-esr --new-window file://$HOME/.local/share/tablet-desktop/help.html" help-browser
+  mkdir -p "$HOME/Google Drive"
+  [ ! -e "$desk/Google Drive" ] && ln -s "$HOME/Google Drive" "$desk/Google Drive"
+  fav_add com.github.maoschanz.drawing.desktop mtpaint.desktop
+  touch "$extras2"
 fi
 # Startup sound (turn off: touch ~/.config/xfce4/.no-startup-sound)
 snd="$HOME/.local/share/sounds/tablet-startup.oga"
 if [ -f "$snd" ] && [ ! -f "$HOME/.config/xfce4/.no-startup-sound" ] && command -v paplay >/dev/null 2>&1; then
   paplay "$snd" >/dev/null 2>&1 &
 fi
+# Google Drive copy (does nothing until a Google account is connected)
+[ -x "$HOME/.local/bin/gdrive-sync" ] && { nohup "$HOME/.local/bin/gdrive-sync" --watch >/dev/null 2>&1 & }
 # Backup reminder (does nothing until it is turned on in the Start menu)
 [ -x "$HOME/.local/bin/backup-reminder" ] && { nohup "$HOME/.local/bin/backup-reminder" --watch >/dev/null 2>&1 & }
 # Alt+Shift switches the keyboard between English and Arabic
@@ -858,6 +875,45 @@ EOF
   ok "Backup reminder (off until you turn it on in the Start menu)"
 else
   fail "Backup reminder"
+fi
+
+# ---------- "Start here": a guide to everything, in Arabic ----------
+if asset help.html "$HOME/.local/share/tablet-desktop/help.html"; then
+  cat > "$APPS/tablet-desktop-help.desktop" <<EOF
+[Desktop Entry]
+Type=Application
+Name=Start here (guide)
+Name[ar]=ابدأ هنا (دليل الكمبيوتر)
+Comment=Everything about this computer in one place
+Comment[ar]=كل شي عن الكمبيوتر في مكان واحد
+Exec=firefox-esr --new-window file://$HOME/.local/share/tablet-desktop/help.html
+Icon=help-browser
+Categories=Utility;
+EOF
+  ok "Start here (guide)"
+else
+  fail "Start here (guide)"
+fi
+
+# ---------- Google Drive: the "Google Drive" folder is copied to Drive ----------
+if asset gdrive-sync "$BIN/gdrive-sync" && asset gdrive-settings.py "$BIN/gdrive-settings"; then
+  chmod +x "$BIN/gdrive-sync" "$BIN/gdrive-settings"
+  mkdir -p "$HOME/Google Drive"
+  cat > "$APPS/gdrive-settings.desktop" <<EOF
+[Desktop Entry]
+Type=Application
+Name=Google Drive sync
+Name[ar]=مزامنة Google Drive
+Comment=Save the Google Drive folder to Google Drive
+Comment[ar]=يحفظ مجلد Google Drive في درايف
+Exec=$BIN/gdrive-settings
+Icon=folder-remote
+Categories=Network;Settings;
+Keywords=drive;google;sync;درايف;مزامنة;
+EOF
+  ok "Google Drive sync (connect it from the Start menu)"
+else
+  fail "Google Drive sync"
 fi
 
 echo "Done. Restart the desktop to see it: desktop-stop, then desktop"
