@@ -29,6 +29,8 @@ async function migrate() {
     create index if not exists bookings_doc_time on bookings(doc_id, starts);
     create table if not exists doc_subs(endpoint text not null, doc_id text not null references docs(id) on delete cascade, keys jsonb not null, created_at bigint not null, primary key(endpoint, doc_id));
     create table if not exists kv(k text primary key, v jsonb not null);
+    create table if not exists suggestions(id text primary key, doc_id text not null references docs(id) on delete cascade, body jsonb not null, by_name text not null default '', status text not null default 'new', created_at bigint not null);
+    create index if not exists suggestions_doc on suggestions(doc_id, status, created_at);
   `);
 }
 async function kvGet(k) { const r = await q('select v from kv where k=$1', [k]); return r.rows[0] ? r.rows[0].v : null; }
@@ -222,6 +224,31 @@ async function notifyDoc(docId, payload) {
   return n;
 }
 route('GET', '/api/push/key', async () => ({ key: (await vapid()).publicKey }));
+
+/* ---------- اقتراحات (شجرتنا): اللي معه رابط العرض يقترح، وصاحب رابط التعديل يعتمد أو يرفض ---------- */
+route('POST', '/api/docs/:id/suggest', async (req, b, p) => {
+  limit(req, 'suggest', 20, 3600e3);
+  const doc = await loadDoc(p.id); if (!roleOf(doc, b.k)) fail(403, 'bad_key'); if (doc.kind !== 'shajara') fail(400, 'bad_kind');
+  const body = isObj(b.body) ? b.body : null; if (!body) fail(400, 'bad_body');
+  const json = JSON.stringify(body); if (json.length > 300 * 1024) fail(413, 'too_big');
+  const pend = await q("select count(*)::int as n from suggestions where doc_id=$1 and status='new'", [doc.id]); if (pend.rows[0].n >= 200) fail(429, 'rate');
+  const id = rid(12), by = str(b.by, 60).trim();
+  await q('insert into suggestions(id, doc_id, body, by_name, status, created_at) values($1,$2,$3,$4,$5,$6)', [id, doc.id, json, by, 'new', now()]);
+  notifyDoc(doc.id, { title: '✍️ اقتراح جديد للشجرة', body: (by ? by + ' ' : '') + 'اقترح إضافة على الشجرة', url: SITE + 'shajara/', tag: 'sugg-' + id }).catch(() => {});
+  return { id };
+});
+route('GET', '/api/docs/:id/suggest', async (req, b, p, url) => {
+  limit(req, 'read', 3000, 600e3);
+  const doc = await loadDoc(p.id); if (roleOf(doc, url.searchParams.get('k')) !== 'edit') fail(403, 'bad_key');
+  const r = await q("select id, body, by_name, created_at from suggestions where doc_id=$1 and status='new' order by created_at limit 200", [doc.id]);
+  return { suggestions: r.rows.map(x => ({ id: x.id, body: x.body, by: x.by_name, createdAt: +x.created_at })) };
+});
+route('POST', '/api/docs/:id/suggest/:sid', async (req, b, p) => {
+  const doc = await loadDoc(p.id); if (roleOf(doc, b.k) !== 'edit') fail(403, 'bad_key');
+  const st = str(b.status, 20); if (!['accepted', 'rejected'].includes(st)) fail(400, 'bad_status');
+  const r = await q('update suggestions set status=$1 where id=$2 and doc_id=$3', [st, str(p.sid, 40), doc.id]); if (!r.rowCount) fail(404, 'not_found');
+  return { ok: true };
+});
 route('POST', '/api/docs/:id/push', async (req, b, p) => {
   const doc = await loadDoc(p.id); if (roleOf(doc, b.k) !== 'edit') fail(403, 'bad_key');
   const s = b.sub || {}; if (!/^https:\/\//.test(s.endpoint || '') || !s.keys || !s.keys.p256dh || !s.keys.auth) fail(400, 'bad_sub');

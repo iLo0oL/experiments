@@ -17,7 +17,7 @@
     bad_time: 'اختار وقت بالمستقبل', too_soon: 'هالموعد صار قريب مرة، اختار وقت أبعد', bad_name: 'اكتب اسمك', bad_phone: 'رقم الجوال غلط', bad_service: 'الخدمة مو موجودة',
     bad_code: 'رمز الإلغاء غلط', noserver: 'المزامنة مو مفعّلة', nopush: 'متصفحك ما يدعم التنبيهات', denied: 'ما سمحت بالتنبيهات',
     nosw: 'ثبّت التطبيق أو افتحه من رابطه عشان تشتغل التنبيهات', server: 'صار خطأ بالسيرفر، جرّب بعد شوي',
-    quota: 'مساحة التخزين بالمتصفح امتلأت، والتعديلات الأخيرة ممكن تضيع إذا قفلت الصفحة'
+    quota: 'مساحة التخزين بالمتصفح امتلأت، والتعديلات الأخيرة ممكن تضيع إذا قفلت الصفحة', bad_body: 'البيانات ناقصة'
   };
   const isObj = x => x && typeof x === 'object' && !Array.isArray(x);
   /* قراءة: ترجع النص أو null. كتابة أو حذف: ترجع true إذا نجحت و false إذا فشلت (مثل امتلاء التخزين) */
@@ -145,6 +145,12 @@
       list(id, key) { return req('GET', `/api/docs/${enc(id)}/bookings?k=${enc(key)}`).then(r => r.bookings); },
       setStatus(id, key, bid, status) { return req('PATCH', `/api/docs/${enc(id)}/bookings/${enc(bid)}`, { k: key, status }); },
       cancel(bid, code) { return req('POST', `/api/bookings/${enc(bid)}/cancel`, { code }); }
+    },
+    /* اقتراحات: اللي معه رابط العرض يرسل، وصاحب رابط التعديل يشوفها ويعتمدها أو يرفضها */
+    suggest: {
+      send(id, key, by, body) { return req('POST', `/api/docs/${enc(id)}/suggest`, { k: key, by, body }); },
+      list(id, key) { return req('GET', `/api/docs/${enc(id)}/suggest?k=${enc(key)}`).then(r => r.suggestions); },
+      resolve(id, key, sid, status) { return req('POST', `/api/docs/${enc(id)}/suggest/${enc(sid)}`, { k: key, status }); }
     },
     push: {
       async subscribe(id, key) {
