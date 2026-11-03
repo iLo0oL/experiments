@@ -72,7 +72,7 @@ svg{flex:none}
 .inp:focus{border-color:var(--acc);box-shadow:0 0 0 3px color-mix(in srgb,var(--acc) 22%,transparent)}
 .inp.bad{border-color:var(--bad)}
 textarea.inp{resize:vertical;min-height:74px;line-height:1.6}
-select.inp{appearance:none;-webkit-appearance:none;padding-inline-end:12px;padding-inline-start:30px;background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),linear-gradient(135deg,var(--muted) 50%,transparent 50%);background-position:16px 50%,11px 50%;background-size:5px 5px;background-repeat:no-repeat}
+select.inp{appearance:none;-webkit-appearance:none;padding-inline-end:12px;padding-inline-start:30px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238a9ba1' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");background-position:10px 50%;background-size:15px 15px;background-repeat:no-repeat}
 .two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .hint{font-size:12.5px;color:var(--muted);margin-top:5px}
 .err{font-size:13.5px;color:var(--bad);margin-top:5px;font-weight:700}
@@ -132,7 +132,8 @@ select.inp{appearance:none;-webkit-appearance:none;padding-inline-end:12px;paddi
 .kind.on{border-color:var(--acc);background:color-mix(in srgb,var(--acc) 12%,var(--card));color:var(--acc)}
 .wfoot{display:flex;gap:10px;margin-top:16px}
 /* services rows */
-.srow{display:grid;grid-template-columns:1fr 112px 84px 34px;gap:8px;align-items:center;margin-bottom:8px}
+.srow{display:grid;grid-template-columns:1fr 1fr 34px;gap:8px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}
+.srow [data-f=name]{grid-column:1/-1}
 .srow .inp{padding:9px 10px;font-size:15px}
 .svc{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--line);cursor:pointer}
 .svc:last-child{border-bottom:0}
@@ -222,6 +223,7 @@ body.sheet-open #toast.show{transform:translateX(-50%)}
 .cw{max-width:620px;margin:0 auto;padding:0 16px}
 .step{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:16px;margin-top:14px;scroll-margin-top:12px}
 .step h2{font-size:17.5px;font-weight:800;display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.step h2>svg{width:21px;height:21px;color:var(--acc)}
 .step h2 .n{width:28px;height:28px;border-radius:50%;background:var(--acc);color:var(--on);display:grid;place-items:center;font-size:14px;flex:none}
 .step.dim{opacity:.5}
 .sv{display:flex;align-items:center;gap:12px;width:100%;padding:13px 14px;border:1.5px solid var(--line);border-radius:16px;margin-bottom:8px;text-align:start;background:var(--card);color:var(--text)}
@@ -231,7 +233,8 @@ body.sheet-open #toast.show{transform:translateX(-50%)}
 .sv .pr{font-weight:800;color:var(--acc);white-space:nowrap}
 .sv .rd{width:22px;height:22px;border-radius:50%;border:2px solid var(--line);flex:none;display:grid;place-items:center}
 .sv.on .rd{border-color:var(--acc);background:var(--acc);color:var(--on)}
-.sv .rd svg{width:13px;height:13px}
+.sv .rd svg{width:13px;height:13px;opacity:0}
+.sv.on .rd svg{opacity:1}
 .days{display:flex;gap:8px;overflow-x:auto;padding:2px 2px 6px;scrollbar-width:none;-webkit-overflow-scrolling:touch;scroll-snap-type:x proximity}
 .days::-webkit-scrollbar{display:none}
 .dy{flex:none;width:68px;padding:9px 4px;border-radius:16px;border:1.5px solid var(--line);text-align:center;background:var(--card);color:var(--text);scroll-snap-align:start}
@@ -481,7 +484,7 @@ const typing = () => { const a = document.activeElement; return !!(a && (a.tagNa
 function onChange(how) {
   if (S.mode === 'loading') return checkRole();
   if (S.mode === 'customer' || S.preview) { renderCustomer(true); return; }
-  if (S.mode === 'owner') render();
+  if (S.mode === 'owner') { if (how && how.local && isPub() && S.store.hasPending() && S.sync.s === 'ok') { S.sync = { s: 'saving', msg: '' }; paintSync(); } render(); }
 }
 function onStatus(s, msg) {
   S.sync = { s, msg };
@@ -577,7 +580,7 @@ function newWiz() { return { step: 0, name: '', kind: '', desc: '', svcs: [], ho
 function svcRows(list) {
   return list.map((s, i) => `<div class="srow" data-i="${i}"><input class="inp" data-f="name" maxlength="50" value="${esc(s.name)}" placeholder="اسم الخدمة">
     <select class="inp" data-f="dur">${DURS.concat(DURS.includes(+s.dur) ? [] : [+s.dur]).map(d => `<option value="${d}" ${+s.dur === d ? 'selected' : ''}>${fmtDur(d)}</option>`).join('')}</select>
-    <input class="inp" data-f="price" inputmode="decimal" value="${s.price == null ? '' : esc(s.price)}" placeholder="السعر"><button class="ib sm" type="button" data-rmsvc="${i}" aria-label="شيل">${ico('x')}</button></div>`).join('');
+    <input class="inp" data-f="price" inputmode="decimal" value="${s.price == null ? '' : esc(s.price)}" placeholder="السعر (اختياري)" aria-label="السعر"><button class="ib sm" type="button" data-rmsvc="${i}" aria-label="شيل">${ico('x')}</button></div>`).join('');
 }
 function renderWizard() {
   const w = S.wiz, st = w.step, steps = 4;
@@ -587,7 +590,6 @@ function renderWizard() {
     <div class="field"><span>وش نوع نشاطك؟</span><div class="kinds">${KINDS.map(k => `<button type="button" class="kind ${w.kind === k[0] ? 'on' : ''}" data-act="wizKind" data-k="${k[0]}"><span>${k[1]}</span>${k[2]}</button>`).join('')}</div></div>
     <label class="field"><span>وصف قصير (اختياري)</span><textarea class="inp" id="wDesc" maxlength="200" placeholder="مثلاً: حلاقة رجالية بأحدث القصّات، حي النرجس">${esc(w.desc)}</textarea></label>`;
   if (st === 1) body = `<h1>وش الخدمات اللي تقدمها؟</h1><p class="sub">لكل خدمة مدتها وسعرها. المدة تحدد الأوقات المتاحة للحجز.</p>
-    <div class="srow muted tiny" style="margin-bottom:4px"><span>الخدمة</span><span>المدة</span><span>السعر</span><span></span></div>
     <div id="wSvcs">${svcRows(w.svcs)}</div><button class="btn ghost sm" type="button" data-act="wizAddSvc">${ico('plus')} أضف خدمة</button>`;
   if (st === 2) body = `<h1>أوقات الدوام</h1><p class="sub">تقدر تحط أكثر من فترة باليوم (مثلاً الصبح والعصر). الأيام المقفلة ما تنحجز.</p>
     <div id="hoursEd">${hoursEditor(w.hours)}</div>
@@ -648,7 +650,7 @@ function hoursEvent(t, h) {
   if (act === 'toggle') { if (t.checked) h[d] = [['09:00', '17:00']]; else delete h[d]; }
   else if (act === 'add') { const r = h[d]; const last = hm(r[r.length - 1][1]); const s = Math.min(last + 60, 1380); r.push([hhmm(s), hhmm(Math.min(s + 240, 1440))]); }
   else if (act === 'rm') { const i = +t.closest('[data-r]').dataset.r; h[d].splice(i, 1); }
-  else if (act === 'copy') { for (const k of Object.keys(h)) if (k !== d) h[k] = h[d].map(x => [...x]); toast('انسخت أوقات ' + WD[d] + ' لكل الأيام المفتوحة'); }
+  else if (act === 'copy') { for (const k of Object.keys(h)) if (k !== d) h[k] = h[d].map(x => [...x]); toast('تم نسخ أوقات ' + WD[d] + ' لكل الأيام المفتوحة'); }
   else if (t.dataset.hf != null) { const i = +t.closest('[data-r]').dataset.r; h[d][i][+t.dataset.hf] = t.value; }
   else return false;
   return true;
@@ -801,7 +803,7 @@ TAB.set = () => {
   const f = (k, label, ph, o = {}) => `<label class="field"><span>${label}</span><input class="inp ${o.ltr ? 'ltr' : ''}" ${o.ltr ? 'dir="ltr"' : ''} data-m="${k}" value="${esc(m[k] || '')}" placeholder="${esc(ph)}" maxlength="${o.max || 120}" ${o.im ? `inputmode="${o.im}"` : ''}>${o.hint ? `<div class="hint">${o.hint}</div>` : ''}</label>`;
   return `${isPub() ? `<div class="card"><h2>${ico('bell')}التنبيهات</h2><p>بيوصلك إشعار على هالجهاز أول ما ينحجز موعد جديد أو يلغي زبون موعده.</p>
     <div class="banner info mt">${ico('info')}<div>بالآيفون: لازم تضيف «موعد» للشاشة الرئيسية أول (من زر المشاركة ← «إضافة إلى الشاشة الرئيسية») وتفتحه من هناك، بعدين فعّل التنبيهات. وبالأندرويد تشتغل من المتصفح على طول.</div></div>
-    <div class="btns"><button class="btn" data-act="pushOn" id="pushBtn">${ico('bell')} ${LS.get('mawid.push.' + S.docId) ? 'فعّلها مرة ثانية' : 'فعّل التنبيهات'}</button><button class="btn sec" data-act="pushTest">جرّب تنبيه</button></div></div>` : ''}
+    <div class="btns"><button class="btn" data-act="pushOn" id="pushBtn">${ico('bell')} ${LS.get('mawid.push.' + S.docId) ? 'فعّلها مرة ثانية' : 'فعّلها'}</button><button class="btn sec" data-act="pushTest">جرّب تنبيه</button></div></div>` : ''}
   <div class="card"><h2>${ico('store')}معلومات المحل</h2>
     ${f('name', 'اسم المحل', 'مثلاً: صالون الأناقة', { max: 60 })}
     <label class="field"><span>الوصف</span><textarea class="inp" data-m="desc" maxlength="200" placeholder="وصف قصير يشوفه الزبون">${esc(m.desc || '')}</textarea></label>
@@ -1055,10 +1057,10 @@ const ACT = {
   style: el => { putMeta({ style: el.dataset.v }); },
   rmLogo: () => { const old = S.store.item('logo'); S.store.del('logo'); toast('انشال الشعار', 'تراجع', () => { if (old) S.store.set('logo', old); }); },
   publish: () => publish(),
-  copyView: () => copy(viewLink(), 'انسخ رابط الحجز ✓'),
+  copyView: () => copy(viewLink(), 'تم نسخ رابط الحجز ✓'),
   waShare: () => { const t = `احجز موعدك عند ${meta().name || ''} من هنا:\n${viewLink()}`; window.__lastWa = { url: 'https://wa.me/?text=' + encodeURIComponent(t), text: t }; window.open(window.__lastWa.url, '_blank'); },
-  shareView: async () => { const l = viewLink(); if (navigator.share) { try { await navigator.share({ title: meta().name || 'احجز موعدك', text: `احجز موعدك عند ${meta().name || ''}`, url: l }); } catch (e) { } } else copy(l, 'انسخ رابط الحجز ✓'); },
-  copyEdit: async () => { const e = curEntry(); if (!e) return; if (!await confirmBox('رابط التعديل', 'هالرابط يعطي صلاحية كاملة على الحجوزات وأرقام الزبائن. لا ترسله إلا لجهازك الثاني أو لموظفك.', 'انسخه', false)) return; copy(Tajarib.joinLink(baseUrl(), e.id, e.edit), 'انسخ رابط التعديل ✓'); },
+  shareView: async () => { const l = viewLink(); if (navigator.share) { try { await navigator.share({ title: meta().name || 'احجز موعدك', text: `احجز موعدك عند ${meta().name || ''}`, url: l }); } catch (e) { } } else copy(l, 'تم نسخ رابط الحجز ✓'); },
+  copyEdit: async () => { const e = curEntry(); if (!e) return; if (!await confirmBox('رابط التعديل', 'هالرابط يعطي صلاحية كاملة على الحجوزات وأرقام الزبائن. لا ترسله إلا لجهازك الثاني أو لموظفك.', 'انسخه', false)) return; copy(Tajarib.joinLink(baseUrl(), e.id, e.edit), 'تم نسخ رابط التعديل ✓'); },
   perPage: el => { S.perPage = +el.dataset.v; $$('#perPage button').forEach(b => b.classList.toggle('on', b === el)); },
   print: async () => { try { await preparePrint(S.perPage === 4 ? 4 : 1); setTimeout(() => window.print(), 150); } catch (e) { toast('ما قدرت أجهّز الطباعة'); } },
   dlQR: async () => { try { await loadQR(); qrCanvas(viewLink(), 16, 4).toBlob(b => dl(b, 'mawid-qr.png'), 'image/png'); } catch (e) { toast('ما قدرت أجهّز الكود'); } },

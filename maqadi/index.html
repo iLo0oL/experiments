@@ -394,7 +394,7 @@ class LocalDoc {
   item(id) { const it = this.data.items[id]; return it ? { ...it, id } : null; }
   meta() { return this.data.meta ? { ...this.data.meta } : null; }
   canEdit() { return true; } hasPending() { return false; }
-  _save() { if (!LS.set(this.key, this.data)) toast('مساحة التخزين بالجهاز امتلت'); this.onChange({ local: true }); }
+  _save() { if (!LS.set(this.key, this.data)) toast('مساحة التخزين بالجهاز امتلأت'); this.onChange({ local: true }); }
   set(id, obj) { const it = { ...obj, u: Date.now() }; delete it.id; this.data.items[id] = it; this._save(); return it; }
   del(id) { delete this.data.items[id]; this._save(); }
   setMeta(obj) { this.data.meta = { ...obj, u: Date.now() }; delete this.data.meta.id; this._save(); }

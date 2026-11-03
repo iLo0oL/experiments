@@ -69,7 +69,7 @@ svg{flex:none}
 .inp{width:100%;background:var(--input);border:1px solid var(--line);border-radius:12px;padding:11px 12px;font-size:16px;outline:none;min-width:0;color:var(--text)}
 .inp:focus{border-color:var(--acc);box-shadow:0 0 0 3px color-mix(in srgb,var(--acc) 22%,transparent)}
 textarea.inp{resize:vertical;min-height:74px;line-height:1.6}
-select.inp{appearance:none;-webkit-appearance:none;background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),linear-gradient(135deg,var(--muted) 50%,transparent 50%);background-position:16px 50%,11px 50%;background-size:5px 5px;background-repeat:no-repeat}
+select.inp{appearance:none;-webkit-appearance:none;padding-inline-start:30px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23999088' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");background-position:10px 50%;background-size:15px 15px;background-repeat:no-repeat}
 .two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .hint{font-size:12.5px;color:var(--muted);margin-top:5px}
 .sw{position:relative;width:50px;height:30px;flex:none;display:inline-block}
@@ -195,11 +195,11 @@ body.sheet-open #toast.show{transform:translateX(-50%)}
 .act svg{width:21px;height:21px}
 .stick{position:sticky;top:0;z-index:10;background:var(--bg);padding:10px 0 9px;margin-top:12px;border-bottom:1px solid var(--line)}
 .has-prev .stick{top:50px}
-.srch{margin:0 16px;position:relative}
+.srch{margin:0 max(16px,calc((100% - 968px) / 2));position:relative}
 .srch input{width:100%;padding:11px 14px;padding-inline-start:42px;border-radius:14px;border:1px solid var(--line);background:var(--card);font-size:16px;outline:none;color:var(--text)}
 .srch input:focus{border-color:var(--acc)}
 .srch svg{position:absolute;top:50%;inset-inline-start:13px;transform:translateY(-50%);width:19px;height:19px;color:var(--muted)}
-.ctabs{display:flex;gap:8px;overflow-x:auto;padding:10px 16px 1px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.ctabs{display:flex;gap:8px;overflow-x:auto;padding:10px max(16px,calc((100% - 968px) / 2)) 1px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
 .ctabs::-webkit-scrollbar{display:none}
 .ctab{flex:none;padding:7px 15px;border-radius:99px;background:var(--card);border:1px solid var(--line);font-weight:700;font-size:14.5px;white-space:nowrap;color:var(--text)}
 .ctab.on{background:var(--acc);border-color:var(--acc);color:var(--on)}
@@ -467,6 +467,7 @@ function onChange(how) {
   if (S.mode === 'loading') return checkRole();
   if (S.mode === 'customer' || S.preview) { if (how && how.remote) renderCustomer(true); return; }
   if (S.mode !== 'owner') return;
+  if (how && how.local && isPub() && S.store.hasPending() && S.sync.s === 'ok') { S.sync = { s: 'saving', msg: '' }; paintSync(); }
   if (S.tab === 'place' && !S.sheet) { if (how && how.local) return; const a = document.activeElement; if (a && /INPUT|TEXTAREA|SELECT/.test(a.tagName)) return; }
   render();
 }
@@ -1094,9 +1095,9 @@ const ACT = {
   style: el => { putMeta({ style: el.dataset.v }); $$('#styleSeg button').forEach(s => s.classList.toggle('on', s === el)); },
   rmImg: el => { const id = el.dataset.id, old = S.store.item(id); S.store.del(id); render(); toast('انشالت الصورة', 'تراجع', () => { if (old) { S.store.set(id, old); render(); } }); },
   publish: () => publish(),
-  copyView: () => copy(viewLink(), 'انسخ رابط المنيو ✓'),
-  shareView: async () => { const l = viewLink(); if (navigator.share) { try { await navigator.share({ title: meta().name || 'المنيو', text: `منيو ${meta().name || ''}`.trim(), url: l }); } catch (e) { } } else copy(l, 'انسخ رابط المنيو ✓'); },
-  copyEdit: async () => { const e = curEntry(); if (!e) return; if (!await confirmBox('رابط التعديل', 'هالرابط يعطي صلاحية تعديل كاملة على المنيو. لا ترسله إلا لجهازك الثاني أو لشريكك.', 'انسخه', false)) return; copy(Tajarib.joinLink(baseUrl(), e.id, e.edit), 'انسخ رابط التعديل ✓'); },
+  copyView: () => copy(viewLink(), 'تم نسخ رابط المنيو ✓'),
+  shareView: async () => { const l = viewLink(); if (navigator.share) { try { await navigator.share({ title: meta().name || 'المنيو', text: `منيو ${meta().name || ''}`.trim(), url: l }); } catch (e) { } } else copy(l, 'تم نسخ رابط المنيو ✓'); },
+  copyEdit: async () => { const e = curEntry(); if (!e) return; if (!await confirmBox('رابط التعديل', 'هالرابط يعطي صلاحية تعديل كاملة على المنيو. لا ترسله إلا لجهازك الثاني أو لشريكك.', 'انسخه', false)) return; copy(Tajarib.joinLink(baseUrl(), e.id, e.edit), 'تم نسخ رابط التعديل ✓'); },
   perPage: el => { S.perPage = +el.dataset.v; $$('#perPage button').forEach(b => b.classList.toggle('on', b === el)); },
   print: async () => { try { await preparePrint(S.perPage === 4 ? 4 : 1); setTimeout(() => window.print(), 150); } catch (e) { toast('ما قدرت أجهّز الطباعة'); } },
   dlQR: async () => { try { await loadQR(); const c = qrCanvas(viewLink(), 16, 4); c.toBlob(b => dl(b, `menu-qr-${(meta().en || 'menu').replace(/[^\w-]+/g, '-').toLowerCase() || 'menu'}.png`), 'image/png'); } catch (e) { toast('ما قدرت أجهّز الكود'); } },

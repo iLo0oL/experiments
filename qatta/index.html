@@ -707,11 +707,13 @@ const refreshing = new Set(); const lastRefresh = {};
 function refreshShared() {
   for (const r of refs) {
     if (r.type !== 'shared' || r.archived || r.dead || r.gid === openGid) continue;
-    if (Date.now() - (lastRefresh[r.gid] || 0) < 30000) continue;
+    if (Date.now() - (lastRefresh[r.gid] || 0) < 25000) continue;
+    /* سحبة وحدة تقريباً لكل قطّة ثم نوقف، عشان ما نضغط على السيرفر */
     lastRefresh[r.gid] = Date.now(); const d = docOf(r); refreshing.add(r.gid); d.start();
-    setTimeout(() => { refreshing.delete(r.gid); const dd = docs.get(r.gid); if (dd && openGid !== r.gid && !dd.hasPending()) dd.stop(); }, 5000);
+    setTimeout(() => { refreshing.delete(r.gid); const dd = docs.get(r.gid); if (dd && openGid !== r.gid && !dd.hasPending()) dd.stop(); }, 3000);
   }
 }
+setInterval(() => { if (!openGid && !document.hidden && !$('#home').hidden) refreshShared(); }, 30000);
 
 /* ================= الرئيسية ================= */
 function showHome() {

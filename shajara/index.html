@@ -374,7 +374,7 @@ class LocalDoc {
   item(id) { const it = this.data.items[id]; return it ? { ...it, id } : null; }
   meta() { return this.data.meta ? { ...this.data.meta } : null; }
   canEdit() { return true; } hasPending() { return false; }
-  _save() { if (!LS.set(this.key, this.data)) toast('مساحة التخزين بالجهاز امتلت، صغّر الصور أو احذف بيانات قديمة'); this.onChange({ local: true }); }
+  _save() { if (!LS.set(this.key, this.data)) toast('مساحة التخزين بالجهاز امتلأت، صغّر الصور أو احذف بيانات قديمة'); this.onChange({ local: true }); }
   set(id, obj) { const it = { ...obj, u: Date.now() }; delete it.id; this.data.items[id] = it; this._save(); return it; }
   del(id) { delete this.data.items[id]; this._save(); }
   setMeta(obj) { this.data.meta = { ...obj, u: Date.now() }; delete this.data.meta.id; this._save(); }
@@ -846,7 +846,7 @@ function fillPerson(sh) {
   if (fa || mo) h += `<div class="sec">الوالدين</div><div class="chips">${fa ? chip(fa, 'الأب') : ''}${mo ? chip(mo, 'الأم') : ''}</div>`;
   if (sps.length) h += `<div class="sec">${p.g === 'f' ? (sps.length > 1 ? 'الأزواج' : 'الزوج') : (sps.length > 1 ? 'الزوجات' : 'الزوجة')}</div><div class="chips">${sps.map(x => chip(x)).join('')}${ed ? sps.map(x => `<button class="chip del" data-unm="${x.id}" title="شيل الزواج">${ICON.x}${esc(x.f)}</button>`).join('') : ''}</div>`;
   if (kids.length) h += `<div class="sec">العيال (${kids.length})</div><div class="kids">${kids.map((k, i) => `<div class="krow">${chip(k, k.mo && k.mo !== p.id && sps.length > 1 && S.P.get(k.mo) ? 'أمه ' + S.P.get(k.mo).f : '')}${ed && i > 0 ? `<button class="mv" data-up="${k.id}" aria-label="قدّمه">${ICON.up}</button>` : ''}</div>`).join('')}</div>${ed && kids.length > 1 && kids.some(k => k.by) ? '<button class="btn sm ghost" data-a="sortkids" style="margin-top:8px">رتّبهم حسب سنة الميلاد</button>' : ''}`;
-  if (sibs.length) h += `<div class="sec">الإخوان والخوات (${sibs.length})</div><div class="chips">${sibs.map(x => chip(x, (p.fa && p.mo && x.fa && x.mo && (x.fa !== p.fa || x.mo !== p.mo)) ? (x.fa === p.fa ? 'من الأب' : 'من الأم') : '')).join('')}</div>`;
+  if (sibs.length) h += `<div class="sec">الإخوان والأخوات (${sibs.length})</div><div class="chips">${sibs.map(x => chip(x, (p.fa && p.mo && x.fa && x.mo && (x.fa !== p.fa || x.mo !== p.mo)) ? (x.fa === p.fa ? 'من الأب' : 'من الأم') : '')).join('')}</div>`;
   $('#pv', sh.el).innerHTML = h;
 }
 async function onPersonClick(e) {
@@ -1240,7 +1240,7 @@ function parseGed(txt) {
   const recs = [], path = []; let cur = null;
   for (const raw of txt.replace(/^﻿/, '').split(/\r?\n/)) {
     const m = /^\s*(\d+)\s+(@[^@]+@\s+)?(\S+)(?:\s(.*))?$/.exec(raw); if (!m) continue;
-    const lv = +m[1], xref = m[2] ? m[2].trim() : null, tag = m[3].toUpperCase(), val = (m[4] || '').trim();
+    const lv = +m[1], xref = m[2] ? m[2].trim() : null, tag = m[3].toUpperCase(), val = (tag === 'CONC' || tag === 'CONT') ? (m[4] || '') : (m[4] || '').trim();
     if (lv === 0) { cur = { xref, tag, val, ch: [] }; recs.push(cur); path.length = 0; path[0] = cur; continue; }
     if (!cur) continue; const node = { tag, val, ch: [] };
     if (tag === 'CONT' || tag === 'CONC') { const par = path[lv - 1]; if (par) par.val += (tag === 'CONT' ? '\n' : '') + val; continue; }
