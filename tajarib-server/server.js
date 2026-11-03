@@ -96,8 +96,10 @@ route('GET', '/api/docs/:id', async (req, b, p, url) => {
   limit(req, 'read', 3000, 600e3);
   const doc = await loadDoc(p.id); const role = roleOf(doc, url.searchParams.get('k')); if (!role) fail(403, 'bad_key');
   if (now() - +doc.last_read > 864e5) q('update docs set last_read=$1 where id=$2', [now(), doc.id]).catch(() => {});
-  if (int(url.searchParams.get('rev')) === doc.rev) return { same: true, rev: doc.rev, role };
-  return { rev: doc.rev, kind: doc.kind, role, body: doc.body };
+  /* رابط العرض بشجرتنا: رقم نسخة خاص يتغيّر كمان يوم تنفتح رسالة، عشان توصله بنصها */
+  const vb = role === 'view' && doc.kind === 'shajara', rev = vb ? doc.rev * 1000 + openedCaps(doc.body) % 1000 : doc.rev;
+  if (int(url.searchParams.get('rev')) === rev) return { same: true, rev, role };
+  return { rev, kind: doc.kind, role, body: vb ? viewBody(doc.body) : doc.body };
 });
 /* دمج: لكل عنصر ينحفظ الأحدث حسب u (وقت التعديل بالملي ثانية)، والمحذوف يبقى علامة {del:1} */
 route('PATCH', '/api/docs/:id', async (req, b, p) => {
@@ -254,8 +256,12 @@ route('POST', '/api/docs/:id/suggest', async (req, b, p) => {
   const pend = await q("select count(*)::int as n from suggestions where doc_id=$1 and status='new'", [doc.id]); if (pend.rows[0].n >= 200) fail(429, 'rate');
   const id = rid(12), by = str(b.by, 60).trim();
   await q('insert into suggestions(id, doc_id, body, by_name, status, created_at) values($1,$2,$3,$4,$5,$6)', [id, doc.id, json, by, 'new', now()]);
-  notifyDoc(doc.id, { title: '✍️ اقتراح جديد للشجرة', body: (by ? by + ' ' : '') + 'اقترح إضافة على الشجرة', url: SITE + 'shajara/', tag: 'sugg-' + id }, 'edit').catch(() => {});
-  return { id };
+  /* تاريخ مخفي: اللي اقترح يشوفه كأنه انقبل عنده بس، وصاحب الشجرة يجيه تذكير */
+  const items = (doc.body && doc.body.items) || {}, cos = (Array.isArray(body.fixes) ? body.fixes : []).filter(x => x && items[x.p] && items[x.p].hd && x.set && ['by', 'dy'].some(k => k in x.set)).map(x => str(x.p, 40));
+  const names = cos.map(pid => str(items[pid].f, 40)).join(' و');
+  notifyDoc(doc.id, cos.length ? { title: '🙈 تذكير: التاريخ مخفي', body: `${by || 'واحد من العائلة'} اقترح تاريخ لـ${names}، وأنت مخفي تاريخ${cos.length > 1 ? 'هم' : items[cos[0]].g === 'f' ? 'ها' : 'ه'}. اقتراحه يبان عنده كأنه انقبل، وما تغيّر شي عند الباقين`, url: SITE + 'shajara/', tag: 'sugg-' + id }
+    : { title: '✍️ اقتراح جديد للشجرة', body: (by ? by + ' ' : '') + 'اقترح إضافة على الشجرة', url: SITE + 'shajara/', tag: 'sugg-' + id }, 'edit').catch(() => {});
+  return { id, cos };
 });
 route('GET', '/api/docs/:id/suggest', async (req, b, p, url) => {
   limit(req, 'read', 3000, 600e3);
@@ -282,6 +288,20 @@ route('POST', '/api/docs/:id/push', async (req, b, p) => {
 });
 route('DELETE', '/api/docs/:id/push', async (req, b, p) => { const doc = await loadDoc(p.id); if (!canSub(doc, b.k)) fail(403, 'bad_key'); await q('delete from doc_subs where endpoint=$1 and doc_id=$2', [str(b.endpoint, 1000), doc.id]); return { ok: true }; });
 route('POST', '/api/docs/:id/push/test', async (req, b, p) => { const doc = await loadDoc(p.id); if (roleOf(doc, b.k) !== 'edit') fail(403, 'bad_key'); limit(req, 'ptest', 10, 600e3); return { sent: await notifyDoc(doc.id, { title: '🔔 التنبيهات شغّالة', body: 'بيوصلك تنبيه أول ما يجيك حجز جديد.', url: SITE + 'mawid/', tag: 'test' }) }; });
+
+/* شجرتنا لأصحاب رابط العرض: التواريخ المخفية ما توصلهم أبد (ولا علامة إنها مخفية)، والرسائل المقفلة توصل بدون نصها */
+const DATE_KEYS = ['by', 'bmo', 'bda', 'dy', 'dmo', 'dda', 'hd'];
+const todayISO = () => { const g = ymd('g'); return `${g.y}-${String(g.m).padStart(2, '0')}-${String(g.d).padStart(2, '0')}`; };
+function openedCaps(body) { const t = todayISO(); let n = 0; for (const it of Object.values((body && body.items) || {})) if (it && it.t === 'cap' && !it.del && it.open && it.open <= t) n++; return n; }
+function viewBody(body) {
+  const items = (body && body.items) || {}, out = {}, today = todayISO();
+  for (const [id, it] of Object.entries(items)) {
+    if (it && it.t === 'p' && it.hd) { const c = { ...it }; for (const k of DATE_KEYS) delete c[k]; out[id] = c; }
+    else if (it && it.t === 'cap' && it.open > today) { const c = { ...it }; delete c.txt; out[id] = c; }
+    else out[id] = it;
+  }
+  return { ...body, items: out };
+}
 
 /* ---------- غرف «مين هذا؟» الجماعية (بالذاكرة، تنمسح بعد 4 ساعات) ---------- */
 const rooms = new Map(), QDUR = 20000;
@@ -335,7 +355,7 @@ function ymd(cal, d = new Date()) {
 function occasionsToday(body, d = new Date()) {
   const items = (body && body.items) || {}, T = { h: ymd('h', d), g: ymd('g', d) }, born = [], died = [];
   for (const it of Object.values(items)) {
-    if (!it || it.del || it.t !== 'p' || !it.f) continue; const t = T[it.cal === 'g' ? 'g' : 'h'];
+    if (!it || it.del || it.t !== 'p' || !it.f || it.hd) continue; const t = T[it.cal === 'g' ? 'g' : 'h'];
     const fa = it.fa && items[it.fa] && !items[it.fa].del ? items[it.fa] : null, nm = str(it.f, 40) + (fa && fa.f ? (it.g === 'f' ? ' بنت ' : ' بن ') + str(fa.f, 40) : '');
     if (!it.dead && !it.dy && +it.bmo === t.m && +it.bda === t.d) born.push({ nm, age: +it.by > 0 ? t.y - it.by : 0 });
     if ((it.dead || it.dy) && +it.dmo === t.m && +it.dda === t.d) died.push({ nm, f: it.g === 'f', n: +it.dy > 0 ? t.y - it.dy : 0 });
