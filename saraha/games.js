@@ -286,8 +286,8 @@ const Quiz = {
         const got = (my.answers.get(st.i) || new Map()).size, all = Quiz.players(my);
         left = st.i > 0 && got && got >= all ? 0 : QTIME + 1500 - el;
       } else left = AUTO_SHOW - el;
-      const t = $('#qautoT');
-      if (t) t.textContent = left > 0 ? `(بعد ${Math.ceil(left / 1000)} ثواني)` : '';
+      const t = $('#qautoT'), sec = Math.ceil(left / 1000);
+      if (t) t.textContent = left > 0 ? `(بعد ${sec} ${sec > 10 ? 'ثانية' : 'ثواني'})` : '';
       if (left <= 0) {
         clearInterval(autoTimer);
         const b = $(st.s === 'ask' ? '#qshow' : '#qnext');

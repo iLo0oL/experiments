@@ -285,7 +285,7 @@ const Movie = {
       const c = Movie.counts(my, st);
       A.innerHTML = `<div class="card"><div class="qhead">الجولة ${st.r + 1} · باقي ${st.alive.length}</div>${lastOut}
         ${st.alive.map((t, i) => `<div class="brow"><span>🎬 ${esc(t)}</span><b data-cnt="${i}">${c[i]}</b></div>`).join('')}</div>
-        <button class="btn primary big" id="cut">${st.alive.length <= 2 ? '🏆 اعلن الفايز' : '✂️ اطلّع الأقل أصوات'}</button>`;
+        <button class="btn primary big" id="cut">${st.alive.length <= 2 ? '🏆 أعلن الفايز' : '✂️ طلّع الأقل أصوات'}</button>`;
       $('#cut').onclick = e => {
         const cn = Movie.counts(my, st);
         if (st.alive.length <= 2) {
@@ -581,7 +581,7 @@ BOARDS.challenge = {
     const rows = people.map(p => ({ p, total: logs.filter(l => l.by === p).reduce((s, l) => s + l.n, 0), todayN: (logs.find(l => l.by === p && l.day === d) || {}).n || 0, st: BOARDS.challenge.streak(logs, p) })).sort((a, b) => b.total - a.total);
     const mine = (logs.find(l => l.by === me && l.day === d) || {}).n || 0, sum = rows.reduce((s, r) => s + r.total, 0);
     const left = end ? daysBetween(d, end) : null;
-    L.innerHTML = `<div class="card center"><div class="big-ic">🏁</div><h3>${esc(goal)}</h3><p class="muted">${target ? `الهدف اليومي: ${fmtNum(target)} ${esc(unit)}` : ''}${left !== null ? ` · ${left >= 0 ? `باقي ${left} يوم` : 'خلص التحدي'}` : ''}</p>
+    L.innerHTML = `<div class="card center"><div class="big-ic">🏁</div><h3>${esc(goal)}</h3><p class="muted">${target ? `الهدف اليومي: ${fmtNum(target)} ${esc(unit)}` : ''}${left !== null ? ` · ${left >= 0 ? `باقي ${left === 0 ? 'أقل من يوم' : left === 1 ? 'يوم' : left === 2 ? 'يومين' : left <= 10 ? left + ' أيام' : left + ' يوم'}` : 'خلص التحدي'}` : ''}</p>
         <p>مجموع الشلة: <b>${fmtNum(sum)}</b> ${esc(unit)}</p></div>
       <section class="card"><h3>📝 إنجازك اليوم: <span class="pink">${fmtNum(mine)}</span> ${esc(unit)}${target && mine >= target ? ' ✅' : ''}</h3>
         <div class="addrow"><input id="cn" inputmode="decimal" placeholder="كم ${esc(unit)} اليوم؟"><button class="btn primary" data-add="set">سجّل</button></div>

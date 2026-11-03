@@ -9,6 +9,7 @@ const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
 const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
 const angDiff = (a, b) => { let d = (a - b) % (Math.PI * 2); if (d > Math.PI) d -= Math.PI * 2; if (d < -Math.PI) d += Math.PI * 2; return Math.abs(d); };
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const cntTxt = (n, one, many) => `${n} ${n > 2 && n < 11 ? many : one}`;
 const fmtTime = s => { s = Math.max(0, Math.floor(s)); return `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`; };
 
 const cv = $('#game'), ctx = cv.getContext('2d');
@@ -84,7 +85,7 @@ function give(it, n = 1, quiet) {
   const I = ITEMS[it]; if (!I) return;
   S.inv[it] = (S.inv[it] || 0) + n;
   if (!quiet) floatText(P.x, P.y - 40, `+${n} ${I.e}`, '#fde68a');
-  if (I.t === 'wpn' && (I.atk || 0) > (ITEMS[S.wpn].atk || 0)) { S.wpn = it; UI.toast(`لبست ${I.e} ${I.n} 💪`); sendPresence(); }
+  if (I.t === 'wpn' && (I.atk || 0) > (ITEMS[S.wpn].atk || 0)) { S.wpn = it; UI.toast(`مسكت ${I.e} ${I.n} 💪`); sendPresence(); }
   if (I.t === 'arm' && (I.def || 0) > (ITEMS[S.arm].def || 0)) { S.arm = it; UI.toast(`لبست ${I.e} ${I.n} 🛡️`); }
 }
 function take(it, n = 1) {
@@ -291,7 +292,7 @@ function bossDead() {
   const w = World.wonderById.whale;
   for (let i = 0; i < 12; i++) setTimeout(() => burst(w.x + rand(-80, 80), w.y - rand(20, 100), 20, 'rainbow', 220), i * 120);
   if (Boss.my > 0) {
-    UI.banner('🐋 الحوت طاح!', `شاركت مع ${Math.max(1, Boss.ids.size)} لاعب`);
+    UI.banner('🐋 الحوت طاح!', `شاركت مع ${cntTxt(Math.max(1, Boss.ids.size), 'لاعب', 'لاعبين')}`);
     S.stats.boss++;
     addXP(250 + S.lvl * 15);
     for (let i = 0; i < 12; i++) dropItem('pearl', irand(10, 25), w.x + rand(-60, 60), w.y + rand(40, 80));

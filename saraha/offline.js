@@ -125,7 +125,7 @@ const OFFLINE = {
       let show = false;
       const draw = () => {
         const alive = names.filter(n => !out.has(n)), aw = alive.filter(n => role.get(n) === 'wolf').length, ao = alive.length - aw;
-        const win = aw === 0 ? '🎉 أهل القرية فازوا! طلّعوا كل الذيابة.' : aw >= ao ? '🐺 الذيب فاز! صار عددهم مثل الباقين.' : '';
+        const win = aw === 0 ? '🎉 أهل القرية فازوا! طلّعوا كل الذيابة.' : aw >= ao ? '🐺 الذيابة فازوا! صار عددهم مثل الباقين.' : '';
         stage.innerHTML = `<div class="card center"><h3>📱 الحين عطوا الجوال للراوي</h3><p class="muted small">الراوي ما يلعب، هو اللي يمشّي اللعبة.</p></div>
           ${win ? `<div class="card center pick"><div class="gname">${win}</div></div>` : ''}
           <section class="card"><div class="gh"><h3>👥 اللاعبين</h3><button class="btn ghost sm" id="tg">${show ? '🙈 خبّ الأدوار' : '👁️ ورّني الأدوار'}</button></div>
@@ -193,7 +193,7 @@ const OFFLINE = {
     $('#peek').onclick = () => {
       if (!word) return;
       dw.innerHTML = `<b class="pink" style="font-size:30px">${esc(word)}</b>`;
-      setTimeout(() => { if (word) dw.textContent = 'احفظتها؟ ابدأ الوقت وارسم ✏️'; }, 2500);
+      setTimeout(() => { if (word) dw.textContent = 'حفظتها؟ ابدأ الوقت وارسم ✏️'; }, 2500);
     };
     $('#go').onclick = () => {
       if (!word) return toast('اختار كلمة أول', true);
@@ -266,7 +266,7 @@ const OFFLINE = {
     const text = () => last.map((t, i) => `${TEAMS[i][0]} الفريق ${TEAMS[i][1]}: ${t.join('، ')}`).join('\n');
     $('#go').onclick = () => {
       const k = +$('#tn').value;
-      if (names.length < k) return toast(`تحتاج ${k} أسماء على الأقل`, true);
+      if (names.length < k) return toast(`تحتاج ${k === 2 ? 'اسمين' : k + ' أسماء'} على الأقل`, true);
       last = Array.from({ length: k }, () => []);
       shuffle(names).forEach((n, i) => last[i % k].push(n));
       $('#out').innerHTML = `<div class="teams">${last.map((t, i) => `<div class="card team"><h3>${TEAMS[i][0]} الفريق ${TEAMS[i][1]}</h3>${t.map(n => `<div>${esc(n)}</div>`).join('')}</div>`).join('')}</div>

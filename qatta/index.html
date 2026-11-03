@@ -615,6 +615,7 @@ function plural(n, zero, one, two, few, many) { return n === 0 ? zero : n === 1 
 const pPeople = n => plural(n, 'ما فيه أحد', 'شخص واحد', 'شخصين', 'أشخاص', 'شخص');
 const pExp = n => plural(n, 'ما فيه مصاريف', 'مصروف واحد', 'مصروفين', 'مصاريف', 'مصروف');
 const pShare = n => (Number.isInteger(n) ? plural(n, 'ولا حصة', 'حصة وحدة', 'حصتين', 'حصص', 'حصة') : `${n} حصة`);
+const pGroup = n => plural(n, '0 قطّة', 'قطّة وحدة', 'قطّتين', 'قطّات', 'قطّة');
 const DF = new Intl.DateTimeFormat('ar-u-nu-latn-ca-gregory', { weekday: 'long', day: 'numeric', month: 'long' });
 const DFY = new Intl.DateTimeFormat('ar-u-nu-latn-ca-gregory', { day: 'numeric', month: 'long', year: 'numeric' });
 function dayLabel(iso) {
@@ -1491,12 +1492,12 @@ function exportBackup() {
   const blob = new Blob([JSON.stringify(data, null, 1)], { type: 'application/json' });
   const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `qatta-backup-${today()}.json`;
   document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000);
-  toast(`نزّلت نسخة فيها ${refs.length} قطّة`);
+  toast(`نزّلت نسخة فيها ${pGroup(refs.length)}`);
 }
 async function importBackup(file) {
   let j; try { j = JSON.parse(await file.text()); } catch (e) { toast('الملف مو نسخة صحيحة'); return; }
   if (!isObj(j) || j.app !== 'qatta' || !Array.isArray(j.groups)) { toast('هذا الملف مو نسخة من القطّة'); return; }
-  if (!await ask(`ترجّع ${j.groups.length} قطّة من النسخة؟`, { sub: 'اللي عندك ما راح ينحذف، ولو القطّة موجودة تندمج والأحدث يفوز.', ok: 'رجّعها' })) return;
+  if (!await ask(`ترجّع ${pGroup(j.groups.length)} من النسخة؟`, { sub: 'اللي عندك ما راح ينحذف، ولو القطّة موجودة تندمج والأحدث يفوز.', ok: 'رجّعها' })) return;
   let added = 0, merged = 0;
   for (const g of j.groups) {
     if (!isObj(g) || !isObj(g.ref)) continue;
@@ -1518,7 +1519,7 @@ async function importBackup(file) {
     }
   }
   saveRefs(); models.clear(); scheduleRender();
-  const parts = []; if (added) parts.push(`رجّعت ${added} قطّة`); if (merged) parts.push(`حدّثت ${merged} قطّة موجودة`);
+  const parts = []; if (added) parts.push(`رجّعت ${pGroup(added)}`); if (merged) parts.push(`حدّثت ${plural(merged, '', 'قطّة وحدة موجودة', 'قطّتين موجودتين', 'قطّات موجودة', 'قطّة موجودة')}`);
   toast(parts.length ? parts.join(' و') : 'ما فيه شي جديد بالنسخة');
 }
 $('#imp-file').addEventListener('change', e => { const f = e.target.files && e.target.files[0]; e.target.value = ''; if (f) importBackup(f); });

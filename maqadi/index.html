@@ -839,7 +839,7 @@ async function createShare(rec) {
   } catch (e) { toast(T ? T.errorText(e) : 'ما قدرت'); return false; }
 }
 async function rotate(rec, which, sh) {
-  if (!await ask(which === 'view' ? 'تغيّر رابط العرض؟' : 'تغيّر رابط التعديل؟', 'الرابط القديم بيوقف، واللي معهم لازم ترسل لهم الجديد.')) return;
+  if (!await ask(which === 'view' ? 'تغيّر رابط العرض؟' : 'تغيّر رابط التعديل؟', 'الرابط القديم بيوقف، واللي معهم الرابط لازم ترسل لهم الجديد.')) return;
   try {
     const r = await T.rotateKeys(rec.id, rec.key, which); const meta = strip(docOf(rec).meta() || {});
     if (r.view) rec.view = r.view; if (r.edit) { rec.edit = rec.key = r.edit; dropDoc(rec); }
@@ -853,7 +853,7 @@ async function stopSharing(rec) {
   try { await T.remove(rec.id, rec.key); } catch (e) { if (e.code !== 'not_found') return toast(T.errorText(e)); }
   dropDoc(rec); T.forget(rec.id); delete rec.id; delete rec.key; delete rec.edit; delete rec.view; saveLists();
   LS.set('maqadi.local.' + rec.k, { items: Object.fromEntries(Object.entries(items).map(([k, v]) => [k, { ...v, u: Date.now() }])), meta: { ...meta, u: Date.now() } });
-  render(); toast('وقفت المشاركة، القائمة صارت على جهازك بس');
+  render(); toast('وقّفت المشاركة، القائمة صارت على جهازك بس');
 }
 function handleJoin() {
   const j = T && T.parseJoin(location.hash); if (!j) return null;
@@ -887,7 +887,7 @@ function importAll() {
     if (j.hist && typeof j.hist === 'object') { for (const [k, h] of Object.entries(j.hist)) if (!HIST[k]) HIST[k] = h; saveHist(); }
     if (Array.isArray(j.tpl)) { const own = LS.get('maqadi.tpl', []); for (const x of j.tpl) if (!own.some(y => y.n === x.n)) own.push(x); LS.set('maqadi.tpl', own); }
     if (!S.me && j.me) { S.me = j.me; LS.set('maqadi.me', S.me); }
-    saveLists(); render(); const nn = n + joined; toast(nn === 1 ? 'رجّعت قائمة وحدة ✓' : nn === 2 ? 'رجّعت قائمتين ✓' : nn <= 10 ? `رجّعت ${nn} قوائم ✓` : `رجّعت ${nn} قائمة ✓`);
+    saveLists(); render(); const nn = n + joined; toast(nn === 0 ? 'ما فيه قوائم جديدة بالنسخة' : nn === 1 ? 'رجّعت قائمة وحدة ✓' : nn === 2 ? 'رجّعت قائمتين ✓' : nn <= 10 ? `رجّعت ${nn} قوائم ✓` : `رجّعت ${nn} قائمة ✓`);
   };
   f.click();
 }
