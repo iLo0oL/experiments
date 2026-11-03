@@ -1,0 +1,70 @@
+#!/usr/bin/env bash
+# Backup reminder. Off until it is turned on in
+#   Start menu > "Backup reminder" (backup-reminder-settings)
+# which saves: REMIND=1|0, EVERY=<days>, HOUR=<0-23> in
+#   ~/.config/xfce4/backup-reminder.conf
+#
+#   backup-reminder --watch   keep checking while the computer is on
+#                             (started by desktop-tweaks)
+#   backup-reminder           check once now
+#   backup-reminder --test    show the reminder now
+#
+# It shows at most once a day, at the chosen hour or later (so if the computer
+# was off at that time, it shows when it is next turned on), and only when the
+# newest backup in Internal storage > ComputerBackup is older than EVERY days.
+conf="$HOME/.config/xfce4/backup-reminder.conf"
+shown="$HOME/.cache/backup-reminder-shown"
+dir=/sdcard/ComputerBackup
+
+last_backup() {  # time of the newest backup, 0 if there is none
+  local f
+  f="$(ls -t "$dir"/computer-*.tar.gz 2>/dev/null | head -1)"
+  if [ -n "$f" ]; then stat -c %Y "$f"; else echo 0; fi
+}
+
+remind() {
+  local last msg title
+  last="$(last_backup)"
+  case "${LANG:-}" in
+    ar*)
+      title="تذكير النسخة الاحتياطية"
+      if [ "$last" = 0 ]; then msg="ما عندك نسخة احتياطية للكمبيوتر إلى الآن."
+      else msg="آخر نسخة احتياطية: $(date -d "@$last" +%Y/%m/%d)."; fi
+      msg="$msg لحفظ نسخة جديدة: أطفئ الكمبيوتر، واكتب desktop-backup في Termux." ;;
+    *)
+      title="Backup reminder"
+      if [ "$last" = 0 ]; then msg="There is no backup of the computer yet."
+      else msg="Last backup: $(date -d "@$last" +%Y/%m/%d)."; fi
+      msg="$msg To save a new one: stop the computer and type desktop-backup in Termux." ;;
+  esac
+  command -v notify-send >/dev/null 2>&1 && notify-send -i document-save "$title" "$msg"
+}
+
+check() {
+  local REMIND=0 EVERY=7 HOUR=20 today last days
+  [ -f "$conf" ] && . "$conf"
+  [ "$REMIND" = 1 ] || return 0
+  today="$(date +%F)"
+  [ "$(cat "$shown" 2>/dev/null)" = "$today" ] && return 0
+  [ "$(date +%-H)" -ge "$HOUR" ] 2>/dev/null || return 0
+  last="$(last_backup)"
+  if [ "$last" != 0 ]; then
+    # whole days between the day of the last backup and today
+    days=$(( ( $(date -d "$today" +%s) - $(date -d "$(date -d "@$last" +%F)" +%s) ) / 86400 ))
+    [ "$days" -ge "$EVERY" ] || return 0
+  fi
+  remind
+  mkdir -p "$(dirname "$shown")" && echo "$today" > "$shown"
+}
+
+case "${1:-}" in
+  --watch)
+    # only one watcher at a time
+    mkdir -p "$HOME/.cache"
+    exec 9>"$HOME/.cache/backup-reminder.lock"
+    flock -n 9 || exit 0
+    sleep 60   # let the desktop finish starting first
+    while :; do check; sleep 600; done ;;
+  --test) remind ;;
+  *) check ;;
+esac

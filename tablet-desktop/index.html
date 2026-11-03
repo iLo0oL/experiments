@@ -48,7 +48,7 @@ code{direction:ltr;unicode-bidi:isolate;white-space:nowrap;max-width:100%;overfl
 
 <section class="card">
 <h2><span class="ic">🪟</span><span>الطريقة ٢: كمبيوتر بشكل ويندوز ١٠، وبالعربي</span></h2>
-<p class="note">كمبيوتر حقيقي (لينكس) شكله مثل ويندوز ١٠، وقائمة ابدأ مثل ويندوز ٧، والواجهة كلها بالعربي. فيه مستكشف الملفات، ومتصفح الإنترنت، والمفكرة، والحاسبة، والصور، ومشغل الوسائط، ومستندات Word وجداول Excel وعروض PowerPoint. يشتغل بدون نت، وما يحتاج روت ولا يؤثر على جهازك.</p>
+<p class="note">كمبيوتر حقيقي (لينكس) شكله مثل ويندوز ١٠، وقائمة ابدأ مثل ويندوز ٧، والواجهة كلها بالعربي. فيه مستكشف الملفات، ومتصفح الإنترنت، والمفكرة، والحاسبة، والصور، ومشغل الوسائط، ومستندات Word وجداول Excel وعروض PowerPoint. يشتغل بدون نت، وما يحتاج روت ولا يؤثّر على جهازك.</p>
 <div class="shots">
 <img src="win10/preview-ar-start-menu.jpg" alt="قائمة ابدأ بالعربي">
 <img src="win10/preview-ar-windows.jpg" alt="مستكشف الملفات والمفكرة بالعربي">
@@ -94,26 +94,30 @@ code{direction:ltr;unicode-bidi:isolate;white-space:nowrap;max-width:100%;overfl
 </section>
 
 <section class="card">
-<h2><span class="ic">🟢</span><span>شكل ويندوز XP <span class="tag">اختياري</span></span></h2>
+<h2><span class="ic">🎨</span><span>شكل ويندوز XP أو ٧ <span class="tag">اختياري</span></span></h2>
 <div class="shots">
+<img src="win10/preview-ar-win7.jpg" alt="سطح المكتب وقائمة ابدأ بشكل ويندوز ٧">
 <img src="win10/preview-ar-xp.jpg" alt="سطح المكتب بشكل ويندوز XP">
 <img src="win10/preview-ar-xp-menu.jpg" alt="قائمة ابدأ بشكل ويندوز XP">
 </div>
-<p class="note">داخل الكمبيوتر افتح قائمة ابدأ واكتب <code>XP</code>، واضغط «شكل ويندوز XP». وللرجوع اكتب <code>10</code> واضغط «شكل ويندوز 10». يتبدّل على طول، وإعداداتك ما تتغيّر.</p>
+<p class="note">داخل الكمبيوتر افتح قائمة ابدأ واكتب <code>شكل</code>، واختر «شكل ويندوز XP» أو «شكل ويندوز 7» أو «شكل ويندوز 10». يتبدّل على طول، وإعداداتك ما تتغيّر.</p>
 </section>
 
 <section class="card">
-<h2><span class="ic">💡</span><span>نصايح</span></h2>
+<h2><span class="ic">💡</span><span>نصائح</span></h2>
 <ul>
 <li><b>الكتابة بالعربي</b> من الكيبورد: <code>Alt + Shift</code> يبدّل بين العربي والإنجليزي.</li>
-<li><b>تبي الواجهة بالإنجليزي؟</b> شغّله كذا: <code>DESKTOP_LANG=en desktop</code>.</li>
+<li><b>تبي الواجهة بالإنجليزي؟</b> افتح قائمة ابدأ واكتب <code>لغة</code>، واختر «اللغة الإنجليزية (English)»، وبعدها اضغط زر Computer عشان يعيد التشغيل. وللرجوع اختر «اللغة العربية».</li>
 <li><b>الخط صغير أو كبير؟</b> اكتب في Termux <code>desktop-size 1</code> لحجم أصغر، أو <code>desktop-size 3</code> لحجم أكبر، أو <code>desktop-size 2</code> للحجم الافتراضي. يحفظ اختيارك، وزر Computer يشغّل عليه.</li>
-<li><b>تبيها مثل شاشة تو كي؟</b> من إشعار Termux:X11 ← Preferences ← Output: خلّ <code>Display resolution mode</code> على <code>exact</code> و<code>Display resolution</code> على <code>2560x1600</code>، وبعدها اكتب <code>desktop-size 1</code>. وللفل اتش دي اختر <code>1920x1200</code>.</li>
-<li><b>اختصارات ويندوز:</b> <code>Ctrl + Alt + Delete</code> يفتح إدارة المهام، وزر ويندوز يفتح قائمة ابدأ، و<code>Win + E</code> يفتح مستكشف الملفات، و<code>Win + D</code> يظهر سطح المكتب. إذا ما اشتغلت، فعّل <code>Intercept system shortcuts</code> من Preferences ← Keyboard في Termux:X11.</li>
+<li><b>تبيها مثل شاشة 2K؟</b> من إشعار Termux:X11 ← Preferences ← Output: خلّ <code>Display resolution mode</code> على <code>exact</code> و<code>Display resolution</code> على <code>2560x1600</code>، وبعدها اكتب <code>desktop-size 1</code>. ولدقة Full HD اختر <code>1920x1200</code>.</li>
+<li><b>اختصارات ويندوز:</b> <code>Ctrl + Alt + Delete</code> يفتح إدارة المهام، وزر ويندوز يفتح قائمة ابدأ، و<code>Win + E</code> يفتح مستكشف الملفات، و<code>Win + D</code> يُظهر سطح المكتب، و<code>PrtSc</code> يصوّر الشاشة ويحفظها في «الصور ← لقطات الشاشة»، و<code>Win + Shift + S</code> تحدد فيه جزءًا من الشاشة وينسخه. إذا ما اشتغلت، فعّل <code>Intercept system shortcuts</code> من Preferences ← Keyboard في Termux:X11.</li>
 <li><b>اللمس:</b> من إعدادات Termux:X11 (من الإشعار حقه اضغط Preferences) غيّر <code>Touchscreen input mode</code> من Trackpad إلى اللمس المباشر، عشان تضغط على الشاشة نفسها بدل ما تحرّك مؤشر.</li>
-<li><b>ملفات التابلت</b> (صورك وتنزيلاتك) تلقاها في مستكشف الملفات داخل مجلد «ملفات التابلت».</li>
+<li><b>سطح المكتب مثل ويندوز:</b> فيه «هذا الكمبيوتر» و«المستندات» و«لوحة التحكم» و«ملفات التابلت» (صورك وتنزيلاتك). إذا حذفت أيقونة منها ما ترجع لحالها.</li>
+<li><b>يوتيوب وواتساب وجيميل</b> في قائمة ابدأ، كل واحد يفتح في نافذة لحاله. أول مرة تفتح واتساب، امسح الرمز من جوالك (واتساب ← الأجهزة المرتبطة).</li>
+<li><b>الطقس جنب الساعة:</b> إذا طلعت علامة <b>؟</b> بدل درجة الحرارة، اضغط عليه بالزر اليمين ← «خصائص» وابحث عن مدينتك. وإذا ما تبيه: زر يمين ← «إزالة».</li>
+<li><b>لوحة المفاتيح على الشاشة:</b> بدون كيبورد خارجي؟ افتح قائمة ابدأ واضغط «لوحة المفاتيح على الشاشة»، وتكتب فيها باللمس.</li>
 <li><b>التنزيلات:</b> أي ملف تنزّله من المتصفح يروح على طول لمجلد <b>Download</b> حق التابلت، وتلقاه في تطبيق «ملفاتي» وتقدر ترسله من الجوال. ومجلد «التنزيلات» داخل الكمبيوتر هو نفس المجلد.</li>
-<li><b>النسخ واللصق بين أندرويد والكمبيوتر:</b> انسخ نص في أي مكان والصقه في الثاني. إذا ما اشتغل: من إشعار Termux:X11 ← Preferences ← Other تأكد إن <code>Clipboard sharing</code> مفعّل.</li>
+<li><b>النسخ واللصق بين أندرويد والكمبيوتر:</b> انسخ نص في أي مكان والصقه في الثاني. إذا ما اشتغل: من إشعار Termux:X11 ← Preferences ← Other تأكد أن <code>Clipboard sharing</code> مفعّل.</li>
 <li><b>تبي برامج زيادة؟</b> افتح قائمة ابدأ واكتب <code>برامج</code>، واضغط «إضافة أو إزالة البرامج». اضغط «بحث» واكتب اسم البرنامج بالإنجليزي، مثلاً <code>gimp</code> (تعديل صور مثل فوتوشوب) أو <code>inkscape</code> (رسم) أو <code>kdenlive</code> (مونتاج فيديو). اضغط عليه بالزر اليمين ← «علّم للتثبيت»، وبعدها «تطبيق».</li>
 <li><b>ملفات Word وExcel من ويندوز</b> تنفتح بنفس شكلها: فيه خطوط بنفس مقاسات Arial وTimes New Roman وCalibri، وخطوط عربية بديلة عن Simplified Arabic وTraditional Arabic، والمدقق الإملائي العربي.</li>
 <li><b>ملء الشاشة:</b> من إشعار Termux:X11 ← Preferences ← Output فعّل <code>Fullscreen</code>، واستخدم الكمبيوتر و<b>DeX مطفي</b>. مع DeX، سامسونج تفتح كل التطبيقات كنوافذ، وما ينفتح ملء الشاشة.</li>
@@ -127,6 +131,7 @@ code{direction:ltr;unicode-bidi:isolate;white-space:nowrap;max-width:100%;overfl
 <ol>
 <li><b>حفظ:</b> في Termux اكتب <code>desktop-backup</code>. يطفّي الكمبيوتر ويحفظه، وياخذ من ١٠ إلى ٤٠ دقيقة ويحتاج كم جيجا فاضية. خلّ Termux مفتوح لين يخلص.</li>
 <li><b>انسخ الملف</b> لمكان آمن (كمبيوتر أو Google Drive) عشان لو ضاع التابلت.</li>
+<li><b>تذكير (اختياري):</b> افتح قائمة ابدأ واكتب <code>تذكير</code>، واختر «تذكير النسخة الاحتياطية». فعّله، واختر كم مرة يطلع وفي أي ساعة. يطلع والكمبيوتر شغّال، وإذا كان مطفأ وقتها يطلع أول ما تشغّله. والتذكير مطفأ إلى أن تفعّله.</li>
 <li><b>استرجاع:</b> اكتب <code>desktop-restore</code> واكتب <code>yes</code> للتأكيد. يرجّع آخر نسخة. وفي جهاز جديد: ركّب كل شي عادي من الخطوات فوق، وحط الملف في مجلد <code>ComputerBackup</code>، وبعدها <code>desktop-restore</code>.</li>
 </ol>
 </section>
@@ -135,7 +140,7 @@ code{direction:ltr;unicode-bidi:isolate;white-space:nowrap;max-width:100%;overfl
 <h2><span class="ic">🎮</span><span>كرت الشاشة <span class="tag exp">تجريبي</span></span></h2>
 <p class="note">عادةً المعالج هو اللي يرسم كل شي في الكمبيوتر، وهذا كافي لسطح المكتب والبرامج العادية. كرت الشاشة يفيد <b>الألعاب والبرامج ثلاثية الأبعاد</b>، وما يسرّع النوافذ والمتصفح بشكل واضح.</p>
 <ol>
-<li><b>جرّبه:</b> داخل الكمبيوتر افتح قائمة ابدأ واكتب <code>كرت</code>، واضغط «اختبار كرت الشاشة». يرسم تروس تدور ١٢ ثانية بالمعالج و١٢ ثانية بكرت الشاشة، ويقولك أيهم أسرع.</li>
+<li><b>جرّبه:</b> داخل الكمبيوتر افتح قائمة ابدأ واكتب <code>كرت</code>، واضغط «اختبار كرت الشاشة». يرسم تروس تدور ١٢ ثانية بالمعالج و١٢ ثانية بكرت الشاشة، ويقول لك أيهم أسرع.</li>
 <li><b>إذا طلع أسرع</b> وتبيه لكل البرامج: في Termux اكتب <code>desktop-gpu on</code> وأعد تشغيل الكمبيوتر.</li>
 <li><b>إذا صار شي غريب</b> (شاشة سوداء في برنامج، أو ألوان خربانة): اكتب <code>desktop-gpu off</code> ويرجع مثل قبل.</li>
 </ol>

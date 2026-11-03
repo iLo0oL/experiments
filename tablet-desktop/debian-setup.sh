@@ -44,6 +44,11 @@ want xarchiver               "Zip Files"
 want xfce4-pulseaudio-plugin "Volume icon on the taskbar"
 want pavucontrol             "Sound settings"
 want fonts-noto-color-emoji  "Emoji"
+want python3-pil             "Picture tool (sharp window buttons on big screens)"
+want libglib2.0-bin          "File tool (desktop icons open without a warning)"
+want xfce4-weather-plugin    "Weather on the taskbar"
+want python3-gi              "Welcome screen and settings windows"
+want gir1.2-gtk-3.0          "Welcome screen and settings windows (GTK)"
 
 step "Debian: programs"
 want firefox-esr             "Internet Browser (Firefox)"
@@ -73,6 +78,10 @@ want galculator              "Calculator"
 want xfce4-taskmanager       "Task Manager"
 want xfce4-screenshooter     "Snipping Tool"
 want vlc                     "Media Player"
+# On-screen keyboard, for using the computer by touch only
+if apt-get "${APT[@]}" install onboard; then ok "On-screen keyboard"
+elif apt-get "${APT[@]}" install matchbox-keyboard; then ok "On-screen keyboard (simple)"
+else warn "On-screen keyboard"; fi
 # Read aloud (Web Speech in the browser): Firefox needs libspeechd (speech-dispatcher)
 want speech-dispatcher           "Read aloud in the browser"
 want speech-dispatcher-espeak-ng "Read aloud voices (Arabic and English)"

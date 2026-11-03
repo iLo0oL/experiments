@@ -16,6 +16,7 @@
 #  Usage:  bash apply.sh
 #  Testing with local copies:  WIN10_THEME_SRC=dir WIN10_ICONS_SRC=dir
 #                              WINXP_THEME_SRC=dir WINXP_ICONS_SRC=dir
+#                              WIN7_THEME_SRC=dir WIN7_ICONS_SRC=dir
 #                              WIN10_WALLPAPER=file bash apply.sh
 # =============================================================
 set -u
@@ -25,6 +26,8 @@ THEME_URL="https://github.com/B00merang-Project/windows-10/archive/refs/heads/ma
 ICONS_URL="https://github.com/B00merang-Artwork/windows-10/archive/refs/heads/master.tar.gz"
 XP_THEME_URL="https://github.com/B00merang-Project/windows-xp/archive/refs/heads/master.tar.gz"
 XP_ICONS_URL="https://github.com/B00merang-Artwork/windows-xp/archive/refs/heads/master.tar.gz"
+WIN7_THEME_URL="https://github.com/B00merang-Project/Windows-7/archive/refs/heads/master.tar.gz"
+WIN7_ICONS_URL="https://github.com/B00merang-Artwork/Windows-7/archive/refs/heads/master.tar.gz"
 
 THEMES="$HOME/.themes"
 ICONS="$HOME/.icons"
@@ -109,14 +112,33 @@ else
   fail "Windows 10 icons (check internet)"
 fi
 
+# png2x <in> <out>: double the size of a PNG (sharp pixels, like xpm2x)
+png2x() {
+  if python3 -c 'import PIL' 2>/dev/null; then
+    python3 -I -c 'import sys
+from PIL import Image
+im = Image.open(sys.argv[1])
+im.resize((im.width * 2, im.height * 2), Image.NEAREST).save(sys.argv[2])' "$1" "$2"
+  elif command -v convert >/dev/null 2>&1; then
+    convert "$1" -filter point -resize 200% "$2"
+  else
+    return 1
+  fi
+}
 # Big-screen copy of the window borders/buttons: make_hidpi <theme dir name>
+# If a picture can't be doubled, there is no big copy and the normal one is used.
 make_hidpi() {
+  local f out="$THEMES/$1-hidpi/xfwm4"
   [ -d "$THEMES/$1/xfwm4" ] || return 1
-  rm -rf "$THEMES/$1-hidpi"; mkdir -p "$THEMES/$1-hidpi/xfwm4"
+  rm -rf "$THEMES/$1-hidpi"; mkdir -p "$out"
   for f in "$THEMES/$1/xfwm4"/*; do
     case "$f" in
-      *.xpm) xpm2x "$f" > "$THEMES/$1-hidpi/xfwm4/$(basename "$f")" ;;
-      *) cp "$f" "$THEMES/$1-hidpi/xfwm4/" ;;
+      *.xpm) xpm2x "$f" > "$out/$(basename "$f")" ;;
+      # xfwm4 prefers a .png to the .xpm of the same name: leave it out so the
+      # doubled .xpm is used, and double the ones that have no .xpm
+      *.png) [ -f "${f%.png}.xpm" ] && continue
+             png2x "$f" "$out/$(basename "$f")" || { rm -rf "$THEMES/$1-hidpi"; return 1; } ;;
+      *) cp "$f" "$out/" ;;
     esac
   done
 }
@@ -148,10 +170,52 @@ if get "${WINXP_ICONS_SRC:-$XP_ICONS_URL}" "$ICONS/Windows-XP"; then
   grep -q '^Inherits=' "$ICONS/Windows-XP/index.theme" 2>/dev/null \
     || sed -i 's/^\[Icon Theme\]$/[Icon Theme]\nInherits=Adwaita,hicolor/' "$ICONS/Windows-XP/index.theme"
   rtl_arrows "$ICONS/Windows-XP"
+  # the language icon is called "locale" in this pack
+  while IFS= read -r f; do
+    t="$(dirname "$f")/preferences-desktop-locale.${f##*.}"
+    [ -e "$t" ] || ln -s "$(basename "$f")" "$t"
+  done < <(find "$ICONS/Windows-XP" -name 'locale.*')
   command -v gtk-update-icon-cache >/dev/null 2>&1 && gtk-update-icon-cache -q -f "$ICONS/Windows-XP" 2>/dev/null
   ok "Windows XP icons"
 else
   fail "Windows XP icons (check internet)"
+fi
+
+# ---------- Windows 7 look (switch with: desktop-theme 7) ----------
+if get "${WIN7_THEME_SRC:-$WIN7_THEME_URL}" "$THEMES/Windows-7"; then
+  # The pack writes window titles in white, which can't be read on the light
+  # glass; Windows 7 writes them in black.
+  sed -i -e 's/^active_text_color=.*/active_text_color=#000000/' \
+         -e 's/^inactive_text_color=.*/inactive_text_color=#4a4a4a/' \
+         -e 's/^title_shadow_\(active\|inactive\)=.*/title_shadow_\1=false/' "$THEMES/Windows-7/xfwm4/themerc"
+  # Its title bar pieces around the title are 553px wide each, which leaves no
+  # room for the title in most windows: keep only 8px of each.
+  python3 -c 'import PIL' 2>/dev/null && python3 -I -c 'import sys
+from PIL import Image
+d = sys.argv[1]
+for state in ("active", "inactive"):
+    for n, left in (("1", True), ("2", True), ("4", False), ("5", False)):
+        f = "%s/title-%s-%s.png" % (d, n, state)
+        im = Image.open(f)
+        w, h = im.size
+        if w > 8:
+            im.crop((0, 0, 8, h) if left else (w - 8, 0, w, h)).save(f)' "$THEMES/Windows-7/xfwm4"
+  make_hidpi Windows-7; ok "Windows 7 theme"
+else
+  fail "Windows 7 theme (check internet)"
+fi
+if get "${WIN7_ICONS_SRC:-$WIN7_ICONS_URL}" "$ICONS/Windows-7"; then
+  # the pack falls back to a "Gnome" icon theme Debian doesn't have
+  if grep -q '^Inherits=' "$ICONS/Windows-7/index.theme" 2>/dev/null; then
+    sed -i 's/^Inherits=.*/Inherits=Adwaita,hicolor/' "$ICONS/Windows-7/index.theme"
+  else
+    sed -i 's/^\[Icon Theme\]$/[Icon Theme]\nInherits=Adwaita,hicolor/' "$ICONS/Windows-7/index.theme"
+  fi
+  rtl_arrows "$ICONS/Windows-7"
+  command -v gtk-update-icon-cache >/dev/null 2>&1 && gtk-update-icon-cache -q -f "$ICONS/Windows-7" 2>/dev/null
+  ok "Windows 7 icons"
+else
+  fail "Windows 7 icons (check internet)"
 fi
 
 # ---------- wallpaper ----------
@@ -171,17 +235,24 @@ asset() {
 if asset startup.oga "$HOME/.local/share/sounds/tablet-startup.oga"; then ok "Startup sound"; else fail "Startup sound"; fi
 
 # ---------- look styles ----------
-# win7-menu.css = Windows 10 look with a Windows 7 style Start menu
-# xp-style.css  = Windows XP look (blue taskbar, green Start button)
+# win7-menu.css    = Windows 10 look with a Windows 7 style Start menu
+# xp-style.css     = Windows XP look (blue taskbar, green Start button)
+# win7-taskbar.css = Windows 7 look (glass taskbar, round Start button), used
+#                    together with win7-menu.css
 # The current one is copied to look.css, which gtk.css imports (the user's own
 # gtk.css is otherwise left alone).
 G="$HOME/.config/gtk-3.0"
 asset win7-menu.css "$G/win7-menu.css" && ok "Windows 7 style Start menu" || fail "Windows 7 style Start menu"
 asset xp-style.css  "$G/xp-style.css"  && ok "Windows XP style"          || fail "Windows XP style"
 asset xp-wallpaper.jpg "$HOME/.local/share/backgrounds/xp-wallpaper.jpg" || fail "Windows XP wallpaper"
+asset win7-taskbar.css "$G/win7-taskbar.css" && ok "Windows 7 style"      || fail "Windows 7 style"
+asset win7-wallpaper.jpg "$HOME/.local/share/backgrounds/win7-wallpaper.jpg" || fail "Windows 7 wallpaper"
 LOOK_FILE="$CONF/.desktop-look"
-look="$(cat "$LOOK_FILE" 2>/dev/null)"; [ "$look" = xp ] || look=10
-[ "$look" = xp ] && cp "$G/xp-style.css" "$G/look.css" || cp "$G/win7-menu.css" "$G/look.css"
+case "$(cat "$LOOK_FILE" 2>/dev/null)" in
+  xp) cp "$G/xp-style.css" "$G/look.css" ;;
+  7)  cat "$G/win7-menu.css" "$G/win7-taskbar.css" > "$G/look.css" ;;
+  *)  cp "$G/win7-menu.css" "$G/look.css" ;;
+esac
 touch "$G/gtk.css"
 sed -i '/@import url("win7-menu.css");/d' "$G/gtk.css"
 grep -q 'look.css' "$G/gtk.css" || echo '@import url("look.css");' >> "$G/gtk.css"
@@ -409,6 +480,7 @@ rename() {
         /^\[/ { main = ($0 == "[Desktop Entry]") }
         main && /^Name(\[[^]]*\])?=/ { if (!n++) { print "Name=" en; print "Name[ar]=" ar }; next }
         main && /^GenericName(\[[^]]*\])?=/ { next }
+        main && /^X-[A-Za-z]+-Gettext-Domain=/ { next }
         main && icon != "" && /^Icon=/ { print "Icon=" icon; next }
         { print }' "$d/$id" > "$APPS/$id"
       break
@@ -423,6 +495,8 @@ rename "xfce-settings-manager.desktop"                       "Control Panel"    
 rename "org.xfce.ristretto.desktop ristretto.desktop"        "Photos"             "الصور"            eog
 rename "galculator.desktop"                                  "Calculator"         "الحاسبة"          accessories-calculator
 rename "synaptic.desktop"                                    "Add or Remove Programs" "إضافة أو إزالة البرامج" system-software-install
+rename "onboard.desktop"                                     "On-Screen Keyboard" "لوحة المفاتيح على الشاشة" input-keyboard
+rename "onboard-settings.desktop"                            "On-Screen Keyboard Settings" "إعدادات لوحة المفاتيح على الشاشة" preferences-desktop-keyboard
 rename "org.xfce.taskmanager.desktop xfce4-taskmanager.desktop" "Task Manager"    "إدارة المهام"     utilities-system-monitor
 rename "org.xfce.screenshooter.desktop xfce4-screenshooter.desktop" "Snipping Tool" "أداة القطع"     applets-screenshooter
 rename "vlc.desktop"                                         "Media Player"       "مشغل الوسائط"
@@ -431,7 +505,39 @@ rename "libreoffice-calc.desktop"                            "Excel Spreadsheets
 rename "libreoffice-impress.desktop"                         "PowerPoint Slides"  "عروض PowerPoint"
 rename "xarchiver.desktop"                                   "Zip Files"          "الملفات المضغوطة" package-x-generic
 rename "org.pulseaudio.pavucontrol.desktop pavucontrol.desktop" "Sound"           "الصوت"            multimedia-volume-control
+# The simple keyboard (used when Onboard isn't available) keeps its menu entry
+# in a subfolder; give it a normal one
+if [ ! -f /usr/share/applications/onboard.desktop ] && command -v matchbox-keyboard >/dev/null 2>&1; then
+  cat > "$APPS/matchbox-keyboard.desktop" <<'EOF'
+[Desktop Entry]
+Type=Application
+Name=On-Screen Keyboard
+Name[ar]=لوحة المفاتيح على الشاشة
+Exec=matchbox-keyboard
+Icon=input-keyboard
+Categories=Utility;Accessibility;
+EOF
+fi
 ok "Windows names for programs"
+
+# Websites as programs: each opens in a browser window of its own
+webapp() {  # webapp <id> <name> <Arabic name> <address> <icon>
+  cat > "$APPS/webapp-$1.desktop" <<EOF
+[Desktop Entry]
+Type=Application
+Name=$2
+Name[ar]=$3
+Comment=Opens $2 in its own window
+Comment[ar]=يفتح $3 في نافذة خاصة
+Exec=firefox-esr --new-window $4
+Icon=$5
+Categories=Network;
+EOF
+}
+webapp youtube  "YouTube"  "يوتيوب" "https://www.youtube.com/"  video-x-generic
+webapp whatsapp "WhatsApp" "واتساب" "https://web.whatsapp.com/" empathy
+webapp gmail    "Gmail"    "جيميل"  "https://mail.google.com/"  internet-mail
+ok "YouTube, WhatsApp and Gmail in the Start menu"
 
 # ---------- downloads go to the tablet's own Download folder ----------
 # The Arabic "Downloads" folder becomes a link to Android's Download folder, so
@@ -463,7 +569,10 @@ cat > "$BIN/desktop-tweaks" <<'EOF'
 scale="${GDK_SCALE:-1}"
 # window borders: big ones on a scaled-up screen
 base=Windows-10
-[ "$(cat "$HOME/.config/xfce4/.desktop-look" 2>/dev/null)" = xp ] && [ -d "$HOME/.themes/Windows-XP-Luna/xfwm4" ] && base=Windows-XP-Luna
+case "$(cat "$HOME/.config/xfce4/.desktop-look" 2>/dev/null)" in
+  xp) [ -d "$HOME/.themes/Windows-XP-Luna/xfwm4" ] && base=Windows-XP-Luna ;;
+  7)  [ -d "$HOME/.themes/Windows-7/xfwm4" ] && base=Windows-7 ;;
+esac
 if [ -d "$HOME/.themes/$base/xfwm4" ]; then
   if [ "$scale" -ge 2 ] 2>/dev/null && [ -d "$HOME/.themes/$base-hidpi" ]; then theme=$base-hidpi; else theme=$base; fi
 elif [ "$scale" -ge 2 ] 2>/dev/null; then theme=Default-xhdpi; else theme=Default; fi
@@ -479,18 +588,48 @@ xfconf-query -c xfwm4 -p /general/button_layout -s "$layout" 2>/dev/null \
 xfconf-query -c xfwm4 -p /general/title_alignment -s "$align" 2>/dev/null \
   || xfconf-query -c xfwm4 -p /general/title_alignment -n -t string -s "$align"
 xfconf-query -c xsettings -p /Gtk/CursorThemeSize -n -t int -s $((24 * scale)) 2>/dev/null
-# Arabic Windows: Start button on the right, clock on the left, menu mirrored
-case "${LANG:-}" in
-  ar*) order="9 8 7 6 5 4 3 2 1"; menu_alt=true ;;
-  *)   order="1 2 3 4 5 6 7 8 9"; menu_alt=false ;;
+ids() { xfconf-query -c xfce4-panel -p /panels/panel-1/plugin-ids 2>/dev/null | grep -E '^[0-9]+$' | tr '\n' ' ' | sed 's/ $//'; }
+restart_panel=0
+# Weather next to the clock (plugin 8), added once. Remove it like any other
+# taskbar item (right click > Remove) and it stays removed.
+wmark="$HOME/.config/xfce4/.weather-v1"
+if [ ! -f "$wmark" ] && [ -f /usr/share/xfce4/panel/plugins/weather.desktop ]; then
+  now="$(ids)"
+  if [ -n "$now" ] && [ "$(xfconf-query -c xfce4-panel -p /plugins/plugin-8 2>/dev/null)" = clock ] \
+     && ! xfconf-query -c xfce4-panel -p /plugins/plugin-10 >/dev/null 2>&1; then
+    xfconf-query -c xfce4-panel -p /plugins/plugin-10 -n -t string -s weather
+    args=()
+    for id in $now; do  # before the clock in English, after it in Arabic (mirrored)
+      case "${LANG:-}" in
+        ar*) args+=(-t int -s "$id"); [ "$id" = 8 ] && args+=(-t int -s 10) ;;
+        *)   [ "$id" = 8 ] && args+=(-t int -s 10); args+=(-t int -s "$id") ;;
+      esac
+    done
+    xfconf-query -c xfce4-panel -p /panels/panel-1/plugin-ids "${args[@]}"
+    restart_panel=1
+  fi
+  touch "$wmark"
+fi
+# Arabic Windows: Start button on the right, clock on the left, menu mirrored.
+# Only for the taskbar as set up here (with or without the weather), so a
+# taskbar the user rearranged is left alone.
+now="$(ids)"
+case "$(echo "$now" | tr ' ' '\n' | sort -n | tr '\n' ' ' | sed 's/ $//')" in
+  "1 2 3 4 5 6 7 8 9")    ltr="1 2 3 4 5 6 7 8 9" ;;
+  "1 2 3 4 5 6 7 8 9 10") ltr="1 2 3 4 5 6 7 10 8 9" ;;
+  *)                      ltr="" ;;
 esac
-now="$(xfconf-query -c xfce4-panel -p /panels/panel-1/plugin-ids 2>/dev/null | grep -E '^[0-9]+$' | tr '\n' ' ' | sed 's/ $//')"
-if [ -n "$now" ] && [ "$now" != "$order" ] && [ "$(echo "$now" | wc -w)" = 9 ]; then
+case "${LANG:-}" in
+  ar*) order="$(echo "$ltr" | tr ' ' '\n' | tac | tr '\n' ' ' | sed 's/ $//')"; menu_alt=true ;;
+  *)   order="$ltr"; menu_alt=false ;;
+esac
+if [ -n "$order" ] && [ "$now" != "$order" ]; then
   args=(); for id in $order; do args+=(-t int -s "$id"); done
   xfconf-query -c xfce4-panel -p /panels/panel-1/plugin-ids "${args[@]}"
   xfconf-query -c xfce4-panel -p /plugins/plugin-1/position-categories-alternate -n -t bool -s "$menu_alt"
-  xfce4-panel -r >/dev/null 2>&1 &
+  restart_panel=1
 fi
+[ "$restart_panel" = 1 ] && { xfce4-panel -r >/dev/null 2>&1 & }
 # wallpaper (only the first time, so your own choice is kept later)
 wall="$HOME/.local/share/backgrounds/win10.jpg"
 mark="$HOME/.config/xfce4/.win10-wallpaper-set"
@@ -523,12 +662,59 @@ if xfconf-query -c xfce4-keyboard-shortcuts -p /commands/custom/override >/dev/n
   sc '/commands/custom/Super_L'              xfce4-popup-whiskermenu # Windows key -> Start menu
   sc '/commands/custom/<Super>e'             thunar                  # Win+E -> File Explorer
   sc '/xfwm4/custom/<Super>d'                show_desktop_key        # Win+D -> show desktop
+  sc '/commands/custom/Print'                "$HOME/.local/bin/screenshot-full" # PrtSc -> save the screen
+  sc '/commands/custom/<Shift><Super>s'      'xfce4-screenshooter -r -c' # Win+Shift+S -> cut a part, copy it
+fi
+# Once (a marker remembers it, so icons the user deletes or moves stay that
+# way): desktop icons like Windows, and the web apps and the on-screen
+# keyboard in the Start menu favourites.
+extras="$HOME/.config/xfce4/.desktop-extras-v1"
+if [ ! -f "$extras" ]; then
+  desk="$HOME/Desktop"; docs="$HOME/Documents"
+  if [ -f "$HOME/.config/user-dirs.dirs" ]; then
+    desk="$(. "$HOME/.config/user-dirs.dirs"; echo "${XDG_DESKTOP_DIR:-$HOME/Desktop}")"
+    docs="$(. "$HOME/.config/user-dirs.dirs"; echo "${XDG_DOCUMENTS_DIR:-$HOME/Documents}")"
+  fi
+  mkdir -p "$desk"
+  # A launcher opens without the "untrusted launcher" question when it is
+  # executable and carries its own checksum (what "Mark executable" does).
+  icon_launcher() {  # icon_launcher <file> <English name> <Arabic name> <command> <icon>
+    local f="$desk/$1.desktop"
+    [ -e "$f" ] && return 0
+    printf '[Desktop Entry]\nType=Application\nName=%s\nName[ar]=%s\nExec=%s\nIcon=%s\n' "$2" "$3" "$4" "$5" > "$f"
+    chmod +x "$f"
+    command -v gio >/dev/null 2>&1 && \
+      gio set -t string "$f" metadata::xfce-exe-checksum "$(sha256sum "$f" | cut -d' ' -f1)" 2>/dev/null
+  }
+  icon_launcher this-pc       "This PC"       "هذا الكمبيوتر" "thunar computer:///"     computer
+  icon_launcher control-panel "Control Panel" "لوحة التحكم"   "xfce4-settings-manager" preferences-desktop
+  case "${LANG:-}" in ar*) dn="المستندات"; tn="ملفات التابلت" ;; *) dn="Documents"; tn="Tablet files" ;; esac
+  [ -d "$docs" ] && [ ! -e "$desk/$dn" ] && ln -s "$docs" "$desk/$dn"
+  [ -d /sdcard ] && [ ! -e "$desk/$tn" ] && ln -s /sdcard "$desk/$tn"
+  # "This PC" and "Documents" take the place of the Home and File System icons
+  xfconf-query -c xfce4-desktop -p /desktop-icons/file-icons/show-home -n -t bool -s false 2>/dev/null
+  xfconf-query -c xfce4-desktop -p /desktop-icons/file-icons/show-filesystem -n -t bool -s false 2>/dev/null
+  # Start menu favourites: add the new ones at the end, keep the user's own
+  fav="$(xfconf-query -c xfce4-panel -p /plugins/plugin-1/favorites 2>/dev/null | tail -n +3)"
+  if [ -n "$fav" ]; then
+    args=()
+    while IFS= read -r x; do [ -n "$x" ] && args+=(-t string -s "$x"); done <<< "$fav"
+    for x in webapp-youtube.desktop webapp-whatsapp.desktop webapp-gmail.desktop onboard.desktop matchbox-keyboard.desktop; do
+      printf '%s\n' "$fav" | grep -qxF "$x" && continue
+      [ -f "$HOME/.local/share/applications/$x" ] || [ -f "/usr/share/applications/$x" ] || continue
+      args+=(-t string -s "$x")
+    done
+    xfconf-query -c xfce4-panel -p /plugins/plugin-1/favorites "${args[@]}" 2>/dev/null
+  fi
+  touch "$extras"
 fi
 # Startup sound (turn off: touch ~/.config/xfce4/.no-startup-sound)
 snd="$HOME/.local/share/sounds/tablet-startup.oga"
 if [ -f "$snd" ] && [ ! -f "$HOME/.config/xfce4/.no-startup-sound" ] && command -v paplay >/dev/null 2>&1; then
   paplay "$snd" >/dev/null 2>&1 &
 fi
+# Backup reminder (does nothing until it is turned on in the Start menu)
+[ -x "$HOME/.local/bin/backup-reminder" ] && { nohup "$HOME/.local/bin/backup-reminder" --watch >/dev/null 2>&1 & }
 # Alt+Shift switches the keyboard between English and Arabic
 command -v setxkbmap >/dev/null 2>&1 && setxkbmap -layout us,ara -option grp:alt_shift_toggle 2>/dev/null
 exit 0
@@ -546,21 +732,24 @@ ok "Startup tweaks"
 # ---------- desktop-theme: switch between the Windows 10 and Windows XP looks ----------
 cat > "$BIN/desktop-theme" <<'EOF'
 #!/usr/bin/env bash
-# Switch the look:   desktop-theme xp   |   desktop-theme 10
+# Switch the look:   desktop-theme xp   |   desktop-theme 7   |   desktop-theme 10
 case "${1:-}" in
   xp|XP)      look=xp ;;
+  7|win7)     look=7 ;;
   10|win10)   look=10 ;;
-  *) echo "Usage: desktop-theme xp|10   (now: $(cat ~/.config/xfce4/.desktop-look 2>/dev/null || echo 10))"; exit 1 ;;
+  *) echo "Usage: desktop-theme xp|7|10   (now: $(cat ~/.config/xfce4/.desktop-look 2>/dev/null || echo 10))"; exit 1 ;;
 esac
 G="$HOME/.config/gtk-3.0"
-if [ "$look" = xp ]; then
-  gtk=Windows-XP-Luna; icons=Windows-XP; css=xp-style.css; wall=xp-wallpaper.jpg; bg=0; title=true; name=XP
-else
-  gtk=Windows-10; icons=Windows-10; css=win7-menu.css; wall=win10.jpg; bg=1; title=false; name=10
-fi
-[ -d "$HOME/.themes/$gtk" ] || { echo "The $look look is not installed yet. Run the update first."; exit 1; }
+# bg: taskbar background (0 = drawn by the look's CSS, 1 = plain colour)
+# title: show the word "Start" on the Start button
+case "$look" in
+  xp) gtk=Windows-XP-Luna; icons=Windows-XP; css="xp-style.css"; wall=xp-wallpaper.jpg; bg=0; title=true; name=XP ;;
+  7)  gtk=Windows-7; icons=Windows-7; css="win7-menu.css win7-taskbar.css"; wall=win7-wallpaper.jpg; bg=0; title=false; name=7 ;;
+  *)  gtk=Windows-10; icons=Windows-10; css="win7-menu.css"; wall=win10.jpg; bg=1; title=false; name=10 ;;
+esac
+[ -d "$HOME/.themes/$gtk" ] || { echo "The Windows $name look is not installed yet. Run the update first."; exit 1; }
 mkdir -p "$HOME/.config/xfce4"; echo "$look" > "$HOME/.config/xfce4/.desktop-look"
-cp "$G/$css" "$G/look.css"
+( cd "$G" && cat $css ) > "$G/look.css.new" && mv "$G/look.css.new" "$G/look.css"
 q() { xfconf-query "$@" 2>/dev/null; }
 q -c xsettings -p /Net/ThemeName -n -t string -s "$gtk"
 q -c xsettings -p /Net/IconThemeName -n -t string -s "$icons"
@@ -580,8 +769,12 @@ echo "Done: Windows $name look."
 EOF
 chmod +x "$BIN/desktop-theme"
 mkdir -p "$APPS"
-for l in xp 10; do
-  if [ "$l" = xp ]; then en="Windows XP look"; ar="شكل ويندوز XP"; else en="Windows 10 look"; ar="شكل ويندوز 10"; fi
+for l in xp 7 10; do
+  case "$l" in
+    xp) en="Windows XP look"; ar="شكل ويندوز XP" ;;
+    7)  en="Windows 7 look";  ar="شكل ويندوز 7" ;;
+    *)  en="Windows 10 look"; ar="شكل ويندوز 10" ;;
+  esac
   cat > "$APPS/desktop-look-$l.desktop" <<EOF
 [Desktop Entry]
 Type=Application
@@ -593,6 +786,78 @@ Icon=preferences-desktop-theme
 Categories=Settings;DesktopSettings;
 EOF
 done
-ok "Look switcher (Start menu > Settings, or: desktop-theme xp|10)"
+ok "Look switcher (Start menu > Settings, or: desktop-theme xp|7|10)"
+
+# ---------- welcome screen while the desktop starts ----------
+if asset desktop-splash.py "$BIN/desktop-splash"; then chmod +x "$BIN/desktop-splash"; ok "Welcome screen"
+else fail "Welcome screen"; fi
+
+# ---------- PrtSc: save the whole screen to Pictures > Screenshots ----------
+cat > "$BIN/screenshot-full" <<'EOF'
+#!/usr/bin/env bash
+# PrtSc: save the whole screen to Pictures > Screenshots (like Win+PrtSc in Windows)
+pics="$HOME/Pictures"
+[ -f "$HOME/.config/user-dirs.dirs" ] && pics="$(. "$HOME/.config/user-dirs.dirs"; echo "${XDG_PICTURES_DIR:-$HOME/Pictures}")"
+case "${LANG:-}" in
+  ar*) dir="$pics/لقطات الشاشة"; name="لقطة شاشة"; title="تم حفظ لقطة الشاشة"; where="في: الصور ← لقطات الشاشة" ;;
+  *)   dir="$pics/Screenshots";  name="Screenshot";  title="Screenshot saved";      where="In: Pictures > Screenshots" ;;
+esac
+mkdir -p "$dir"
+# a whole file name, so it saves right away instead of asking where
+f="$dir/$name $(date +%Y-%m-%d_%H-%M-%S).png"
+xfce4-screenshooter -f -s "$f" && [ -f "$f" ] && notify-send -i applets-screenshooter "$title" "$where"
+EOF
+chmod +x "$BIN/screenshot-full"
+ok "PrtSc saves a screenshot, Win+Shift+S cuts a part of the screen"
+
+# ---------- language from the Start menu ----------
+cat > "$BIN/desktop-language" <<'EOF'
+#!/usr/bin/env bash
+# Choose the language of the computer:   desktop-language ar | en
+# It is used from the next start (the Computer button restarts the computer).
+case "${1:-}" in ar|en) ;; *) echo "Usage: desktop-language ar|en"; exit 1 ;; esac
+mkdir -p "$HOME/.config/xfce4" && echo "$1" > "$HOME/.config/xfce4/.desktop-lang"
+case "${LANG:-}" in
+  ar*) [ "$1" = ar ] && l="العربية" || l="الإنجليزية"
+       notify-send -i preferences-desktop-locale "اللغة: $l" "تتغيّر بعد إعادة تشغيل الكمبيوتر: اضغط زر Computer في التابلت." ;;
+  *)   [ "$1" = ar ] && l="Arabic" || l="English"
+       notify-send -i preferences-desktop-locale "Language: $l" "It changes after a restart: tap the Computer button on the tablet." ;;
+esac
+EOF
+chmod +x "$BIN/desktop-language"
+for l in ar en; do
+  if [ "$l" = ar ]; then en="Arabic (عربي)"; ar="اللغة العربية"; else en="English"; ar="اللغة الإنجليزية (English)"; fi
+  cat > "$APPS/desktop-language-$l.desktop" <<EOF
+[Desktop Entry]
+Type=Application
+Name=$en
+Name[ar]=$ar
+Comment=Language of the computer
+Comment[ar]=لغة الكمبيوتر
+Exec=$BIN/desktop-language $l
+Icon=preferences-desktop-locale
+Categories=Settings;DesktopSettings;
+EOF
+done
+ok "Language buttons in the Start menu"
+
+# ---------- backup reminder (off until turned on) ----------
+if asset backup-reminder "$BIN/backup-reminder" && asset backup-reminder-settings.py "$BIN/backup-reminder-settings"; then
+  chmod +x "$BIN/backup-reminder" "$BIN/backup-reminder-settings"
+  cat > "$APPS/backup-reminder-settings.desktop" <<EOF
+[Desktop Entry]
+Type=Application
+Name=Backup reminder
+Name[ar]=تذكير النسخة الاحتياطية
+Comment=Choose if and when to be reminded to back up the computer
+Comment[ar]=اختر إذا تبي تذكيرًا بالنسخة الاحتياطية، وكم مرة، وفي أي ساعة
+Exec=$BIN/backup-reminder-settings
+Icon=document-save
+Categories=Settings;DesktopSettings;
+EOF
+  ok "Backup reminder (off until you turn it on in the Start menu)"
+else
+  fail "Backup reminder"
+fi
 
 echo "Done. Restart the desktop to see it: desktop-stop, then desktop"
