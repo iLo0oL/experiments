@@ -118,6 +118,8 @@ nav.tabs svg.i{width:23px;height:23px}
 .frow{display:flex;gap:8px;margin-top:9px;overflow-x:auto;scrollbar-width:none;align-items:center}
 .frow::-webkit-scrollbar{display:none}
 .frow .cnt{margin-right:auto;color:var(--muted);font-size:13px;white-space:nowrap}
+.msel{height:36px;border-radius:18px;background:var(--card);border:1px solid var(--line);color:var(--text);padding:0 12px;font:inherit;font-size:14px;max-width:100%}
+.msel.on{border-color:var(--acc);color:var(--acc);background:var(--hl)}
 .prow{display:flex;align-items:center;gap:11px;padding:10px 12px;background:var(--card);border:1px solid var(--line);border-radius:15px;margin-bottom:8px;cursor:pointer;width:100%;text-align:right}
 .prow:hover{border-color:var(--acc)}
 .prow .av{width:42px;height:42px;font-size:17px}
@@ -255,6 +257,10 @@ body.light #toast{background:#14211a}
             <button class="chip" id="sortBtn" data-s="name">ترتيب: أبجدي</button>
             <span class="cnt" id="cnt"></span>
           </div>
+          <div class="frow"><select class="msel" id="miss" aria-label="فرز اللي ناقصهم أقارب">
+            <option value="">كل الأشخاص</option><option value="nofa">بدون أب</option><option value="nomo">بدون أم</option><option value="nopar">بدون أب ولا أم</option>
+            <option value="nobro">بدون إخوان</option><option value="nosis">بدون أخوات</option><option value="nosib">بدون إخوان ولا أخوات</option><option value="nosp">بدون زوج أو زوجة</option>
+          </select></div>
         </div>
         <div id="plist"></div>
       </div>
@@ -609,10 +615,10 @@ function treeKids(p, isRoot) {
 }
 function hiddenCount(p, isRoot) { const seen = new Set([p.id]); let n = 0; const st = [[p, isRoot]]; while (st.length) { const [x, r] = st.pop(); for (const k of treeKids(x, r)) if (!seen.has(k.id)) { seen.add(k.id); n++; st.push([k, false]); } } return n; }
 function computeLayout(root) {
-  const seen = new Set();
+  const seen = new Set(), spSeen = new Set();
   function build(p, depth, isRoot) {
     seen.add(p.id);
-    const sps = spousesOf(p.id), spw = sps.length ? sps.length * (SW + SG) : 0;
+    const sps = spousesOf(p.id), spw = sps.length ? sps.length * (SW + SG) : 0; sps.forEach(x => spSeen.add(x.id));
     const n = { p, depth, sps, kids: [], le: PW / 2, re: PW / 2 + spw, spw };
     let ks = treeKids(p, isRoot).filter(k => !seen.has(k.id));
     n.has = ks.length > 0; n.col = n.has && S.col.has(p.id);
@@ -625,7 +631,17 @@ function computeLayout(root) {
     else for (const k of ks) if (!seen.has(k.id)) { const kn = build(k, depth + 1, false); if (n.multi) { kn.grp = gi(k); kn.op = S.P.get(op(k)); kn.opF = p.g === 'f'; } n.kids.push(kn); }
     return n;
   }
-  const R = build(root, 0, true);
+  let R;
+  if (root.all) {
+    /* الشجرة كاملة: كل عائلة لحالها جنب الثانية، وأي شخص ما له مكان يطلع لحاله */
+    R = { p: null, virtual: true, depth: -1, sps: [], kids: [], le: 0, re: 0, spw: 0 };
+    const tops = [...S.P.values()].filter(p => !(p.fa && S.P.has(p.fa)));
+    const men = tops.filter(p => p.g !== 'f').map(p => ({ p, c: hiddenCount(p, false) })).sort((a, b) => b.c - a.c || (+a.p.by || 1e9) - (+b.p.by || 1e9)).map(x => x.p);
+    for (const p of men) if (!seen.has(p.id)) R.kids.push(build(p, 0, true));
+    for (const p of tops) if (p.g === 'f' && !seen.has(p.id) && !spSeen.has(p.id)) R.kids.push(build(p, 0, true));
+    for (const p of S.P.values()) if (!seen.has(p.id) && !spSeen.has(p.id)) R.kids.push(build(p, 0, true));
+    if (!R.kids.length) return null;
+  } else R = build(root, 0, true);
   (function place(n) {
     if (!n.kids.length) { n.cl = [-n.le]; n.cr = [n.re]; return; }
     for (const k of n.kids) place(k);
@@ -634,14 +650,14 @@ function computeLayout(root) {
     for (let i = 1; i < m; i++) {
       const k = ks[i]; let s = -Infinity; const d = Math.min(Rr.length, k.cl.length);
       for (let j = 0; j < d; j++) s = Math.max(s, Rr[j] - k.cl[j]);
-      A[i] = s + HG;
+      A[i] = s + (n.virtual ? HG * 4 : HG);
       for (let j = 0; j < k.cl.length; j++) { if (j < Rr.length) Rr[j] = A[i] + k.cr[j]; else { L.push(A[i] + k.cl[j]); Rr.push(A[i] + k.cr[j]); } }
     }
     B[m - 1] = 0; L = ks[m - 1].cl.slice(); Rr = ks[m - 1].cr.slice();
     for (let i = m - 2; i >= 0; i--) {
       const k = ks[i]; let s = Infinity; const d = Math.min(L.length, k.cr.length);
       for (let j = 0; j < d; j++) s = Math.min(s, L[j] - k.cr[j]);
-      B[i] = s - HG;
+      B[i] = s - (n.virtual ? HG * 4 : HG);
       for (let j = 0; j < k.cl.length; j++) { if (j < L.length) L[j] = B[i] + k.cl[j]; else { L.push(B[i] + k.cl[j]); Rr.push(B[i] + k.cr[j]); } }
     }
     const b0 = B[0], X = A.map((a, i) => (a + B[i] - b0) / 2), c = (X[0] + X[m - 1]) / 2;
@@ -650,12 +666,13 @@ function computeLayout(root) {
     n.cl = cl; n.cr = cr;
   })(R);
   const list = [];
-  (function abs(n, x) { n.x = x; n.vx = -x; n.y = n.depth * (NH + VG); list.push(n); for (const k of n.kids) abs(k, x + k.dx); })(R, 0);
+  (function abs(n, x) { n.x = x; n.vx = -x; n.y = n.depth * (NH + VG); if (!n.virtual) list.push(n); for (const k of n.kids) abs(k, x + k.dx); })(R, 0);
   let minX = Infinity, maxX = -Infinity, maxY = 0;
   for (const n of list) { n.left = n.vx - PW / 2 - n.spw; n.right = n.vx + PW / 2; if (n.left < minX) minX = n.left; if (n.right > maxX) maxX = n.right; if (n.y + NH > maxY) maxY = n.y + NH; }
   const ox = PAD - minX, oy = PAD + 46;
   for (const n of list) { n.left += ox; n.right += ox; n.cx = n.vx + ox; n.y += oy; }
-  return { root: R, list, W: maxX - minX + PAD * 2, H: maxY + oy + PAD + 30, pos: new Map(list.map(n => [n.p.id, n])) };
+  const anchor = R.virtual ? R.kids[0] : R;
+  return { root: R, anchor, anchorId: anchor.p.id, list, W: maxX - minX + PAD * 2, H: maxY + oy + PAD + 30, pos: new Map(list.map(n => [n.p.id, n])) };
 }
 
 /* ---------- رسم الشجرة ---------- */
@@ -675,7 +692,9 @@ function defaultRoot() {
   }
   return best || [...S.P.values()][0] || null;
 }
-function getRoot() { const r = S.dev.root && S.P.get(S.dev.root); return r || defaultRoot(); }
+/* البداية: شخص معيّن، أو الشجرة كاملة (الافتراضي) */
+const ALL = { id: '*', all: true };
+function getRoot() { const r = S.dev.root && S.dev.root !== '*' && S.P.get(S.dev.root); return r || (S.P.size ? ALL : null); }
 /* ألوان الزوجات: كل زوجة لها لون، وعيالها نفس اللون */
 const WC = ['#e2b866', '#46c08a', '#b48cf2', '#f08a5d', '#4fc3d9'];
 const wcol = i => i >= 0 ? WC[i % WC.length] : '';
@@ -732,11 +751,11 @@ function renderTree(keep) {
     const b = $('#emImp'); if (b) b.onclick = importAny;
     return;
   }
-  $('#rootName').textContent = 'من: ' + fullName(root, 2);
+  $('#rootName').textContent = root.all ? 'الشجرة كاملة' : 'من: ' + fullName(root, 2);
   const t0 = performance.now();
   const anchor = keep && keep.id && S.lay && S.lay.pos.get(keep.id);
   const before = anchor ? { x: Z.x + anchor.cx * Z.s, y: Z.y + anchor.y * Z.s } : null;
-  const L = computeLayout(root);
+  const L = computeLayout(root); if (!L) { world.innerHTML = ''; S.lay = null; return; }
   const paths = linkPaths(L).map(x => `<path d="${x.d}"${x.c ? ` style="stroke:${x.c}"` : ''}/>`).join('');
   let h = `<svg width="${L.W}" height="${L.H}" viewBox="0 0 ${L.W} ${L.H}">${paths}</svg>`;
   for (const n of L.list) h += nodeHtml(n);
@@ -748,10 +767,10 @@ function renderTree(keep) {
 }
 function initView() {
   const L = S.lay; if (!L) return; const w = stage.clientWidth || innerWidth, h = stage.clientHeight || innerHeight - 120;
-  if (!w || !h) return; S.zInit = true; S.zRoot = L.root.p.id;
+  if (!w || !h) return; S.zInit = true; S.zRoot = S.layRoot;
   const fit = Math.min(w / L.W, (h - 10) / L.H, 1);
   if (fit >= 0.55) setZ((w - L.W * fit) / 2, Math.max(0, (h - L.H * fit) / 2 - 10), fit);
-  else { const s = 0.85, r = L.root; setZ(w / 2 - r.cx * s, 4 - (r.y - 70) * s, s); }
+  else { const s = 0.85, r = L.anchor; setZ(w / 2 - r.cx * s, 4 - (r.y - 70) * s, s); }
 }
 function fitAll() { const L = S.lay; if (!L) return; const w = stage.clientWidth, h = stage.clientHeight; const s = clamp(Math.min(w / L.W, h / L.H), 0.08, 1.2); setZ((w - L.W * s) / 2, (h - L.H * s) / 2, s, true); }
 function zoomAt(mx, my, s, anim) { s = clamp(s, 0.08, 2.6); const wx = (mx - Z.x) / Z.s, wy = (my - Z.y) / Z.s; setZ(mx - wx * s, my - wy * s, s, anim); }
@@ -773,8 +792,9 @@ function revealInTree(id) {
   const chain = [], seen = new Set(); let c = S.P.get(target);
   while (c && !seen.has(c.id)) { seen.add(c.id); chain.push(c.id); let up = S.P.get(c.fa); if (!up && S.dtr && c.mo) up = S.P.get(c.mo); c = up; }
   const root = getRoot();
-  if (!root || !chain.includes(root.id)) S.dev.root = chain[chain.length - 1];
   for (const x of chain.slice(1)) S.col.delete(x);
+  if (root && root.all) { saveDev(); renderTree(); if (S.lay && S.lay.pos.has(target)) { requestAnimationFrame(() => centerOn(target)); return; } }
+  if (!root || root.all || !chain.includes(root.id)) S.dev.root = chain[chain.length - 1];
   saveDev(); renderTree(); requestAnimationFrame(() => centerOn(target));
 }
 function toggleCol(id) { if (S.col.has(id)) S.col.delete(id); else S.col.add(id); saveDev(); renderTree({ id }); }
@@ -822,13 +842,19 @@ $('#focusMe').onclick = async () => {
 $('#findBtn').onclick = async () => { const id = await pickPerson({ title: 'دوّر على شخص' }); if (id) revealInTree(id); };
 $('#rootBtn').onclick = async () => {
   const tops = [...S.P.values()].filter(p => p.g !== 'f' && !(p.fa && S.P.has(p.fa))).map(p => ({ p, c: hiddenCount(p, false) })).sort((a, b) => b.c - a.c);
-  const id = await pickPerson({ title: 'الشجرة تبدأ من مين؟', prefer: tops.map(x => x.p.id), preferLabel: 'كبار العوائل', note: x => { const t = tops.find(y => y.p.id === x.id); return t ? `${t.c} من الذرية` : ''; } });
-  if (!id) return; S.dev.root = id; S.col.clear(); saveDev(); S.zInit = false; renderTree();
+  const id = await pickPerson({ title: 'الشجرة تبدأ من مين؟', allowNone: true, noneText: '🌳 اعرض الشجرة كاملة', prefer: tops.map(x => x.p.id), preferLabel: 'كبار العوائل', note: x => { const t = tops.find(y => y.p.id === x.id); return t ? `${t.c} من الذرية` : ''; } });
+  if (id === undefined) return; S.dev.root = id || '*'; S.col.clear(); saveDev(); S.zInit = false; renderTree();
 };
 window.addEventListener('resize', () => { if (S.view === 'tree' && S.lay && !S.zInit) initView(); });
 
 /* ---------- القائمة ---------- */
 $('#q').addEventListener('input', () => renderList());
+$('#miss').addEventListener('change', e => { S.miss = e.target.value; e.target.classList.toggle('on', !!S.miss); renderList(); });
+const sibsOf = p => [...new Set([...(p.fa && S.P.has(p.fa) ? S.kidsF.get(p.fa) || [] : []), ...(p.mo && S.P.has(p.mo) ? S.kidsM.get(p.mo) || [] : [])])].filter(x => x.id !== p.id);
+const MISS = {
+  nofa: p => !(p.fa && S.P.has(p.fa)), nomo: p => !(p.mo && S.P.has(p.mo)), nopar: p => !(p.fa && S.P.has(p.fa)) && !(p.mo && S.P.has(p.mo)),
+  nobro: p => !sibsOf(p).some(x => x.g !== 'f'), nosis: p => !sibsOf(p).some(x => x.g === 'f'), nosib: p => !sibsOf(p).length, nosp: p => !spousesOf(p.id).length
+};
 $('#frow').addEventListener('click', e => {
   const b = e.target.closest('button'); if (!b) return;
   if (b.dataset.f) { S.filter = b.dataset.f; $$('#frow [data-f]').forEach(x => x.classList.toggle('act', x === b)); }
@@ -842,13 +868,14 @@ function personRow(p, extra) {
 function renderList() {
   const q = norm($('#q').value); let arr = [...S.P.values()];
   if (S.filter === 'm') arr = arr.filter(p => p.g !== 'f'); else if (S.filter === 'f') arr = arr.filter(p => p.g === 'f'); else if (S.filter === 'alive') arr = arr.filter(p => !p.dead && !p.dy);
+  if (S.miss && MISS[S.miss]) arr = arr.filter(MISS[S.miss]);
   if (q) { const qs = q.split(' '); arr = arr.filter(p => { const k = searchKey(p); return qs.every(w => k.includes(w)); }); }
   const coll = new Intl.Collator('ar');
   if (S.sort === 'gen') arr.sort((a, b) => genOf(a) - genOf(b) || coll.compare(a.f, b.f)); else arr.sort((a, b) => coll.compare(a.f, b.f) || coll.compare(fullName(a, 3), fullName(b, 3)));
   $('#cnt').textContent = ppl(arr.length);
   $('#addFab').hidden = !canEdit();
   if (!S.P.size) { $('#plist').innerHTML = `<div class="empty"><p>ما فيه أحد للحين.${canEdit() ? ' اضغط «ضيف شخص» وابدأ.' : ''}</p></div>`; return; }
-  if (!arr.length) { $('#plist').innerHTML = `<div class="empty"><p>ما لقيت أحد بهالبحث</p></div>`; return; }
+  if (!arr.length) { $('#plist').innerHTML = `<div class="empty"><p>${S.miss && !q ? 'ما فيه أحد ناقص 👌' : 'ما لقيت أحد بهالبحث'}</p></div>`; return; }
   const max = 400;
   $('#plist').innerHTML = arr.slice(0, max).map(p => personRow(p, S.sort === 'gen' ? `<span class="gen">الجيل ${genOf(p)}</span>` : '')).join('') + (arr.length > max ? `<p class="empty">وفيه ${arr.length - max} غيرهم، دقّق البحث</p>` : '');
 }
@@ -1056,17 +1083,42 @@ async function unmilk(rid) {
 }
 
 /* ---------- إضافة وتعديل ---------- */
-function addChild(p, g) {
-  const sps = spousesOf(p.id), preset = { g };
-  if (p.g === 'f') { preset.mo = p.id; if (sps.length === 1) preset.fa = sps[0].id; }
-  else { preset.fa = p.id; if (sps.length === 1) preset.mo = sps[0].id; }
-  personForm({ preset, title: `${g === 'f' ? 'بنت' : 'ابن'} ${fullName(p, 2, false)}` });
+/* إضافة ابن أو بنت: تختار من المسجّلين بالشجرة أو تضيف شخص جديد */
+async function addChild(p, g) {
+  const sps = spousesOf(p.id), title = `${g === 'f' ? 'بنت' : 'ابن'} ${fullName(p, 2, false)}`, key = p.g === 'f' ? 'mo' : 'fa', other = key === 'fa' ? 'mo' : 'fa';
+  const anc = ancestors(p.id);
+  const id = await pickPerson({ title, newText: g === 'f' ? 'بنت جديدة مو بالشجرة' : 'ابن جديد مو بالشجرة', filter: x => x.g === g && !anc.has(x.id) && x[key] !== p.id, prefer: [...S.P.values()].filter(x => !(x[key] && S.P.has(x[key]))).map(x => x.id) });
+  if (!id) return;
+  if (id === '__new') {
+    const preset = { g }; preset[key] = p.id; if (sps.length === 1) preset[other] = sps[0].id;
+    return personForm({ preset, title });
+  }
+  const k = S.P.get(id); if (!k) return; const o = strip(k);
+  const cur = S.P.get(o[key]);
+  if (cur && cur.id !== p.id && !await ask(key === 'fa' ? 'تغيير الأب' : 'تغيير الأم', `${k.f} مسجّل${k.g === 'f' ? 'ة' : ''} إن ${key === 'fa' ? 'أبو' : 'أم'}${k.g === 'f' ? 'ها' : 'ه'} ${cur.f}. تبي ${key === 'fa' ? 'تغيّره' : 'تغيّرها'} لـ${p.f}؟`, [{ v: true, t: 'إيه، غيّر' }, { v: false, t: 'إلغاء', cls: 'ghost', cancel: true }])) return;
+  o[key] = p.id;
+  if (!(o[other] && S.P.has(o[other]))) {
+    if (sps.length === 1) o[other] = sps[0].id;
+    else if (sps.length > 1) { const w = await ask(key === 'fa' ? `مين أم ${k.f}؟` : `مين أبو ${k.f}؟`, '', [...sps.map(x => ({ v: x.id, t: fullName(x, 2, false) })), { v: '', t: 'ما أعرف', cls: 'ghost', cancel: true }]); if (w) o[other] = w; }
+  }
+  if (key === 'fa' && o.fam && o.fam === famOf(p)) delete o.fam;
+  try { S.doc.set(id, o); ensureMarriage(o.fa, o.mo); } catch (x) { return toast(T ? T.errorText(x) : 'ما انحفظ'); }
+  toast(`صار${k.g === 'f' ? 'ت' : ''} ${k.f} ${g === 'f' ? 'بنت' : 'ابن'} ${p.f} ✓`);
 }
-function addParent(p, g) {
-  personForm({
-    preset: { g, fam: g === 'm' ? (p.fam || '') : '' }, title: `${g === 'm' ? 'أبو' : 'أم'} ${p.f}`,
-    after: nid => { const cur = S.P.get(p.id) || p; const o = strip(cur); if (g === 'm') o.fa = nid; else o.mo = nid; if (g === 'm' && o.fam && o.fam === S.P.get(nid)?.fam) delete o.fam; S.doc.set(p.id, o); ensureMarriage(o.fa, o.mo); }
-  });
+/* إضافة أب أو أم: من المسجّلين أو جديد */
+function setParent(pid, g, nid) {
+  const cur = S.P.get(pid); if (!cur) return; const o = strip(cur); if (g === 'm') o.fa = nid; else o.mo = nid;
+  const np = S.P.get(nid); if (g === 'm' && o.fam && np && o.fam === famOf(np)) delete o.fam;
+  S.doc.set(pid, o); ensureMarriage(o.fa, o.mo);
+}
+async function addParent(p, g) {
+  const desc = descendants(p.id), title = `${g === 'm' ? 'أبو' : 'أم'} ${p.f}`;
+  const pref = g === 'f' && p.fa ? spousesOf(p.fa).map(x => x.id) : g === 'm' && p.mo ? spousesOf(p.mo).map(x => x.id) : [];
+  const id = await pickPerson({ title, newText: g === 'm' ? 'أب جديد مو بالشجرة' : 'أم جديدة مو بالشجرة', prefer: pref, filter: x => x.g === g && x.id !== p.id && !desc.has(x.id) });
+  if (!id) return;
+  if (id === '__new') return personForm({ preset: { g, fam: g === 'm' ? (p.fam || '') : '' }, title, after: nid => setParent(p.id, g, nid) });
+  try { setParent(p.id, g, id); } catch (x) { return toast(T ? T.errorText(x) : 'ما انحفظ'); }
+  toast(`صار${g === 'f' ? 'ت' : ''} ${S.P.get(id).f} ${g === 'm' ? 'أبو' : 'أم'} ${p.f} ✓`);
 }
 async function addSpouse(p) {
   const g = p.g === 'f' ? 'm' : 'f';
@@ -1190,7 +1242,7 @@ function renderStatus() {
 }
 function renderAll() {
   renderStatus();
-  if (S.view === 'tree') renderTree(S.lay ? { id: S.lay.root.p.id === (getRoot() || {}).id ? (S.lay.root.p.id) : null } : null);
+  if (S.view === 'tree') renderTree(S.lay ? { id: S.layRoot === (getRoot() || {}).id ? S.lay.anchorId : null } : null);
   else if (S.view === 'list') renderList();
   else renderMore();
   if (personSheet && sheets.includes(personSheet)) { if (S.P.has(personSheet.data.id)) fillPerson(personSheet); else closeSheet(personSheet); }
@@ -1199,7 +1251,7 @@ function setView(v) {
   S.view = v; LS.set('shajara.view', v);
   $$('.view').forEach(x => x.classList.toggle('on', x.id === 'v' + v[0].toUpperCase() + v.slice(1)));
   $$('#tabs button').forEach(b => b.classList.toggle('on', b.dataset.v === v));
-  if (v === 'tree') renderTree(S.lay && S.zInit ? { id: S.lay.root.p.id } : null); else if (v === 'list') renderList(); else renderMore();
+  if (v === 'tree') renderTree(S.lay && S.zInit ? { id: S.lay.anchorId } : null); else if (v === 'list') renderList(); else renderMore();
 }
 $('#tabs').onclick = e => { const b = e.target.closest('[data-v]'); if (b) setView(b.dataset.v); };
 $('#brand').onclick = () => setView('more');
@@ -1323,7 +1375,7 @@ function exportJson() {
 }
 function drawTreeCanvas(maxScale) {
   const root = getRoot(); if (!root) return null;
-  const L = (S.lay && S.layRoot === root.id) ? S.lay : computeLayout(root);
+  const L = (S.lay && S.layRoot === root.id) ? S.lay : computeLayout(root); if (!L) return null;
   const head = 80, oy = PAD + 46, w = L.W, h = L.H - oy + head + 10;
   /* حد آمن لحجم اللوحة (سفاري الآيفون يرفض أكبر من ~16 مليون بكسل) */
   let s = Math.min(maxScale || 2, 16000 / w, 16000 / h, Math.sqrt(16e6 / (w * h))); s = Math.max(s, 0.05);
@@ -1490,7 +1542,7 @@ setView(start && start.id && LS.get('shajara.view', null) == null ? 'tree' : S.v
 if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => { });
 
 /* واجهة صغيرة للاختبارات الآلية */
-window.__shajara = { S, relation, fullName: id => fullName(S.P.get(id)), computeLayout, getRoot, canEdit, revealInTree, centerOn, Z, parseGed, trees: () => trees, nodeSub, divorced, openPerson, deletePerson, drawTreeCanvas, exportGed, setZ, stage, setDownload: f => { dlHook = f; } };
+window.__shajara = { S, relation, getRoot, addChild, addParent, fullName: id => fullName(S.P.get(id)), computeLayout, getRoot, canEdit, revealInTree, centerOn, Z, parseGed, trees: () => trees, nodeSub, divorced, openPerson, deletePerson, drawTreeCanvas, exportGed, setZ, stage, setDownload: f => { dlHook = f; } };
 })();
 </script>
 </body>
