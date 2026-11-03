@@ -1,0 +1,64 @@
+#!/usr/bin/env bash
+# Google Drive: copies the "Google Drive" folder of the computer to Google
+# Drive, into the folder "كمبيوتر التابلت". Set up from
+#   Start menu > "Google Drive sync" (gdrive-settings)
+# which saves AUTO=1|0 and EVERY=<minutes> in ~/.config/xfce4/gdrive.conf.
+#
+#   gdrive-sync            copy now and say how it went
+#   gdrive-sync --quiet    copy now, say something only if it fails
+#   gdrive-sync --watch    copy every few minutes while the computer is on
+#                          (started by desktop-tweaks)
+#
+# It only adds and updates files on Drive; it never deletes anything there.
+conf="$HOME/.config/xfce4/gdrive.conf"
+last="$HOME/.cache/gdrive-last"
+err="$HOME/.cache/gdrive-error"
+local_dir="$HOME/Google Drive"
+remote="gdrive:كمبيوتر التابلت"
+
+# connected: the "gdrive" remote exists and has its sign-in key
+connected() { rclone config show gdrive 2>/dev/null | grep -q '^token = '; }
+
+say() {  # say <Arabic> <English>
+  local m="$1"; case "${LANG:-}" in ar*) ;; *) m="$2" ;; esac
+  command -v notify-send >/dev/null 2>&1 && notify-send -i folder-remote "Google Drive" "$m"
+}
+
+copy() {
+  local out
+  mkdir -p "$local_dir" "$HOME/.cache"
+  if out="$(rclone copy "$local_dir" "$remote" --update --transfers 2 --checkers 4 2>&1)"; then
+    date +%s > "$last"; : > "$err"; return 0
+  fi
+  printf '%s\n' "$out" | tail -n 3 > "$err"
+  return 1
+}
+
+case "${1:-}" in
+  --watch)
+    mkdir -p "$HOME/.cache"
+    exec 9>"$HOME/.cache/gdrive-sync.lock"
+    flock -n 9 || exit 0   # only one watcher at a time
+    sleep 90               # let the desktop finish starting first
+    while :; do
+      AUTO=1; EVERY=15
+      [ -f "$conf" ] && . "$conf"
+      # quietly: no message every few minutes when there is no internet
+      [ "$AUTO" = 1 ] && connected && copy
+      sleep $(( ${EVERY:-15} > 0 ? ${EVERY:-15} * 60 : 900 ))
+    done ;;
+  *)
+    if ! connected; then
+      say "Google Drive مو مربوط. افتح «مزامنة Google Drive» من قائمة ابدأ واضغط «ربط حساب Google»." \
+          "Google Drive is not connected. Open \"Google Drive sync\" in the Start menu and press \"Connect Google account\"."
+      exit 1
+    fi
+    if copy; then
+      [ "${1:-}" = --quiet ] || say "تمت المزامنة: ملفاتك محفوظة في درايف (كمبيوتر التابلت)." \
+                                    "Synced: your files are saved on Drive (كمبيوتر التابلت)."
+    else
+      say "ما زبطت المزامنة. تأكد من الإنترنت وجرّب مرة ثانية." \
+          "The sync didn't work. Check the internet and try again."
+      exit 1
+    fi ;;
+esac

@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ابدأ هنا</title>
+<style>
+:root{--blue:#0067b8;--ink:#1b1b1b;--soft:#5a5a5a;--line:#e3e3e3;--bg:#f6f7f9;--card:#fff}
+@media (prefers-color-scheme:dark){:root{--blue:#4cb0ff;--ink:#eee;--soft:#b5b5b5;--line:#333;--bg:#16181c;--card:#20232a}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.75 "Noto Sans Arabic","Noto Naskh Arabic","DejaVu Sans",sans-serif}
+header{background:var(--blue);color:#fff;padding:28px 20px 24px}
+header h1{margin:0;font-size:30px}
+header p{margin:6px 0 0;opacity:.9}
+main{max-width:900px;margin:0 auto;padding:18px 16px 40px}
+nav{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 18px}
+nav a{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:4px 14px;color:var(--blue);text-decoration:none;font-size:15px}
+section{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px 20px;margin:0 0 14px}
+h2{margin:0 0 8px;font-size:21px;color:var(--blue)}
+ul,ol{margin:6px 0;padding-inline-start:24px}
+li{margin:3px 0}
+code,kbd{direction:ltr;unicode-bidi:isolate;font-family:"DejaVu Sans Mono",monospace;font-size:14px;background:var(--bg);border:1px solid var(--line);border-radius:5px;padding:1px 6px}
+table{border-collapse:collapse;width:100%}
+td{border-top:1px solid var(--line);padding:7px 4px;vertical-align:top}
+td:first-child{white-space:nowrap;width:1%;padding-inline-end:16px}
+.note{color:var(--soft);font-size:15px}
+</style>
+</head>
+<body>
+<header>
+<h1>ابدأ هنا</h1>
+<p>كل اللي تحتاج تعرفه عن الكمبيوتر اللي في التابلت، في مكان واحد.</p>
+</header>
+<main>
+<nav>
+<a href="#start">التشغيل</a><a href="#keys">الاختصارات</a><a href="#look">الشكل واللغة</a>
+<a href="#files">الملفات</a><a href="#apps">البرامج</a><a href="#net">الإنترنت</a>
+<a href="#drive">Google Drive</a><a href="#touch">اللمس</a><a href="#backup">النسخة الاحتياطية</a><a href="#help">إذا صار شي</a>
+</nav>
+
+<section id="start">
+<h2>التشغيل والإيقاف</h2>
+<ul>
+<li><b>التشغيل:</b> اضغط زر <b>Computer</b> في الشاشة الرئيسية للتابلت، أو اكتب <code>desktop</code> في Termux.</li>
+<li><b>الإيقاف:</b> ارجع لـ Termux واكتب <code>desktop-stop</code>.</li>
+<li><b>إعادة التشغيل:</b> اضغط زر Computer مرة ثانية.</li>
+</ul>
+</section>
+
+<section id="keys">
+<h2>اختصارات لوحة المفاتيح</h2>
+<table>
+<tr><td><kbd>Win</kbd></td><td>قائمة ابدأ. اكتب فيها اسم أي برنامج أو إعداد وتطلع لك.</td></tr>
+<tr><td><kbd>Ctrl + Alt + Delete</kbd></td><td>إدارة المهام (تقفل منها أي برنامج معلّق).</td></tr>
+<tr><td><kbd>Win + E</kbd></td><td>مستكشف الملفات.</td></tr>
+<tr><td><kbd>Win + D</kbd></td><td>يُظهر سطح المكتب.</td></tr>
+<tr><td><kbd>PrtSc</kbd></td><td>يصوّر الشاشة ويحفظها في «الصور ← لقطات الشاشة».</td></tr>
+<tr><td><kbd>Win + Shift + S</kbd></td><td>تحدد جزءًا من الشاشة وينسخه، وتلصقه في أي مكان.</td></tr>
+<tr><td><kbd>Alt + Shift</kbd></td><td>يبدّل الكتابة بين العربي والإنجليزي.</td></tr>
+<tr><td><kbd>Ctrl + C</kbd> / <kbd>Ctrl + V</kbd></td><td>نسخ ولصق، حتى بين الكمبيوتر وتطبيقات أندرويد.</td></tr>
+</table>
+<p class="note">إذا ما اشتغلت الاختصارات: من إشعار Termux:X11 ← Preferences ← Keyboard فعّل <code>Intercept system shortcuts</code>.</p>
+</section>
+
+<section id="look">
+<h2>الشكل واللغة</h2>
+<ul>
+<li><b>الشكل:</b> افتح قائمة ابدأ واكتب <code>شكل</code>، واختر «شكل ويندوز XP» أو «شكل ويندوز 7» أو «شكل ويندوز 10».</li>
+<li><b>اللغة:</b> اكتب <code>لغة</code> واختر «اللغة العربية» أو «اللغة الإنجليزية (English)»، وبعدها اضغط زر Computer عشان يعيد التشغيل.</li>
+<li><b>الخط صغير أو كبير:</b> في Termux اكتب <code>desktop-size 1</code> (أصغر) أو <code>desktop-size 2</code> أو <code>desktop-size 3</code> (أكبر).</li>
+<li><b>الطقس جنب الساعة:</b> إذا طلعت علامة <b>؟</b>، اضغط عليه بالزر اليمين ← «خصائص» وابحث عن مدينتك.</li>
+<li><b>شاشة «مرحبًا»</b> تطلع وهو يشتغل، وتختفي لحالها أول ما يجهز.</li>
+</ul>
+</section>
+
+<section id="files">
+<h2>الملفات</h2>
+<ul>
+<li><b>هذا الكمبيوتر:</b> على سطح المكتب، يفتح مستكشف الملفات.</li>
+<li><b>ملفات التابلت:</b> صورك وتنزيلاتك وملفاتك اللي في أندرويد.</li>
+<li><b>التنزيلات:</b> أي ملف تنزّله من المتصفح يروح على طول لمجلد Download حق التابلت، وتلقاه في تطبيق «ملفاتي».</li>
+<li><b>لقطات الشاشة:</b> في «الصور ← لقطات الشاشة».</li>
+<li><b>ملفات Word وExcel</b> اللي تجيك من ويندوز تنفتح بنفس شكلها وخطوطها.</li>
+</ul>
+</section>
+
+<section id="apps">
+<h2>البرامج</h2>
+<ul>
+<li>في قائمة ابدأ: مستكشف الملفات، ومتصفح الإنترنت، والمفكرة، والحاسبة، والصور، والرسام، ومشغل الوسائط، ومستندات Word وجداول Excel وعروض PowerPoint، وVS Code للبرمجة.</li>
+<li><b>برامج زيادة:</b> اكتب <code>برامج</code> في قائمة ابدأ واختر «إضافة أو إزالة البرامج». اضغط «بحث» واكتب اسم البرنامج بالإنجليزي (مثلاً <code>gimp</code> لتعديل الصور)، وبعدها زر يمين عليه ← «علّم للتثبيت» ← «تطبيق».</li>
+<li><b>برامج ويندوز (.exe):</b> افتح الملف بضغطتين. البرامج الخفيفة غالبًا تشتغل، والثقيلة قد تكون بطيئة أو ما تشتغل.</li>
+<li><b>كرت الشاشة (تجريبي):</b> اختبره من «اختبار كرت الشاشة» في قائمة ابدأ.</li>
+</ul>
+</section>
+
+<section id="net">
+<h2>الإنترنت</h2>
+<ul>
+<li>المتصفح فيه <b>مانع إعلانات</b> جاهز.</li>
+<li><b>يوتيوب وواتساب وجيميل</b> في قائمة ابدأ، كل واحد يفتح في نافذة لحاله. أول مرة تفتح واتساب، امسح الرمز من جوالك (واتساب ← الأجهزة المرتبطة).</li>
+</ul>
+</section>
+
+<section id="drive">
+<h2>Google Drive</h2>
+<ol>
+<li>افتح قائمة ابدأ واكتب <code>Drive</code>، واختر «مزامنة Google Drive».</li>
+<li>اضغط «ربط حساب Google»، وسجّل دخولك في المتصفح اللي ينفتح، ووافق.</li>
+<li>أي ملف تحطه في مجلد <b>Google Drive</b> (على سطح المكتب) ينحفظ في درايف لحاله، في مجلد «كمبيوتر التابلت».</li>
+</ol>
+<p class="note">ينسخ ويحدّث الملفات بس، وما يحذف شي من درايف حتى لو حذفته من الكمبيوتر.</p>
+</section>
+
+<section id="touch">
+<h2>اللمس وبدون كيبورد</h2>
+<ul>
+<li><b>لوحة المفاتيح على الشاشة:</b> من قائمة ابدأ، وتكتب فيها باللمس.</li>
+<li><b>اللمس المباشر:</b> من إشعار Termux:X11 ← Preferences غيّر <code>Touchscreen input mode</code> من Trackpad إلى اللمس المباشر.</li>
+<li><b>شريط المفاتيح الإضافي</b> (Esc وCtrl وAlt): اسحب بثلاثة أصابع لتحت.</li>
+</ul>
+</section>
+
+<section id="backup">
+<h2>النسخة الاحتياطية</h2>
+<ul>
+<li><b>حفظ:</b> أطفئ الكمبيوتر، وفي Termux اكتب <code>desktop-backup</code>. ينحفظ في مجلد ComputerBackup في التابلت.</li>
+<li><b>استرجاع:</b> اكتب <code>desktop-restore</code> واكتب <code>yes</code> للتأكيد.</li>
+<li><b>تذكير (اختياري):</b> اكتب <code>تذكير</code> في قائمة ابدأ واختر «تذكير النسخة الاحتياطية»، وحدد كم مرة يطلع وفي أي ساعة.</li>
+</ul>
+</section>
+
+<section id="help">
+<h2>إذا صار شي</h2>
+<ul>
+<li><b>برنامج معلّق:</b> <kbd>Ctrl + Alt + Delete</kbd> واقفله من إدارة المهام.</li>
+<li><b>شي غريب في الشكل أو الشاشة:</b> أعد التشغيل بزر Computer.</li>
+<li><b>شاشة سوداء:</b> افتح صفحة التعليمات واتبع قسم «إذا طلعت لك شاشة سوداء».</li>
+<li><b>تحديث:</b> صفحة التعليمات فيها أمر التحديث، وإعداداتك ما تنمسح.</li>
+</ul>
+<p class="note">صفحة التعليمات: ilo0ol.github.io/experiments/tablet-desktop</p>
+</section>
+</main>
+</body>
+</html>

@@ -49,6 +49,7 @@ want libglib2.0-bin          "File tool (desktop icons open without a warning)"
 want xfce4-weather-plugin    "Weather on the taskbar"
 want python3-gi              "Welcome screen and settings windows"
 want gir1.2-gtk-3.0          "Welcome screen and settings windows (GTK)"
+want rclone                  "Google Drive sync"
 
 step "Debian: programs"
 want firefox-esr             "Internet Browser (Firefox)"
@@ -74,6 +75,10 @@ EOF
 fi
 want mousepad                "Notepad"
 want ristretto               "Photos"
+# Paint: "Drawing" is the closest to Windows Paint; mtpaint if it isn't there
+if apt-get "${APT[@]}" install drawing; then ok "Paint"
+elif apt-get "${APT[@]}" install mtpaint; then ok "Paint (simple)"
+else warn "Paint"; fi
 want galculator              "Calculator"
 want xfce4-taskmanager       "Task Manager"
 want xfce4-screenshooter     "Snipping Tool"
