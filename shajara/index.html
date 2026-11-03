@@ -1721,14 +1721,12 @@ function renderMore() {
   let share = '';
   const priv = shared && !!(S.meta && S.meta.priv);
   if (!shared) {
-    share = T && T.available() ? `<p class="d">🔐 احفظ نسخة خاصة على السيرفر عشان ما تضيع شجرتك إذا انمسح الجوال، أو شاركها مع أهلك.</p><button class="btn" id="bkBtn" style="margin-bottom:10px">🔐 احفظ نسخة على السيرفر</button><p class="d">شارك الشجرة مع العائلة: اللي معه <b>رابط التعديل</b> يقدر يضيف ويعدّل، واللي معه <b>رابط العرض</b> يشوف بس. التعديلات توصل للكل أول بأول.</p><button class="btn pri" id="shBtn">${ICON.link}شارك الشجرة</button>`
+    share = T && T.available() ? `<p class="d">شارك الشجرة مع العائلة: اللي معه <b>رابط التعديل</b> يقدر يضيف ويعدّل، واللي معه <b>رابط العرض</b> يشوف بس. التعديلات توصل للكل أول بأول.</p><button class="btn pri" id="shBtn">${ICON.link}شارك الشجرة</button>`
       : `<p class="d">المشاركة تحتاج سيرفر المزامنة، وهو مو مفعّل الحين. الشجرة محفوظة على جهازك.</p>`;
   } else if (S.lost) {
     share = `<p class="d">${esc(lostText())}</p>`;
   } else if (priv && owner && c.key) {
-    share = `<p class="d">🔐 شجرتك محفوظة على السيرفر بشكل خاص وتتحدّث تلقائي، ومحد عنده رابطها غيرك.</p>
-      ${linkBox('رابط الاسترجاع (لك بس)', T.joinLink(joinBase(), c.id, c.key), 'edit')}
-      <p class="d" style="color:var(--warn)">احفظ هالرابط عندك (مثلًا أرسله لنفسك بالواتساب). تفتحه بأي جهاز وترجع لك الشجرة. وانتبه: اللي معه الرابط يقدر يعدّل.</p>
+    share = `<p class="d">🔐 شجرتك محفوظة على السيرفر بشكل خاص، ومحد عنده رابطها غيرك. إذا تبي أهلك يشوفونها اضغط «شاركها مع العائلة».</p>
       <div class="rowb"><button class="btn sm pri" id="unprivBtn">شاركها مع العائلة</button><button class="btn sm danger" id="unshBtn">شيل النسخة من السيرفر</button></div>`;
   } else {
     share = `<p class="d">${owner ? 'أرسل رابط التعديل لأهلك اللي بيساعدون، ورابط العرض للباقين.' : role === 'view' ? 'عندك رابط عرض بس. تقدر ترسله لغيرك عشان يشوفون الشجرة.' : 'لحظة، أتأكد من الرابط…'}</p>
@@ -1741,6 +1739,7 @@ function renderMore() {
     ${trees.map(t => `<div class="trow ${t.k === c.k ? 'on' : ''}" data-tree="${esc(t.k)}"><span class="tx"><b>${esc(t.name)}</b></span>${t.id ? `<span class="badge sh">${t.k === c.k && priv ? 'محفوظة بالسيرفر' : 'مشتركة'}</span>` : '<span class="badge">على الجهاز</span>'}</div>`).join('')}
     <div class="rowb" style="margin-top:10px">${ed ? '<button class="btn sm" id="renBtn">غيّر الاسم</button>' : ''}<button class="btn sm" id="newTree">${ICON.plus}شجرة جديدة</button><button class="btn sm danger" id="rmTree">احذفها من جهازي</button></div>
   </div>
+  ${backupCard(c, shared, owner, priv)}
   <div class="card"><h3>🔗 المشاركة مع العائلة</h3>${share}${shared && owner && !priv ? `<p class="d" style="margin-top:10px">اللي معه رابط العرض يقدر يقترح إضافات، وتوصلك هنا عشان توافق عليها أو ترفضها.</p><div class="rowb"><button class="btn sm" id="qrBtn">📱 كود QR</button><button class="btn sm" id="pushBtn">🔔 نبّهني لما ينضاف أحد</button><button class="btn sm" id="sgRev">📨 الاقتراحات${S.sugg && S.sugg.length ? ` (${S.sugg.length})` : ''}</button></div>` : ''}${canSuggest() ? `<div class="rowb" style="margin-top:10px"><button class="btn sm pri" id="sgNew">✍️ اقترح إضافة على الشجرة</button><button class="btn sm" id="pushBtn">🔔 نبّهني لما ينضاف أحد</button><button class="btn sm" id="qrBtn">📱 كود QR</button></div>` : ''}</div>
   ${statsHtml()}
   <div class="card"><h3>🧰 أدوات</h3>
@@ -1770,7 +1769,7 @@ function renderMore() {
   on('renBtn', async () => { const n = await promptText('اسم الشجرة', S.cur.name, 'مثل: آل فلان'); if (!n) return; S.cur.name = n; saveTrees(); try { S.doc.setMeta({ ...strip(S.doc.meta() || {}), name: n }); } catch (x) { } renderAll(); });
   on('newTree', async () => { const n = await promptText('اسم الشجرة الجديدة', '', 'مثل: أهل أمي'); if (!n) return; const r = newLocalTree(n); openTree(r); setView('tree'); });
   on('rmTree', () => forgetTree(S.cur));
-  on('shBtn', () => createShare(false)); on('bkBtn', () => createShare(true)); on('rotBtn', rotateLinks); on('unshBtn', stopSharing);
+  on('shBtn', () => createShare(false)); on('bkBtn', () => createShare(true)); on('bkFile', exportJson); on('rotBtn', rotateLinks); on('unshBtn', stopSharing);
   on('unprivBtn', () => { try { S.doc.setMeta({ ...strip(S.doc.meta() || {}), priv: 0 }); } catch (e) { } S.meta.priv = 0; toast('صارت الشجرة مشتركة ✓ أرسل الروابط لأهلك'); renderMore(); });
   on('pushBtn', async () => { try { await T.push.subscribe(S.cur.id, S.cur.key); toast('🔔 تفعّل، بيوصلك تنبيه لما ينضاف أحد للشجرة'); } catch (e) { toast(T.errorText(e)); } });
   on('mergeBtn', mergeTreesUI); on('storyBtn', openStory); on('bookBtn', bookletPrint); on('showBtn', () => slideshow()); on('qrBtn', openQR);
@@ -1785,11 +1784,21 @@ function renderMore() {
   $$('#more [data-copy]').forEach(b => b.onclick = async () => { const ok = await copyText(b.dataset.copy); toast(ok ? 'نسخت الرابط ✓' : 'ما قدرت أنسخ، انسخه يدوي'); });
   $$('#more [data-wa]').forEach(b => b.onclick = () => shareLink(b.dataset.wa, b.dataset.kind));
 }
+function backupCard(c, shared, owner, priv) {
+  let h;
+  if (!shared) h = `<p class="d" style="color:var(--warn)">⚠️ شجرتك محفوظة على هالجهاز بس. إذا انمسح المتصفح أو ضاع الجوال تضيع معه.</p>${T && T.available() ? `<button class="btn pri" id="bkBtn">🔐 احفظ نسخة على السيرفر</button><p class="d" style="margin-top:8px">بعدها يطلع لك «رابط الاسترجاع»، تفتحه بأي جهاز وترجع لك الشجرة. والنسخة خاصة، محد يشوفها غيرك.</p>` : ''}`;
+  else if (S.lost) h = '';
+  else if (owner && c.key) h = `<p class="d">✅ شجرتك محفوظة على السيرفر، وتتحدّث تلقائي مع كل تعديل.</p>
+    ${linkBox(priv ? 'رابط الاسترجاع (لك بس)' : 'رابط الاسترجاع (هو نفسه رابط التعديل)', T.joinLink(joinBase(), c.id, c.key), 'self')}
+    <p class="d" style="color:var(--warn)">احفظ هالرابط عندك: اضغط «أرسل» وأرسله لنفسك بالواتساب. لو ضاع الجوال تفتحه بأي جهاز وترجع لك الشجرة. وانتبه: اللي معه الرابط يقدر يعدّل، فلا ترسله لأحد ما تثق فيه.</p>`;
+  else h = `<p class="d">✅ الشجرة محفوظة على السيرفر عند اللي شاركها معك.</p>`;
+  return `<div class="card"><h3>🔐 النسخة الاحتياطية</h3>${h}<div class="rowb" style="margin-top:8px"><button class="btn sm" id="bkFile">⬇️ نزّل نسخة ملف على جهازك</button></div></div>`;
+}
 function linkBox(label, url, kind) {
   return `<div class="fld"><span>${label}</span><div class="linkbox"><input readonly value="${esc(url)}" onclick="this.select()"><button class="btn sm" data-copy="${esc(url)}">انسخ</button><button class="btn sm" data-wa="${esc(url)}" data-kind="${kind}">أرسل</button></div></div>`;
 }
 function shareLink(url, kind) {
-  const text = kind === 'edit' ? `هذي شجرة عائلتنا «${S.cur.name}» على شجرتنا، تقدر تضيف وتعدّل:\n${url}` : `شوف شجرة عائلتنا «${S.cur.name}»:\n${url}`;
+  const text = kind === 'self' ? `🔐 رابط استرجاع شجرة «${S.cur.name}» (لا ترسله لأحد):\n${url}` : kind === 'edit' ? `هذي شجرة عائلتنا «${S.cur.name}» على شجرتنا، تقدر تضيف وتعدّل:\n${url}` : `شوف شجرة عائلتنا «${S.cur.name}»:\n${url}`;
   if (navigator.share) navigator.share({ title: 'شجرتنا', text }).catch(() => { });
   else window.open('https://wa.me/?text=' + encodeURIComponent(text), '_blank', 'noopener');
 }
