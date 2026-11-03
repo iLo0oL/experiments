@@ -594,13 +594,41 @@ function bloodAll(aId, bId, milk) {
   if (!common.length) return [];
   if (common.length > 40) return [blood(aId, bId, milk)];
   const up = new Map(), anc = c => { if (!up.has(c)) up.set(c, ancestors(c, milk)); return up.get(c); };
-  return common.filter(c => !common.some(c2 => c2 !== c && anc(c2).has(c))).map(c => pathRel(ma, mb, c)).sort((x, y) => x.d - y.d);
+  /* نفس السلف المشترك ممكن نوصله من أكثر من طريق (مثلًا جدك وجدتك إخوان: أبوهم واحد، ونوصله من جهة أبوك ومن جهة أمك)، فنحسب كل طريق لحاله */
+  /* نجرّب كل سلف مشترك، ونقبل الطريقين إذا ما يمرّون بنفس الشخص (غير السلف) — كذا ما تطلع صلة مكررة بعيدة */
+  const isLca = c => !common.some(c2 => c2 !== c && anc(c2).has(c)), res = [];
+  for (const c of common) {
+    const aPs = pathsUp(aId, c, milk), bPs = pathsUp(bId, c, milk);
+    if (!aPs.length || !bPs.length) { if (isLca(c)) res.push(pathRel(ma, mb, c)); continue; }
+    for (const ap of aPs.slice(0, 4)) for (const bp of bPs.slice(0, 4)) {
+      const sa = new Set(ap.path.slice(0, -1)); if (bp.path.slice(0, -1).some(x => sa.has(x))) continue;
+      res.push(relFromPaths(ap.path, bp.path.slice().reverse(), ap.mk || bp.mk));
+    }
+  }
+  return res.sort((x, y) => x.d - y.d);
+}
+/* كل الطرق من شخص لفوق لين سلف معيّن: [{path: [الشخص … السلف], mk: فيه رضاعة؟}] */
+function pathsUp(from, to, milk) {
+  const upsOf = x => { const p = S.P.get(x); if (!p) return []; const u = [[p.fa, 0], [p.mo, 0]]; if (milk) { for (const r of S.mPar.get(x) || []) u.push([r.m, 1], [r.f, 1]); for (const sg of S.mSib.get(x) || []) u.push(['v:' + sg.id, 1]); } return u.filter(([y]) => y); };
+  const memo = new Map(), reach = u => { if (u === to) return true; if (memo.has(u)) return memo.get(u); memo.set(u, false); let r = false; for (const [y] of upsOf(u)) if (reach(y)) r = true; memo.set(u, r); return r; };
+  const out = [];
+  (function dfs(x, path, mk) {
+    if (out.length >= 6 || path.length > 13) return;
+    if (x === to) { out.push({ path: path.slice(), mk }); return; }
+    for (const [y, m] of upsOf(x)) if (!path.includes(y) && reach(y)) { path.push(y); dfs(y, path, mk || m); path.pop(); }
+  })(from, [from], 0);
+  return out.sort((p, q) => p.path.length - q.path.length);
 }
 function pathRel(ma, mb, c0) {
-  const ia = ma.get(c0), ib = mb.get(c0), best = { c: c0, a: ia.d, b: ib.d, mk: ia.mk || ib.mk };
-  const aPath = []; for (let x = best.c; x != null; x = ma.get(x).prev) aPath.push(x); aPath.reverse(); // A ... LCA
-  const bPath = []; for (let x = best.c; x != null; x = mb.get(x).prev) bPath.push(x); // LCA ... B
-  const g = id => S.P.get(id), a = best.a, b = best.b, words = [];
+  const ia = ma.get(c0), ib = mb.get(c0);
+  const aPath = []; for (let x = c0; x != null; x = ma.get(x).prev) aPath.push(x); aPath.reverse();
+  const bPath = []; for (let x = c0; x != null; x = mb.get(x).prev) bPath.push(x);
+  return relFromPaths(aPath, bPath, ia.mk || ib.mk);
+}
+/* الصلة من طريقين: aPath (A … السلف) و bPath (السلف … B) */
+function relFromPaths(aPath, bPath, mk0) {
+  const best = { c: aPath[aPath.length - 1], mk: mk0 };
+  const g = id => S.P.get(id), a = aPath.length - 1, b = bPath.length - 1, words = [];
   for (let i = bPath.length - 1; i >= 2; i--) words.push(W.kid(g(bPath[i])));
   let half = '';
   if (b >= 1) {
