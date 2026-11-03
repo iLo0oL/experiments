@@ -220,7 +220,9 @@ nav.tabs svg.i{width:23px;height:23px}
 #quiz .qz-who{text-align:center;font-size:18px}#quiz.tv .qz-q{font-size:clamp(24px,3.4vw,46px)}#quiz.tv .qz-img{width:min(30vh,300px);height:min(30vh,300px)}
 #quiz .qz-pad{display:grid;grid-template-columns:1fr 1fr;gap:10px;flex:1;max-height:62vh}#quiz .qz-pad button{border:0;border-radius:18px;color:#fff;font:inherit;font-size:20px;font-weight:800;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:10px}#quiz .qz-pad i{font-size:30px}
 #quiz .qz-q.sm{font-size:18px;margin:12px 0}
-.cap.open{border-color:var(--gold)}.cap b{display:block;margin-bottom:4px}
+.cap.open{border-color:var(--gold)}.hidnote{margin-top:6px;font-size:13px;color:var(--warn)}
+.fact{display:flex;gap:12px;align-items:flex-start;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px;margin-bottom:8px}.fact .fi{font-size:26px;line-height:1}.fact b{display:block;margin-bottom:4px}
+#snBox{background:var(--card);border-radius:14px;padding:6px}#snBox svg{max-height:70vh}.cap b{display:block;margin-bottom:4px}
 #mapBox{direction:ltr;height:62vh;border-radius:14px;overflow:hidden;background:var(--card)}#mapBox .leaflet-popup-content{margin:10px}.mtip{font-family:inherit;font-weight:700}
 #quiz .qz-n{text-align:center;margin-top:14px;font-size:18px;font-weight:700}#quiz .qz-end{text-align:center;margin:auto}#quiz .qz-end h2{font-size:28px;margin:8px 0}
 #show{position:fixed;inset:0;z-index:400;background:radial-gradient(circle at 50% 30%,#1b2a22,#060a08);color:#fff;display:grid;place-items:center;text-align:center;padding:24px}
@@ -291,6 +293,7 @@ body.light #toast{background:#14211a}
   #printArea th,#printArea td{border:1px solid #bbb;padding:4pt 6pt;text-align:right}
   #printArea th{background:#eef3ea}
   #printArea tr{break-inside:avoid}
+  body.bwp #printArea,body.bwp #printArea *{color:#000!important;border-color:#000!important}body.bwp #printArea th{background:#fff!important}body.bwp #printArea img{filter:grayscale(1)}
 }
 </style>
 </head>
@@ -477,7 +480,7 @@ let trees = LS.get('shajara.trees', []);
 const saveTrees = () => LS.set('shajara.trees', trees);
 const S = {
   cur: null, doc: null, P: new Map(), M: [], kidsF: new Map(), kidsM: new Map(), sp: new Map(), meta: {}, dev: {}, col: new Set(),
-  view: LS.get('shajara.view', 'tree'), gens: LS.get('shajara.gens', 5), dkids: LS.get('shajara.dkids', true), momAll: LS.get('shajara.momAll', 'f'), brCol: LS.get('shajara.brCol', false), subMom: LS.get('shajara.subMom', false), hlLine: LS.get('shajara.hlLine', false), depthLim: 0, status: 'local', statusMsg: '', lost: null,
+  view: LS.get('shajara.view', 'tree'), gens: LS.get('shajara.gens', 5), dkids: LS.get('shajara.dkids', true), momAll: LS.get('shajara.momAll', 'f'), brCol: LS.get('shajara.brCol', false), bw: LS.get('shajara.bw', false), subMom: LS.get('shajara.subMom', false), hlLine: LS.get('shajara.hlLine', false), depthLim: 0, status: 'local', statusMsg: '', lost: null,
   filter: 'all', sort: 'name', lay: null, renderMs: 0
 };
 function newLocalTree(name) { const rec = { k: 'L' + newId(''), name: name || 'شجرة العائلة' }; trees.push(rec); saveTrees(); return rec; }
@@ -514,7 +517,9 @@ function onDocStatus(s, msg) {
 const ord = p => (p.o != null ? +p.o : +(p.c || 0));
 function rebuild() {
   const P = new Map(), M = [], R = [], RS = [], MEM = new Map(), PHS = new Map(), AUD = new Map(), CAP = [];
-  for (const it of S.doc.items()) { if (it.t === 'p' && it.f) P.set(it.id, it); else if (it.t === 'm') M.push(it); else if (it.t === 'r') R.push(it); else if (it.t === 'rs') RS.push(it); else if (it.t === 'mem' && it.p) push(MEM, it.p, it); else if (it.t === 'ph' && it.p && it.img) push(PHS, it.p, it); else if (it.t === 'au' && it.p && it.au) push(AUD, it.p, it); else if (it.t === 'cap' && it.open) CAP.push(it); }
+  /* تصحيح اقترحه صاحب رابط العرض لتاريخ مخفي: يبان عنده هو بس */
+  const ovl = S.doc.role === 'view' && S.cur && S.cur.id ? LS.get('shajara.ovl.' + S.cur.id, null) : null;
+  for (const it of S.doc.items()) { if (it.t === 'p' && it.f) P.set(it.id, ovl && ovl[it.id] ? { ...it, ...ovl[it.id] } : it); else if (it.t === 'm') M.push(it); else if (it.t === 'r') R.push(it); else if (it.t === 'rs') RS.push(it); else if (it.t === 'mem' && it.p) push(MEM, it.p, it); else if (it.t === 'ph' && it.p && it.img) push(PHS, it.p, it); else if (it.t === 'au' && it.p && it.au) push(AUD, it.p, it); else if (it.t === 'cap' && it.open) CAP.push(it); }
   const kidsF = new Map(), kidsM = new Map(), sp = new Map();
   for (const p of P.values()) { if (p.fa && P.has(p.fa) && p.fa !== p.id) push(kidsF, p.fa, p); if (p.mo && P.has(p.mo) && p.mo !== p.id) push(kidsM, p.mo, p); }
   const byO = (a, b) => ord(a) - ord(b) || (a.id < b.id ? -1 : 1);
@@ -579,11 +584,12 @@ function today(cal) {
 const dateTxt = (d, m, y, cal) => [d || '', m ? MONTHS[cal === 'g' ? 'g' : 'h'][m - 1] : '', y || ''].filter(Boolean).join(' ');
 /* العمر: بالسنة، ونطرح سنة إذا ما جا يوم ميلاده هالسنة */
 function ageOf(p) {
-  if (!p.by) return null; const t = today(p.cal); let a = t.y - p.by;
+  if (!p.by || p.hd) return null; const t = today(p.cal); let a = t.y - p.by;
   if (p.bmo && t.m && (t.m < p.bmo || (t.m === p.bmo && p.bda && t.d < p.bda))) a--;
   return a;
 }
 function yearsText(p, short) {
+  if (p.hd) return (p.dead || p.dy) ? (p.g === 'f' ? 'رحمها الله' : 'رحمه الله') : '';
   if (!short && (p.bmo || p.dmo)) {
     const b = p.by || p.bmo ? dateTxt(p.bda, p.bmo, p.by, p.cal) : '', d = p.dy || p.dmo ? dateTxt(p.dda, p.dmo, p.dy, p.cal) : '';
     if (b && d) return `${b} – ${d} ${calL(p)}`;
@@ -1283,8 +1289,8 @@ function fillPerson(sh) {
   const he = p.g === 'f' ? 'ها' : 'ه';
   const facts = [];
   const yt = yearsText(p); if (yt) facts.push(`<span>${esc(yt)}</span>`);
-  if (p.by && !p.dead && !p.dy) facts.push(`<span>العمر${p.bmo ? '' : ' تقريبًا'} <b>${ageOf(p)}</b></span>`);
-  if (p.dy && p.by) facts.push(`<span>عاش${p.g === 'f' ? 'ت' : ''} تقريبًا <b>${p.dy - p.by}</b> سنة</span>`);
+  if (p.by && !p.hd && !p.dead && !p.dy) facts.push(`<span>العمر${p.bmo ? '' : ' تقريبًا'} <b>${ageOf(p)}</b></span>`);
+  if (p.dy && p.by && !p.hd) facts.push(`<span>عاش${p.g === 'f' ? 'ت' : ''} تقريبًا <b>${p.dy - p.by}</b> سنة</span>`);
   if (p.city) facts.push(`<span>📍 <b>${esc(p.city)}</b></span>`);
   facts.push(`<span>الجيل <b>${genOf(p)}</b></span>`);
   let h = `<div class="phead">${avatar(p)}<div style="min-width:0;flex:1"><h3>${esc(p.f)}</h3><div class="fn">${esc(fullName(p))}</div></div><button class="ib" data-close aria-label="سكّر">${ICON.x}</button></div>
@@ -1297,7 +1303,7 @@ function fillPerson(sh) {
       ${fa ? '' : `<button class="chip act" data-a="fa">${ICON.plus}ضيف أب</button>`}${mo ? '' : `<button class="chip act" data-a="mo">${ICON.plus}ضيف أم</button>`}
       <button class="chip" data-a="edit">${ICON.edit}عدّل</button><button class="chip" data-a="merge">🔗 دمج مع شخص ثاني</button><button class="chip del" data-a="del">${ICON.trash}احذف</button></div>`;
   }
-  h += `<div class="chips" style="margin-top:8px"><button class="chip" data-a="rel">${ICON.q}وش صلتي في${he}؟</button><button class="chip" data-a="rel2">صلت${he} بشخص ثاني</button><button class="chip" data-a="show">${ICON.target}ورني إيا${he} بالشجرة</button>${S.dev.me === p.id ? '' : `<button class="chip" data-a="me">${ICON.user}هذا أنا</button>`}<button class="chip" data-a="copyname">📋 انسخ النسب</button><button class="chip" data-a="cert">📜 وثيقة نسب</button>${canSuggest() ? '<button class="chip" data-a="sgFix">✏️ اقترح تصحيح</button>' : ''}${ed ? '<button class="chip" data-a="capNew">💌 رسالة للمستقبل</button>' : ''}<button class="chip" data-a="ped">🧬 أجداد${he}</button><button class="chip" data-a="kin">👥 أقارب${he}</button><button class="chip" data-a="card">🪪 بطاقة</button><button class="chip" data-a="rootHere">🌳 ابدأ الشجرة من${p.g === 'f' ? 'ها' : 'ه'}</button></div>`;
+  h += `<div class="chips" style="margin-top:8px"><button class="chip" data-a="rel">${ICON.q}وش صلتي في${he}؟</button><button class="chip" data-a="rel2">صلت${he} بشخص ثاني</button><button class="chip" data-a="show">${ICON.target}ورني إيا${he} بالشجرة</button>${S.dev.me === p.id ? '' : `<button class="chip" data-a="me">${ICON.user}هذا أنا</button>`}<button class="chip" data-a="copyname">📋 انسخ النسب</button><button class="chip" data-a="cert">📜 وثيقة نسب</button>${kids.length ? `<button class="chip" data-a="sun">🌞 ذريت${he} بشكل دائري</button>` : ''}<button class="chip" data-a="gen">👥 جيل${he}</button>${canSuggest() ? '<button class="chip" data-a="sgFix">✏️ اقترح تصحيح</button>' : ''}${ed ? '<button class="chip" data-a="capNew">💌 رسالة للمستقبل</button>' : ''}<button class="chip" data-a="ped">🧬 أجداد${he}</button><button class="chip" data-a="kin">👥 أقارب${he}</button><button class="chip" data-a="card">🪪 بطاقة</button><button class="chip" data-a="rootHere">🌳 ابدأ الشجرة من${p.g === 'f' ? 'ها' : 'ه'}</button></div>`;
   const dups = ed ? dupsOf(p) : [];
   if (dups.length) h += `<div class="note" style="margin-top:10px">ممكن ${esc(p.f)} مسجّل${p.g === 'f' ? 'ة' : ''} مرتين: ${dups.map(x => esc(fullName(x, 3))).join('، ')}. إذا ${dups.length > 1 ? 'واحد منهم نفس' : 'هو نفس'} الشخص، اضغط «دمج مع شخص ثاني».</div>`;
   if (!ed && canSuggest()) h += `<div class="chips" style="margin-top:8px"><button class="chip act" data-a="sugg">✍️ اقترح إضافة ل${p.g === 'f' ? 'ها' : 'ه'}</button></div>`;
@@ -1377,6 +1383,8 @@ async function onPersonClick(e) {
   else if (act === 'sgMem') suggestMem(id);
   else if (act === 'sgFix') suggestFix(id);
   else if (act === 'cert') printCert(id);
+  else if (act === 'sun') openSun(id);
+  else if (act === 'gen') openGen(id);
   else if (act === 'capNew') capForm(id);
   else if (act === 'sgPh') suggestPhoto(id);
   else if (act === 'addAu') recordVoice(id);
@@ -1626,12 +1634,13 @@ function personForm(o) {
     <div class="row2"><div class="fld"><span>يوم وشهر الميلاد <i>(اختياري)</i></span><div class="dm"><select id="fBd" aria-label="يوم الميلاد"></select><select id="fBm" aria-label="شهر الميلاد"></select></div></div><div class="fld"><span>يوم وشهر الوفاة</span><div class="dm"><select id="fDd" aria-label="يوم الوفاة"></select><select id="fDm" aria-label="شهر الوفاة"></select></div></div></div>
     <div class="fld"><div class="seg" id="fCal"><button type="button" data-v="h">هجري</button><button type="button" data-v="g">ميلادي</button></div></div>
     <label class="chk"><input type="checkbox" id="fDead"><span id="fDeadL"></span></label>
+    <label class="chk"><input type="checkbox" id="fHd"><span id="fHdL"></span></label>
     <label class="fld"><span>المدينة</span><input id="fCity" maxlength="40"></label>
     <label class="fld"><span>ملاحظات</span><textarea id="fNt" rows="2" maxlength="600"></textarea></label>
     <div class="fld"><span>صورة صغيرة <i>(اختياري)</i></span><div class="phrow"><span id="fPhV"></span><button type="button" class="btn sm" id="fPhB">اختر صورة</button><button type="button" class="btn sm ghost" id="fPhX">شيلها</button></div></div>
     <div class="acts"><button class="btn pri" id="fSave">حفظ</button><button class="btn ghost" data-close>إلغاء</button></div>`);
   const E = s => $(s, sh.el);
-  E('#fF').value = p.f || ''; E('#fFam').value = p.fam || ''; E('#fBy').value = p.by || ''; E('#fDy').value = p.dy || ''; E('#fCity').value = p.city || ''; E('#fNt').value = p.nt || ''; E('#fDead').checked = !!(p.dead || p.dy);
+  E('#fF').value = p.f || ''; E('#fFam').value = p.fam || ''; E('#fBy').value = p.by || ''; E('#fDy').value = p.dy || ''; E('#fCity').value = p.city || ''; E('#fNt').value = p.nt || ''; E('#fDead').checked = !!(p.dead || p.dy); E('#fHd').checked = !!p.hd;
   const seg = (sel, key) => { const el = E(sel); const upd = () => $$('button', el).forEach(b => b.classList.toggle('on', b.dataset.v === p[key])); el.onclick = e => { const b = e.target.closest('button'); if (b) { p[key] = b.dataset.v; upd(); refresh(); } }; upd(); };
   const excl = old ? new Set([old.id, ...descendants(old.id)]) : new Set();
   const refresh = () => {
@@ -1642,6 +1651,7 @@ function personForm(o) {
     const wives = fa ? spousesOf(fa.id).filter(w => w.id !== p.mo) : [];
     E('#fMoQ').innerHTML = !p.mo && wives.length ? `<span style="color:var(--muted);font-size:13px;align-self:center">أمه:</span>` + wives.map(w => `<button type="button" class="chip f" data-w="${w.id}">${esc(w.f)}</button>`).join('') : '';
     E('#fDeadL').textContent = p.g === 'f' ? 'متوفاة، الله يرحمها' : 'متوفى، الله يرحمه';
+    E('#fHdL').textContent = p.g === 'f' ? '🙈 اخفِ تواريخها (ما تطلع بأي مكان، ولا توصل للي معهم رابط العرض)' : '🙈 اخفِ تواريخه (ما تطلع بأي مكان، ولا توصل للي معهم رابط العرض)';
     E('#fPhV').innerHTML = avatar({ ...p, f: E('#fF').value || '؟' }, 'big');
   };
   /* اليوم والشهر: أسماء الشهور تتغيّر مع التقويم */
@@ -1669,7 +1679,7 @@ function personForm(o) {
     const by = yr(E('#fBy').value), dy = yr(E('#fDy').value), num = sel => +(E(sel).value || 0) || null;
     if (by && dy && dy < by) { toast('سنة الوفاة قبل الميلاد؟ راجعها'); return; }
     if (by && dy && dy === by && num('#fBm') && num('#fDm') && num('#fDm') < num('#fBm')) { toast('تاريخ الوفاة قبل الميلاد؟ راجعه'); return; }
-    const obj = { t: 'p', f, g: p.g === 'f' ? 'f' : 'm', fam: E('#fFam').value.trim(), fa: p.fa || '', mo: p.mo || '', by, dy, bda: num('#fBd'), bmo: num('#fBm'), dda: num('#fDd'), dmo: num('#fDm'), cal: p.cal === 'g' ? 'g' : 'h', dead: (E('#fDead').checked || !!dy) ? 1 : 0, city: E('#fCity').value.trim(), nt: E('#fNt').value.trim(), ph: p.ph || '', o: p.o != null ? p.o : Date.now(), c: p.c || Date.now() };
+    const obj = { t: 'p', f, g: p.g === 'f' ? 'f' : 'm', fam: E('#fFam').value.trim(), fa: p.fa || '', mo: p.mo || '', by, dy, bda: num('#fBd'), bmo: num('#fBm'), dda: num('#fDd'), dmo: num('#fDm'), cal: p.cal === 'g' ? 'g' : 'h', dead: (E('#fDead').checked || !!dy) ? 1 : 0, city: E('#fCity').value.trim(), nt: E('#fNt').value.trim(), ph: p.ph || '', o: p.o != null ? p.o : Date.now(), c: p.c || Date.now(), hd: E('#fHd').checked ? 1 : 0 };
     for (const k of Object.keys(obj)) if (obj[k] === '' || obj[k] == null || obj[k] === 0) delete obj[k];
     obj.t = 'p'; obj.g = obj.g || 'm';
     if (o.id && (obj.fa === o.id || obj.mo === o.id)) { toast('ما يصير يكون أبو نفسه'); return; }
@@ -1761,7 +1771,7 @@ function statsHtml() {
   const men = ps.filter(p => p.g !== 'f').length, dead = ps.filter(p => p.dead || p.dy).length;
   const gens = Math.max(...ps.map(genOf)), marr = S.M.filter(m => S.P.has(m.a) && S.P.has(m.b)).length;
   const top = ps.map(p => ({ p, n: kidsOf(p.id).length })).sort((a, b) => b.n - a.n)[0];
-  const old = ps.filter(p => p.by && !p.dead && !p.dy).map(p => ({ p, a: curYear(p.cal) - p.by })).filter(x => x.a > 0 && x.a < 130).sort((a, b) => b.a - a.a)[0];
+  const old = ps.filter(p => p.by && !p.hd && !p.dead && !p.dy).map(p => ({ p, a: curYear(p.cal) - p.by })).filter(x => x.a > 0 && x.a < 130).sort((a, b) => b.a - a.a)[0];
   const names = g => { const c = new Map(); for (const p of ps) if ((p.g === 'f') === (g === 'f')) { const k = p.f.trim(); c.set(k, (c.get(k) || 0) + 1); } return [...c].filter(x => x[1] > 1).sort((a, b) => b[1] - a[1]).slice(0, 3).map(([n, k]) => `${esc(n)} (${k})`).join('، '); };
   const milk = S.R.length + S.RS.length, row = (l, v) => v ? `<div class="set"><div class="l">${l}</div><b>${v}</b></div>` : '';
   return `<div class="card"><h3>📊 إحصائيات الشجرة</h3>
@@ -1800,7 +1810,7 @@ function renderMore() {
   <div class="card"><h3>🔗 المشاركة مع العائلة</h3>${share}${shared && owner && !priv ? `<p class="d" style="margin-top:10px">اللي معه رابط العرض يقدر يقترح إضافات، وتوصلك هنا عشان توافق عليها أو ترفضها.</p><div class="rowb"><button class="btn sm" id="qrBtn">📱 كود QR</button><button class="btn sm" id="pushBtn">${pushLabel()}</button><button class="btn sm" id="sgRev">📨 الاقتراحات${S.sugg && S.sugg.length ? ` (${S.sugg.length})` : ''}</button></div>` : ''}${canSuggest() ? `<div class="rowb" style="margin-top:10px"><button class="btn sm pri" id="sgNew">✍️ اقترح إضافة على الشجرة</button><button class="btn sm" id="pushBtn">${pushLabel()}</button><button class="btn sm" id="qrBtn">📱 كود QR</button></div>` : ''}</div>
   ${statsHtml()}
   <div class="card"><h3>🧰 أدوات</h3>
-    <div class="rowb">${ed ? '<button class="btn sm" id="qaBtn">⚡ أضف بالنسب</button><button class="btn sm" id="chkBtn">🩺 فحص الشجرة</button>' : ''}<button class="btn sm" id="rhmBtn">🤲 اللهم ارحمهم</button><button class="btn sm" id="occBtn">📅 مناسبات الشهر</button><button class="btn sm" id="cityBtn">🏙️ مدن العائلة</button><button class="btn sm" id="storyBtn">📖 قصة العائلة</button><button class="btn sm" id="bookBtn">📘 كتيّب العائلة</button><button class="btn sm" id="showBtn">📺 عرض العائلة</button><button class="btn sm" id="tlBtn">🕰️ الخط الزمني</button><button class="btn sm" id="quizBtn">🎯 مين هذا؟</button><button class="btn sm" id="capBtn">💌 رسائل للمستقبل</button><button class="btn sm" id="mapBtn">🗺️ خريطة العائلة</button>${ed ? '<button class="btn sm" id="mergeBtn">🔀 دمج شجرة ثانية</button>' : ''}${shared ? '<button class="btn sm" id="logBtn">🕘 آخر التعديلات</button>' : ''}</div>
+    <div class="rowb">${ed ? '<button class="btn sm" id="qaBtn">⚡ أضف بالنسب</button><button class="btn sm" id="chkBtn">🩺 فحص الشجرة</button>' : ''}<button class="btn sm" id="rhmBtn">🤲 اللهم ارحمهم</button><button class="btn sm" id="occBtn">📅 مناسبات الشهر</button><button class="btn sm" id="cityBtn">🏙️ مدن العائلة</button><button class="btn sm" id="storyBtn">📖 قصة العائلة</button><button class="btn sm" id="bookBtn">📘 كتيّب العائلة</button><button class="btn sm" id="showBtn">📺 عرض العائلة</button><button class="btn sm" id="tlBtn">🕰️ الخط الزمني</button><button class="btn sm" id="quizBtn">🎯 مين هذا؟</button><button class="btn sm" id="capBtn">💌 رسائل للمستقبل</button><button class="btn sm" id="mapBtn">🗺️ خريطة العائلة</button><button class="btn sm" id="factsBtn">🏅 حقائق العائلة</button><button class="btn sm" id="genBtn">👥 جيلي</button><button class="btn sm" id="grpBtn">📣 رسالة للقروب</button>${ed ? '<button class="btn sm" id="mergeBtn">🔀 دمج شجرة ثانية</button>' : ''}${shared ? '<button class="btn sm" id="logBtn">🕘 آخر التعديلات</button>' : ''}</div>
   </div>
   <div class="card"><h3>🙋 أنا</h3>
     <div class="set"><div class="l">أنا مين بالشجرة؟<small>${me ? esc(fullName(me, 3)) : 'عشان «ركّز عليّ» و«وش صلتي فيه؟»'}</small></div><button class="btn sm" id="meBtn">${me ? 'غيّر' : 'اختر'}</button></div>
@@ -1808,6 +1818,7 @@ function renderMore() {
   <div class="card"><h3>⚙️ العرض</h3>
     <div class="set"><div class="l">الاسم الكامل<small>كم اسم يطلع بالنسب: «فلان بن فلان…»</small></div><div class="stepper"><button class="ib" id="gMinus" aria-label="أقل">−</button><b id="gVal">${S.gens}</b><button class="ib" id="gPlus" aria-label="أكثر">+</button></div></div>
     <div class="set"><div class="l">عيال البنات المتزوجات من برّا العائلة<small>يطلعون تحت أمهم بالشجرة. إذا طفيته تصير الشجرة بالنسب للأب بس (مثل شجرات القبايل)، وعيالهن يطلعون مع عائلة أبوهم</small></div><button class="sw ${S.dkids ? 'on' : ''}" id="dtrSw" aria-label="عيال البنات"></button></div>
+    <div class="set"><div class="l">🖨️ الطباعة بالأبيض والأسود<small>الشجرة والكتيّب والوثائق تنطبع بدون ألوان، توفّر الحبر وتطلع أوضح</small></div><button class="sw ${S.bw ? 'on' : ''}" id="bwSw" aria-label="الطباعة بالأبيض والأسود"></button></div>
     <div class="set"><div class="l">الوضع الفاتح</div><button class="sw ${document.body.classList.contains('light') ? 'on' : ''}" id="lightSw" aria-label="الوضع الفاتح"></button></div>
   </div>
   <div class="card"><h3>🔒 الخصوصية</h3>
@@ -1829,7 +1840,8 @@ function renderMore() {
   on('shBtn', () => createShare(false)); on('bkBtn', () => createShare(true)); on('bkFile', exportJson); on('rotBtn', rotateLinks); on('unshBtn', stopSharing);
   on('unprivBtn', () => { try { S.doc.setMeta({ ...strip(S.doc.meta() || {}), priv: 0 }); } catch (e) { } S.meta.priv = 0; toast('صارت الشجرة مشتركة ✓ أرسل الروابط لأهلك'); renderMore(); });
   on('pushBtn', openPushPrefs);
-  on('mergeBtn', mergeTreesUI); on('storyBtn', openStory); on('bookBtn', bookletPrint); on('showBtn', () => slideshow()); on('qrBtn', openQR); on('tlBtn', openTimeline); on('quizBtn', quizMenu); on('capBtn', openCaps); on('mapBtn', openMap);
+  on('bwSw', () => { S.bw = !S.bw; LS.set('shajara.bw', S.bw); document.body.classList.toggle('bwp', S.bw); renderMore(); toast(S.bw ? 'الطباعة صارت بالأبيض والأسود' : 'رجعت الطباعة بالألوان'); });
+  on('mergeBtn', mergeTreesUI); on('storyBtn', openStory); on('bookBtn', bookletPrint); on('showBtn', () => slideshow()); on('qrBtn', openQR); on('tlBtn', openTimeline); on('quizBtn', quizMenu); on('capBtn', openCaps); on('mapBtn', openMap); on('factsBtn', openFacts); on('genBtn', async () => { let id = S.dev.me && S.P.get(S.dev.me) ? S.dev.me : await pickMe(); if (id) openGen(id); }); on('grpBtn', groupMsg);
   on('meBtn', pickMe); on('sgRev', reviewSugg); on('sgNew', () => suggestComposer()); on('qaBtn', quickAdd); on('chkBtn', openChecks); on('rhmBtn', openDeceased);
   on('gMinus', () => { S.gens = clamp(S.gens - 1, 2, 9); LS.set('shajara.gens', S.gens); S._nm = new Map(); renderMore(); });
   on('gPlus', () => { S.gens = clamp(S.gens + 1, 2, 9); LS.set('shajara.gens', S.gens); S._nm = new Map(); renderMore(); });
@@ -1928,7 +1940,7 @@ function exportJson() {
   download(fname('json'), JSON.stringify({ app: 'shajara', v: 1, name: S.cur.name, exported: new Date().toISOString(), meta: b.meta, items: b.items }, null, 1), 'application/json');
   toast('نزّلت النسخة الاحتياطية ✓');
 }
-function drawTreeCanvas(maxScale) {
+function drawTreeCanvas(maxScale, bw) {
   const root = getRoot(); if (!root) return null;
   const L = (S.lay && S.layRoot === root.id) ? S.lay : computeLayout(root); if (!L) return null;
   const head = 80, oy = PAD + 46, w = L.W, h = L.H - oy + head + 10;
@@ -1937,7 +1949,8 @@ function drawTreeCanvas(maxScale) {
   const c = document.createElement('canvas'); c.width = Math.ceil(w * s); c.height = Math.ceil(h * s);
   const x = c.getContext('2d'); x.scale(s, s);
   const ff = getComputedStyle(document.body).fontFamily;
-  const col = { bg: '#fbfcf8', card: '#ffffff', line: '#d3ddd0', lines: '#8fae9e', text: '#14211a', muted: '#5b6e63', m: '#2f7fd6', f: '#cc4a88', sp: '#f1f5ee' };
+  const col = bw ? { bg: '#ffffff', card: '#ffffff', line: '#222222', lines: '#444444', text: '#000000', muted: '#333333', m: '#000000', f: '#7a7a7a', sp: '#ffffff' } : { bg: '#fbfcf8', card: '#ffffff', line: '#d3ddd0', lines: '#8fae9e', text: '#14211a', muted: '#5b6e63', m: '#2f7fd6', f: '#cc4a88', sp: '#f1f5ee' };
+  const bwc = c => bw ? (c === '#2fb877' ? '#000000' : '#555555') : c;
   x.fillStyle = col.bg; x.fillRect(0, 0, w, h);
   x.direction = 'rtl'; x.textAlign = 'center'; x.textBaseline = 'middle';
   x.fillStyle = col.text; x.font = `800 26px ${ff}`; x.fillText(S.cur.name || 'شجرتنا', w / 2, 34);
@@ -1946,17 +1959,17 @@ function drawTreeCanvas(maxScale) {
   const rr = (X, Y, W, H, r) => { x.beginPath(); x.moveTo(X + r, Y); x.arcTo(X + W, Y, X + W, Y + H, r); x.arcTo(X + W, Y + H, X, Y + H, r); x.arcTo(X, Y + H, X, Y, r); x.arcTo(X, Y, X + W, Y, r); x.closePath(); };
   const fit = (t, mw) => { if (x.measureText(t).width <= mw) return t; while (t.length > 1 && x.measureText(t + '…').width > mw) t = t.slice(0, -1); return t + '…'; };
   x.lineWidth = 2;
-  for (const pth of linkPaths(L)) { if (!pth.d) continue; x.strokeStyle = pth.c || col.lines; x.lineWidth = pth.w || 2; x.stroke(new Path2D(pth.d)); } x.lineWidth = 2;
+  for (const pth of linkPaths(L)) { if (!pth.d) continue; x.strokeStyle = pth.c ? bwc(pth.c) : col.lines; x.lineWidth = pth.w || 2; x.stroke(new Path2D(pth.d)); } x.lineWidth = 2;
   for (const n of L.list) {
     const p = n.p, bx = n.right - PW, by = n.y;
     x.fillStyle = col.card; x.strokeStyle = col.line; x.lineWidth = 1; rr(bx, by, PW, NH, 12); x.fill(); x.stroke();
-    x.save(); rr(bx, by, PW, NH, 12); x.clip(); x.fillStyle = S.brCol && n.br != null ? BRC[n.br % BRC.length] : (p.g === 'f' ? col.f : col.m); x.fillRect(bx, by, PW, S.brCol && n.br != null ? 6 : 4); x.restore();
+    x.save(); rr(bx, by, PW, NH, 12); x.clip(); x.fillStyle = !bw && S.brCol && n.br != null ? BRC[n.br % BRC.length] : (p.g === 'f' ? col.f : col.m); x.fillRect(bx, by, PW, !bw && S.brCol && n.br != null ? 6 : 4); x.restore();
     x.fillStyle = col.text; x.font = `800 15px ${ff}`; x.fillText(fit(p.f, PW - 14), bx + PW / 2, by + 25);
-    const ns = nodeSub(n); if (ns.t) { x.fillStyle = ns.c || col.muted; x.font = `${ns.c ? 700 : 500} 11px ${ff}`; x.fillText(fit(ns.t, PW - 12), bx + PW / 2, by + 44); }
+    const ns = nodeSub(n); if (ns.t) { x.fillStyle = ns.c && !bw ? ns.c : col.muted; x.font = `${ns.c ? 700 : 500} 11px ${ff}`; x.fillText(fit(ns.t, PW - 12), bx + PW / 2, by + 44); }
     if (n.col) { x.fillStyle = '#c99a3a'; rr(bx + PW / 2 - 16, by + NH - 6, 32, 16, 8); x.fill(); x.fillStyle = '#fff'; x.font = `800 11px ${ff}`; x.fillText('+' + n.hidden, bx + PW / 2, by + NH + 2); }
     n.sps.forEach((s2, i) => {
       const sx = bx - (i + 1) * (SW + SG), sy = by + 5;
-      x.fillStyle = col.sp; x.strokeStyle = n.multi ? wcol(i) : col.line; x.lineWidth = n.multi ? 2 : 1; rr(sx, sy, SW, 50, 10); x.fill(); x.stroke(); x.lineWidth = 1;
+      x.fillStyle = col.sp; x.strokeStyle = n.multi && !bw ? wcol(i) : col.line; x.lineWidth = n.multi ? 2 : 1; rr(sx, sy, SW, 50, 10); x.fill(); x.stroke(); x.lineWidth = 1;
       const sub = spouseSub(p, s2);
       x.fillStyle = s2.g === 'f' ? col.f : col.m; x.font = `700 13px ${ff}`; x.fillText(fit(s2.f, SW - 12), sx + SW / 2, sy + (sub ? 20 : 26));
       if (sub) { x.fillStyle = col.muted; x.font = `500 10.5px ${ff}`; x.fillText(fit(sub, SW - 10), sx + SW / 2, sy + 37); }
@@ -2046,7 +2059,7 @@ function photoViewer(pid, phid) {
 /* ========== كتيّب العائلة (طباعة PDF) ========== */
 function bookletPrint() {
   const ps = [...S.P.values()]; if (!ps.length) return toast('الشجرة فاضية');
-  const c = drawTreeCanvas(1.6), story = familyStory(), col0 = S.col; S.col = new Set(); const L = computeLayout(ALL); S.col = col0;
+  const c = drawTreeCanvas(1.6, S.bw), story = familyStory(), col0 = S.col; S.col = new Set(); const L = computeLayout(ALL); S.col = col0;
   const roots = L ? (L.root.virtual ? L.root.kids : [L.root]) : [], coll = new Intl.Collator('ar');
   const flat = n => [n, ...n.kids.flatMap(flat)];
   const branches = []; for (const r of roots) { if (r.kids.length) for (const k of r.kids) branches.push({ title: `فرع ${fullName(k.p, 2)}`, people: flat(k).map(x => x.p) }); else branches.push({ title: fullName(r.p, 2), people: [r.p] }); }
@@ -2142,9 +2155,146 @@ function suggestFix(pid) {
     if ((by && !(by > 0 && by < 2200)) || (dy && !(dy > 0 && dy < 2200))) return toast('اكتب السنة بالأرقام');
     if (!Object.keys(set).length) return toast('ما غيّرت شي');
     const by0 = await askSgName(); if (!by0) return; const b = E('#fxS'); b.disabled = true; b.textContent = 'لحظة…';
-    try { await T.suggest.send(S.cur.id, S.cur.key, by0, { note: '', people: [], fixes: [{ p: pid, set, why: E('#fxW').value.trim() }] }); closeSheet(sh); toast('وصل التصحيح لصاحب الشجرة ✓ شكرًا'); }
+    try {
+      const r = await T.suggest.send(S.cur.id, S.cur.key, by0, { note: '', people: [], fixes: [{ p: pid, set, why: E('#fxW').value.trim() }] });
+      if (r && Array.isArray(r.cos) && r.cos.includes(pid)) { const k = 'shajara.ovl.' + S.cur.id, ov = LS.get(k, {}) || {}, o = ov[pid] || {}; for (const f of ['by', 'dy']) if (f in set) { if (set[f]) o[f] = set[f]; else delete o[f]; } ov[pid] = o; LS.set(k, ov); rebuild(); renderAll(); }
+      closeSheet(sh); toast('وصل التصحيح لصاحب الشجرة ✓ شكرًا');
+    }
     catch (x) { b.disabled = false; b.textContent = 'أرسل'; toast(T.errorText(x)); }
   };
+}
+
+/* ========== حقائق العائلة ========== */
+function familyFacts() {
+  const ps = [...S.P.values()], F = [], nm = x => fullName(x, 2, false);
+  const top = (arr, n = 3) => arr.slice(0, n);
+  const names = g => { const c = new Map(); for (const p of ps) if ((p.g === 'f') === (g === 'f')) { const k = p.f.trim(); c.set(k, (c.get(k) || 0) + 1); } return [...c].filter(x => x[1] > 1).sort((a, b) => b[1] - a[1]).slice(0, 5); };
+  const nm1 = names('m'), nm2 = names('f');
+  if (nm1.length) F.push({ ic: '🧔', t: 'أكثر أسماء الرجال', v: nm1.map(([n, k]) => `${n} (${k})`).join('، ') });
+  if (nm2.length) F.push({ ic: '🧕', t: 'أكثر أسماء النساء', v: nm2.map(([n, k]) => `${n} (${k})`).join('، ') });
+  const life = top(ps.filter(p => !p.hd && +p.by > 0 && +p.dy > p.by).map(p => ({ p, a: p.dy - p.by })).filter(x => x.a < 130).sort((a, b) => b.a - a.a));
+  if (life.length) F.push({ ic: '🕰️', t: 'أطول الأعمار (الله يرحمهم)', ps: life.map(x => ({ p: x.p, s: x.a + ' سنة' })) });
+  const old = top(ps.filter(p => !p.hd && !p.dead && !p.dy).map(p => ({ p, a: ageOf(p) })).filter(x => x.a > 0 && x.a < 130).sort((a, b) => b.a - a.a));
+  if (old.length) F.push({ ic: '👴', t: 'أكبر الأحياء', ps: old.map(x => ({ p: x.p, s: x.a + ' سنة' })) });
+  const young = ps.filter(p => !p.hd && !p.dead && !p.dy && +p.by > 0).sort((a, b) => toG(b.by, b.cal) - toG(a.by, a.cal) || (b.bmo || 0) - (a.bmo || 0) || (b.bda || 0) - (a.bda || 0))[0];
+  if (young) F.push({ ic: '👶', t: 'آخر العنقود بالعائلة', ps: [{ p: young, s: yearsText(young, true) }] });
+  /* الزوج والزوجة لهم نفس العيال: نحسب الأب، والأم بس إذا أبو عيالها مو بالشجرة */
+  const solo = p => p.g !== 'f' || kidsOf(p.id).some(k => !S.P.has(k.fa));
+  const kk = top(ps.filter(solo).map(p => ({ p, n: kidsOf(p.id).length })).filter(x => x.n > 1).sort((a, b) => b.n - a.n));
+  if (kk.length) F.push({ ic: '👨‍👧‍👦', t: 'أكثر عيال', ps: kk.map(x => ({ p: x.p, s: cnt(x.n, 'ولد واحد', 'ولدين', 'عيال', 'من العيال') })) });
+  const dd = top(ps.filter(solo).map(p => ({ p, n: descendants(p.id).size })).filter(x => x.n > 2).sort((a, b) => b.n - a.n));
+  if (dd.length) F.push({ ic: '🌳', t: 'أكبر ذرية', ps: dd.map(x => ({ p: x.p, s: ppl(x.n) })) });
+  const deep = ps.map(p => { let n = 0, c = p; const seen = new Set(); while (c && c.fa && S.P.has(c.fa) && !seen.has(c.id)) { seen.add(c.id); c = S.P.get(c.fa); n++; } return { p, n }; }).sort((a, b) => b.n - a.n)[0];
+  if (deep && deep.n >= 2) F.push({ ic: '📜', t: 'أطول نسب', ps: [{ p: deep.p, s: cnt(deep.n, 'جد واحد', 'جدين', 'أجداد', 'جد') + ' بالشجرة' }] });
+  const tw = [], seen = new Set();
+  for (const p of ps) { if (p.hd || !p.bda || !p.bmo || !p.by || seen.has(p.id)) continue; const sb = ps.filter(x => x.id !== p.id && !x.hd && x.by === p.by && x.bmo === p.bmo && x.bda === p.bda && ((p.fa && x.fa === p.fa) || (p.mo && x.mo === p.mo))); if (sb.length) { [p, ...sb].forEach(x => seen.add(x.id)); tw.push([p, ...sb]); } }
+  if (tw.length) F.push({ ic: '👯', t: 'التوائم', v: tw.map(g => g.map(x => x.f).join(' و')).join('، ') });
+  const ct = new Map(); for (const p of ps) { const c = (p.city || '').trim(); if (c) ct.set(c, (ct.get(c) || 0) + 1); }
+  const cs = [...ct].sort((a, b) => b[1] - a[1]).slice(0, 3); if (cs.length) F.push({ ic: '🏙️', t: 'أكثر المدن', v: cs.map(([c, n]) => `${c} (${n})`).join('، ') });
+  const gens = Math.max(0, ...ps.map(genOf)); if (gens > 1) F.push({ ic: '🪜', t: 'عدد الأجيال', v: String(gens) });
+  return F;
+}
+function openFacts() {
+  const F = familyFacts(); if (!F.length) return toast('الشجرة تحتاج ناس أكثر عشان تطلع حقائق');
+  const txt = `🏅 حقائق عن ${S.cur.name || 'العائلة'}\n` + F.map(f => `${f.ic} ${f.t}: ${f.v || f.ps.map(x => x.p.f + ' (' + x.s + ')').join('، ')}`).join('\n');
+  const sh = openSheet(`<h2>🏅 حقائق العائلة<button class="ib x" data-close aria-label="سكّر">${ICON.x}</button></h2>
+    ${F.map(f => `<div class="fact"><div class="fi">${f.ic}</div><div><b>${esc(f.t)}</b>${f.v ? `<div>${esc(f.v)}</div>` : `<div class="chips">${f.ps.map(x => `<button class="chip ${x.p.g === 'f' ? 'f' : 'm'}" data-go="${x.p.id}">${esc(fullName(x.p, 2, false))} <small style="color:var(--muted)">${esc(x.s)}</small></button>`).join('')}</div>`}</div></div>`).join('')}
+    <div class="rowb" style="margin-top:10px"><button class="btn sm pri" id="fcCopy">📋 انسخها</button><button class="btn sm" id="fcWa">📤 أرسلها بالواتساب</button></div>`);
+  $('#fcCopy', sh.el).onclick = async () => toast(await copyText(txt) ? 'نسخت الحقائق ✓' : 'ما قدرت أنسخ');
+  $('#fcWa', sh.el).onclick = () => window.open('https://wa.me/?text=' + encodeURIComponent(txt), '_blank', 'noopener');
+  sh.el.addEventListener('click', e => { const b = e.target.closest('[data-go]'); if (b) openPerson(b.dataset.go); });
+}
+
+/* ========== الذرية بشكل دائري ========== */
+function sunSvg(id, depth, forImg) {
+  const me = S.P.get(id), seen = new Set([id]);
+  const build = (p, d) => { const n = { p, d, kids: [] }; if (d < depth) for (const k of kidsOf(p.id)) if (!seen.has(k.id)) { seen.add(k.id); n.kids.push(build(k, d + 1)); } n.w = n.kids.length ? n.kids.reduce((s, k) => s + k.w, 0) : 1; return n; };
+  const root = build(me, 0), maxD = (function md(n) { return n.kids.length ? Math.max(...n.kids.map(md)) : n.d; })(root);
+  const r0 = 70, rw = maxD > 3 ? 64 : 78, R = r0 + maxD * rw, W = 2 * R + 40, cx = W / 2, cy = W / 2;
+  const light = forImg || S.bw || document.body.classList.contains('light'), bg = light ? '#fbfcf8' : '#0d1411', tc = light ? '#14211a' : '#ecf2ee', st = light ? '#ffffff' : '#0d1411';
+  const ff = (getComputedStyle(document.body).fontFamily || 'sans-serif').replace(/"/g, "'");
+  const pt = (r, a) => [cx + r * Math.sin(a), cy - r * Math.cos(a)];
+  let out = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${W}" width="${forImg ? W * 2 : '100%'}" ${forImg ? `height="${W * 2}"` : ''} style="max-width:100%;display:block;margin:auto" font-family="${ff}">${forImg ? `<rect width="${W}" height="${W}" fill="${bg}"/>` : ''}`;
+  const total = descendants(id).size;
+  out += `<circle cx="${cx}" cy="${cy}" r="${r0}" fill="${me.g === 'f' ? (light ? '#f7dce9' : '#3a2230') : (light ? '#d9e8f8' : '#1d3349')}" stroke="${st}" stroke-width="2"/><text x="${cx}" y="${cy - 6}" text-anchor="middle" font-size="17" font-weight="800" fill="${tc}">${esc(me.f)}</text><text x="${cx}" y="${cy + 16}" text-anchor="middle" font-size="11.5" fill="${tc}" opacity=".75">${esc('ذريت' + (me.g === 'f' ? 'ها ' : 'ه ') + ppl(total))}</text>`;
+  const arc = (n, a1, a2, br) => {
+    if (n.d > 0) {
+      const ri = r0 + (n.d - 1) * rw, ro = ri + rw - 2, big = a2 - a1 > Math.PI ? 1 : 0, full = a2 - a1 >= Math.PI * 2 - 1e-6;
+      const colr = S.bw || forImg && S.bw ? ['#d9d9d9', '#bdbdbd', '#a6a6a6', '#8c8c8c', '#737373'][n.d % 5] : BRC[br % BRC.length];
+      const op = S.bw ? 1 : Math.max(.35, 1 - (n.d - 1) * .16);
+      let d;
+      if (full) d = `M${cx} ${cy - ro}A${ro} ${ro} 0 1 1 ${cx - .01} ${cy - ro}L${cx - .01} ${cy - ri}A${ri} ${ri} 0 1 0 ${cx} ${cy - ri}Z`;
+      else { const [x1, y1] = pt(ri, a1), [x2, y2] = pt(ro, a1), [x3, y3] = pt(ro, a2), [x4, y4] = pt(ri, a2); d = `M${x1} ${y1}L${x2} ${y2}A${ro} ${ro} 0 ${big} 1 ${x3} ${y3}L${x4} ${y4}A${ri} ${ri} 0 ${big} 0 ${x1} ${y1}Z`; }
+      out += `<path d="${d}" fill="${colr}" fill-opacity="${op}" stroke="${st}" stroke-width="1.5"${!forImg ? ` data-go="${n.p.id}" style="cursor:pointer"` : ''}/>`;
+      const am = (a1 + a2) / 2, rm = (ri + ro) / 2, len = (a2 - a1) * rm, fs = Math.min(14, Math.max(7.5, len / 4.2));
+      if (len >= 9) {
+        const [tx, ty] = pt(rm, am), tang = n.d === 1 && len > 60; let deg = am * 180 / Math.PI - 90;
+        if (tang) deg = 0; else if (am > Math.PI) deg -= 180;
+        const maxC = Math.max(3, Math.floor((tang ? len : rw - 6) / (fs * .62))), nm = n.p.f.length > maxC ? n.p.f.slice(0, maxC - 1) + '…' : n.p.f;
+        out += `<text x="${tx}" y="${ty}" text-anchor="middle" dominant-baseline="middle" font-size="${fs.toFixed(1)}" font-weight="700" fill="${S.bw ? '#000' : '#111'}" transform="rotate(${deg.toFixed(1)} ${tx.toFixed(1)} ${ty.toFixed(1)})" pointer-events="none">${esc(nm)}</text>`;
+      }
+    }
+    let a = a1; n.kids.forEach((k, i) => { const span = (a2 - a1) * k.w / n.w; arc(k, a, a + span, n.d === 0 ? i : br); a += span; });
+  };
+  arc(root, 0, Math.PI * 2, 0);
+  return out + '</svg>';
+}
+async function svgPng(svg, name) {
+  const img = new Image(), url = URL.createObjectURL(new Blob([svg], { type: 'image/svg+xml' }));
+  try { img.src = url; await img.decode(); const c = document.createElement('canvas'); c.width = img.width; c.height = img.height; c.getContext('2d').drawImage(img, 0, 0); const b = await new Promise(r => c.toBlob(r, 'image/png')); download(name, b, 'image/png'); toast('نزّلت الصورة ✓'); }
+  catch (e) { toast('ما قدرت أسوي الصورة'); } finally { URL.revokeObjectURL(url); }
+}
+function openSun(id) {
+  const p = S.P.get(id); let depth = 4;
+  const sh = openSheet(`<h2>🌞 ذرية ${esc(p.f)}<button class="ib x" data-close aria-label="سكّر">${ICON.x}</button></h2>
+    <div class="rowb" style="justify-content:center;margin-bottom:6px"><span style="color:var(--muted)">الأجيال</span><div class="stepper"><button class="ib" id="snM" aria-label="أقل">−</button><b id="snV">4</b><button class="ib" id="snP" aria-label="أكثر">+</button></div><button class="btn sm" id="snPng">⬇️ صورة</button><button class="btn sm" id="snPr">🖨️ اطبعها</button></div>
+    <div id="snBox"></div>`);
+  const draw = () => { $('#snV', sh.el).textContent = depth; $('#snBox', sh.el).innerHTML = sunSvg(id, depth); };
+  draw();
+  $('#snM', sh.el).onclick = () => { if (depth > 1) { depth--; draw(); } }; $('#snP', sh.el).onclick = () => { if (depth < 7) { depth++; draw(); } };
+  $('#snPng', sh.el).onclick = () => svgPng(sunSvg(id, depth, true), `ذرية ${p.f}.png`);
+  $('#snPr', sh.el).onclick = () => { $('#printArea').innerHTML = `<h1>🌞 ذرية ${esc(fullName(p, 3))}</h1><div class="sub">${esc(S.cur.name || '')} · ${stamp()}</div>${sunSvg(id, depth, true).replace(/width="\d+" height="\d+"/, 'width="100%"')}`; setTimeout(() => window.print(), 80); };
+  sh.el.addEventListener('click', e => { const b = e.target.closest('[data-go]'); if (b) openPerson(b.dataset.go); });
+}
+
+/* ========== جيلي: الإخوان وعيال العم والعمة والخال والخالة ========== */
+function genGroups(id) {
+  const p = S.P.get(id), out = [], sibsOf = x => !x ? [] : [...new Set([...(x.fa ? kidsOf(x.fa) : []), ...(x.mo ? kidsOf(x.mo) : [])])].filter(y => y.id !== x.id);
+  const fa = S.P.get(p.fa), mo = S.P.get(p.mo), sib = sibsOf(p);
+  if (sib.length) out.push({ k: 'sib', t: 'الإخوان والأخوات', ps: sib });
+  for (const [par, side] of [[fa, 'fa'], [mo, 'mo']]) for (const u of sibsOf(par)) { const ks = kidsOf(u.id).filter(k => k.id !== p.id && !sib.some(s => s.id === k.id)); if (ks.length) out.push({ k: side + u.g, u, t: (side === 'fa' ? (u.g === 'f' ? 'عيال العمة ' : 'عيال العم ') : (u.g === 'f' ? 'عيال الخالة ' : 'عيال الخال ')) + u.f, ps: ks }); }
+  return out;
+}
+function openGen(id) {
+  const p = S.P.get(id), G = genGroups(id), you = S.dev.me === id, cous = G.filter(g => g.k !== 'sib').reduce((s, g) => s + g.ps.length, 0);
+  const sum = [['fam', 'عيال العم'], ['faf', 'عيال العمات'], ['mom', 'عيال الخال'], ['mof', 'عيال الخالات']].map(([k, t]) => { const n = G.filter(g => g.k === k).reduce((s, g) => s + g.ps.length, 0); return n ? `${t}: ${n}` : ''; }).filter(Boolean).join(' · ');
+  const sh = openSheet(`<h2>👥 ${you ? 'جيلي' : 'جيل ' + esc(p.f)}<button class="ib x" data-close aria-label="سكّر">${ICON.x}</button></h2>
+    <p style="color:var(--muted);font-size:14px;margin:0 0 8px">${G.length ? `${cous ? ppl(cous) + ' من عيال ' + (you ? 'أعمامك وعماتك وأخوالك وخالاتك' : 'الأعمام والعمات والأخوال والخالات') : 'ما فيه عيال عم ولا خال مسجّلين'}${sum ? '<br>' + esc(sum) : ''}` : `ما لقيت أحد من ${you ? 'جيلك' : p.g === 'f' ? 'جيلها' : 'جيله'} بالشجرة. سجّل الأب والأم وإخوانهم أول.`}</p>
+    ${G.map(g => `<div class="sec">${esc(g.t)} (${g.ps.length})</div><div class="chips">${g.ps.map(x => `<button class="chip ${x.g === 'f' ? 'f' : 'm'}" data-go="${x.id}">${esc(x.f)}</button>`).join('')}</div>`).join('')}`);
+  sh.el.addEventListener('click', e => { const b = e.target.closest('[data-go]'); if (b) openPerson(b.dataset.go); });
+}
+
+/* ========== رسالة جاهزة لقروب العائلة ========== */
+function groupMsg() {
+  const name = S.cur.name || 'العائلة', vk = S.cur.view || (S.meta && S.meta.vk), link = S.cur.id && vk ? T.joinLink(joinBase(), S.cur.id, vk) : '';
+  const since = Date.now() - 14 * 864e5, fresh = [...S.P.values()].filter(p => +p.c > since).sort((a, b) => a.c - b.c);
+  const td = occasionsFor(0).filter(o => o.day && o.day === today(o.cal).d), mo = occasionsFor(0);
+  const T0 = {
+    invite: { t: '🌳 دعوة للشجرة', s: `السلام عليكم يا أهل ${name} 🌳\nسوّينا شجرة العائلة، فيها ${ppl(S.P.size)} لين الحين.${link ? `\nتقدرون تشوفونها من هنا، واللي عنده إضافة أو تصحيح يقترحه من نفس الرابط:\n${link}` : ''}` },
+    fresh: { t: '👶 الجدد بالشجرة', s: fresh.length ? `🌳 انضاف لشجرة ${name} آخر أسبوعين:\n${fresh.slice(0, 30).map(p => '• ' + fullName(p, 3)).join('\n')}${link ? '\n\nشوفوها: ' + link : ''}` : '' },
+    today: { t: '🎂 مناسبات اليوم', s: td.length ? td.map(o => o.kind === 'b' ? `🎂 اليوم عيد ميلاد ${fullName(o.p, 2)}، كل عام و${o.p.g === 'f' ? 'هي' : 'هو'} بخير` : `🤲 اليوم ذكرى وفاة ${fullName(o.p, 2)}، الله يرحم${o.p.g === 'f' ? 'ها' : 'ه'} ويغفر ل${o.p.g === 'f' ? 'ها' : 'ه'}`).join('\n') : '' },
+    month: { t: '📅 مناسبات الشهر', s: mo.length ? `📅 مناسبات هالشهر في ${name}:\n${mo.map(o => `• ${o.kind === 'b' ? '🎂' : '🤲'} ${fullName(o.p, 2)}${o.day ? ' (' + dateTxt(o.day, o.m, '', o.cal) + ')' : ''}`).join('\n')}` : '' },
+    numbers: { t: '📊 أرقام العائلة', s: `📊 ${name} بالأرقام:\n• ${ppl(S.P.size)}\n• ${Math.max(0, ...[...S.P.values()].map(genOf))} أجيال\n${(familyFacts().slice(0, 4).map(f => `• ${f.ic} ${f.t}: ${f.v || f.ps.map(x => x.p.f).join('، ')}`)).join('\n')}` }
+  };
+  const keys = Object.keys(T0).filter(k => T0[k].s); let cur = keys[0];
+  const sh = openSheet(`<h2>📣 رسالة للقروب<button class="ib x" data-close aria-label="سكّر">${ICON.x}</button></h2>
+    <div class="chips" id="gmK">${keys.map(k => `<button class="chip ${k === cur ? 'on' : ''}" data-k="${k}">${esc(T0[k].t)}</button>`).join('')}</div>
+    <textarea id="gmT" rows="9" style="margin-top:10px"></textarea>
+    <div class="rowb" style="margin-top:10px"><button class="btn sm pri" id="gmWa">📤 أرسلها بالواتساب</button><button class="btn sm" id="gmCp">📋 انسخها</button></div>`);
+  const E = q => $(q, sh.el); E('#gmT').value = T0[cur].s;
+  E('#gmK').onclick = e => { const b = e.target.closest('[data-k]'); if (!b) return; cur = b.dataset.k; $$('#gmK .chip', sh.el).forEach(x => x.classList.toggle('on', x === b)); E('#gmT').value = T0[cur].s; };
+  E('#gmWa').onclick = () => window.open('https://wa.me/?text=' + encodeURIComponent(E('#gmT').value), '_blank', 'noopener');
+  E('#gmCp').onclick = async () => toast(await copyText(E('#gmT').value) ? 'نسختها ✓ الصقها بالقروب' : 'ما قدرت أنسخ');
 }
 
 /* ========== وثيقة نسب ========== */
@@ -2368,6 +2518,7 @@ function timelineEvents() {
   const ev = [], nm = p => fullName(p, 2), she = p => p.g === 'f';
   for (const p of S.P.values()) {
     const cal = p.cal === 'g' ? 'g' : 'h';
+    if (p.hd) continue;
     if (+p.by > 0) ev.push({ k: 'b', y: +p.by, cal, m: p.bmo || 0, d: p.bda || 0, p, t: `👶 ${she(p) ? 'انولدت' : 'انولد'} ${nm(p)}` });
     if (+p.dy > 0) ev.push({ k: 'd', y: +p.dy, cal, m: p.dmo || 0, d: p.dda || 0, p, t: `🤲 ${she(p) ? 'توفيت' : 'توفي'} ${nm(p)}${+p.by > 0 ? ` عن ${p.dy - p.by} سنة` : ''}` });
   }
@@ -2581,6 +2732,7 @@ function occasionsFor(off) {
   const out = [];
   for (const p of S.P.values()) {
     const cal = p.cal === 'g' ? 'g' : 'h', t = today(cal); let m = t.m + off, y = t.y; if (m > 12) { m -= 12; y++; }
+    if (p.hd) continue;
     if (p.bmo === m && !p.dead && !p.dy) out.push({ p, kind: 'b', day: p.bda || 0, m, cal, n: p.by ? y - p.by : null });
     if (p.dmo === m && (p.dead || p.dy)) out.push({ p, kind: 'd', day: p.dda || 0, m, cal, n: p.dy ? y - p.dy : null });
   }
@@ -2618,7 +2770,7 @@ function openCities() {
 /* ========== ملصق كبير: الشجرة مقسومة على كذا ورقة A4 ========== */
 async function posterPrint() {
   const cols = await ask('ملصق كبير', 'كم ورقة بالعرض؟ كل ما زادت تكبر الشجرة. تطبعها وتلصقها ببعض حسب الأرقام اللي بزاوية كل ورقة.', [{ v: 2, t: 'ورقتين' }, { v: 3, t: '3 أوراق' }, { v: 4, t: '4 أوراق' }, { v: 6, t: '6 أوراق' }, { v: null, t: 'إلغاء', cls: 'ghost', cancel: true }]);
-  if (!cols) return; const c = drawTreeCanvas(4); if (!c) return toast('الشجرة فاضية');
+  if (!cols) return; const c = drawTreeCanvas(4, S.bw); if (!c) return toast('الشجرة فاضية');
   const tw = Math.floor(c.width / cols), th = Math.floor(tw * 190 / 285), rows = Math.max(1, Math.ceil(c.height / th)), imgs = [];
   for (let r = 0; r < rows; r++) for (let k = 0; k < cols; k++) {
     const t = document.createElement('canvas'); t.width = tw; t.height = th; const x = t.getContext('2d');
@@ -2753,7 +2905,7 @@ function reviewSugg() {
   const sh = openSheet(`<h2>📨 اقتراحات العائلة<button class="ib x" data-close aria-label="سكّر">${ICON.x}</button></h2>
     ${list.length ? list.map((sg, i) => `<div class="card" style="margin:10px 0;padding:12px"><b>${esc(sg.by || 'بدون اسم')}</b> <small style="color:var(--muted)">${new Date(sg.createdAt).toLocaleDateString('ar-SA-u-nu-latn')}</small>
       ${(sg.body.people || []).map(x => `<div style="margin-top:6px">＋ ${line(x)}</div>`).join('')}
-      ${(sg.body.fixes || []).map(x => `<div class="mem" style="margin-top:8px"><small>✏️ تصحيح لـ${esc(S.P.has(x.p) ? fullName(S.P.get(x.p), 3) : '؟')}</small>${fixLines(x).map(l => `<div class="mt">${esc(l)}</div>`).join('')}</div>`).join('')}
+      ${(sg.body.fixes || []).map(x => { const q = S.P.get(x.p), hid = q && q.hd && x.set && ('by' in x.set || 'dy' in x.set); return `<div class="mem" style="margin-top:8px"><small>✏️ تصحيح لـ${esc(q ? fullName(q, 3) : '؟')}</small>${fixLines(x).map(l => `<div class="mt">${esc(l)}</div>`).join('')}${hid ? `<div class="hidnote">🙈 تذكير: أنت مخفي ${q.g === 'f' ? 'تواريخها' : 'تواريخه'}. اللي اقترح يشوف التاريخ كأنه انقبل عنده بس. وإذا اعتمدته ينحفظ ويبقى مخفي.</div>` : ''}</div>`; }).join('')}
       ${(sg.body.mems || []).map(x => `<div class="mem" style="margin-top:8px"><small>📜 ذكرى عن ${esc(S.P.has(x.p) ? fullName(S.P.get(x.p), 3) : '؟')}${x.d ? ' · ' + esc(x.d) : ''}</small><div class="mt">${esc(x.txt || '')}</div></div>`).join('')}
       ${(sg.body.phs || []).map(x => `<div style="margin-top:8px"><small>🖼️ صورة لـ${esc(S.P.has(x.p) ? fullName(S.P.get(x.p), 3) : '؟')}${x.cap ? ' · ' + esc(x.cap) : ''}</small><img src="${esc(/^data:image\//.test(x.img || '') ? x.img : '')}" alt="" style="display:block;max-width:100%;max-height:220px;border-radius:12px;margin-top:4px"></div>`).join('')}${sg.body.note ? `<div class="note" style="margin-top:8px">${esc(sg.body.note)}</div>` : ''}
       <div class="rowb" style="margin-top:10px"><button class="btn sm pri" data-acc="${i}">اعتمده</button><button class="btn sm ghost" data-rej="${i}">ارفضه</button></div></div>`).join('') : '<p style="color:var(--muted)">ما فيه اقتراحات جديدة.</p>'}`);
@@ -2997,7 +3149,7 @@ async function exportPng() {
   download(fname('png'), blob, 'image/png'); toast('نزّلت صورة الشجرة ✓');
 }
 function printTree() {
-  const c = drawTreeCanvas(1.5); if (!c) return toast('الشجرة فاضية');
+  const c = drawTreeCanvas(1.5, S.bw); if (!c) return toast('الشجرة فاضية');
   const coll = new Intl.Collator('ar'); const people = [...S.P.values()].sort((a, b) => genOf(a) - genOf(b) || coll.compare(a.f, b.f));
   $('#printArea').innerHTML = `<h1>${esc(S.cur.name)}</h1><div class="sub">شجرتنا · ${ppl(S.P.size)} · ${stamp()}</div><img src="${c.toDataURL('image/png')}" alt="الشجرة">
     <table><thead><tr><th>الاسم</th><th>الميلاد والوفاة</th><th>المدينة</th></tr></thead><tbody>${people.map(p => `<tr><td>${esc(fullName(p))}</td><td>${esc(yearsText(p))}</td><td>${esc(p.city || '')}</td></tr>`).join('')}</tbody></table>`;
@@ -3121,6 +3273,7 @@ if (LS.get('shajara.pin', null)) showLock();
 let start = handleJoin();
 if (!trees.length) newLocalTree();
 if (!start) start = trees.find(t => t.k === LS.get('shajara.cur', '')) || trees[0];
+document.body.classList.toggle('bwp', !!S.bw);
 openTree(start); birthdayToast(); offerBackup(); capToast();
 { const qm = location.hash.match(/^#quiz=(\d{4})$/); if (qm) { history.replaceState(null, '', location.pathname + location.search); setTimeout(() => quizPlayer(qm[1]), 300); } }
 if (location.hash === '#occ') { history.replaceState(null, '', location.pathname + location.search); goHash('occ'); }
@@ -3128,7 +3281,7 @@ setView(start && start.id && LS.get('shajara.view', null) == null ? 'tree' : S.v
 if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => { });
 
 /* واجهة صغيرة للاختبارات الآلية */
-window.__shajara = { S, suggestFix, printCert, openCaps, capForm, capToast, openMap, cityLL, quizMenu, quizHost, quizPlayer, momMode, openTimeline, timelineEvents, openQuiz, quizQuestions, openPushPrefs, suggestMem, suggestPhoto, recordVoice, voiceFile, saveVoice, voiceEdit, unmarry, openQR, memForm, addAlbum, photoViewer, bookletPrint, slideshow, mergePlan, applyMerge, mergeTreesUI, familyStory, openStory, fanSvg, createShare, offerBackup, itemsOfTree, occasionsFor, openOccasions, openCities, openLog, posterPrint, pinSettings, showLock, editorName, birthdayToast, applySuggestion, reviewSugg, suggestComposer, loadSugg, canSuggest, parseLineage, planLineage, quickAdd, treeIssues, kinGroups, openPedigree, openKin, openChecks, openDeceased, personCard, relation, mahramOf, bloodAll, getRoot, addChild, addParent, addSibling, dupsOf, mergeInto, Z, NH, fullName: id => fullName(S.P.get(id)), computeLayout, getRoot, canEdit, revealInTree, centerOn, Z, parseGed, trees: () => trees, nodeSub, divorced, openPerson, deletePerson, drawTreeCanvas, exportGed, setZ, stage, setDownload: f => { dlHook = f; } };
+window.__shajara = { S, familyFacts, openFacts, sunSvg, openSun, genGroups, openGen, groupMsg, rebuild, suggestFix, printCert, openCaps, capForm, capToast, openMap, cityLL, quizMenu, quizHost, quizPlayer, momMode, openTimeline, timelineEvents, openQuiz, quizQuestions, openPushPrefs, suggestMem, suggestPhoto, recordVoice, voiceFile, saveVoice, voiceEdit, unmarry, openQR, memForm, addAlbum, photoViewer, bookletPrint, slideshow, mergePlan, applyMerge, mergeTreesUI, familyStory, openStory, fanSvg, createShare, offerBackup, itemsOfTree, occasionsFor, openOccasions, openCities, openLog, posterPrint, pinSettings, showLock, editorName, birthdayToast, applySuggestion, reviewSugg, suggestComposer, loadSugg, canSuggest, parseLineage, planLineage, quickAdd, treeIssues, kinGroups, openPedigree, openKin, openChecks, openDeceased, personCard, relation, mahramOf, bloodAll, getRoot, addChild, addParent, addSibling, dupsOf, mergeInto, Z, NH, fullName: id => fullName(S.P.get(id)), computeLayout, getRoot, canEdit, revealInTree, centerOn, Z, parseGed, trees: () => trees, nodeSub, divorced, openPerson, deletePerson, drawTreeCanvas, exportGed, setZ, stage, setDownload: f => { dlHook = f; } };
 })();
 </script>
 </body>
