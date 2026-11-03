@@ -1,0 +1,1163 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0e1417">
+<meta name="description" content="حجز مواعيد لمحلك: حلاق، صالون، تصوير، دروس… الزبون يحجز بنفسه وأنت يجيك تنبيه">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="موعد">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="format-detection" content="telephone=no">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>موعد</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0e1417;--card:#162026;--card2:#1e2a31;--line:#26343c;--text:#eef4f6;--muted:#93a6ad;--acc:#1fb8a5;--acc2:#3a6ee0;--on:#fff;--ok:#2fcf7a;--warn:#f5a524;--bad:#ff5d62;--info:#4c9bff;--input:#121b20;--sh:0 14px 34px rgba(0,0,0,.42);--r:18px}
+body.light{--bg:#f2f6f7;--card:#fff;--card2:#eaf0f2;--line:#dce5e8;--text:#14222a;--muted:#5f7279;--input:#fff;--sh:0 10px 28px rgba(20,50,60,.12)}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html{-webkit-text-size-adjust:100%}
+html,body{overflow-x:hidden}
+body{font-family:'Tajawal',system-ui,-apple-system,'Segoe UI',Tahoma,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;line-height:1.5;font-size:16px}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer;border:0;background:none}
+a{color:inherit;text-decoration:none}
+img{display:block;max-width:100%}
+svg{flex:none}
+.hide{display:none!important}
+.ltr{direction:ltr;text-align:left;unicode-bidi:plaintext}
+.muted{color:var(--muted)}.small{font-size:13.5px}.tiny{font-size:12px}
+.row{display:flex;gap:10px;align-items:center}
+.grow{flex:1;min-width:0}
+.mt{margin-top:12px}.mb{margin-bottom:12px}
+.top{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:10px;padding:10px 16px;padding-top:max(10px,env(safe-area-inset-top));background:var(--bg);border-bottom:1px solid var(--line)}
+@supports (backdrop-filter:blur(1px)){.top{background:color-mix(in srgb,var(--bg) 86%,transparent);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}}
+.brand{display:flex;align-items:center;gap:9px;font-weight:800;font-size:20px;white-space:nowrap}
+.brand img{width:32px;height:32px;border-radius:10px}
+.sync{margin-inline-start:auto;font-size:12.5px;font-weight:700;padding:5px 11px;border-radius:99px;background:var(--card2);color:var(--muted);white-space:nowrap;max-width:46vw;overflow:hidden;text-overflow:ellipsis}
+.sync.ok{color:var(--ok)}.sync.bad{color:var(--bad)}.sync.warn{color:var(--warn)}
+.ib{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;background:var(--card2);flex:none;color:var(--text)}
+.ib svg{width:20px;height:20px}
+.ib.sm{width:34px;height:34px;border-radius:10px}.ib.sm svg{width:17px;height:17px}
+.wrap{max-width:680px;margin:0 auto;padding:16px 16px calc(100px + env(safe-area-inset-bottom))}
+.tabs{position:fixed;bottom:0;left:0;right:0;z-index:20;display:flex;justify-content:center;gap:2px;padding:7px 6px calc(7px + env(safe-area-inset-bottom));background:var(--card);border-top:1px solid var(--line)}
+.tabs button{flex:1;max-width:120px;display:flex;flex-direction:column;align-items:center;gap:1px;padding:6px 1px;border-radius:14px;font-size:12px;color:var(--muted);font-weight:700;position:relative;white-space:nowrap}
+.tabs button svg{width:22px;height:22px}
+.tabs button.on{color:var(--acc);background:color-mix(in srgb,var(--acc) 13%,transparent)}
+.tabs .dotn{position:absolute;top:3px;inset-inline-end:calc(50% - 20px);min-width:18px;height:18px;border-radius:99px;background:var(--bad);color:#fff;font-size:11px;display:grid;place-items:center;padding:0 5px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px;margin-bottom:14px}
+.card h2{font-size:17px;font-weight:800;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.card h2 svg{width:20px;height:20px;color:var(--acc)}
+.card p{color:var(--muted);font-size:14.5px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:46px;padding:10px 18px;border-radius:14px;font-weight:800;font-size:15.5px;background:linear-gradient(135deg,var(--acc),var(--acc2));color:var(--on);box-shadow:0 6px 18px color-mix(in srgb,var(--acc) 28%,transparent);text-align:center}
+.btn.sec{background:var(--card2);color:var(--text);box-shadow:none;border:1px solid var(--line)}
+.btn.ghost{background:none;box-shadow:none;color:var(--acc);padding:8px 10px;min-height:40px}
+.btn.danger{background:color-mix(in srgb,var(--bad) 13%,transparent);color:var(--bad);box-shadow:none}
+.btn.wa{background:#1fae5b;box-shadow:0 6px 18px rgba(31,174,91,.28);color:#fff}
+.btn.block{width:100%}
+.btn.sm{min-height:38px;padding:7px 13px;font-size:14px;border-radius:12px}
+.btn.xs{min-height:34px;padding:5px 11px;font-size:13.5px;border-radius:10px}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn svg{width:19px;height:19px}
+.btn.xs svg{width:16px;height:16px}
+.btns{display:flex;gap:10px;flex-wrap:wrap}.btns>.btn{flex:1 1 140px}
+.field{display:block;margin-bottom:13px}
+.field>span{display:block;font-size:13.5px;font-weight:700;color:var(--muted);margin-bottom:6px}
+.inp{width:100%;background:var(--input);border:1px solid var(--line);border-radius:12px;padding:11px 12px;font-size:16px;outline:none;min-width:0;color:var(--text)}
+.inp:focus{border-color:var(--acc);box-shadow:0 0 0 3px color-mix(in srgb,var(--acc) 22%,transparent)}
+.inp.bad{border-color:var(--bad)}
+textarea.inp{resize:vertical;min-height:74px;line-height:1.6}
+select.inp{appearance:none;-webkit-appearance:none;padding-inline-end:12px;padding-inline-start:30px;background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),linear-gradient(135deg,var(--muted) 50%,transparent 50%);background-position:16px 50%,11px 50%;background-size:5px 5px;background-repeat:no-repeat}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.hint{font-size:12.5px;color:var(--muted);margin-top:5px}
+.err{font-size:13.5px;color:var(--bad);margin-top:5px;font-weight:700}
+.sw{position:relative;width:50px;height:30px;flex:none;display:inline-block}
+.sw input{position:absolute;opacity:0;inset:0;margin:0;cursor:pointer;z-index:1;width:100%;height:100%}
+.sw i{position:absolute;inset:0;border-radius:99px;background:var(--line);transition:.2s}
+.sw i:after{content:"";position:absolute;top:3px;right:3px;width:24px;height:24px;border-radius:50%;background:#fff;transition:.2s;box-shadow:0 1px 3px rgba(0,0,0,.3)}
+.sw input:checked+i{background:var(--ok)}
+.sw input:checked+i:after{transform:translateX(-20px)}
+.sw.red input:checked+i{background:var(--bad)}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{padding:7px 13px;border-radius:99px;border:1px solid var(--line);background:var(--card2);font-size:14px;font-weight:700;color:var(--text)}
+.chip.on{background:color-mix(in srgb,var(--acc) 18%,transparent);border-color:var(--acc);color:var(--acc)}
+.seg{display:flex;background:var(--card2);border-radius:12px;padding:4px;gap:4px}
+.seg button{flex:1;padding:8px 4px;border-radius:9px;font-weight:700;color:var(--muted);font-size:14.5px}
+.seg button.on{background:var(--card);color:var(--text);box-shadow:0 1px 4px rgba(0,0,0,.15)}
+.seg button b{display:inline-block;min-width:20px;font-size:12px;background:var(--card2);border-radius:99px;padding:0 6px;margin-inline-start:4px}
+.banner{display:flex;gap:10px;align-items:flex-start;padding:12px 14px;border-radius:14px;background:color-mix(in srgb,var(--warn) 14%,transparent);color:var(--text);font-size:14px;margin-bottom:14px;border:1px solid color-mix(in srgb,var(--warn) 35%,transparent)}
+.banner.bad{background:color-mix(in srgb,var(--bad) 12%,transparent);border-color:color-mix(in srgb,var(--bad) 35%,transparent)}
+.banner.info{background:color-mix(in srgb,var(--acc) 10%,transparent);border-color:color-mix(in srgb,var(--acc) 28%,transparent)}
+.banner svg{width:20px;height:20px;margin-top:1px}
+.linkrow{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)}
+.linkrow:last-child{border-bottom:0}
+.linkbox{direction:ltr;text-align:left;font-size:13px;background:var(--input);border:1px solid var(--line);border-radius:12px;padding:10px 12px;word-break:break-all;color:var(--muted);margin-bottom:10px;user-select:all}
+.filebtn{position:relative;overflow:hidden}
+.filebtn input{position:absolute;inset:0;opacity:0;cursor:pointer;font-size:0}
+.swrow{display:flex;align-items:center;gap:12px;padding:8px 0}
+.swrow .grow b{display:block;font-size:15px}
+.sep{height:1px;background:var(--line);margin:14px 0}
+.empty{text-align:center;padding:28px 16px;color:var(--muted)}
+.empty .big{font-size:42px;margin-bottom:6px}
+.pill{display:inline-flex;align-items:center;gap:5px;font-size:12.5px;font-weight:800;padding:3px 10px;border-radius:99px;white-space:nowrap}
+.pill.ok{background:color-mix(in srgb,var(--ok) 15%,transparent);color:var(--ok)}
+.pill.warn{background:color-mix(in srgb,var(--warn) 16%,transparent);color:var(--warn)}
+.pill.bad{background:color-mix(in srgb,var(--bad) 14%,transparent);color:var(--bad)}
+.pill.info{background:color-mix(in srgb,var(--info) 15%,transparent);color:var(--info)}
+.pill.mute{background:var(--card2);color:var(--muted)}
+.spin{width:34px;height:34px;border-radius:50%;border:3px solid var(--line);border-top-color:var(--acc);animation:sp .8s linear infinite;margin:0 auto}
+@keyframes sp{to{transform:rotate(360deg)}}
+.center{min-height:70vh;display:grid;place-items:center;text-align:center;padding:24px}
+/* welcome + wizard */
+.hero-w{text-align:center;padding:28px 6px 8px}
+.hero-w img{width:92px;height:92px;border-radius:26px;margin:0 auto 14px;box-shadow:var(--sh)}
+.hero-w h1{font-size:30px;font-weight:800}
+.hero-w p{color:var(--muted);max-width:430px;margin:6px auto 0;font-size:15.5px}
+.feat{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:18px 0}
+.feat div{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:11px;font-size:13.5px;font-weight:700;display:flex;gap:8px;align-items:center}
+.feat svg{width:20px;height:20px;color:var(--acc)}
+.wsteps{display:flex;gap:6px;margin:4px 0 16px}
+.wsteps i{flex:1;height:6px;border-radius:9px;background:var(--line)}
+.wsteps i.on{background:var(--acc)}
+.wiz h1{font-size:23px;font-weight:800;margin-bottom:4px}
+.wiz .sub{color:var(--muted);margin-bottom:16px}
+.kinds{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:8px}
+.kind{padding:12px 6px;border-radius:14px;border:1px solid var(--line);background:var(--card);text-align:center;font-weight:700;font-size:14px}
+.kind span{display:block;font-size:26px;margin-bottom:3px}
+.kind.on{border-color:var(--acc);background:color-mix(in srgb,var(--acc) 12%,var(--card));color:var(--acc)}
+.wfoot{display:flex;gap:10px;margin-top:16px}
+/* services rows */
+.srow{display:grid;grid-template-columns:1fr 112px 84px 34px;gap:8px;align-items:center;margin-bottom:8px}
+.srow .inp{padding:9px 10px;font-size:15px}
+.svc{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--line);cursor:pointer}
+.svc:last-child{border-bottom:0}
+.svc .ic{width:42px;height:42px;border-radius:12px;background:color-mix(in srgb,var(--acc) 14%,transparent);color:var(--acc);display:grid;place-items:center;flex:none}
+.svc .ic svg{width:21px;height:21px}
+/* hours editor */
+.day{border-bottom:1px solid var(--line);padding:10px 0}
+.day:last-child{border-bottom:0}
+.day-h{display:flex;align-items:center;gap:10px}
+.day-h b{flex:1;font-size:15.5px}
+.day-h .closed{color:var(--muted);font-size:13.5px;font-weight:500}
+.rng{display:flex;align-items:center;gap:6px;margin-top:8px}
+.rng select{flex:1;padding:8px 8px;padding-inline-start:26px;font-size:14.5px;min-width:0}
+.rng .to{color:var(--muted);font-size:13px}
+.offd{display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:12px;background:var(--card2);margin-bottom:6px}
+/* bookings */
+.today{background:linear-gradient(135deg,color-mix(in srgb,var(--acc) 22%,var(--card)),var(--card));}
+.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
+.kpi{background:var(--card2);border-radius:14px;padding:10px 8px;text-align:center}
+.kpi b{display:block;font-size:21px;font-weight:800;line-height:1.2}
+.kpi span{font-size:12px;color:var(--muted);font-weight:700}
+.next{display:flex;gap:10px;align-items:center;margin-top:12px;padding:10px 12px;border-radius:14px;background:var(--card);border:1px solid var(--line);font-size:14px}
+.next svg{width:20px;height:20px;color:var(--acc)}
+.dayhead{display:flex;align-items:baseline;gap:8px;margin:18px 2px 8px}
+.dayhead b{font-size:16px}
+.dayhead span{font-size:12.5px;color:var(--muted)}
+.bk{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:12px 14px;margin-bottom:10px;border-inline-start:4px solid var(--info)}
+.bk.confirmed{border-inline-start-color:var(--ok)}.bk.done{border-inline-start-color:var(--muted);opacity:.85}.bk.cancelled{border-inline-start-color:var(--bad);opacity:.7}.bk.noshow{border-inline-start-color:var(--warn);opacity:.85}
+.bk.fresh{box-shadow:0 0 0 2px color-mix(in srgb,var(--info) 50%,transparent)}
+.bk-top{display:flex;align-items:center;gap:8px}
+.bk-time{font-weight:800;font-size:16px;direction:rtl}
+.bk-name{font-weight:800;font-size:16.5px;margin-top:4px}
+.bk-sub{font-size:13.5px;color:var(--muted)}
+.bk-note{font-size:13.5px;background:var(--card2);border-radius:10px;padding:6px 10px;margin-top:6px;white-space:pre-line}
+.bk-acts{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.bk-acts .btn{flex:1 1 auto}
+.bk.cancelled .bk-name{text-decoration:line-through}
+/* sheet + modal + toast */
+.ov{position:fixed;inset:0;z-index:50;background:rgba(5,10,12,.55);display:flex;align-items:flex-end;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s}
+.ov.open{opacity:1;pointer-events:auto}
+.sheet{width:100%;max-width:640px;max-height:92vh;max-height:92dvh;overflow:auto;background:var(--card);color:var(--text);border-radius:24px 24px 0 0;padding:8px 16px calc(18px + env(safe-area-inset-bottom));transform:translateY(40px);transition:transform .25s;overscroll-behavior:contain}
+.ov.open .sheet{transform:none}
+.grab{width:44px;height:5px;border-radius:9px;background:var(--line);margin:4px auto 10px}
+.sh-head{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.sh-head h3{flex:1;font-size:19px;font-weight:800;min-width:0}
+@media(min-width:700px){.ov{align-items:center}.sheet{border-radius:24px;max-height:88vh}}
+.md{position:fixed;inset:0;z-index:60;background:rgba(5,10,12,.6);display:grid;place-items:center;padding:16px;opacity:0;pointer-events:none;transition:opacity .15s}
+.md.open{opacity:1;pointer-events:auto}
+.md .box{width:100%;max-width:400px;background:var(--card);color:var(--text);border-radius:22px;padding:20px;box-shadow:var(--sh)}
+.md h3{font-size:18px;font-weight:800;margin-bottom:8px}
+.md p{color:var(--muted);font-size:15px;margin-bottom:16px;white-space:pre-line}
+#toast{position:fixed;bottom:calc(90px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%) translateY(16px);z-index:80;background:#18242a;color:#fff;padding:11px 16px;border-radius:14px;box-shadow:0 10px 30px rgba(0,0,0,.35);display:flex;gap:14px;align-items:center;font-weight:700;font-size:14.5px;opacity:0;pointer-events:none;transition:.25s;max-width:calc(100vw - 32px);width:max-content}
+#toast.show{opacity:1;transform:translateX(-50%);pointer-events:auto}
+#toast button{color:#7ee6d6;font-weight:800;white-space:nowrap}
+body.cust #toast{bottom:calc(24px + env(safe-area-inset-bottom))}
+body.sheet-open #toast{bottom:auto;top:calc(14px + env(safe-area-inset-top));transform:translateX(-50%) translateY(-16px)}
+body.sheet-open #toast.show{transform:translateX(-50%)}
+/* share card */
+.qrcard{border:1.5px dashed #b9b9b9;border-radius:7mm;padding:9mm 7mm 7mm;text-align:center;color:#111;background:#fff;font-family:'Tajawal',system-ui,Tahoma,sans-serif;break-inside:avoid;-webkit-print-color-adjust:exact;print-color-adjust:exact;position:relative;overflow:hidden}
+.qrcard .bar{position:absolute;top:0;left:0;right:0;height:4mm}
+.qrcard .pl{width:20mm;height:20mm;border-radius:50%;object-fit:cover;margin:0 auto 3mm;border:1px solid #eee}
+.qrcard .pn{font-size:21pt;font-weight:800;line-height:1.25}
+.qrcard .pd{font-size:11pt;color:#666}
+.qrcard .pq{width:62%;margin:5mm auto 4mm;image-rendering:pixelated}
+.qrcard .pc{font-size:17pt;font-weight:800}
+.qrcard .ps{font-size:10pt;color:#777;direction:ltr;margin-top:1mm}
+.pgrid.n1 .qrcard{width:118mm;margin:12mm auto}
+.pgrid.n4{display:grid;grid-template-columns:1fr 1fr;gap:7mm}
+.pgrid.n4 .qrcard{padding:7mm 5mm 5mm}.pgrid.n4 .qrcard .pn{font-size:15pt}.pgrid.n4 .qrcard .pc{font-size:13pt}.pgrid.n4 .qrcard .pl{width:15mm;height:15mm}
+.cardprev .qrcard{width:100%;max-width:300px;margin:0 auto;border-radius:20px;padding:26px 18px 18px}
+.cardprev .qrcard .pl{width:62px;height:62px}.cardprev .qrcard .pn{font-size:22px}.cardprev .qrcard .pc{font-size:17px}.cardprev .qrcard .pd,.cardprev .qrcard .ps{font-size:12px}.cardprev .qrcard .bar{height:10px}.cardprev .qrcard .pq{margin:14px auto 10px}
+#printArea{display:none}
+@media print{@page{size:A4;margin:10mm}html,body{background:#fff!important}body>*:not(#printArea){display:none!important}#printArea{display:block!important}}
+/* ===== customer ===== */
+.c{min-height:100vh;padding-bottom:40px}
+.prevbar{position:sticky;top:0;z-index:25;display:flex;align-items:center;gap:10px;padding:8px 12px;padding-top:max(8px,env(safe-area-inset-top));background:#111;color:#fff;font-size:13.5px;font-weight:700}
+.prevbar .btn{min-height:34px;padding:5px 12px;font-size:13.5px}
+.bh{position:relative;padding:28px 16px 22px;text-align:center;background:linear-gradient(160deg,var(--acc),var(--acc2));color:var(--on);border-radius:0 0 28px 28px;overflow:hidden}
+.bh:before{content:"";position:absolute;inset:0;opacity:.14;background-image:radial-gradient(circle at 15% 20%,#fff 0 2px,transparent 3px),radial-gradient(circle at 65% 70%,#fff 0 2px,transparent 3px);background-size:36px 36px,50px 50px}
+.bh>*{position:relative}
+.blogo{width:88px;height:88px;border-radius:50%;margin:0 auto 10px;object-fit:cover;border:4px solid rgba(255,255,255,.85);background:#fff;display:grid;place-items:center;font-size:36px;font-weight:800;color:var(--acc);box-shadow:0 8px 24px rgba(0,0,0,.18)}
+.bh h1{font-size:25px;font-weight:800;line-height:1.3}
+.bh .ds{opacity:.92;margin-top:4px;font-size:15px;white-space:pre-line}
+.bacts{display:flex;justify-content:center;gap:8px;margin-top:14px;flex-wrap:wrap}
+.bact{display:inline-flex;align-items:center;gap:6px;padding:7px 13px;border-radius:99px;background:rgba(255,255,255,.18);color:inherit;font-weight:700;font-size:14px;border:1px solid rgba(255,255,255,.25)}
+.bact svg{width:17px;height:17px}
+.cw{max-width:620px;margin:0 auto;padding:0 16px}
+.step{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:16px;margin-top:14px;scroll-margin-top:12px}
+.step h2{font-size:17.5px;font-weight:800;display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.step h2 .n{width:28px;height:28px;border-radius:50%;background:var(--acc);color:var(--on);display:grid;place-items:center;font-size:14px;flex:none}
+.step.dim{opacity:.5}
+.sv{display:flex;align-items:center;gap:12px;width:100%;padding:13px 14px;border:1.5px solid var(--line);border-radius:16px;margin-bottom:8px;text-align:start;background:var(--card);color:var(--text)}
+.sv.on{border-color:var(--acc);background:color-mix(in srgb,var(--acc) 8%,var(--card))}
+.sv .grow b{display:block;font-size:16px}
+.sv .grow small{display:block;color:var(--muted);font-size:13px;margin-top:1px}
+.sv .pr{font-weight:800;color:var(--acc);white-space:nowrap}
+.sv .rd{width:22px;height:22px;border-radius:50%;border:2px solid var(--line);flex:none;display:grid;place-items:center}
+.sv.on .rd{border-color:var(--acc);background:var(--acc);color:var(--on)}
+.sv .rd svg{width:13px;height:13px}
+.days{display:flex;gap:8px;overflow-x:auto;padding:2px 2px 6px;scrollbar-width:none;-webkit-overflow-scrolling:touch;scroll-snap-type:x proximity}
+.days::-webkit-scrollbar{display:none}
+.dy{flex:none;width:68px;padding:9px 4px;border-radius:16px;border:1.5px solid var(--line);text-align:center;background:var(--card);color:var(--text);scroll-snap-align:start}
+.dy small{display:block;font-size:12px;color:var(--muted);font-weight:700}
+.dy b{display:block;font-size:21px;font-weight:800;line-height:1.25}
+.dy i{display:block;font-style:normal;font-size:11.5px;color:var(--muted)}
+.dy.on{border-color:var(--acc);background:var(--acc);color:var(--on)}
+.dy.on small,.dy.on i{color:var(--on);opacity:.9}
+.dy.full{opacity:.42;background:var(--card2);cursor:not-allowed}
+.dy.full i{color:var(--bad);font-weight:700}
+.daysnav{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;font-size:14px;color:var(--muted);font-weight:700}
+.slots{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:8px}
+.sl{padding:11px 4px;border-radius:13px;border:1.5px solid var(--line);font-weight:800;font-size:15px;background:var(--card);color:var(--text);direction:rtl}
+.sl.on{background:var(--acc);border-color:var(--acc);color:var(--on)}
+.slg{font-size:13.5px;color:var(--muted);font-weight:700;margin:12px 2px 8px;display:flex;align-items:center;gap:6px}
+.slg:first-child{margin-top:0}
+.slg svg{width:17px;height:17px}
+.sum{background:var(--card2);border-radius:14px;padding:12px 14px;margin:4px 0 14px}
+.sum div{display:flex;justify-content:space-between;gap:10px;padding:3px 0;font-size:14.5px}
+.sum div span:first-child{color:var(--muted)}
+.sum div span:last-child{font-weight:800;text-align:end}
+.done{text-align:center;padding:22px 16px 8px}
+.done .ok{width:74px;height:74px;border-radius:50%;background:var(--ok);color:#fff;display:grid;place-items:center;margin:0 auto 12px;box-shadow:0 10px 26px color-mix(in srgb,var(--ok) 40%,transparent)}
+.done .ok svg{width:40px;height:40px}
+.done h2{font-size:23px;font-weight:800}
+.code{font-size:34px;font-weight:800;letter-spacing:6px;direction:ltr;color:var(--acc);background:var(--card2);border-radius:16px;padding:8px 14px;display:inline-block;margin:6px 0 4px;font-variant-numeric:tabular-nums}
+.mybk{display:flex;align-items:center;gap:10px;padding:12px 0;border-bottom:1px solid var(--line)}
+.mybk:last-child{border-bottom:0}
+.cfoot{text-align:center;color:var(--muted);font-size:12.5px;padding:24px 20px 8px}
+.cfoot a{color:var(--acc);font-weight:700}
+.closedbox{text-align:center;padding:26px 16px}
+.closedbox .big{font-size:46px}
+</style>
+</head>
+<body>
+<div id="app"><div class="center"><div class="spin"></div></div></div>
+<div class="ov" id="ov"><div class="sheet" id="sheet" role="dialog" aria-modal="true"></div></div>
+<div class="md" id="md"><div class="box" id="mdbox" role="alertdialog" aria-modal="true"></div></div>
+<div id="toast" role="status" aria-live="polite"></div>
+<div id="printArea"></div>
+<script src="../shared/sync.js"></script>
+<script>
+(function () {
+'use strict';
+/* ================= أدوات ================= */
+const $ = (s, r) => (r || document).querySelector(s);
+const $$ = (s, r) => Array.from((r || document).querySelectorAll(s));
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const LS = { get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }, set(k, v) { try { localStorage.setItem(k, v); return true; } catch (e) { return false; } }, del(k) { try { localStorage.removeItem(k); } catch (e) { } } };
+const J = { get(k, d) { try { const v = JSON.parse(LS.get(k)); return v == null ? d : v; } catch (e) { return d; } }, set(k, v) { return LS.set(k, JSON.stringify(v)); } };
+const latin = s => String(s == null ? '' : s).replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d)).replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d));
+const num = v => { const s = latin(v).replace('٫', '.').replace(/,/g, '.').replace(/[^\d.]/g, ''); if (!s) return null; const n = parseFloat(s); return isFinite(n) ? Math.round(n * 100) / 100 : null; };
+const fmtN = n => String(Math.round((+n || 0) * 100) / 100);
+const pad = n => String(n).padStart(2, '0');
+const isImg = s => typeof s === 'string' && /^data:image\/(png|jpeg|webp|gif);base64,/.test(s);
+const safeUrl = u => { u = String(u || '').trim(); if (!u) return ''; if (/^https?:\/\//i.test(u)) return u; if (/^[\w-]+(\.[\w-]+)+(\/|$)/.test(u)) return 'https://' + u; return ''; };
+function waNum(p) { let s = latin(p).replace(/[^\d+]/g, ''); if (s.startsWith('+')) s = s.slice(1); else if (s.startsWith('00')) s = s.slice(2); else if (/^05\d{8}$/.test(s)) s = '966' + s.slice(1); else if (/^5\d{8}$/.test(s)) s = '966' + s; return s.replace(/\D/g, ''); }
+/* رقم الجوال: يرجّع 05xxxxxxxx للأرقام السعودية، أو +رقم دولي، أو null */
+function normPhone(p) {
+  let s = latin(p).replace(/[\s\-().]/g, '');
+  if (/^(\+|00)?9660?5\d{8}$/.test(s)) return '0' + s.slice(-9);
+  if (/^05\d{8}$/.test(s)) return s; if (/^5\d{8}$/.test(s)) return '0' + s;
+  if (/^00\d{7,15}$/.test(s)) s = '+' + s.slice(2);
+  if (/^\+\d{7,15}$/.test(s)) return s;
+  return null;
+}
+const showPhone = p => /^05\d{8}$/.test(p) ? `${p.slice(0, 3)} ${p.slice(3, 6)} ${p.slice(6)}` : p;
+const baseUrl = () => location.href.split('#')[0].split('?')[0].replace(/index\.html$/, '');
+const dl = (blob, name) => { const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1500); };
+
+/* ===== الوقت بتوقيت المحل ===== */
+const WD = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
+const WDS = ['أحد', 'اثنين', 'ثلاثاء', 'أربعاء', 'خميس', 'جمعة', 'سبت'];
+const MO = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'];
+const fmtCache = {};
+function parts(ms, tz) {
+  const f = fmtCache[tz] || (fmtCache[tz] = new Intl.DateTimeFormat('en-GB', { timeZone: tz, hourCycle: 'h23', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' }));
+  const o = {}; for (const x of f.formatToParts(new Date(ms))) o[x.type] = x.value;
+  const h = (+o.hour) % 24; return { date: `${o.year}-${o.month}-${o.day}`, min: h * 60 + (+o.minute), y: +o.year, mo: +o.month, d: +o.day, h, mi: +o.minute, s: +o.second };
+}
+function tzOff(ms, tz) { const p = parts(ms, tz); return Date.UTC(p.y, p.mo - 1, p.d, p.h, p.mi, p.s) - Math.floor(ms / 1000) * 1000; }
+function zoned(date, min, tz) { const [y, m, d] = date.split('-').map(Number); const g = Date.UTC(y, m - 1, d) + min * 60000; let t = g - tzOff(g, tz); const o2 = tzOff(t, tz); if (g - o2 !== t) t = g - o2; return t; }
+const addDays = (date, n) => { const [y, m, d] = date.split('-').map(Number); return new Date(Date.UTC(y, m - 1, d + n)).toISOString().slice(0, 10); };
+const wdOf = date => { const [y, m, d] = date.split('-').map(Number); return new Date(Date.UTC(y, m - 1, d)).getUTCDay(); };
+const hm = s => { const m = /^(\d{1,2}):(\d{2})$/.exec(String(s || '')); return m ? (+m[1]) * 60 + (+m[2]) : null; };
+const hhmm = min => `${pad(Math.floor(min / 60))}:${pad(min % 60)}`;
+function fmtMin(min) { const h = Math.floor(min / 60) % 24, m = min % 60; return `${h % 12 || 12}:${pad(m)} ${h < 12 ? 'ص' : 'م'}`; }
+const TZ = () => { const t = (meta().tz || 'Asia/Riyadh'); try { new Intl.DateTimeFormat('en', { timeZone: t }); return t; } catch (e) { return 'Asia/Riyadh'; } };
+const todayStr = () => parts(Date.now(), TZ()).date;
+function fmtDay(date, long) {
+  const [y, m, d] = date.split('-').map(Number); const t = todayStr(); const rel = date === t ? 'اليوم' : date === addDays(t, 1) ? 'بكرة' : date === addDays(t, -1) ? 'أمس' : '';
+  const base = `${WD[wdOf(date)]} ${d} ${MO[m - 1]}${long && y !== +t.slice(0, 4) ? ' ' + y : ''}`;
+  return rel ? `${rel}، ${base}` : base;
+}
+const fmtAt = ms => { const p = parts(ms, TZ()); return { day: fmtDay(p.date), time: fmtMin(p.min), date: p.date, min: p.min }; };
+function fmtDur(m) {
+  m = +m || 0; if (m < 60) return `${m} دقيقة`;
+  const h = Math.floor(m / 60), r = m % 60; const hs = h === 1 ? 'ساعة' : h === 2 ? 'ساعتين' : h <= 10 ? `${h} ساعات` : `${h} ساعة`;
+  return hs + (r === 0 ? '' : r === 30 ? ' ونص' : r === 15 ? ' وربع' : ` و${r} دقيقة`);
+}
+const DURS = [10, 15, 20, 30, 45, 60, 75, 90, 120, 150, 180, 240, 300, 360, 480];
+const TIMES = Array.from({ length: 97 }, (_, i) => i * 15);
+
+const IC = {
+  plus: '<path d="M12 5v14M5 12h14"/>', x: '<path d="M18 6 6 18M6 6l12 12"/>', check: '<path d="m5 12.5 4.5 4.5L19 7.5"/>',
+  edit: '<path d="M4 20h4L19 9l-4-4L4 16v4z"/><path d="m13.5 6.5 4 4"/>', trash: '<path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/>',
+  sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M4.6 4.6 6 6M18 18l1.4 1.4M2.5 12h2M19.5 12h2M4.6 19.4 6 18M18 6l1.4-1.4"/>',
+  moon: '<path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/>',
+  cal: '<rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/>',
+  calc: '<rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4M9 15l2 2 4-4"/>',
+  list: '<path d="M9 6h11M9 12h11M9 18h11"/><circle cx="4.5" cy="6" r="1.2"/><circle cx="4.5" cy="12" r="1.2"/><circle cx="4.5" cy="18" r="1.2"/>',
+  clock: '<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>',
+  share: '<circle cx="18" cy="5.5" r="2.8"/><circle cx="6" cy="12" r="2.8"/><circle cx="18" cy="18.5" r="2.8"/><path d="m8.5 13.4 7 3.7M15.5 6.9l-7 3.7"/>',
+  qr: '<rect x="4" y="4" width="6" height="6" rx="1"/><rect x="14" y="4" width="6" height="6" rx="1"/><rect x="4" y="14" width="6" height="6" rx="1"/><path d="M14 14h2v2h-2zM18 18h2v2h-2zM18 14h2M14 18v2"/>',
+  gear: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>',
+  copy: '<rect x="8" y="8" width="12" height="12" rx="2.5"/><path d="M16 8V6.5A2.5 2.5 0 0 0 13.5 4h-7A2.5 2.5 0 0 0 4 6.5v7A2.5 2.5 0 0 0 6.5 16H8"/>',
+  ext: '<path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/>',
+  print: '<path d="M7 9V4h10v5M7 17H5a1 1 0 0 1-1-1v-5a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v5a1 1 0 0 1-1 1h-2"/><rect x="7" y="14" width="10" height="6" rx="1"/>',
+  dl: '<path d="M12 4v11M7 10l5 5 5-5M5 20h14"/>', ul: '<path d="M12 16V5M7 10l5-5 5 5M5 20h14"/>',
+  phone: '<path d="M5 4h3.5l2 5-2.4 1.6a11 11 0 0 0 5.3 5.3L15 13.5l5 2V19a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z"/>',
+  wa: '<path d="M4 20.5 5.3 16A8.3 8.3 0 1 1 8.2 19z"/><path d="M9.2 8.6c-.4 2.9 3.2 6.5 6.2 6.2l.9-1.4-1.9-1-1 .7c-.8-.4-1.5-1.1-1.9-1.9l.7-1-1-1.9z"/>',
+  pin: '<path d="M12 21s7-6.1 7-11.4A7 7 0 0 0 5 9.6C5 14.9 12 21 12 21z"/><circle cx="12" cy="9.6" r="2.5"/>',
+  img: '<rect x="3.5" y="5" width="17" height="14" rx="2.5"/><circle cx="9" cy="10" r="1.7"/><path d="m20.5 16-5-5-8.5 8"/>',
+  eye: '<path d="M2.5 12S6 5 12 5s9.5 7 9.5 7-3.5 7-9.5 7-9.5-7-9.5-7z"/><circle cx="12" cy="12" r="3"/>',
+  key: '<circle cx="8" cy="15" r="4"/><path d="m11 12 8.5-8.5M16.5 6.5l3 3M14.5 8.5l2 2"/>',
+  warn: '<path d="M12 4 2.5 20h19z"/><path d="M12 10v4.5M12 17.5v.01"/>', info: '<circle cx="12" cy="12" r="8.5"/><path d="M12 11v5.5M12 7.8v.01"/>',
+  bell: '<path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 20.5a2 2 0 0 0 4 0"/>',
+  refresh: '<path d="M20 11a8 8 0 0 0-14.6-4.5L4 8M4 4v4h4M4 13a8 8 0 0 0 14.6 4.5L20 16M20 20v-4h-4"/>',
+  pause: '<rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/>',
+  scissors: '<circle cx="6" cy="6.5" r="2.5"/><circle cx="6" cy="17.5" r="2.5"/><path d="M8 8 20 18M8 16 20 6"/>',
+  cloud: '<path d="M7 18.5a4.5 4.5 0 0 1-.6-9 6 6 0 0 1 11.5 1.6A3.8 3.8 0 0 1 17.5 18.5z"/><path d="M12 11v5M9.8 13.2 12 11l2.2 2.2"/>',
+  up: '<path d="m6 15 6-6 6 6"/>', back: '<path d="m9 6 6 6-6 6"/>', fwd: '<path d="m15 6-6 6 6 6"/>', link: '<path d="M10 14a4.5 4.5 0 0 0 6.4 0l3-3a4.5 4.5 0 0 0-6.4-6.4l-1 1"/><path d="M14 10a4.5 4.5 0 0 0-6.4 0l-3 3a4.5 4.5 0 0 0 6.4 6.4l1-1"/>',
+  user: '<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>', store: '<path d="M4 10v10h16V10"/><path d="M3 9.5 5 4h14l2 5.5a3 3 0 0 1-6 .5 3 3 0 0 1-6 0 3 3 0 0 1-6-.5z"/><path d="M10 20v-5h4v5"/>'
+};
+const ico = n => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${IC[n] || ''}</svg>`;
+
+const KINDS = [
+  ['barber', '💈', 'حلاق', [['حلاقة شعر', 30, 40], ['تحديد دقن', 15, 20], ['شعر ودقن', 45, 55], ['حلاقة أطفال', 20, 30]]],
+  ['salon', '💇‍♀️', 'صالون نسائي', [['قص شعر', 45, 80], ['سشوار', 30, 60], ['صبغة', 120, 250], ['مكياج', 60, 300]]],
+  ['photo', '📸', 'مصوّر', [['جلسة تصوير قصيرة', 30, 300], ['جلسة تصوير ساعة', 60, 500], ['تصوير منتجات', 90, 700]]],
+  ['tutor', '📚', 'مدرّس خصوصي', [['حصة ساعة', 60, 150], ['حصة ساعة ونص', 90, 200]]],
+  ['trainer', '🏋️', 'مدرب رياضي', [['جلسة تدريب', 60, 120], ['استشارة وتقييم', 30, 0]]],
+  ['clinic', '🩺', 'عيادة وجلسات', [['استشارة', 30, 150], ['جلسة علاج', 60, 250]]],
+  ['car', '🚗', 'غسيل سيارات', [['غسيل خارجي', 30, 30], ['غسيل داخلي وخارجي', 60, 70], ['تلميع', 120, 200]]],
+  ['other', '✨', 'غيرها', [['خدمة', 30, 50]]]
+];
+const ACCENTS = ['#0f766e', '#0e7490', '#2563eb', '#4f46e5', '#7c3aed', '#be185d', '#c2410c', '#b45309', '#15803d', '#334155'];
+const STATUS = { new: ['جديد', 'info'], confirmed: ['مؤكد', 'ok'], done: ['خلص', 'mute'], noshow: ['ما حضر', 'warn'], cancelled: ['ملغي', 'bad'] };
+const defHours = () => { const h = {}; for (let d = 0; d < 7; d++) h[d] = d === 5 ? [['16:00', '22:00']] : [['09:00', '13:00'], ['16:00', '22:00']]; return h; };
+const LOGO = { ratio: 1, max: 256, target: 36000, alpha: true };
+
+/* ================= الحالة ================= */
+const S = { mode: 'boot', store: null, docId: null, tab: LS.get('mawid.tab') || 'book', sync: { s: 'draft', msg: '' }, bk: null, bkErr: '', seg: 'today', preview: false, busy: [], busyAt: 0, c: {}, raf: 0, sheet: null, qrCache: {}, wiz: null };
+window.MawidApp = S;
+const mine = () => J.get('mawid.mine', []);
+const setMine = a => J.set('mawid.mine', a);
+const curEntry = () => { const id = LS.get('mawid.cur'); return id ? mine().find(m => m.id === id) || null : null; };
+const meta = () => (S.store && S.store.meta()) || {};
+const isPub = () => !!S.docId;
+class Draft {
+  constructor(key, onChange) { this.key = key; this.onChange = onChange || (() => { }); const d = J.get(key, {}) || {}; this.body = { items: d.items && typeof d.items === 'object' ? d.items : {}, meta: d.meta || null }; this.role = 'edit'; this.status = 'ok'; }
+  items() { return Object.entries(this.body.items).filter(([, it]) => it && !it.del).map(([id, it]) => ({ ...it, id })); }
+  item(id) { const it = this.body.items[id]; return it && !it.del ? { ...it, id } : null; }
+  meta() { return this.body.meta ? { ...this.body.meta } : null; }
+  canEdit() { return true; } hasPending() { return false; }
+  set(id, obj) { const it = { ...obj, u: Date.now() }; delete it.id; this.body.items[id] = it; this.save(); return it; }
+  del(id) { delete this.body.items[id]; this.save(); }
+  setMeta(obj) { this.body.meta = { ...obj, u: Date.now() }; this.save(); }
+  save() { if (!J.set(this.key, this.body)) toast('ما قدرت أحفظ بالجهاز: مساحة المتصفح ممتلئة'); this.onChange({ local: true }); }
+  start() { return this; } stop() { }
+}
+const byO = (a, b) => (+a.o || 0) - (+b.o || 0) || String(a.id).localeCompare(String(b.id));
+const services = () => S.store.items().filter(x => x.type === 'service').sort(byO);
+const imgOf = id => { const p = S.store && S.store.item(id); return p && isImg(p.d) ? p.d : ''; };
+function putMeta(ch) { const m = { ...meta(), ...ch }; delete m.u; S.store.setMeta(m); }
+const money = n => { if (n == null || n === '') return ''; return +n === 0 ? 'مجاناً' : `${fmtN(n)} ${meta().cur || 'ر.س'}`; };
+function viewKey() { const v = S.store && S.store.item('_vk'); const e = curEntry(); return (v && v.v) || (e && e.view) || ''; }
+function viewLink() { return isPub() && viewKey() ? Tajarib.joinLink(baseUrl(), S.docId, viewKey()) : ''; }
+const rules = () => { const m = meta(); return { step: Math.max(5, +m.step || 30), buffer: Math.max(0, +m.buffer || 0), notice: Math.max(0, +m.notice || 0), ahead: Math.min(120, Math.max(1, +m.ahead || 30)) }; };
+
+/* ================= حساب الأوقات ================= */
+function dayRanges(date) { const m = meta(); if ((m.off || []).includes(date)) return []; const h = (m.hours || {})[wdOf(date)] || (m.hours || {})[String(wdOf(date))]; return Array.isArray(h) ? h.map(r => [hm(r[0]), hm(r[1])]).filter(r => r[0] != null && r[1] != null && r[1] > r[0]) : []; }
+function daySlots(date, dur, busy, now) {
+  const tz = TZ(), r = rules(); now = now || Date.now();
+  const minStart = now + Math.max(r.notice, 6) * 60000, maxStart = now + Math.min(r.ahead, 120) * 864e5 - 120000, buf = r.buffer * 60000, out = [], seen = new Set();
+  for (const [A, B] of dayRanges(date)) {
+    for (let t = A; t + dur <= B; t += r.step) {
+      const s = zoned(date, t, tz), e = s + dur * 60000;
+      if (s < minStart || s > maxStart || seen.has(s)) continue;
+      if (busy.some(b => b[0] < e + buf && b[1] > s - buf)) continue;
+      seen.add(s); out.push({ t, s, e });
+    }
+  }
+  return out.sort((a, b) => a.s - b.s);
+}
+function bookDays() { const t = todayStr(), n = rules().ahead; return Array.from({ length: n + 1 }, (_, i) => addDays(t, i)); }
+
+/* ================= واجهات صغيرة ================= */
+let toastT;
+function toast(msg, action, fn) {
+  const t = $('#toast'); t.innerHTML = `<span>${esc(msg)}</span>` + (action ? `<button type="button">${esc(action)}</button>` : '');
+  if (action) t.querySelector('button').onclick = () => { t.classList.remove('show'); fn && fn(); };
+  t.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), action ? 6500 : 3400);
+}
+let mdResolve = null;
+function modal(html, onOpen) { $('#mdbox').innerHTML = html; $('#md').classList.add('open'); if (onOpen) onOpen($('#mdbox')); return new Promise(res => { mdResolve = res; }); }
+function closeModal(v) { $('#md').classList.remove('open'); const r = mdResolve; mdResolve = null; if (r) r(v); }
+$('#md').addEventListener('click', e => { if (e.target.id === 'md') closeModal(false); const b = e.target.closest('[data-md]'); if (b) closeModal(b.dataset.md === 'ok' ? true : b.dataset.md === 'no' ? false : b.dataset.md); });
+function confirmBox(title, text, ok = 'أكيد', danger = true, extra) {
+  return modal(`<h3>${esc(title)}</h3><p>${esc(text)}</p><div class="btns"><button class="btn ${danger ? 'danger' : ''}" data-md="ok">${esc(ok)}</button><button class="btn sec" data-md="no">رجوع</button></div>${extra || ''}`);
+}
+let sheetOpen = false, ignorePop = false, sheetClose = null;
+function openSheet(html, onClose) {
+  const ov = $('#ov'), sh = $('#sheet'); sh.onclick = null; sh.innerHTML = `<div class="grab"></div>` + html; sh.scrollTop = 0; ov.classList.add('open');
+  document.body.style.overflow = 'hidden'; document.body.classList.add('sheet-open'); sheetClose = onClose || null;
+  if (!sheetOpen) { try { history.pushState({ sheet: 1 }, ''); } catch (e) { } } sheetOpen = true; return sh;
+}
+function closeSheet(fromPop) {
+  if (!sheetOpen) return; sheetOpen = false; $('#ov').classList.remove('open'); document.body.style.overflow = ''; document.body.classList.remove('sheet-open');
+  const f = sheetClose; sheetClose = null; S.sheet = null; if (f) try { f(); } catch (e) { }
+  if (!fromPop && history.state && history.state.sheet) { ignorePop = true; history.back(); }
+}
+window.addEventListener('popstate', () => { if (ignorePop) { ignorePop = false; return; } if (sheetOpen) closeSheet(true); });
+$('#ov').addEventListener('click', e => { if (e.target.id === 'ov') closeSheet(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') { if ($('#md').classList.contains('open')) closeModal(false); else closeSheet(); } });
+async function copy(text, ok) {
+  try { await navigator.clipboard.writeText(text); toast(ok); }
+  catch (e) { const t = document.createElement('textarea'); t.value = text; t.style.position = 'fixed'; t.style.opacity = '0'; document.body.appendChild(t); t.select(); try { document.execCommand('copy'); toast(ok); } catch (x) { toast('ما قدرت أنسخ، انسخه يدوياً'); } t.remove(); }
+}
+function loadImg(file) { return new Promise((res, rej) => { const u = URL.createObjectURL(file); const im = new Image(); im.onload = () => { res(im); setTimeout(() => URL.revokeObjectURL(u), 2000); }; im.onerror = () => { URL.revokeObjectURL(u); rej(new Error('img')); }; im.src = u; }); }
+async function compress(file, o) {
+  const im = await loadImg(file); let sw = im.naturalWidth, sh = im.naturalHeight, sx = 0, sy = 0; if (!sw || !sh) throw new Error('img');
+  if (o.ratio) { if (sw / sh > o.ratio) { const nw = sh * o.ratio; sx = (sw - nw) / 2; sw = nw; } else { const nh = sw / o.ratio; sy = (sh - nh) / 2; sh = nh; } }
+  let scale = Math.min(1, o.max / Math.max(sw, sh)), q = 0.82, out = '';
+  for (let i = 0; i < 14; i++) {
+    const w = Math.max(1, Math.round(sw * scale)), h = Math.max(1, Math.round(sh * scale)); const c = document.createElement('canvas'); c.width = w; c.height = h; const x = c.getContext('2d');
+    x.imageSmoothingQuality = 'high'; x.drawImage(im, sx, sy, sw, sh, 0, 0, w, h);
+    out = c.toDataURL('image/webp', q); if (!out.startsWith('data:image/webp')) { out = c.toDataURL('image/png'); if (out.length > o.target) { x.globalCompositeOperation = 'destination-over'; x.fillStyle = '#fff'; x.fillRect(0, 0, w, h); out = c.toDataURL('image/jpeg', q); } }
+    if (out.length <= o.target) return out; if (q > 0.55) q -= 0.12; else { scale *= 0.8; q = 0.74; }
+  }
+  return out;
+}
+
+/* ================= فتح المستندات ================= */
+function stopStore() { if (S.store && S.store.stop) S.store.stop(); S.store = null; clearInterval(S.bkTimer); clearInterval(S.busyTimer); }
+const typing = () => { const a = document.activeElement; return !!(a && (a.tagName === 'TEXTAREA' || (a.tagName === 'INPUT' && !/checkbox|radio|file|color|button/.test(a.type)))); };
+function onChange(how) {
+  if (S.mode === 'loading') return checkRole();
+  if (S.mode === 'customer' || S.preview) { renderCustomer(true); return; }
+  if (S.mode === 'owner') render();
+}
+function onStatus(s, msg) {
+  S.sync = { s, msg };
+  if (S.mode === 'error' && S.join && S.store && s === 'ok') { S.mode = 'loading'; return checkRole(); }
+  if (S.mode === 'loading') return checkRole();
+  const d = S.store, code = d && d.error && d.error.code;
+  if (S.mode === 'customer' && (code === 'bad_key' || code === 'not_found')) return showError(Tajarib.errorText(d.error));
+  if (S.mode === 'owner' && (code === 'bad_key' || code === 'not_found')) { if (!S.lost) { S.lost = code; render(); } }
+  if (S.mode === 'owner') paintSync();
+}
+function openOwnerDoc(m) {
+  stopStore(); S.docId = m.id; S.lost = null; S.bk = null; S.bkErr = ''; S.sync = { s: 'saving', msg: '' }; S.mode = 'owner';
+  S.store = Tajarib.open({ id: m.id, key: m.edit, kind: 'mawid', onChange, onStatus }).start();
+  render(); loadBookings(true); S.bkTimer = setInterval(() => { if (!document.hidden) loadBookings(); }, 20000);
+}
+function openDraft() { stopStore(); S.docId = null; S.lost = null; S.bk = null; S.store = new Draft('mawid.draft', onChange); S.sync = { s: 'draft', msg: '' }; S.mode = 'owner'; render(); }
+function clearHash() { try { history.replaceState(null, '', baseUrl()); } catch (e) { } }
+function openJoin(j) {
+  const m = mine().find(x => x.id === j.id);
+  if (m && m.edit === j.key) { LS.set('mawid.cur', m.id); clearHash(); return openOwnerDoc(m); }
+  if (!Tajarib.available()) return showError('الحجز يحتاج سيرفر «تجارب»، وهو مو متاح الحين. جرّب بعد شوي.');
+  stopStore(); S.join = j; S.docId = j.id; S.mode = 'loading'; render();
+  S.store = Tajarib.open({ id: j.id, key: j.key, kind: 'mawid', onChange, onStatus }).start();
+  if (S.store.role && S.store.meta()) checkRole();
+}
+function checkRole() {
+  const d = S.store; if (!d) return;
+  if (d.error && (d.error.code === 'bad_key' || d.error.code === 'not_found' || (!d.meta() && d.status === 'offline'))) return showError(Tajarib.errorText(d.error));
+  if (d.status === 'error' && !d.role) return showError(Tajarib.errorText(d.error));
+  if (!d.role) return;
+  const j = S.join;
+  if (d.role === 'edit') {
+    const a = mine().filter(x => x.id !== j.id); const vk = d.item('_vk'); a.push({ id: j.id, edit: j.key, view: (vk && vk.v) || '', name: (d.meta() || {}).name || '' }); setMine(a);
+    LS.set('mawid.cur', j.id); clearHash(); S.mode = 'owner'; S.tab = 'book'; render(); loadBookings(true);
+    clearInterval(S.bkTimer); S.bkTimer = setInterval(() => { if (!document.hidden) loadBookings(); }, 20000);
+    toast('صار هالجهاز يقدر يدير الحجوزات ✓');
+  } else {
+    S.mode = 'customer'; S.c = { ...(J.get('mawid.me', {}) || {}) };
+    const seen = J.get('mawid.seen', []).filter(x => x.id !== j.id); seen.unshift({ id: j.id, key: j.key, name: (d.meta() || {}).name || '' }); J.set('mawid.seen', seen.slice(0, 6));
+    render(); refreshBusy(); clearInterval(S.busyTimer); S.busyTimer = setInterval(() => { if (!document.hidden) refreshBusy(); }, 30000);
+  }
+}
+function showError(msg) { S.mode = 'error'; S.err = msg; render(); }
+
+/* ================= الرسم ================= */
+function render() { cancelAnimationFrame(S.raf); S.raf = requestAnimationFrame(doRender); }
+function ownerTheme() { document.body.classList.toggle('light', LS.get('mawid.theme') === 'light'); }
+function resetCust() {
+  document.body.classList.remove('cust'); for (const k of ['bg', 'card', 'card2', 'line', 'text', 'muted', 'input', 'acc', 'acc2', 'on']) document.body.style.removeProperty('--' + k);
+  ownerTheme(); document.title = 'موعد'; const tc = $('meta[name=theme-color]'); if (tc) tc.content = document.body.classList.contains('light') ? '#f2f6f7' : '#0e1417';
+}
+function doRender() {
+  if (S.mode === 'customer' || S.preview) return renderCustomer();
+  resetCust();
+  const app = $('#app');
+  if (S.mode === 'loading') { app.innerHTML = `<div class="center"><div><div class="spin"></div><p class="muted mt">جاري فتح صفحة الحجز…</p></div></div>`; return; }
+  if (S.mode === 'error') { app.innerHTML = `<div class="center"><div><div style="font-size:52px">😕</div><h2 style="margin:8px 0">ما قدرت أفتح الصفحة</h2><p class="muted" id="errMsg">${esc(S.err)}</p><a class="btn sec mt" href="${esc(baseUrl())}">الصفحة الرئيسية</a></div></div>`; return; }
+  if (S.mode === 'welcome') return renderWelcome();
+  if (S.mode === 'wizard') return renderWizard();
+  if (typing() && $('#main') && $('#main').contains(document.activeElement)) { S.stale = true; return; }
+  S.stale = false;
+  const tabs = [['book', 'calc', 'الحجوزات'], ['svc', 'scissors', 'الخدمات'], ['hours', 'clock', 'الدوام'], ['share', 'qr', 'المشاركة'], ['set', 'gear', 'الإعدادات']];
+  const newN = (S.bk || []).filter(b => b.status === 'new' && b.end > Date.now()).length;
+  const sy = window.scrollY;
+  app.innerHTML = `<header class="top"><div class="brand"><img src="icon-192.png" alt="">موعد</div><span class="sync" id="sync"></span>
+    <button class="ib" data-act="theme" aria-label="تبديل المظهر">${ico(document.body.classList.contains('light') ? 'moon' : 'sun')}</button></header>
+    <main class="wrap" id="main">${S.lost ? `<div class="banner bad">${ico('warn')}<div>ما عاد عند هالجهاز صلاحية على صفحة الحجز هذي (يمكن تغيّر مفتاح التعديل أو انحذفت). <button class="btn ghost sm" data-act="forget">انسَها من الجهاز</button></div></div>` : ''}${(TAB[S.tab] || TAB.book)()}</main>
+    <nav class="tabs">${tabs.map(t => `<button data-act="tab" data-tab="${t[0]}" class="${S.tab === t[0] ? 'on' : ''}">${ico(t[1])}<span>${t[2]}</span>${t[0] === 'book' && newN ? `<span class="dotn">${newN}</span>` : ''}</button>`).join('')}</nav>`;
+  paintSync(); if (S.tab === 'share') afterShare();
+  window.scrollTo(0, sy);
+}
+document.addEventListener('focusout', () => setTimeout(() => { if (S.stale && !typing()) render(); }, 60));
+function paintSync() {
+  const el = $('#sync'); if (!el) return; const s = S.sync.s;
+  const map = { draft: ['بجهازك بس', 'warn'], ok: ['محفوظ ✓', 'ok'], saving: ['يحفظ…', ''], idle: ['يحفظ…', ''], offline: ['بدون نت، بيرسل لاحقاً', 'warn'], error: [S.sync.msg || 'صار خطأ', 'bad'] };
+  const v = map[s] || ['', '']; el.textContent = v[0]; el.className = 'sync ' + v[1]; el.title = v[0];
+}
+
+/* ---------- الترحيب والإعداد ---------- */
+function renderWelcome() {
+  const seen = J.get('mawid.seen', []), own = mine();
+  $('#app').innerHTML = `<main class="wrap" style="padding-bottom:40px">
+    <div class="hero-w"><img src="icon-192.png" alt=""><h1>موعد</h1><p>صفحة حجز مواعيد لمحلك: الزبون يختار الخدمة واليوم والوقت بنفسه، وأنت يجيك تنبيه وتدير الحجوزات من جوالك.</p></div>
+    <div class="feat"><div>${ico('cal')}الأوقات المتاحة تلقائياً</div><div>${ico('bell')}تنبيه بكل حجز</div><div>${ico('wa')}تواصل بالواتساب</div><div>${ico('qr')}رابط وكود QR</div></div>
+    ${own.length ? `<div class="card"><h2>${ico('store')}محلاتك بهالجهاز</h2>${own.map(x => `<div class="linkrow"><span class="grow"><b>${esc(x.name || 'صفحة حجز')}</b></span><button class="btn sec sm" data-act="switch" data-id="${esc(x.id)}">افتح</button></div>`).join('')}</div>` : ''}
+    <button class="btn block" data-act="wizStart">${ico('plus')} ${own.length ? 'جهّز صفحة حجز جديدة' : 'جهّز صفحة الحجز'}</button>
+    <div class="card mt"><h2>${ico('cloud')}عندك صفحة من قبل؟</h2><p>لو جهّزتها بجهاز ثاني، افتح «رابط التعديل» من صفحة المشاركة هناك. أو استورد نسخة احتياطية:</p>
+      <label class="btn sec block mt filebtn">${ico('ul')} استورد نسخة احتياطية<input type="file" accept="application/json,.json" data-chg="importFile"></label></div>
+    ${seen.length ? `<div class="card"><h2>${ico('cal')}محلات حجزت عندها</h2>${seen.map(s => `<a class="linkrow" href="${esc(Tajarib.joinLink(baseUrl(), s.id, s.key))}"><span class="grow"><b>${esc(s.name || 'صفحة حجز')}</b></span>${ico('fwd')}</a>`).join('')}</div>` : ''}
+  </main>`;
+}
+function newWiz() { return { step: 0, name: '', kind: '', desc: '', svcs: [], hours: defHours(), stepMin: 30, wa: '', phone: '', loc: '', touched: false }; }
+function svcRows(list) {
+  return list.map((s, i) => `<div class="srow" data-i="${i}"><input class="inp" data-f="name" maxlength="50" value="${esc(s.name)}" placeholder="اسم الخدمة">
+    <select class="inp" data-f="dur">${DURS.concat(DURS.includes(+s.dur) ? [] : [+s.dur]).map(d => `<option value="${d}" ${+s.dur === d ? 'selected' : ''}>${fmtDur(d)}</option>`).join('')}</select>
+    <input class="inp" data-f="price" inputmode="decimal" value="${s.price == null ? '' : esc(s.price)}" placeholder="السعر"><button class="ib sm" type="button" data-rmsvc="${i}" aria-label="شيل">${ico('x')}</button></div>`).join('');
+}
+function renderWizard() {
+  const w = S.wiz, st = w.step, steps = 4;
+  let body = '';
+  if (st === 0) body = `<h1>عرّفنا على نشاطك</h1><p class="sub">هذا اللي بيشوفه الزبون أول ما يفتح صفحة الحجز.</p>
+    <label class="field"><span>اسم المحل أو النشاط</span><input class="inp" id="wName" maxlength="60" value="${esc(w.name)}" placeholder="مثلاً: صالون الأناقة"></label>
+    <div class="field"><span>وش نوع نشاطك؟</span><div class="kinds">${KINDS.map(k => `<button type="button" class="kind ${w.kind === k[0] ? 'on' : ''}" data-act="wizKind" data-k="${k[0]}"><span>${k[1]}</span>${k[2]}</button>`).join('')}</div></div>
+    <label class="field"><span>وصف قصير (اختياري)</span><textarea class="inp" id="wDesc" maxlength="200" placeholder="مثلاً: حلاقة رجالية بأحدث القصّات، حي النرجس">${esc(w.desc)}</textarea></label>`;
+  if (st === 1) body = `<h1>وش الخدمات اللي تقدمها؟</h1><p class="sub">لكل خدمة مدتها وسعرها. المدة تحدد الأوقات المتاحة للحجز.</p>
+    <div class="srow muted tiny" style="margin-bottom:4px"><span>الخدمة</span><span>المدة</span><span>السعر</span><span></span></div>
+    <div id="wSvcs">${svcRows(w.svcs)}</div><button class="btn ghost sm" type="button" data-act="wizAddSvc">${ico('plus')} أضف خدمة</button>`;
+  if (st === 2) body = `<h1>أوقات الدوام</h1><p class="sub">تقدر تحط أكثر من فترة باليوم (مثلاً الصبح والعصر). الأيام المقفلة ما تنحجز.</p>
+    <div id="hoursEd">${hoursEditor(w.hours)}</div>
+    <label class="field mt"><span>الأوقات تبدأ كل</span><select class="inp" id="wStep">${[10, 15, 20, 30, 45, 60].map(v => `<option value="${v}" ${w.stepMin === v ? 'selected' : ''}>${fmtDur(v)}</option>`).join('')}</select></label>`;
+  if (st === 3) body = `<h1>كيف يتواصل معك الزبون؟</h1><p class="sub">تطلع أزرار التواصل بصفحة الحجز.</p>
+    <label class="field"><span>رقم الواتساب</span><input class="inp ltr" dir="ltr" id="wWa" inputmode="tel" maxlength="20" value="${esc(w.wa)}" placeholder="05xxxxxxxx"></label>
+    <label class="field"><span>رقم الاتصال (اختياري)</span><input class="inp ltr" dir="ltr" id="wPhone" inputmode="tel" maxlength="20" value="${esc(w.phone)}" placeholder="05xxxxxxxx"></label>
+    <label class="field"><span>رابط الموقع (اختياري)</span><input class="inp ltr" dir="ltr" id="wLoc" maxlength="300" value="${esc(w.loc)}" placeholder="https://maps.app.goo.gl/…"></label>
+    ${Tajarib.available() ? '' : `<div class="banner">${ico('warn')}<div>النشر يحتاج سيرفر «تجارب» وهو مو متاح الحين. بنحفظ الإعدادات بجهازك وتقدر تنشر الصفحة بعدين.</div></div>`}`;
+  $('#app').innerHTML = `<main class="wrap wiz" style="padding-bottom:40px"><div class="wsteps">${Array.from({ length: steps }, (_, i) => `<i class="${i <= st ? 'on' : ''}"></i>`).join('')}</div>
+    <div class="card">${body}</div>
+    <div class="wfoot">${st > 0 ? `<button class="btn sec" data-act="wizBack">${ico('back')} رجوع</button>` : `<button class="btn sec" data-act="wizCancel">إلغاء</button>`}
+    <button class="btn grow" data-act="wizNext" id="wizNext">${st === steps - 1 ? (Tajarib.available() ? 'خلّصت، انشر الصفحة' : 'خلّصت') : 'التالي'} ${st === steps - 1 ? ico('check') : ico('fwd')}</button></div></main>`;
+}
+function readWiz() {
+  const w = S.wiz; const g = id => { const e = $('#' + id); return e ? e.value : null; };
+  if (w.step === 0) { w.name = (g('wName') || '').trim(); w.desc = (g('wDesc') || '').trim(); }
+  if (w.step === 1) w.svcs = readSvcRows('#wSvcs');
+  if (w.step === 2) { w.stepMin = +g('wStep') || 30; }
+  if (w.step === 3) { w.wa = (g('wWa') || '').trim(); w.phone = (g('wPhone') || '').trim(); w.loc = (g('wLoc') || '').trim(); }
+}
+function readSvcRows(sel) { return $$(sel + ' .srow').map(r => ({ name: $('[data-f=name]', r).value.trim(), dur: +$('[data-f=dur]', r).value || 30, price: num($('[data-f=price]', r).value) })); }
+async function wizNext() {
+  readWiz(); const w = S.wiz;
+  if (w.step === 0) { if (!w.name) { $('#wName').focus(); return toast('اكتب اسم المحل'); } if (!w.kind) w.kind = 'other'; if (!w.svcs.length) w.svcs = (KINDS.find(k => k[0] === w.kind) || KINDS[7])[3].map(s => ({ name: s[0], dur: s[1], price: s[2] })); }
+  if (w.step === 1) { w.svcs = w.svcs.filter(s => s.name); if (!w.svcs.length) { toast('أضف خدمة وحدة على الأقل'); return renderWizard(); } }
+  if (w.step === 2) { const e = hoursError(w.hours); if (e) return toast(e); if (!Object.keys(w.hours).length) return toast('افتح يوم واحد على الأقل'); }
+  if (w.step === 3) {
+    if (w.wa && !waNum(w.wa)) return toast('رقم الواتساب غلط');
+    const t = Date.now(), items = {};
+    w.svcs.forEach((s, i) => { items[Tajarib.newId('s')] = { type: 'service', name: s.name, dur: s.dur, price: s.price, o: i + 1, u: t }; });
+    J.set('mawid.draft', { items, meta: { name: w.name, desc: w.desc, kind: w.kind, wa: w.wa, phone: w.phone, loc: w.loc, tz: 'Asia/Riyadh', hours: w.hours, off: [], step: w.stepMin, buffer: 0, notice: 60, ahead: 30, closed: false, accent: ACCENTS[0], cur: 'ر.س', u: t } });
+    LS.set('mawid.cur', ''); S.wiz = null; S.tab = 'share'; openDraft();
+    if (Tajarib.available()) await publish(); else toast('انحفظت الإعدادات بجهازك ✓');
+    return;
+  }
+  w.step++; renderWizard(); window.scrollTo(0, 0);
+}
+
+/* ---------- محرر الدوام ---------- */
+function hoursEditor(h) {
+  const opts = sel => TIMES.map(t => `<option value="${hhmm(t)}" ${hhmm(t) === sel ? 'selected' : ''}>${t === 1440 ? '12:00 ص (آخر اليوم)' : fmtMin(t)}</option>`).join('');
+  return [0, 1, 2, 3, 4, 5, 6].map(d => {
+    const r = h[d] || h[String(d)]; const open = Array.isArray(r) && r.length;
+    return `<div class="day" data-day="${d}"><div class="day-h"><b>${WD[d]}</b>${open ? `<button class="btn ghost xs" type="button" data-hact="copy" title="انسخ لكل الأيام المفتوحة">انسخ للكل</button>` : '<span class="closed">مقفل</span>'}<label class="sw"><input type="checkbox" data-hact="toggle" ${open ? 'checked' : ''} aria-label="${WD[d]}"><i></i></label></div>
+      ${open ? r.map((x, i) => `<div class="rng" data-r="${i}"><select class="inp" data-hf="0">${opts(x[0])}</select><span class="to">إلى</span><select class="inp" data-hf="1">${opts(x[1])}</select>${r.length > 1 ? `<button class="ib sm" type="button" data-hact="rm" aria-label="شيل الفترة">${ico('x')}</button>` : ''}</div>`).join('') + (r.length < 4 ? `<button class="btn ghost xs mt" type="button" data-hact="add">${ico('plus')} فترة ثانية</button>` : '') : ''}</div>`;
+  }).join('');
+}
+function hoursError(h) {
+  for (const [d, r] of Object.entries(h)) {
+    const rs = r.map(x => [hm(x[0]), hm(x[1])]).sort((a, b) => a[0] - b[0]);
+    for (let i = 0; i < rs.length; i++) { if (rs[i][1] <= rs[i][0]) return `${WD[d]}: وقت النهاية لازم يكون بعد البداية`; if (i && rs[i][0] < rs[i - 1][1]) return `${WD[d]}: الفترات متداخلة`; }
+  }
+  return '';
+}
+function hoursEvent(t, h) {
+  const dayEl = t.closest('[data-day]'); if (!dayEl) return false; const d = dayEl.dataset.day; const act = t.dataset.hact;
+  if (act === 'toggle') { if (t.checked) h[d] = [['09:00', '17:00']]; else delete h[d]; }
+  else if (act === 'add') { const r = h[d]; const last = hm(r[r.length - 1][1]); const s = Math.min(last + 60, 1380); r.push([hhmm(s), hhmm(Math.min(s + 240, 1440))]); }
+  else if (act === 'rm') { const i = +t.closest('[data-r]').dataset.r; h[d].splice(i, 1); }
+  else if (act === 'copy') { for (const k of Object.keys(h)) if (k !== d) h[k] = h[d].map(x => [...x]); toast('انسخت أوقات ' + WD[d] + ' لكل الأيام المفتوحة'); }
+  else if (t.dataset.hf != null) { const i = +t.closest('[data-r]').dataset.r; h[d][i][+t.dataset.hf] = t.value; }
+  else return false;
+  return true;
+}
+
+/* ---------- التبويبات ---------- */
+const TAB = {};
+TAB.book = () => {
+  if (!isPub()) return `<div class="card"><h2>${ico('cloud')}صفحة الحجز للحين بجهازك</h2><p>انشرها من تبويب «المشاركة» عشان تاخذ الرابط وتبدأ تستقبل حجوزات.</p><button class="btn block mt" data-act="tab" data-tab="share">روح للمشاركة</button></div>
+    <div class="card"><h2>${ico('eye')}شوف صفحتك كزبون</h2><button class="btn sec block" data-act="preview">${ico('eye')} معاينة</button></div>`;
+  const m = meta(), now = Date.now(), t = todayStr();
+  let h = '';
+  if (m.closed) h += `<div class="banner bad">${ico('pause')}<div>الحجز موقف مؤقتاً، والزبائن ما يقدرون يحجزون. <button class="btn ghost sm" data-act="tab" data-tab="hours">شغّله</button></div></div>`;
+  if (!LS.get('mawid.push.' + S.docId)) h += `<div class="banner info">${ico('bell')}<div class="grow">فعّل التنبيهات عشان يوصلك إشعار أول ما ينحجز موعد. <button class="btn ghost sm" data-act="tab" data-tab="set">فعّلها</button></div></div>`;
+  if (S.bk == null) return h + (S.bkErr ? `<div class="banner bad">${ico('warn')}<div>${esc(S.bkErr)} <button class="btn ghost sm" data-act="reload">جرّب مرة ثانية</button></div></div>` : `<div class="center" style="min-height:40vh"><div class="spin"></div></div>`);
+  const all = S.bk.map(b => ({ ...b, at: fmtAt(b.start) }));
+  const svc = id => S.store.item(id) || { name: 'خدمة محذوفة' };
+  const tod = all.filter(b => b.at.date === t), up = all.filter(b => b.at.date > t), past = all.filter(b => b.at.date < t).reverse();
+  const live = x => x.filter(b => b.status !== 'cancelled');
+  const tl = live(tod), income = tl.filter(b => b.status !== 'noshow').reduce((a, b) => a + (+svc(b.service).price || 0), 0);
+  const next = all.find(b => b.end > now && b.status !== 'cancelled' && b.status !== 'noshow' && b.status !== 'done');
+  h += `<div class="card today"><div class="row"><h2 class="grow" style="margin:0">${ico('cal')}ملخص اليوم</h2><button class="ib sm" data-act="reload" aria-label="تحديث">${ico('refresh')}</button></div><div class="muted small">${fmtDay(t)}</div>
+    <div class="kpis"><div class="kpi"><b>${tl.length}</b><span>حجز</span></div><div class="kpi"><b>${tl.filter(b => b.status === 'confirmed' || b.status === 'done').length}</b><span>مؤكد أو خلص</span></div><div class="kpi"><b>${fmtN(income)}</b><span>${esc(m.cur || 'ر.س')} متوقع</span></div></div>
+    ${next ? `<div class="next">${ico('clock')}<div class="grow">الموعد الجاي: <b>${esc(next.name)}</b> · ${esc(svc(next.service).name)}<div class="muted small">${next.at.date === t ? 'اليوم' : esc(next.at.day)} الساعة ${next.at.time}</div></div></div>` : ''}</div>`;
+  const segs = [['today', 'اليوم', live(tod).length], ['up', 'الجاية', live(up).length], ['past', 'السابقة', past.length]];
+  h += `<div class="seg mb" id="bkSeg">${segs.map(s => `<button data-act="seg" data-v="${s[0]}" class="${S.seg === s[0] ? 'on' : ''}">${s[1]}<b>${s[2]}</b></button>`).join('')}</div>`;
+  const list = S.seg === 'today' ? tod : S.seg === 'up' ? up : past;
+  if (!list.length) return h + `<div class="card empty"><div class="big">${S.seg === 'past' ? '🗂️' : '🗓️'}</div>${S.seg === 'today' ? 'ما فيه حجوزات اليوم' : S.seg === 'up' ? 'ما فيه حجوزات جاية للحين. شارك رابط الحجز مع زبائنك!' : 'ما فيه حجوزات سابقة (آخر 30 يوم)'}</div>`;
+  let lastDay = '';
+  for (const b of list) {
+    if (S.seg !== 'today' && b.at.date !== lastDay) {
+      lastDay = b.at.date; const dl = live(list.filter(x => x.at.date === lastDay)); const inc = dl.filter(x => x.status !== 'noshow').reduce((a, x) => a + (+svc(x.service).price || 0), 0);
+      h += `<div class="dayhead"><b>${esc(b.at.day)}</b><span>${dl.length} حجز${inc ? ' · ' + fmtN(inc) + ' ' + esc(m.cur || 'ر.س') : ''}</span></div>`;
+    }
+    h += bkCard(b, svc(b.service));
+  }
+  return h;
+};
+function bkCard(b, s) {
+  const st = STATUS[b.status] || STATUS.new, past = b.end < Date.now();
+  const A = (act, label, cls = 'sec') => `<button class="btn ${cls} xs" data-act="bkSet" data-st="${act}" data-id="${b.id}">${label}</button>`;
+  let acts = '';
+  if (b.status === 'new') acts = A('confirmed', `${ico('check')} أكّد`, '') + A('cancelled', 'ألغِ', 'danger');
+  else if (b.status === 'confirmed') acts = A('done', 'خلص') + A('noshow', 'ما حضر') + (past ? '' : A('cancelled', 'ألغِ', 'danger'));
+  else if (b.status !== 'cancelled') acts = A('confirmed', 'رجّعه مؤكد');
+  if (b.status === 'new' && past) acts = A('done', 'خلص') + A('noshow', 'ما حضر');
+  return `<div class="bk ${b.status} ${S.fresh && S.fresh.has(b.id) ? 'fresh' : ''}" data-bk="${b.id}"><div class="bk-top"><span class="bk-time">${fmtAt(b.start).time} – ${fmtAt(b.end).time}</span><span class="grow"></span><span class="pill ${st[1]}">${st[0]}</span></div>
+    <div class="bk-name">${esc(b.name)}</div><div class="bk-sub">${esc(s.name)} · ${fmtDur(Math.round((b.end - b.start) / 60000))}${s.price != null && s.price !== '' ? ' · ' + money(s.price) : ''}</div>
+    <div class="bk-sub ltr" dir="ltr" style="text-align:right">${esc(showPhone(b.phone))}</div>
+    ${b.note ? `<div class="bk-note">${esc(b.note)}</div>` : ''}
+    <div class="bk-acts">${acts}<a class="btn sec xs" href="tel:${esc(b.phone)}" aria-label="اتصال">${ico('phone')}</a><button class="btn sec xs" data-act="bkWa" data-id="${b.id}" aria-label="واتساب">${ico('wa')}</button></div></div>`;
+}
+async function loadBookings(first) {
+  if (!isPub()) return; const e = curEntry(); if (!e) return;
+  try {
+    const list = (await Tajarib.bookings.list(e.id, e.edit)).sort((a, b) => a.start - b.start);
+    const prev = S.bk ? new Set(S.bk.map(b => b.id)) : null; S.bk = list; S.bkErr = '';
+    if (prev) { const fresh = list.filter(b => !prev.has(b.id) && b.status === 'new'); if (fresh.length) { S.fresh = new Set([...(S.fresh || []), ...fresh.map(b => b.id)]); toast(fresh.length === 1 ? `وصلك حجز جديد من ${fresh[0].name} 🎉` : `وصلك ${fresh.length} حجوزات جديدة 🎉`); } }
+  } catch (er) { S.bkErr = Tajarib.errorText(er); if (er.code === 'bad_key' || er.code === 'not_found') S.lost = er.code; }
+  if (S.mode !== 'owner') return;
+  const n = S.bk ? S.bk.filter(b => b.status === 'new' && b.end > Date.now()).length : 0;
+  if (S.tab === 'book' || first || n !== S.newN) render(); S.newN = n;
+}
+function bkWaText(b) {
+  const m = meta(), s = S.store.item(b.service) || { name: 'موعدك' }, at = fmtAt(b.start), biz = m.name || '';
+  if (b.status === 'cancelled') return `هلا ${b.name}، معك ${biz}. نعتذر منك، اضطرينا نلغي موعدك لـ${s.name} يوم ${at.day} الساعة ${at.time}.${viewLink() ? ` تقدر تحجز وقت ثاني من هنا: ${viewLink()}` : ''}`;
+  if (b.status === 'new') return `هلا ${b.name}، معك ${biz}. تم تأكيد موعدك لـ${s.name} يوم ${at.day} الساعة ${at.time}. نتشرف فيك!`;
+  if (b.status === 'confirmed') return `هلا ${b.name}، معك ${biz}. نذكّرك بموعدك لـ${s.name} يوم ${at.day} الساعة ${at.time}. ننتظرك!`;
+  return `هلا ${b.name}، معك ${biz}. شكراً لزيارتك، نتمنى نشوفك مرة ثانية!`;
+}
+async function bkSet(id, st) {
+  const e = curEntry(), b = (S.bk || []).find(x => x.id === id); if (!b || !e) return;
+  if (st === 'cancelled') { const at = fmtAt(b.start); if (!await confirmBox('إلغاء الموعد', `بيتلغى موعد ${b.name} (${at.day} الساعة ${at.time}) ويرجع الوقت متاح للحجز.`, 'ألغِ الموعد')) return; }
+  const prev = b.status; b.status = st; render();
+  try {
+    await Tajarib.bookings.setStatus(e.id, e.edit, id, st);
+    const label = { confirmed: 'تأكّد الموعد ✓', done: 'تسجّل إنه خلص ✓', noshow: 'تسجّل إنه ما حضر', cancelled: 'انلغى الموعد' }[st] || 'تم';
+    if (st === 'cancelled' || st === 'confirmed') toast(label, 'أرسل له واتساب', () => { const bb = (S.bk || []).find(x => x.id === id); if (bb) { const tmp = { ...bb, status: st === 'confirmed' ? 'new' : st }; openWa(bb.phone, bkWaText(tmp)); } });
+    else toast(label, 'تراجع', () => bkSet(id, prev));
+  } catch (er) { b.status = prev; render(); toast(Tajarib.errorText(er)); }
+}
+function openWa(phone, text) { const url = `https://wa.me/${waNum(phone)}?text=${encodeURIComponent(text)}`; window.__lastWa = { url, text }; window.open(url, '_blank'); }
+
+TAB.svc = () => {
+  const list = services();
+  return `<div class="card"><h2>${ico('scissors')}الخدمات</h2>${list.length ? list.map((s, i) => `<div class="svc" data-act="editSvc" data-id="${s.id}"><div class="ic">${ico('scissors')}</div><div class="grow"><b>${esc(s.name)}</b><div class="muted small">${fmtDur(s.dur)}${s.price != null && s.price !== '' ? ' · ' + money(s.price) : ''}</div></div>
+    <button class="ib sm" data-act="svcUp" data-id="${s.id}" ${i === 0 ? 'disabled style="opacity:.3"' : ''} aria-label="فوق">${ico('up')}</button></div>`).join('') : `<div class="empty"><div class="big">✂️</div>ما فيه خدمات. أضف خدمة عشان الزبائن يقدرون يحجزون.</div>`}
+    <button class="btn block mt" data-act="editSvc" data-id="">${ico('plus')} أضف خدمة</button></div>
+    <p class="small muted" style="padding:0 6px">تعديل مدة الخدمة ما يأثر على الحجوزات اللي قبل.</p>`;
+};
+async function editSvc(id) {
+  const s = id ? S.store.item(id) : null;
+  const ok = await modal(`<h3>${s ? 'تعديل الخدمة' : 'خدمة جديدة'}</h3>
+    <label class="field"><span>اسم الخدمة</span><input class="inp" id="sName" maxlength="50" value="${esc(s ? s.name : '')}" placeholder="مثلاً: حلاقة شعر"></label>
+    <div class="two"><label class="field"><span>المدة</span><select class="inp" id="sDur">${DURS.concat(s && !DURS.includes(+s.dur) ? [+s.dur] : []).map(d => `<option value="${d}" ${(s ? +s.dur : 30) === d ? 'selected' : ''}>${fmtDur(d)}</option>`).join('')}</select></label>
+    <label class="field"><span>السعر (اختياري)</span><input class="inp" id="sPrice" inputmode="decimal" value="${s && s.price != null ? esc(s.price) : ''}" placeholder="0 = مجاناً"></label></div>
+    <label class="field"><span>وصف (اختياري)</span><input class="inp" id="sDesc" maxlength="120" value="${esc(s ? s.desc || '' : '')}" placeholder="مثلاً: يشمل الغسيل والتسريح"></label>
+    <div class="btns"><button class="btn" data-md="ok">حفظ</button><button class="btn sec" data-md="no">إلغاء</button></div>
+    ${s ? `<button class="btn danger block mt" data-md="del">${ico('trash')} احذف الخدمة</button>` : ''}`, box => setTimeout(() => $('#sName', box).focus(), 60));
+  if (ok === 'del') {
+    if (!await confirmBox('حذف الخدمة', `بتنحذف «${s.name}» وما يقدر أحد يحجزها. الحجوزات اللي قبل تبقى.`, 'احذف')) return;
+    S.store.del(id); toast('انحذفت الخدمة', 'تراجع', () => S.store.set(id, s)); return;
+  }
+  if (ok !== true) return;
+  const name = $('#sName').value.trim(); if (!name) return toast('اكتب اسم الخدمة');
+  S.store.set(id || Tajarib.newId('s'), { type: 'service', name, dur: +$('#sDur').value || 30, price: num($('#sPrice').value), desc: $('#sDesc').value.trim(), o: s ? s.o : Date.now() });
+  toast(s ? 'انحفظت الخدمة ✓' : 'انضافت الخدمة ✓');
+}
+
+TAB.hours = () => {
+  const m = meta(), r = rules(), off = (m.off || []).filter(d => d >= todayStr()).sort();
+  const sel = (id, vals, cur, f) => `<select class="inp" data-rule="${id}">${vals.map(v => `<option value="${v}" ${+cur === v ? 'selected' : ''}>${f(v)}</option>`).join('')}</select>`;
+  const nf = v => v === 0 ? 'بدون' : v < 60 ? `قبلها بـ${v} دقيقة` : v === 60 ? 'قبلها بساعة' : v === 120 ? 'قبلها بساعتين' : v === 1440 ? 'قبلها بيوم' : v === 2880 ? 'قبلها بيومين' : `قبلها بـ${v / 60} ساعات`;
+  return `<div class="card"><div class="swrow"><div class="grow"><b>${ico('pause').replace('<svg', '<svg style="width:18px;height:18px;vertical-align:-3px;color:var(--bad)"')} أوقف الحجز مؤقتاً</b><span class="muted small">الصفحة تبقى، بس ما أحد يقدر يحجز لين ترجعه</span></div><label class="sw red"><input type="checkbox" data-chg="closed" ${m.closed ? 'checked' : ''}><i></i></label></div>
+    ${m.closed ? `<label class="field mt"><span>رسالة للزبائن (اختياري)</span><input class="inp" data-m="closedMsg" maxlength="140" value="${esc(m.closedMsg || '')}" placeholder="مثلاً: مسافرين ونرجع 20 نوفمبر"></label>` : ''}</div>
+  <div class="card"><h2>${ico('clock')}أوقات الدوام</h2><div id="hoursEd">${hoursEditor(m.hours || {})}</div></div>
+  <div class="card"><h2>${ico('cal')}الإجازات</h2><p class="mb">الأيام اللي تحطها هنا ما تنحجز.</p>
+    ${off.length ? off.map(d => `<div class="offd"><span class="grow">${esc(fmtDay(d, true))}</span><button class="ib sm" data-act="rmOff" data-d="${d}" aria-label="شيل">${ico('x')}</button></div>`).join('') : ''}
+    <div class="row mt"><input class="inp grow" type="date" id="offIn" min="${todayStr()}" max="${addDays(todayStr(), 365)}"><button class="btn sm" data-act="addOff">${ico('plus')} أضف</button></div>
+    <div class="btns mt"><button class="btn sec xs" data-act="quickOff" data-n="0">إجازة اليوم</button><button class="btn sec xs" data-act="quickOff" data-n="1">إجازة بكرة</button></div></div>
+  <div class="card"><h2>${ico('gear')}قواعد الحجز</h2>
+    <label class="field"><span>الأوقات تبدأ كل</span>${sel('step', [10, 15, 20, 30, 45, 60], r.step, fmtDur)}</label>
+    <label class="field"><span>استراحة بين كل موعد والثاني</span>${sel('buffer', [0, 5, 10, 15, 20, 30], r.buffer, v => v ? fmtDur(v) : 'بدون')}</label>
+    <label class="field"><span>أقل وقت قبل الموعد</span>${sel('notice', [0, 15, 30, 60, 120, 180, 360, 720, 1440, 2880], r.notice, nf)}<div class="hint">مثلاً «قبلها بساعة» يعني ما أحد يحجز موعد بعد أقل من ساعة.</div></label>
+    <label class="field"><span>كم يوم قدام يقدر الزبون يحجز</span>${sel('ahead', [7, 14, 21, 30, 45, 60, 90, 120], r.ahead, v => `${v} يوم`)}</label></div>`;
+};
+TAB.share = () => {
+  if (!isPub()) {
+    const can = Tajarib.available();
+    return `<div class="card"><h2>${ico('cloud')}انشر صفحة الحجز</h2><p>الصفحة للحين بجهازك بس. انشرها عشان تاخذ رابط وكود QR، ويقدر زبائنك يحجزون.</p>
+      ${can ? `<button class="btn block mt" data-act="publish" id="pubBtn">${ico('cloud')} انشر صفحة الحجز</button>` : `<div class="banner mt">${ico('warn')}<div>النشر يحتاج سيرفر «تجارب»، وهو مو متاح الحين. إعداداتك محفوظة بجهازك، وتقدر تنشر أول ما يتوفر.</div></div>`}
+      <button class="btn sec block mt" data-act="preview">${ico('eye')} معاينة الصفحة</button></div>`;
+  }
+  const link = viewLink();
+  return `<div class="card"><h2>${ico('link')}رابط الحجز لزبائنك</h2><div class="linkbox" id="viewLink">${esc(link)}</div>
+    <div class="btns"><button class="btn sm" data-act="copyView">${ico('copy')} انسخ</button><button class="btn wa sm" data-act="waShare">${ico('wa')} شارك بالواتساب</button><button class="btn sec sm" data-act="shareView">${ico('share')} شارك</button><a class="btn sec sm" href="${esc(link)}" target="_blank" rel="noopener">${ico('ext')} افتح</a></div>
+    <p class="small mt">حطه بالبايو في انستقرام وسناب، أو أرسله لزبائنك.</p></div>
+  <div class="card"><h2>${ico('qr')}كود QR</h2><p class="mb">اطبعه وحطه عند الكاشير أو على الباب.</p><div class="cardprev" id="cardPrev"><div class="spin"></div></div>
+    <div class="field mt"><span>الطباعة</span><div class="seg" id="perPage"><button data-act="perPage" data-v="1" class="${S.perPage !== 4 ? 'on' : ''}">بطاقة وحدة</button><button data-act="perPage" data-v="4" class="${S.perPage === 4 ? 'on' : ''}">4 بطاقات بالصفحة</button></div></div>
+    <div class="btns"><button class="btn" data-act="print">${ico('print')} اطبع البطاقة</button><button class="btn sec" data-act="dlQR">${ico('dl')} حمّل الكود</button></div></div>
+  <div class="card"><h2>${ico('key')}إدارة من جهاز ثاني</h2><p>افتح هالرابط بجوالك الثاني أو جهاز موظفك عشان يشوف الحجوزات ويديرها.</p>
+    <div class="banner mt">${ico('warn')}<div>هالرابط يعطي صلاحية كاملة (يشوف أرقام الزبائن ويعدّل كل شي). لا ترسله لأي أحد ثاني.</div></div>
+    <button class="btn sec block" data-act="copyEdit">${ico('copy')} انسخ رابط التعديل</button></div>
+  <div class="card"><h2>${ico('warn')}الأمان</h2><div class="btns"><button class="btn sec sm" data-act="rotView">غيّر رابط الحجز</button><button class="btn sec sm" data-act="rotEdit">اطرد الأجهزة الثانية</button></div>
+    <p class="small mt">تغيير رابط الحجز يوقف الرابط والكود القديم. وطرد الأجهزة يغيّر رابط التعديل، فأي جهاز ثاني يطلع من لوحة التحكم.</p>
+    <button class="btn danger block mt" data-act="unpublish">${ico('trash')} احذف صفحة الحجز من النت</button></div>`;
+};
+TAB.set = () => {
+  const m = meta(), logo = imgOf('logo'), acc = m.accent || ACCENTS[0], light = document.body.classList.contains('light');
+  const f = (k, label, ph, o = {}) => `<label class="field"><span>${label}</span><input class="inp ${o.ltr ? 'ltr' : ''}" ${o.ltr ? 'dir="ltr"' : ''} data-m="${k}" value="${esc(m[k] || '')}" placeholder="${esc(ph)}" maxlength="${o.max || 120}" ${o.im ? `inputmode="${o.im}"` : ''}>${o.hint ? `<div class="hint">${o.hint}</div>` : ''}</label>`;
+  return `${isPub() ? `<div class="card"><h2>${ico('bell')}التنبيهات</h2><p>بيوصلك إشعار على هالجهاز أول ما ينحجز موعد جديد أو يلغي زبون موعده.</p>
+    <div class="banner info mt">${ico('info')}<div>بالآيفون: لازم تضيف «موعد» للشاشة الرئيسية أول (من زر المشاركة ← «إضافة إلى الشاشة الرئيسية») وتفتحه من هناك، بعدين فعّل التنبيهات. وبالأندرويد تشتغل من المتصفح على طول.</div></div>
+    <div class="btns"><button class="btn" data-act="pushOn" id="pushBtn">${ico('bell')} ${LS.get('mawid.push.' + S.docId) ? 'فعّلها مرة ثانية' : 'فعّل التنبيهات'}</button><button class="btn sec" data-act="pushTest">جرّب تنبيه</button></div></div>` : ''}
+  <div class="card"><h2>${ico('store')}معلومات المحل</h2>
+    ${f('name', 'اسم المحل', 'مثلاً: صالون الأناقة', { max: 60 })}
+    <label class="field"><span>الوصف</span><textarea class="inp" data-m="desc" maxlength="200" placeholder="وصف قصير يشوفه الزبون">${esc(m.desc || '')}</textarea></label>
+    <div class="field"><span>الشعار</span><div class="row">${logo ? `<img src="${logo}" alt="" style="width:60px;height:60px;border-radius:50%;object-fit:cover">` : `<div class="ib" style="width:60px;height:60px;border-radius:50%">${ico('img')}</div>`}<label class="btn sec sm filebtn">${logo ? 'غيّر' : 'اختر صورة'}<input type="file" accept="image/*" data-chg="logo"></label>${logo ? `<button class="btn ghost sm" data-act="rmLogo">شيله</button>` : ''}</div></div>
+    ${f('wa', 'رقم الواتساب', '05xxxxxxxx', { ltr: 1, im: 'tel', max: 20, hint: 'يوصلك عليه الزبون، ويطلع زر واتساب بالصفحة' })}
+    ${f('phone', 'رقم الاتصال (اختياري)', '05xxxxxxxx', { ltr: 1, im: 'tel', max: 20 })}
+    ${f('loc', 'رابط الموقع (اختياري)', 'https://maps.app.goo.gl/…', { ltr: 1, max: 300 })}
+    <label class="field"><span>ملاحظة تطلع للزبون قبل يأكّد (اختياري)</span><textarea class="inp" data-m="note" maxlength="300" placeholder="مثلاً: الرجاء الحضور قبل الموعد بـ5 دقايق">${esc(m.note || '')}</textarea></label>
+    <div class="two">${f('cur', 'العملة', 'ر.س', { max: 8 })}<div></div></div></div>
+  <div class="card"><h2>${ico('eye')}شكل صفحة الحجز</h2>
+    <div class="field"><span>اللون</span><div class="chips" id="accs">${ACCENTS.map(a => `<button class="chip ${a === acc ? 'on' : ''}" data-act="accent" data-v="${a}" style="width:36px;height:36px;padding:0;border-radius:50%;background:${a};border:3px solid ${a === acc ? 'var(--text)' : 'transparent'}" aria-label="لون"></button>`).join('')}</div></div>
+    <div class="field"><span>الخلفية</span><div class="seg" id="styleSeg"><button data-act="style" data-v="light" class="${m.style !== 'dark' ? 'on' : ''}">فاتحة</button><button data-act="style" data-v="dark" class="${m.style === 'dark' ? 'on' : ''}">داكنة</button></div></div>
+    <button class="btn sec block" data-act="preview">${ico('eye')} معاينة</button></div>
+  <div class="card"><h2>${ico(light ? 'sun' : 'moon')}مظهر التطبيق</h2><div class="seg"><button data-act="setTheme" data-v="dark" class="${light ? '' : 'on'}">داكن</button><button data-act="setTheme" data-v="light" class="${light ? 'on' : ''}">فاتح</button></div></div>
+  <div class="card"><h2>${ico('dl')}النسخ الاحتياطي</h2><p>صدّر نسخة من الخدمات والدوام والإعدادات${isPub() ? ' والحجوزات' : ''}.</p>
+    <div class="btns mt"><button class="btn sec" data-act="export">${ico('dl')} صدّر نسخة</button><label class="btn sec filebtn">${ico('ul')} استورد<input type="file" accept="application/json,.json" data-chg="importFile"></label></div></div>
+  ${mine().length > 1 || (mine().length && LS.get('mawid.draft')) ? `<div class="card"><h2>${ico('store')}الصفحات بهالجهاز</h2>${mine().map(x => `<div class="linkrow"><span class="grow"><b>${esc(x.name || 'صفحة حجز')}</b></span>${x.id === S.docId ? '<span class="pill ok">مفتوحة</span>' : `<button class="btn sec sm" data-act="switch" data-id="${x.id}">افتح</button>`}</div>`).join('')}${LS.get('mawid.draft') ? `<div class="linkrow"><span class="grow"><b>مسودة</b></span>${!isPub() ? '<span class="pill ok">مفتوحة</span>' : `<button class="btn sec sm" data-act="switch" data-id="">افتح</button>`}</div>` : ''}</div>` : ''}
+  <div class="card"><h2>${ico('plus')}محل ثاني</h2><p>تبي صفحة حجز لفرع أو نشاط ثاني؟</p><button class="btn sec block mt" data-act="newPage">جهّز صفحة جديدة</button></div>
+  <div class="card"><h2>${ico('trash')}هالجهاز</h2><p>${isPub() ? 'تشيل الصفحة من هالجهاز بس، وتبقى شغّالة للزبائن. ترجع لها برابط التعديل.' : 'تحذف المسودة من هالجهاز نهائياً.'}</p><button class="btn danger block mt" data-act="forget">${isPub() ? 'انسَ الصفحة من الجهاز' : 'احذف المسودة'}</button></div>
+  <p class="tiny muted" style="text-align:center">موعد · من تجارب</p>`;
+};
+let metaT;
+function onMetaInput(el) { clearTimeout(metaT); S.pendingMeta = S.pendingMeta || {}; S.pendingMeta[el.dataset.m] = el.value.trim(); metaT = setTimeout(flushMeta, 500); }
+function flushMeta() { clearTimeout(metaT); if (!S.pendingMeta) return; const p = S.pendingMeta; S.pendingMeta = null; if (p.name === '') delete p.name; putMeta(p); }
+
+/* ---------- QR والطباعة ---------- */
+function loadQR() { if (window.qrcode) return Promise.resolve(); return new Promise((res, rej) => { const s = document.createElement('script'); s.src = 'vendor/qrcode.js'; s.onload = res; s.onerror = () => rej(new Error('qr')); document.head.appendChild(s); }); }
+function qrCanvas(text, px, margin) {
+  const q = qrcode(0, 'M'); q.addData(text); q.make(); const n = q.getModuleCount(), s = (n + margin * 2) * px;
+  const c = document.createElement('canvas'); c.width = c.height = s; const x = c.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0, 0, s, s); x.fillStyle = '#000';
+  for (let r = 0; r < n; r++) for (let k = 0; k < n; k++) if (q.isDark(r, k)) x.fillRect((k + margin) * px, (r + margin) * px, px, px);
+  return c;
+}
+async function qrUrl(text) { await loadQR(); if (!S.qrCache[text]) S.qrCache = { [text]: qrCanvas(text, 10, 4).toDataURL('image/png') }; return S.qrCache[text]; }
+function cardHtml(qr) { const m = meta(), logo = imgOf('logo'), acc = m.accent || ACCENTS[0]; return `<div class="qrcard"><div class="bar" style="background:${esc(acc)}"></div>${logo ? `<img class="pl" src="${logo}" alt="">` : ''}<div class="pn">${esc(m.name || 'احجز موعدك')}</div>${m.desc ? `<div class="pd">${esc(m.desc.split('\n')[0].slice(0, 60))}</div>` : ''}<img class="pq" src="${qr}" alt="QR"><div class="pc" style="color:${esc(acc)}">امسح واحجز موعدك</div><div class="ps">Scan to book an appointment</div></div>`; }
+async function afterShare() { const link = viewLink(), box = $('#cardPrev'); if (!box || !link) return; try { const qr = await qrUrl(link); if ($('#cardPrev')) $('#cardPrev').innerHTML = cardHtml(qr); } catch (e) { box.innerHTML = '<p class="muted">ما قدرت أجهّز الكود</p>'; } }
+async function preparePrint(n) { const c = cardHtml(await qrUrl(viewLink())); $('#printArea').innerHTML = `<div class="pgrid n${n}">${n === 4 ? c + c + c + c : c}</div>`; await Promise.all($$('#printArea img').map(i => i.complete ? 0 : new Promise(r => { i.onload = i.onerror = r; }))); }
+async function publish() {
+  if (!Tajarib.available()) return toast('النشر يحتاج سيرفر «تجارب» وهو مو متاح الحين');
+  flushMeta(); const m = meta(); if (!m.name) { S.tab = 'set'; render(); return toast('اكتب اسم المحل أول'); }
+  if (!services().length) { S.tab = 'svc'; render(); return toast('أضف خدمة وحدة على الأقل'); }
+  const btn = $('#pubBtn'); if (btn) { btn.disabled = true; btn.textContent = 'جاري النشر…'; }
+  const body = { items: { ...S.store.body.items }, meta: S.store.body.meta };
+  try {
+    const r = await Tajarib.create('mawid', body);
+    LS.set('tajarib.doc.' + r.id, JSON.stringify({ body, pending: { items: {}, meta: null }, rev: r.rev || 1, role: 'edit', kind: 'mawid' }));
+    const e = { id: r.id, edit: r.edit, view: r.view, name: m.name }; setMine([...mine().filter(x => x.id !== r.id), e]); LS.set('mawid.cur', r.id); LS.del('mawid.draft');
+    S.tab = 'share'; LS.set('mawid.tab', 'share'); openOwnerDoc(e); S.store.set('_vk', { type: 'vk', v: r.view });
+    toast('انتشرت صفحة الحجز ✓ شارك الرابط مع زبائنك');
+  } catch (e) { toast(Tajarib.errorText(e)); if (btn) { btn.disabled = false; btn.textContent = 'انشر صفحة الحجز'; } }
+}
+async function exportBackup() {
+  const items = {}; for (const it of S.store.items()) { if (it.id === '_vk') continue; const c = { ...it }; delete c.id; items[it.id] = c; }
+  const data = { app: 'mawid', v: 1, exported: new Date().toISOString(), meta: S.store.meta(), items };
+  if (isPub() && S.bk) data.bookings = S.bk;
+  dl(new Blob([JSON.stringify(data, null, 1)], { type: 'application/json' }), `mawid-${todayStr()}.json`); toast('تم تصدير النسخة ✓');
+}
+async function importBackup(file) {
+  let data; try { data = JSON.parse(await file.text()); } catch (e) { return toast('الملف هذا مو نسخة صحيحة'); }
+  if (!data || data.app !== 'mawid' || typeof data.items !== 'object') return toast('الملف هذا مو نسخة من «موعد»');
+  if (S.mode === 'welcome') { J.set('mawid.draft', { items: data.items, meta: data.meta || { name: 'محلي' } }); LS.set('mawid.cur', ''); S.tab = 'svc'; openDraft(); return toast('انستوردت النسخة ✓'); }
+  if (!await confirmBox('استيراد نسخة', 'بتتبدّل الخدمات والدوام والإعدادات بالنسخة اللي اخترتها (الحجوزات ما تتأثر). أكمل؟', 'استبدل', false)) return;
+  const keep = new Set(Object.keys(data.items));
+  for (const it of S.store.items()) if (it.id !== '_vk' && !keep.has(it.id)) S.store.del(it.id);
+  for (const [id, it] of Object.entries(data.items)) { if (id === '_vk' || !it || it.del) continue; S.store.set(id, it); }
+  if (data.meta) { const m = { ...data.meta }; delete m.u; S.store.setMeta(m); }
+  toast('انستوردت النسخة ✓');
+}
+
+/* ================= صفحة الزبون ================= */
+function hexLum(h) { const m = /^#?([\da-f]{6})$/i.exec(h || ''); if (!m) return 0.3; const n = parseInt(m[1], 16); const c = [n >> 16, n >> 8 & 255, n & 255].map(v => { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); }); return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]; }
+function shade(h, f) { const m = /^#?([\da-f]{6})$/i.exec(h || ''); if (!m) return h; const n = parseInt(m[1], 16); return '#' + [n >> 16, n >> 8 & 255, n & 255].map(v => Math.max(0, Math.min(255, Math.round(f < 0 ? v * (1 + f) : v + (255 - v) * f)))).map(v => v.toString(16).padStart(2, '0')).join(''); }
+function custTheme() {
+  const m = meta(), dark = m.style === 'dark'; let acc = /^#[\da-f]{6}$/i.test(m.accent || '') ? m.accent : ACCENTS[0]; if (dark && hexLum(acc) < 0.06) acc = shade(acc, 0.35);
+  const v = dark ? { bg: '#101416', card: '#1a2023', card2: '#232b2f', line: '#2c363a', text: '#f1f5f6', muted: '#9aa8ad', input: '#151b1e' } : { bg: '#f4f7f8', card: '#ffffff', card2: '#eef3f4', line: '#e1e9eb', text: '#16242b', muted: '#62757c', input: '#ffffff' };
+  const b = document.body; b.classList.add('cust'); b.classList.remove('light'); for (const [k, val] of Object.entries(v)) b.style.setProperty('--' + k, val);
+  b.style.setProperty('--acc', acc); b.style.setProperty('--acc2', shade(acc, -0.35)); b.style.setProperty('--on', hexLum(acc) > 0.45 ? '#111' : '#fff');
+  const tc = $('meta[name=theme-color]'); if (tc) tc.content = acc;
+}
+const myKey = () => 'mawid.my.' + S.docId;
+const myBookings = () => J.get(myKey(), []).filter(b => b && b.end > Date.now() - 864e5);
+async function refreshBusy() {
+  if (!isPub() || S.mode !== 'customer' && !S.preview) return; const key = S.mode === 'customer' ? S.join.key : viewKey(); if (!key) return;
+  const from = Date.now(), to = from + (rules().ahead + 1) * 864e5; let out = [];
+  try {
+    for (let a = from; a < to; a += 90 * 864e5) out = out.concat(await Tajarib.bookings.busy(S.docId, key, a, Math.min(to, a + 90 * 864e5)));
+    S.busy = out; S.busyAt = Date.now(); S.busyErr = '';
+    if (S.c.slot && !S.c.done) { const sv = S.store.item(S.c.sid); if (sv && S.busy.some(b => b[0] < S.c.slot + sv.dur * 60000 && b[1] > S.c.slot)) { S.c.slot = null; toast('الوقت اللي اخترته انحجز، اختار وقت ثاني'); } }
+  } catch (e) { S.busyErr = Tajarib.errorText(e); }
+  renderCustomer(true);
+}
+function renderCustomer(soft) {
+  custTheme(); const m = meta(), app = $('#app');
+  document.title = m.name ? `${m.name} · احجز موعدك` : 'احجز موعدك';
+  if (S.c.done) return renderDone();
+  const logo = imgOf('logo'), svcs = services(), c = S.c;
+  if (c.sid && !S.store.item(c.sid)) c.sid = null;
+  const acts = [];
+  if (waNum(m.wa)) acts.push(`<a class="bact" href="https://wa.me/${waNum(m.wa)}" target="_blank" rel="noopener">${ico('wa')} واتساب</a>`);
+  if (latin(m.phone).replace(/[^\d+]/g, '')) acts.push(`<a class="bact" href="tel:${esc(latin(m.phone).replace(/[^\d+]/g, ''))}">${ico('phone')} اتصال</a>`);
+  if (safeUrl(m.loc)) acts.push(`<a class="bact" href="${esc(safeUrl(m.loc))}" target="_blank" rel="noopener">${ico('pin')} الموقع</a>`);
+  const head = `${S.preview ? `<div class="prevbar"><span class="grow">معاينة: هذا اللي يشوفه الزبون</span><button class="btn sm" data-act="endPreview">${ico('back')} رجوع للوحة</button></div>` : ''}
+    <header class="bh">${logo ? `<img class="blogo" src="${logo}" alt="">` : `<div class="blogo">${esc((m.name || 'م').trim().charAt(0))}</div>`}<h1>${esc(m.name || 'احجز موعدك')}</h1>${m.desc ? `<div class="ds">${esc(m.desc)}</div>` : ''}${acts.length ? `<div class="bacts">${acts.join('')}</div>` : ''}</header>`;
+  const mineHtml = myBookingsHtml();
+  if (m.closed) {
+    app.innerHTML = `<div class="c">${head}<div class="cw"><div class="step closedbox"><div class="big">⏸️</div><h2 style="justify-content:center">الحجز موقف مؤقتاً</h2><p class="muted">${esc(m.closedMsg || 'تقدر تتواصل معنا بالواتساب أو الاتصال.')}</p></div>${mineHtml}</div>${foot()}</div>`;
+    return;
+  }
+  const focusIn = soft && document.activeElement && document.activeElement.closest && document.activeElement.closest('#st4');
+  if (focusIn && $('#cSteps')) { $('#st1').outerHTML = stepSvc(svcs); $('#st2').outerHTML = stepDay(); $('#st3').outerHTML = stepTime(); paintSummary(); return; }
+  const sy = window.scrollY;
+  app.innerHTML = `<div class="c">${head}<div class="cw" id="cSteps">${!isPub() ? `<div class="banner mt">${ico('info')}<div>هذي معاينة لمسودة. الأوقات بتطلع على حسب الدوام، والحجز يشتغل بعد ما تنشر الصفحة.</div></div>` : ''}
+    ${S.busyErr && !S.preview ? `<div class="banner bad mt">${ico('warn')}<div>${esc(S.busyErr)}</div></div>` : ''}
+    ${stepSvc(svcs)}${stepDay()}${stepTime()}${stepForm()}${mineHtml}</div>${foot()}</div>`;
+  if (soft) window.scrollTo(0, sy);
+  const sel = $('.dy.on'); if (sel) { const box = sel.parentElement; const br = box.getBoundingClientRect(), r = sel.getBoundingClientRect(); const d = (r.left + r.width / 2) - (br.left + br.width / 2); if (Math.abs(d) > br.width / 2 - 40) box.scrollBy({ left: d }); }
+}
+const foot = () => `<footer class="cfoot">${TZ() !== (Intl.DateTimeFormat().resolvedOptions().timeZone || TZ()) ? `<div>الأوقات حسب توقيت المحل (${esc(TZ())})</div>` : ''}${!S.preview ? `<div class="mt"><a href="${esc(baseUrl())}">تبي صفحة حجز مثل هذي لمحلك؟</a></div>` : ''}</footer>`;
+function stepSvc(svcs) {
+  return `<section class="step" id="st1"><h2><span class="n">1</span>اختر الخدمة</h2>${svcs.length ? svcs.map(s => `<button class="sv ${S.c.sid === s.id ? 'on' : ''}" data-act="cSvc" data-id="${s.id}"><span class="rd">${ico('check')}</span><span class="grow"><b>${esc(s.name)}</b><small>${fmtDur(s.dur)}${s.desc ? ' · ' + esc(s.desc) : ''}</small></span>${s.price != null && s.price !== '' ? `<span class="pr">${money(s.price)}</span>` : ''}</button>`).join('') : '<p class="muted">ما فيه خدمات متاحة للحجز حالياً.</p>'}</section>`;
+}
+function dayInfo() {
+  const sv = S.c.sid && S.store.item(S.c.sid); if (!sv) return null;
+  const now = Date.now(); return bookDays().map(d => { const rs = dayRanges(d); const sl = rs.length ? daySlots(d, +sv.dur, S.busy, now) : []; return { d, off: !rs.length, n: sl.length, slots: sl }; });
+}
+function stepDay() {
+  const info = dayInfo(); if (!info) return `<section class="step dim" id="st2"><h2><span class="n">2</span>اختر اليوم</h2><p class="muted small">اختر الخدمة أول</p></section>`;
+  if (isPub() && !S.busyAt && !S.busyErr) return `<section class="step" id="st2"><h2><span class="n">2</span>اختر اليوم</h2><div class="spin"></div><p class="muted small" style="text-align:center;margin-top:8px">جاري تحميل الأوقات المتاحة…</p></section>`;
+  if (!S.c.date || !info.some(x => x.d === S.c.date && x.n)) { const f = info.find(x => x.n); S.c.date = f ? f.d : null; }
+  if (!info.some(x => x.n)) return `<section class="step" id="st2"><h2><span class="n">2</span>اختر اليوم</h2><p class="muted">ما فيه أوقات متاحة بالأيام الجاية. تواصل مع المحل مباشرة.</p></section>`;
+  const t = todayStr();
+  return `<section class="step" id="st2"><h2><span class="n">2</span>اختر اليوم</h2><div class="daysnav"><span>${esc(MO[+S.c.date.slice(5, 7) - 1])} ${S.c.date.slice(0, 4)}</span><span class="tiny">اسحب لأيام أكثر</span></div><div class="days" id="days">${info.map(x => {
+    const [, mo, dd] = x.d.split('-').map(Number); const lbl = x.d === t ? 'اليوم' : x.d === addDays(t, 1) ? 'بكرة' : WDS[wdOf(x.d)];
+    const cls = !x.n ? 'full' : S.c.date === x.d ? 'on' : '';
+    return `<button class="dy ${cls}" data-act="cDay" data-d="${x.d}" ${!x.n ? 'disabled aria-disabled="true"' : ''} title="${esc(fmtDay(x.d))}"><small>${lbl}</small><b>${dd}</b><i>${x.off ? 'إجازة' : !x.n ? 'مكتمل' : esc(MO[mo - 1])}</i></button>`;
+  }).join('')}</div></section>`;
+}
+function stepTime() {
+  const sv = S.c.sid && S.store.item(S.c.sid);
+  if (!sv || !S.c.date || (isPub() && !S.busyAt && !S.busyErr)) return `<section class="step dim" id="st3"><h2><span class="n">3</span>اختر الوقت</h2><p class="muted small">اختر اليوم أول</p></section>`;
+  const sl = daySlots(S.c.date, +sv.dur, S.busy); if (S.c.slot && !sl.some(x => x.s === S.c.slot)) S.c.slot = null;
+  const am = sl.filter(x => x.t < 720), pm = sl.filter(x => x.t >= 720);
+  const grp = (list, label, icon) => list.length ? `<div class="slg">${ico(icon)}${label}</div><div class="slots">${list.map(x => `<button class="sl ${S.c.slot === x.s ? 'on' : ''}" data-act="cSlot" data-s="${x.s}">${fmtMin(x.t)}</button>`).join('')}</div>` : '';
+  return `<section class="step" id="st3"><h2><span class="n">3</span>اختر الوقت <span class="muted small" style="font-weight:500">· ${esc(fmtDay(S.c.date))}</span></h2>${sl.length ? grp(am, 'الصبح', 'sun') + grp(pm, 'العصر والمسا', 'moon') : '<p class="muted">ما فيه أوقات فاضية بهاليوم.</p>'}</section>`;
+}
+function stepForm() {
+  const c = S.c, ready = c.sid && c.date && c.slot, m = meta();
+  return `<section class="step ${ready ? '' : 'dim'}" id="st4"><h2><span class="n">4</span>بياناتك</h2>
+    <label class="field"><span>الاسم</span><input class="inp" id="cName" maxlength="60" autocomplete="name" value="${esc(c.name || '')}" placeholder="اسمك"></label>
+    <label class="field"><span>رقم الجوال</span><input class="inp ltr" dir="ltr" id="cPhone" type="tel" inputmode="tel" autocomplete="tel" maxlength="20" value="${esc(c.phone || '')}" placeholder="05xxxxxxxx"><div class="hint" id="phHint">رقم سعودي يبدأ بـ05 (10 أرقام)، أو رقم دولي يبدأ بـ+</div></label>
+    <label class="field"><span>ملاحظة (اختياري)</span><textarea class="inp" id="cNote" maxlength="300" placeholder="أي شي تبي المحل يعرفه" style="min-height:60px">${esc(c.note || '')}</textarea></label>
+    <div id="cSum"></div>${m.note ? `<div class="banner info">${ico('info')}<div>${esc(m.note)}</div></div>` : ''}
+    <div class="err hide" id="cErr"></div>
+    <button class="btn block" data-act="cBook" id="cBook" ${ready ? '' : 'disabled'}>${ico('check')} أكّد الحجز</button></section>`;
+}
+function paintSummary() {
+  const box = $('#cSum'); if (!box) return; const c = S.c, sv = c.sid && S.store.item(c.sid);
+  const btn = $('#cBook'); const ready = !!(sv && c.date && c.slot); if (btn) btn.disabled = !ready; const st = $('#st4'); if (st) st.classList.toggle('dim', !ready);
+  if (!ready) { box.innerHTML = ''; return; }
+  const at = fmtAt(c.slot), end = fmtAt(c.slot + sv.dur * 60000);
+  box.innerHTML = `<div class="sum"><div><span>الخدمة</span><span>${esc(sv.name)}</span></div><div><span>اليوم</span><span>${esc(at.day)}</span></div><div><span>الوقت</span><span>${at.time} – ${end.time}</span></div>${sv.price != null && sv.price !== '' ? `<div><span>السعر</span><span>${money(sv.price)}</span></div>` : ''}</div>`;
+}
+function myBookingsHtml() {
+  const list = myBookings(); if (!list.length) return '';
+  return `<section class="step" id="myb"><h2>${ico('cal')} مواعيدي</h2>${list.sort((a, b) => a.start - b.start).map(b => { const at = fmtAt(b.start); return `<div class="mybk"><div class="grow"><b>${esc(b.sname)}</b><div class="muted small">${esc(at.day)} · ${at.time}</div></div>${b.cancelled ? '<span class="pill bad">ملغي</span>' : b.end < Date.now() ? '<span class="pill mute">انتهى</span>' : `<button class="btn sec xs" data-act="cShow" data-id="${b.id}">التفاصيل</button><button class="btn danger xs" data-act="cCancel" data-id="${b.id}">إلغاء</button>`}</div>`; }).join('')}</section>`;
+}
+function renderDone() {
+  const b = S.c.done, m = meta(), at = fmtAt(b.start), end = fmtAt(b.end), cancelled = !!b.cancelled;
+  $('#app').innerHTML = `<div class="c"><div class="cw"><div class="step done">
+    ${cancelled ? `<div class="ok" style="background:var(--bad)">${ico('x')}</div><h2>انلغى الموعد</h2>` : `<div class="ok">${ico('check')}</div><h2>تم حجز موعدك!</h2><p class="muted">عند ${esc(m.name || '')}</p>`}
+    <div class="sum mt" style="text-align:start"><div><span>الخدمة</span><span>${esc(b.sname)}</span></div><div><span>اليوم</span><span>${esc(at.day)}</span></div><div><span>الوقت</span><span>${at.time} – ${end.time}</span></div>${b.price != null && b.price !== '' ? `<div><span>السعر</span><span>${money(b.price)}</span></div>` : ''}<div><span>الاسم</span><span>${esc(b.name || '')}</span></div></div>
+    ${cancelled ? '' : `<p class="small muted">رمز الإلغاء (احتفظ فيه):</p><div class="code" id="cCode">${esc(b.code)}</div><p class="tiny muted mb">تقدر تلغي من هالجهاز من «مواعيدي».</p>
+    <div class="btns"><button class="btn" data-act="ics">${ico('cal')} أضف للتقويم</button><a class="btn sec" href="${esc(gcalUrl(b))}" target="_blank" rel="noopener">${ico('ext')} تقويم قوقل</a></div>
+    ${waNum(m.wa) ? `<button class="btn wa block mt" data-act="cWa">${ico('wa')} أرسل تفاصيل الموعد للمحل</button>` : ''}
+    <button class="btn danger block mt" data-act="cCancel" data-id="${b.id}">إلغاء الموعد</button>`}
+    <button class="btn ghost block mt" data-act="cAgain">احجز موعد ثاني</button></div></div>${foot()}</div>`;
+  const k = b.id + (cancelled ? 'c' : ''); if (S.lastDone !== k) { S.lastDone = k; window.scrollTo(0, 0); }
+}
+/* ملف التقويم */
+const icsEsc = s => String(s || '').replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\r?\n/g, '\\n');
+const icsDate = ms => new Date(ms).toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
+function icsFold(line) {
+  const enc = new TextEncoder(); if (enc.encode(line).length <= 75) return line;
+  const out = []; let cur = '', size = 0, lim = 75;
+  for (const ch of line) { const n = enc.encode(ch).length; if (size + n > lim) { out.push(cur); cur = ''; size = 0; lim = 74; } cur += ch; size += n; }
+  out.push(cur); return out.join('\r\n ');
+}
+function buildIcs(b) {
+  const m = meta(), link = isPub() && S.join ? Tajarib.joinLink(baseUrl(), S.docId, S.join.key) : '';
+  const desc = [`الخدمة: ${b.sname}`, `رمز الإلغاء: ${b.code}`, m.phone ? `جوال المحل: ${m.phone}` : '', link ? `صفحة الحجز: ${link}` : ''].filter(Boolean).join('\n');
+  const L = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Tajarib//Mawid//AR', 'CALSCALE:GREGORIAN', 'METHOD:PUBLISH', 'BEGIN:VEVENT', `UID:${b.id}@mawid.tajarib`, `DTSTAMP:${icsDate(Date.now())}`, `DTSTART:${icsDate(b.start)}`, `DTEND:${icsDate(b.end)}`,
+    `SUMMARY:${icsEsc(`${b.sname} - ${m.name || 'موعد'}`)}`, `DESCRIPTION:${icsEsc(desc)}`];
+  if (safeUrl(m.loc)) L.push(`LOCATION:${icsEsc(safeUrl(m.loc))}`);
+  L.push('STATUS:CONFIRMED', 'BEGIN:VALARM', 'ACTION:DISPLAY', 'DESCRIPTION:' + icsEsc('تذكير بموعدك'), 'TRIGGER:-PT1H', 'END:VALARM', 'END:VEVENT', 'END:VCALENDAR');
+  return L.map(icsFold).join('\r\n') + '\r\n';
+}
+function gcalUrl(b) { const m = meta(); return 'https://calendar.google.com/calendar/render?action=TEMPLATE' + `&text=${encodeURIComponent(`${b.sname} - ${m.name || ''}`)}&dates=${icsDate(b.start)}/${icsDate(b.end)}&details=${encodeURIComponent(`رمز الإلغاء: ${b.code}`)}${safeUrl(m.loc) ? '&location=' + encodeURIComponent(safeUrl(m.loc)) : ''}`; }
+async function cBook() {
+  const c = S.c, sv = S.store.item(c.sid), err = $('#cErr'); const fail = msg => { err.textContent = msg; err.classList.remove('hide'); };
+  err.classList.add('hide');
+  c.name = $('#cName').value.trim(); c.note = $('#cNote').value.trim(); const ph = normPhone($('#cPhone').value);
+  if (c.name.length < 2) { $('#cName').classList.add('bad'); $('#cName').focus(); return fail('اكتب اسمك'); }
+  if (!ph) { $('#cPhone').classList.add('bad'); $('#cPhone').focus(); return fail('رقم الجوال غلط. اكتبه مثل 05xxxxxxxx'); }
+  c.phone = ph; $('#cPhone').value = ph; J.set('mawid.me', { name: c.name, phone: ph });
+  if (!sv || !c.slot) return fail('اختر الخدمة والوقت');
+  if (S.preview || !isPub()) return fail('هذي معاينة. الحجز الفعلي يكون من رابط الزبائن.');
+  const btn = $('#cBook'); btn.disabled = true; btn.textContent = 'جاري الحجز…';
+  try {
+    const r = await Tajarib.bookings.book(S.docId, S.join.key, { service: sv.id, start: c.slot, name: c.name, phone: ph, note: c.note });
+    const rec = { id: r.id, code: r.code, start: r.start, end: r.end, sid: sv.id, sname: sv.name, price: sv.price, name: c.name };
+    J.set(myKey(), [...J.get(myKey(), []).filter(x => x.end > Date.now() - 30 * 864e5), rec]);
+    S.c = { name: c.name, phone: ph, done: rec }; S.busy.push([r.start, r.end]); renderCustomer(); refreshBusy();
+  } catch (e) {
+    fail(Tajarib.errorText(e)); btn.disabled = false; btn.innerHTML = `${ico('check')} أكّد الحجز`;
+    if (e.code === 'taken' || e.code === 'outside' || e.code === 'bad_time') { c.slot = null; await refreshBusy(); const er = $('#cErr'); if (er) { er.textContent = Tajarib.errorText(e); er.classList.remove('hide'); } }
+  }
+}
+async function cCancel(id) {
+  const list = J.get(myKey(), []), b = list.find(x => x.id === id); if (!b) return;
+  const at = fmtAt(b.start); if (!await confirmBox('إلغاء الموعد', `متأكد تبي تلغي موعدك (${b.sname}) ${at.day} الساعة ${at.time}؟`, 'إيه، ألغِه')) return;
+  try {
+    await Tajarib.bookings.cancel(b.id, b.code); b.cancelled = true; J.set(myKey(), list);
+    if (S.c.done && S.c.done.id === id) S.c.done = { ...b }; toast('انلغى موعدك'); S.busy = S.busy.filter(x => !(x[0] === b.start && x[1] === b.end)); refreshBusy(); renderCustomer();
+  } catch (e) { toast(Tajarib.errorText(e)); }
+}
+
+/* ================= الأحداث ================= */
+const ACT = {
+  tab: el => { flushMeta(); S.tab = el.dataset.tab; LS.set('mawid.tab', S.tab); if (S.tab === 'book') loadBookings(); S.fresh = S.tab === 'book' ? S.fresh : null; render(); window.scrollTo(0, 0); },
+  theme: () => { LS.set('mawid.theme', document.body.classList.contains('light') ? 'dark' : 'light'); ownerTheme(); render(); },
+  setTheme: el => { LS.set('mawid.theme', el.dataset.v); ownerTheme(); render(); },
+  close: () => closeSheet(),
+  wizStart: () => { S.wiz = newWiz(); S.mode = 'wizard'; render(); },
+  wizCancel: () => { S.wiz = null; boot(); },
+  wizBack: () => { readWiz(); S.wiz.step--; renderWizard(); },
+  wizNext: () => wizNext(),
+  wizKind: el => { readWiz(); const w = S.wiz; w.kind = el.dataset.k; const k = KINDS.find(x => x[0] === w.kind); w.svcs = k[3].map(s => ({ name: s[0], dur: s[1], price: s[2] })); renderWizard(); },
+  wizAddSvc: () => { S.wiz.svcs = readSvcRows('#wSvcs'); S.wiz.svcs.push({ name: '', dur: 30, price: null }); renderWizard(); const r = $$('#wSvcs .srow'); if (r.length) $('[data-f=name]', r[r.length - 1]).focus(); },
+  reload: () => { S.bkErr = ''; loadBookings(true); },
+  seg: el => { S.seg = el.dataset.v; render(); },
+  bkSet: el => bkSet(el.dataset.id, el.dataset.st),
+  bkWa: el => { const b = (S.bk || []).find(x => x.id === el.dataset.id); if (b) openWa(b.phone, bkWaText(b)); },
+  editSvc: (el, e) => { if (e.target.closest('[data-act=svcUp]')) return; editSvc(el.dataset.id || null); },
+  svcUp: el => { const l = services(), i = l.findIndex(x => x.id === el.dataset.id); if (i < 1) return; const a = l[i], b = l[i - 1]; let oa = +a.o || 0, ob = +b.o || 0; if (oa === ob) ob = oa - 1; S.store.set(a.id, { ...a, o: ob }); S.store.set(b.id, { ...b, o: oa }); },
+  addOff: () => { const v = $('#offIn').value; if (!v) return toast('اختر التاريخ'); addOff(v); },
+  quickOff: el => addOff(addDays(todayStr(), +el.dataset.n)),
+  rmOff: el => { const d = el.dataset.d; putMeta({ off: (meta().off || []).filter(x => x !== d) }); toast('انشالت الإجازة', 'تراجع', () => addOff(d, true)); },
+  preview: () => { flushMeta(); S.preview = true; S.c = {}; window.scrollTo(0, 0); render(); refreshBusy(); },
+  endPreview: () => { S.preview = false; S.c = {}; render(); },
+  accent: el => { putMeta({ accent: el.dataset.v }); },
+  style: el => { putMeta({ style: el.dataset.v }); },
+  rmLogo: () => { const old = S.store.item('logo'); S.store.del('logo'); toast('انشال الشعار', 'تراجع', () => { if (old) S.store.set('logo', old); }); },
+  publish: () => publish(),
+  copyView: () => copy(viewLink(), 'انسخ رابط الحجز ✓'),
+  waShare: () => { const t = `احجز موعدك عند ${meta().name || ''} من هنا:\n${viewLink()}`; window.__lastWa = { url: 'https://wa.me/?text=' + encodeURIComponent(t), text: t }; window.open(window.__lastWa.url, '_blank'); },
+  shareView: async () => { const l = viewLink(); if (navigator.share) { try { await navigator.share({ title: meta().name || 'احجز موعدك', text: `احجز موعدك عند ${meta().name || ''}`, url: l }); } catch (e) { } } else copy(l, 'انسخ رابط الحجز ✓'); },
+  copyEdit: async () => { const e = curEntry(); if (!e) return; if (!await confirmBox('رابط التعديل', 'هالرابط يعطي صلاحية كاملة على الحجوزات وأرقام الزبائن. لا ترسله إلا لجهازك الثاني أو لموظفك.', 'انسخه', false)) return; copy(Tajarib.joinLink(baseUrl(), e.id, e.edit), 'انسخ رابط التعديل ✓'); },
+  perPage: el => { S.perPage = +el.dataset.v; $$('#perPage button').forEach(b => b.classList.toggle('on', b === el)); },
+  print: async () => { try { await preparePrint(S.perPage === 4 ? 4 : 1); setTimeout(() => window.print(), 150); } catch (e) { toast('ما قدرت أجهّز الطباعة'); } },
+  dlQR: async () => { try { await loadQR(); qrCanvas(viewLink(), 16, 4).toBlob(b => dl(b, 'mawid-qr.png'), 'image/png'); } catch (e) { toast('ما قدرت أجهّز الكود'); } },
+  rotView: async () => {
+    if (!await confirmBox('تغيير رابط الحجز', 'الرابط القديم والكود المطبوع بيوقفون، ولازم تشارك الرابط الجديد. أكمل؟', 'غيّره')) return;
+    try { const e = curEntry(); const r = await Tajarib.rotateKeys(e.id, e.edit, 'view'); S.store.set('_vk', { type: 'vk', v: r.view }); setMine(mine().map(x => x.id === e.id ? { ...x, view: r.view } : x)); S.qrCache = {}; render(); toast('تغيّر رابط الحجز ✓'); } catch (er) { toast(Tajarib.errorText(er)); }
+  },
+  rotEdit: async () => {
+    if (!await confirmBox('طرد الأجهزة الثانية', 'بيتغيّر رابط التعديل، وأي جهاز ثاني فاتح لوحة التحكم بيطلع منها. هالجهاز بيبقى. أكمل؟', 'غيّره')) return;
+    try { const e = curEntry(); const r = await Tajarib.rotateKeys(e.id, e.edit, 'edit'); const ne = { ...e, edit: r.edit }; setMine(mine().map(x => x.id === e.id ? ne : x)); openOwnerDoc(ne); toast('تم ✓ الأجهزة الثانية طلعت'); } catch (er) { toast(Tajarib.errorText(er)); }
+  },
+  unpublish: async () => {
+    if (LS.get('mawid.draft')) return toast('عندك مسودة ثانية بهالجهاز، افتحها وانشرها أو احذفها أول');
+    if (!await confirmBox('حذف صفحة الحجز من النت', 'بتنحذف الصفحة من السيرفر مع كل الحجوزات، ويوقف الرابط والكود. بتبقى الخدمات والإعدادات بجهازك كمسودة. صدّر نسخة احتياطية أول إذا تبي الحجوزات. متأكد؟', 'احذفها')) return;
+    try {
+      const e = curEntry(); const items = {}; for (const it of S.store.items()) { if (it.id === '_vk') continue; const c = { ...it }; delete c.id; items[it.id] = c; }
+      await Tajarib.remove(e.id, e.edit); J.set('mawid.draft', { items, meta: S.store.meta() }); setMine(mine().filter(x => x.id !== e.id)); Tajarib.forget(e.id); LS.set('mawid.cur', ''); openDraft(); toast('انحذفت من النت، والإعدادات بجهازك');
+    } catch (er) { toast(Tajarib.errorText(er)); }
+  },
+  pushOn: async () => {
+    const btn = $('#pushBtn'); if (btn) btn.disabled = true;
+    try { const e = curEntry(); await Tajarib.push.subscribe(e.id, e.edit); LS.set('mawid.push.' + e.id, '1'); toast('تفعّلت التنبيهات ✓'); render(); }
+    catch (er) { toast(Tajarib.errorText(er)); }
+    if ($('#pushBtn')) $('#pushBtn').disabled = false;
+  },
+  pushTest: async () => { try { const e = curEntry(); const r = await Tajarib.push.test(e.id, e.edit); toast(r && r.sent ? 'انرسل تنبيه تجريبي ✓' : 'ما فيه جهاز مفعّل التنبيهات للحين. فعّلها أول'); } catch (er) { toast(Tajarib.errorText(er)); } },
+  export: () => exportBackup(),
+  switch: el => { const id = el.dataset.id; LS.set('mawid.cur', id); S.tab = 'book'; if (!id) return openDraft(); const m = mine().find(x => x.id === id); if (m) openOwnerDoc(m); },
+  newPage: () => {
+    if (LS.get('mawid.draft')) return toast(isPub() ? 'عندك مسودة بهالجهاز، افتحها من «الصفحات بهالجهاز»' : 'أنت فاتح مسودة الحين. انشرها أو احذفها أول');
+    stopStore(); LS.set('mawid.cur', ''); S.docId = null; S.wiz = newWiz(); S.mode = 'wizard'; render();
+  },
+  forget: async () => {
+    if (isPub()) { if (!await confirmBox('انسَ الصفحة من الجهاز', 'بتنشال من هالجهاز بس وتبقى شغّالة للزبائن. إذا ما عندك رابط التعديل بجهاز ثاني، ما تقدر ترجع تديرها. متأكد؟', 'انسَها')) return; const id = S.docId; stopStore(); setMine(mine().filter(x => x.id !== id)); Tajarib.forget(id); }
+    else { if (!await confirmBox('حذف المسودة', 'بتنحذف المسودة من هالجهاز نهائياً. متأكد؟', 'احذف')) return; stopStore(); LS.del('mawid.draft'); }
+    const rest = mine(); if (rest.length) { LS.set('mawid.cur', rest[0].id); openOwnerDoc(rest[0]); } else { LS.set('mawid.cur', ''); S.docId = null; S.mode = 'welcome'; render(); }
+  },
+  /* الزبون */
+  cSvc: el => { S.c.sid = el.dataset.id; S.c.slot = null; renderCustomer(true); setTimeout(() => scrollStep('#st2'), 50); },
+  cDay: el => { if (el.disabled) return; S.c.date = el.dataset.d; S.c.slot = null; renderCustomer(true); setTimeout(() => scrollStep('#st3'), 50); },
+  cSlot: el => { S.c.slot = +el.dataset.s; $$('.sl.on').forEach(b => b.classList.remove('on')); el.classList.add('on'); paintSummary(); setTimeout(() => scrollStep('#st4'), 50); },
+  cBook: () => cBook(),
+  cCancel: el => cCancel(el.dataset.id),
+  cShow: el => { const b = J.get(myKey(), []).find(x => x.id === el.dataset.id); if (b) { S.c.done = b; renderCustomer(); } },
+  cAgain: () => { const me = J.get('mawid.me', {}) || {}; S.c = { ...me }; renderCustomer(); window.scrollTo(0, 0); refreshBusy(); },
+  ics: () => { const b = S.c.done; window.__lastIcs = buildIcs(b); dl(new Blob([window.__lastIcs], { type: 'text/calendar;charset=utf-8' }), 'mawid.ics'); },
+  cWa: () => { const b = S.c.done, m = meta(), at = fmtAt(b.start); openWa(m.wa, `السلام عليكم، حجزت موعد عندكم:\nالخدمة: ${b.sname}\nاليوم: ${at.day}\nالوقت: ${at.time}\nالاسم: ${b.name || ''}`); }
+};
+function scrollStep(sel) { const el = $(sel); if (!el) return; const r = el.getBoundingClientRect(); if (r.top > window.innerHeight * 0.55 || r.top < 0) window.scrollTo({ top: window.scrollY + r.top - 12, behavior: 'smooth' }); }
+function addOff(d, silent) { const off = new Set(meta().off || []); off.add(d); putMeta({ off: [...off].filter(x => x >= addDays(todayStr(), -1)).sort() }); if (!silent) toast(`انضافت إجازة: ${fmtDay(d)}`); }
+document.addEventListener('click', e => {
+  if (e.target.closest('.sw')) return;
+  const el = e.target.closest('[data-act]'); if (!el || el.disabled) return;
+  const fn = ACT[el.dataset.act]; if (fn) fn(el, e);
+});
+document.addEventListener('click', e => {
+  const t = e.target.closest('[data-hact]'); if (!t || t.tagName === 'INPUT') return;
+  hoursChanged(t);
+});
+document.addEventListener('click', e => { const t = e.target.closest('[data-rmsvc]'); if (!t) return; S.wiz.svcs = readSvcRows('#wSvcs'); S.wiz.svcs.splice(+t.dataset.rmsvc, 1); renderWizard(); });
+function hoursChanged(t) {
+  const h = S.mode === 'wizard' ? S.wiz.hours : JSON.parse(JSON.stringify(meta().hours || {}));
+  if (!hoursEvent(t, h)) return;
+  if (S.mode === 'wizard') { $('#hoursEd').innerHTML = hoursEditor(h); return; }
+  const err = hoursError(h); if (err) { toast(err); $('#hoursEd').innerHTML = hoursEditor(meta().hours || {}); return; }
+  putMeta({ hours: h });
+}
+document.addEventListener('input', e => {
+  const t = e.target;
+  if (t.dataset && t.dataset.m) onMetaInput(t);
+  if (t.id === 'cName' || t.id === 'cNote') { S.c[t.id === 'cName' ? 'name' : 'note'] = t.value; t.classList.remove('bad'); }
+  if (t.id === 'cPhone') { S.c.phone = t.value; t.classList.remove('bad'); const h = $('#phHint'); const p = normPhone(t.value); if (h) { h.textContent = !t.value ? 'رقم سعودي يبدأ بـ05 (10 أرقام)، أو رقم دولي يبدأ بـ+' : p ? `✓ ${showPhone(p)}` : 'اكتبه مثل 05xxxxxxxx'; h.style.color = p ? 'var(--ok)' : ''; } }
+});
+document.addEventListener('focusout', e => { if (e.target.dataset && e.target.dataset.m) flushMeta(); });
+document.addEventListener('change', e => {
+  const t = e.target;
+  if (t.dataset && (t.dataset.hact === 'toggle' || t.dataset.hf != null)) return hoursChanged(t);
+  if (t.dataset && t.dataset.rule) { putMeta({ [t.dataset.rule]: +t.value }); return toast('انحفظ ✓'); }
+  const c = t.dataset && t.dataset.chg; if (!c) return;
+  if (c === 'closed') { putMeta({ closed: t.checked }); toast(t.checked ? 'وقّفت الحجز مؤقتاً' : 'رجع الحجز شغّال ✓'); }
+  if (c === 'logo') { const f = t.files[0]; t.value = ''; if (f) compress(f, LOGO).then(d => { S.store.set('logo', { type: 'img', d }); toast('انحفظ الشعار ✓'); }).catch(() => toast('ما قدرت أفتح الصورة، جرّب صورة ثانية')); }
+  if (c === 'importFile') { const f = t.files[0]; t.value = ''; if (f) importBackup(f); }
+});
+document.addEventListener('visibilitychange', () => { if (document.hidden) return; if (S.mode === 'owner') loadBookings(); if (S.mode === 'customer') refreshBusy(); });
+window.addEventListener('hashchange', () => { if (Tajarib.parseJoin(location.hash)) location.reload(); });
+window.addEventListener('pagehide', flushMeta);
+if ('serviceWorker' in navigator) navigator.serviceWorker.addEventListener('message', e => { if (e.data && e.data.type === 'push' && S.mode === 'owner') loadBookings(); });
+
+function boot() {
+  ownerTheme();
+  const j = Tajarib.parseJoin(location.hash); if (j) return openJoin(j);
+  const e = curEntry(); if (e) return openOwnerDoc(e);
+  if (LS.get('mawid.draft')) return openDraft();
+  const m = mine(); if (m.length) { LS.set('mawid.cur', m[0].id); return openOwnerDoc(m[0]); }
+  S.mode = 'welcome'; render();
+}
+boot();
+if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => { });
+})();
+</script>
+</body>
+</html>

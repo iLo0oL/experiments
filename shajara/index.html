@@ -1,0 +1,1337 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0d1411">
+<meta name="description" content="شجرة العائلة: سجّل أهلك، شوف الشجرة، واعرف صلة القرابة، وشاركها مع العائلة">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="شجرتنا">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>شجرتنا</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0d1411;--bg2:#121b17;--card:#18231e;--card2:#203029;--line:#2a3b33;--text:#ecf2ee;--muted:#93a89d;--acc:#46c08a;--acc2:#2f9b6c;--gold:#e2b866;--m:#5aa2ef;--f:#e886b6;--danger:#f0645f;--warn:#f0a94a;--shadow:0 8px 28px rgba(0,0,0,.45);--grid:rgba(255,255,255,.04);--lines:#4f7464;--onacc:#05130c;--hl:rgba(70,192,138,.18)}
+body.light{--bg:#f3f5ef;--bg2:#e8eee5;--card:#ffffff;--card2:#eef3ea;--line:#d6e0d3;--text:#14211a;--muted:#5b6e63;--acc:#23945d;--acc2:#1c7a4c;--gold:#a8791f;--m:#2f7fd6;--f:#cc4a88;--danger:#d64541;--warn:#c27a12;--shadow:0 8px 22px rgba(20,40,30,.14);--grid:rgba(0,0,0,.05);--lines:#93b2a2;--onacc:#ffffff;--hl:rgba(35,148,93,.14)}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+[hidden]{display:none!important}
+html,body{height:100%;overflow:hidden}
+body{font-family:'Tajawal',system-ui,-apple-system,'Segoe UI',Tahoma,sans-serif;background:var(--bg);color:var(--text);font-size:15px;line-height:1.5}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer;border:0;background:none}
+input,select,textarea{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px;width:100%;outline:none;font-size:16px}
+input:focus,select:focus,textarea:focus{border-color:var(--acc)}
+textarea{resize:vertical;min-height:60px}
+svg.i{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+#app{position:fixed;inset:0;display:flex;flex-direction:column}
+header{display:flex;align-items:center;gap:8px;padding:9px 12px;padding-top:max(9px,env(safe-area-inset-top));background:var(--bg2);border-bottom:1px solid var(--line);z-index:10}
+.brand{display:flex;align-items:center;gap:9px;min-width:0;flex:1;cursor:pointer}
+.logo{width:36px;height:36px;border-radius:11px;background:linear-gradient(140deg,#3fbf86,#1b5d45);display:grid;place-items:center;flex-shrink:0;color:#fff}
+.logo svg{width:22px;height:22px}
+.brand div{min-width:0}
+.brand h1{font-size:18px;font-weight:800;line-height:1.2}
+.brand small{display:block;font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pill{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;padding:5px 10px;border-radius:20px;background:var(--card);border:1px solid var(--line);color:var(--muted);white-space:nowrap;flex-shrink:0}
+.pill i{width:8px;height:8px;border-radius:50%;background:var(--muted)}
+.pill.ok i{background:var(--acc)}.pill.saving i{background:var(--gold);animation:blink 1s infinite}.pill.offline i{background:var(--warn)}.pill.error i{background:var(--danger)}
+.pill.ro{color:var(--gold)}
+@keyframes blink{50%{opacity:.3}}
+.ib{width:38px;height:38px;border-radius:12px;display:grid;place-items:center;color:var(--text);flex-shrink:0}
+.ib:hover{background:var(--card)}
+main{flex:1;min-height:0;position:relative}
+.view{position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;display:none}
+.view.on{display:block}
+nav.tabs{display:flex;background:var(--bg2);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom);z-index:10}
+nav.tabs button{flex:1;padding:8px 4px 9px;display:flex;flex-direction:column;align-items:center;gap:2px;color:var(--muted);font-size:12.5px;font-weight:700}
+nav.tabs button.on{color:var(--acc)}
+nav.tabs svg.i{width:23px;height:23px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:11px 16px;border-radius:14px;background:var(--card2);border:1px solid var(--line);font-weight:700;font-size:15px;white-space:nowrap;color:var(--text);text-decoration:none}
+.btn:hover{filter:brightness(1.08)}
+.btn.pri{background:var(--acc);border-color:var(--acc);color:var(--onacc)}
+.btn.danger{background:transparent;border-color:var(--danger);color:var(--danger)}
+.btn.ghost{background:transparent}
+.btn.sm{padding:7px 12px;font-size:13.5px;border-radius:11px}
+.btn.wide{width:100%}
+.btn:disabled{opacity:.5;cursor:default}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:7px 12px;border-radius:20px;background:var(--card);border:1px solid var(--line);font-size:13.5px;font-weight:700;white-space:nowrap;cursor:pointer;color:var(--text)}
+.chip.m{border-color:color-mix(in srgb,var(--m) 45%,var(--line))}
+.chip.f{border-color:color-mix(in srgb,var(--f) 45%,var(--line))}
+.chip.act{background:var(--hl);border-color:color-mix(in srgb,var(--acc) 45%,var(--line));color:var(--acc)}
+.chip.del{color:var(--danger);border-color:color-mix(in srgb,var(--danger) 40%,var(--line))}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+/* tree */
+#vTree{overflow:hidden;background-color:var(--bg);background-image:radial-gradient(var(--grid) 1.2px,transparent 1.3px);background-size:22px 22px}
+#stage{position:absolute;inset:0;touch-action:none;cursor:grab;overflow:hidden;user-select:none;-webkit-user-select:none}
+#stage.drag{cursor:grabbing}
+#world{position:absolute;left:0;top:0;transform-origin:0 0;will-change:transform}
+#world svg{position:absolute;left:0;top:0;overflow:visible;pointer-events:none}
+#world path{fill:none;stroke:var(--lines);stroke-width:2;stroke-linejoin:round}
+.nd{position:absolute;display:flex;gap:6px;height:60px}
+.pb{width:124px;height:60px;flex-shrink:0;background:var(--card);border:1px solid var(--line);border-top:3px solid var(--m);border-radius:14px;display:flex;align-items:center;gap:7px;padding:0 7px;box-shadow:0 2px 8px rgba(0,0,0,.18);cursor:pointer;position:relative}
+.nd.f>.pb{border-top-color:var(--f)}
+.nd.me>.pb{outline:2.5px solid var(--gold);outline-offset:2px}
+.nd.hl>.pb{animation:pulse 1.4s ease 2}
+@keyframes pulse{40%{box-shadow:0 0 0 8px var(--hl),0 2px 8px rgba(0,0,0,.2);transform:scale(1.06)}}
+.tx{min-width:0;flex:1;line-height:1.25}
+.tx b{display:block;font-size:14.5px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tx small{display:block;font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.av{width:34px;height:34px;border-radius:50%;flex-shrink:0;display:grid;place-items:center;font-weight:800;font-size:15px;color:#fff;background:var(--m);overflow:hidden}
+.av.f{background:var(--f)}
+.av img{width:100%;height:100%;object-fit:cover;display:block}
+.av.dd{filter:grayscale(.7);opacity:.8}
+.sc{width:96px;height:50px;margin-top:5px;flex-shrink:0;background:var(--card2);border:1px dashed var(--line);border-radius:12px;display:flex;align-items:center;gap:6px;padding:0 7px;cursor:pointer}
+.sc .av{width:24px;height:24px;font-size:11px}
+.sc .tx b{font-size:13px;font-weight:700}
+.sc .tx small{font-size:10.5px}
+.tg{position:absolute;top:49px;right:62px;transform:translateX(50%);min-width:24px;height:22px;padding:0 6px;border-radius:12px;background:var(--acc);color:var(--onacc);font-size:12.5px;font-weight:800;line-height:22px;z-index:2;border:2px solid var(--bg)}
+.tg.c{background:var(--gold)}
+.tbar{position:absolute;top:10px;right:10px;left:10px;display:flex;gap:8px;z-index:5;pointer-events:none;align-items:center}
+.tbar>*{pointer-events:auto}
+.fbtn{display:inline-flex;align-items:center;gap:6px;height:40px;padding:0 12px;border-radius:13px;background:var(--bg2);border:1px solid var(--line);box-shadow:var(--shadow);font-weight:700;font-size:13.5px;white-space:nowrap;color:var(--text)}
+.fbtn.rt{flex:1;min-width:0;justify-content:flex-start}
+.fbtn.rt span{overflow:hidden;text-overflow:ellipsis}
+.fbtn.sq{width:40px;padding:0;justify-content:center}
+.zbar{position:absolute;left:10px;bottom:14px;display:flex;flex-direction:column;gap:8px;z-index:5}
+.empty{max-width:420px;margin:0 auto;padding:46px 22px;text-align:center}
+.empty .big{width:86px;height:86px;border-radius:26px;margin:0 auto 16px;display:grid;place-items:center;background:var(--hl);color:var(--acc)}
+.empty .big svg{width:48px;height:48px}
+.empty h2{font-size:21px;margin-bottom:6px}
+.empty p{color:var(--muted);margin-bottom:18px}
+.empty .btn{margin:5px}
+/* list */
+.wrap{max-width:720px;margin:0 auto;padding:12px 14px 100px}
+.sbox{position:sticky;top:0;z-index:4;background:var(--bg);padding:12px 14px 8px;margin:-12px -14px 6px}
+.srch{position:relative}
+.srch svg{position:absolute;right:12px;top:50%;transform:translateY(-50%);color:var(--muted)}
+.srch input{padding-right:40px}
+.frow{display:flex;gap:8px;margin-top:9px;overflow-x:auto;scrollbar-width:none;align-items:center}
+.frow::-webkit-scrollbar{display:none}
+.frow .cnt{margin-right:auto;color:var(--muted);font-size:13px;white-space:nowrap}
+.prow{display:flex;align-items:center;gap:11px;padding:10px 12px;background:var(--card);border:1px solid var(--line);border-radius:15px;margin-bottom:8px;cursor:pointer;width:100%;text-align:right}
+.prow:hover{border-color:var(--acc)}
+.prow .av{width:42px;height:42px;font-size:17px}
+.prow .tx b{font-size:15px;white-space:normal}
+.prow .tx small{font-size:12.5px;white-space:normal}
+.prow .gen{font-size:11.5px;color:var(--muted);background:var(--card2);border-radius:8px;padding:2px 7px;white-space:nowrap}
+.fab{position:fixed;left:16px;bottom:calc(76px + env(safe-area-inset-bottom));z-index:6;height:52px;padding:0 18px;border-radius:18px;background:var(--acc);color:var(--onacc);font-weight:800;display:flex;align-items:center;gap:7px;box-shadow:var(--shadow)}
+/* more */
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:15px;margin-bottom:12px}
+.card h3{font-size:16px;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.card p.d{color:var(--muted);font-size:13.5px;margin-bottom:10px}
+.rowb{display:flex;flex-wrap:wrap;gap:8px}
+.set{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 0;border-top:1px solid var(--line)}
+.set:first-of-type{border-top:0}
+.set .l{min-width:0}
+.set .l small{display:block;color:var(--muted);font-size:12.5px}
+.stepper{display:flex;align-items:center;gap:6px}
+.stepper b{min-width:26px;text-align:center}
+.sw{width:48px;height:28px;border-radius:15px;background:var(--line);position:relative;flex-shrink:0;transition:.2s}
+.sw:after{content:"";position:absolute;top:3px;right:3px;width:22px;height:22px;border-radius:50%;background:#fff;transition:.2s}
+.sw.on{background:var(--acc)}
+.sw.on:after{right:23px}
+.trow{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:12px;cursor:pointer;border:1px solid transparent}
+.trow.on{background:var(--hl);border-color:color-mix(in srgb,var(--acc) 40%,transparent)}
+.trow .tx b{font-size:14.5px}
+.badge{font-size:11px;font-weight:700;padding:2px 8px;border-radius:9px;background:var(--card2);color:var(--muted);white-space:nowrap}
+.badge.sh{color:var(--acc)}
+/* sheets */
+.ov{position:fixed;inset:0;background:rgba(0,0,0,.52);z-index:50;display:flex;align-items:flex-end;justify-content:center;opacity:0;transition:opacity .18s}
+.ov.on{opacity:1}
+.sheet{background:var(--bg2);width:100%;max-width:560px;max-height:92dvh;overflow-y:auto;overflow-x:hidden;border-radius:22px 22px 0 0;padding:8px 16px calc(18px + env(safe-area-inset-bottom));transform:translateY(40px);transition:transform .2s;box-shadow:var(--shadow)}
+.ov.on .sheet{transform:none}
+.grab{width:42px;height:5px;border-radius:3px;background:var(--line);margin:4px auto 10px}
+.sheet h2{font-size:19px;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.sheet h2 .x{margin-right:auto}
+.ov.dlg{align-items:center;padding:20px}
+.ov.dlg .sheet{border-radius:20px;max-width:400px;padding:20px}
+.dlg p{color:var(--muted);margin-bottom:16px;white-space:pre-line}
+.dacts{display:flex;flex-direction:column;gap:8px}
+@media(min-width:700px){.ov{align-items:center}.sheet{border-radius:22px}}
+.fld{display:block;margin-bottom:12px}
+.fld>span{display:block;font-size:13.5px;font-weight:700;margin-bottom:5px;color:var(--muted)}
+.fld>span i{font-style:normal;font-weight:500}
+.row2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px}
+.seg{display:flex;background:var(--card);border:1px solid var(--line);border-radius:13px;padding:3px;gap:3px}
+.seg button{flex:1;padding:8px;border-radius:10px;font-weight:700;color:var(--muted)}
+.seg button.on{background:var(--acc);color:var(--onacc)}
+.pick{width:100%;display:flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:9px 12px;text-align:right;min-height:44px}
+.pick span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pick .ph{color:var(--muted)}
+.qc{margin-top:7px}
+.chk{display:flex;align-items:center;gap:9px;margin-bottom:12px;cursor:pointer}
+.chk input{width:20px;height:20px;accent-color:var(--acc)}
+.phrow{display:flex;align-items:center;gap:10px}
+.av.big{width:56px;height:56px;font-size:22px}
+.acts{display:flex;gap:10px;margin-top:8px}
+.acts .btn{flex:1}
+.plist{max-height:56dvh;overflow-y:auto;margin-top:8px}
+.plist .prow{padding:8px 10px}
+.plist .prow .av{width:34px;height:34px;font-size:14px}
+/* person */
+.phead{display:flex;gap:14px;align-items:center;margin-bottom:12px}
+.phead .av{width:68px;height:68px;font-size:28px}
+.phead h3{font-size:22px;line-height:1.25}
+.phead .fn{color:var(--muted);font-size:14px;margin-top:2px}
+.facts{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:13.5px;color:var(--muted);margin-bottom:12px}
+.facts b{color:var(--text);font-weight:700}
+.note{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-bottom:12px;white-space:pre-wrap;font-size:14px}
+.sec{margin:14px 0 6px;font-size:13px;color:var(--muted);font-weight:800}
+.krow{display:flex;align-items:center;gap:6px}
+.krow .chip{flex:1;justify-content:flex-start;min-width:0}
+.krow .chip span{overflow:hidden;text-overflow:ellipsis}
+.mv{width:32px;height:32px;border-radius:10px;display:grid;place-items:center;color:var(--muted);background:var(--card)}
+.kids{display:flex;flex-direction:column;gap:6px}
+.rel{background:linear-gradient(135deg,var(--hl),transparent);border:1px solid color-mix(in srgb,var(--acc) 35%,var(--line));border-radius:16px;padding:14px;margin-top:10px}
+.rel .big{font-size:20px;font-weight:800}
+.rel .big em{font-style:normal;color:var(--acc)}
+.rel small{display:block;color:var(--muted);margin-top:4px;font-size:13.5px}
+.linkbox{display:flex;gap:6px;align-items:center;margin-bottom:8px}
+.linkbox input{direction:ltr;text-align:left;font-size:13px;padding:9px}
+.banner{margin:10px 14px 0;padding:11px 13px;border-radius:14px;background:color-mix(in srgb,var(--danger) 14%,var(--card));border:1px solid color-mix(in srgb,var(--danger) 40%,var(--line));font-size:14px;display:flex;gap:10px;align-items:center}
+.banner span{flex:1}
+#toast{position:fixed;left:0;right:0;margin:0 auto;width:max-content;bottom:calc(84px + env(safe-area-inset-bottom));transform:translateY(30px);background:#1f2a25;color:#fff;border-radius:14px;padding:11px 16px;font-weight:700;font-size:14.5px;display:flex;align-items:center;gap:14px;opacity:0;pointer-events:none;transition:.22s;z-index:90;max-width:calc(100vw - 28px);box-shadow:var(--shadow)}
+body.light #toast{background:#14211a}
+#toast.on{opacity:1;transform:none;pointer-events:auto}
+#toast button{color:#7ee0ad;font-weight:800;white-space:nowrap}
+#printArea{display:none}
+@media print{
+  @page{margin:12mm}
+  html,body{height:auto;overflow:visible;background:#fff!important;color:#000!important}
+  #app,.ov,#toast{display:none!important}
+  #printArea{display:block!important;font-family:'Tajawal',Tahoma,sans-serif}
+  #printArea h1{font-size:22pt;margin-bottom:4pt}
+  #printArea .sub{color:#555;margin-bottom:10pt}
+  #printArea img{max-width:100%;display:block;margin:0 auto 14pt}
+  #printArea table{width:100%;border-collapse:collapse;font-size:10.5pt}
+  #printArea th,#printArea td{border:1px solid #bbb;padding:4pt 6pt;text-align:right}
+  #printArea th{background:#eef3ea}
+  #printArea tr{break-inside:avoid}
+}
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <div class="brand" id="brand" title="شجراتي">
+      <div class="logo"><svg viewBox="0 0 24 24" class="i" style="width:22px;height:22px"><circle cx="12" cy="5" r="2.6"/><circle cx="5" cy="18.5" r="2.6"/><circle cx="12" cy="18.5" r="2.6"/><circle cx="19" cy="18.5" r="2.6"/><path d="M12 7.6v8.3M12 11.5H5v4.4M12 11.5h7v4.4"/></svg></div>
+      <div><h1>شجرتنا</h1><small id="treeName"></small></div>
+    </div>
+    <span class="pill" id="pill" hidden><i></i><span></span></span>
+    <button class="ib" id="themeBtn" aria-label="الوضع الفاتح أو الداكن"><svg class="i" viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button>
+  </header>
+  <div id="lostBanner"></div>
+  <main>
+    <section class="view" id="vTree">
+      <div id="stage"><div id="world"></div></div>
+      <div class="tbar" id="tbar">
+        <button class="fbtn rt" id="rootBtn"><svg class="i" viewBox="0 0 24 24"><path d="M12 3v18M5 10l7-7 7 7"/></svg><span id="rootName">من</span></button>
+        <button class="fbtn sq" id="findBtn" aria-label="دوّر على شخص"><svg class="i" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg></button>
+        <button class="fbtn" id="focusMe"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/></svg>ركّز علي</button>
+      </div>
+      <div class="zbar" id="zbar">
+        <button class="fbtn sq" id="zIn" aria-label="كبّر"><svg class="i" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
+        <button class="fbtn sq" id="zOut" aria-label="صغّر"><svg class="i" viewBox="0 0 24 24"><path d="M5 12h14"/></svg></button>
+        <button class="fbtn sq" id="zFit" aria-label="اعرض الكل"><svg class="i" viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
+      </div>
+      <div id="treeEmpty" class="empty" hidden></div>
+    </section>
+    <section class="view" id="vList">
+      <div class="wrap">
+        <div class="sbox">
+          <div class="srch"><svg class="i" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><input id="q" type="search" placeholder="دوّر بالاسم أو المدينة…" autocomplete="off"></div>
+          <div class="frow" id="frow">
+            <button class="chip act" data-f="all">الكل</button><button class="chip" data-f="m">الذكور</button><button class="chip" data-f="f">الإناث</button><button class="chip" data-f="alive">الأحياء</button>
+            <button class="chip" id="sortBtn" data-s="name">ترتيب: أبجدي</button>
+            <span class="cnt" id="cnt"></span>
+          </div>
+        </div>
+        <div id="plist"></div>
+      </div>
+      <button class="fab" id="addFab"><svg class="i" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>ضيف شخص</button>
+    </section>
+    <section class="view" id="vMore"><div class="wrap" id="more"></div></section>
+  </main>
+  <nav class="tabs" id="tabs">
+    <button data-v="tree"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="5" r="2.4"/><circle cx="5" cy="19" r="2.4"/><circle cx="19" cy="19" r="2.4"/><path d="M12 7.4v4.6M12 12H5v4.6M12 12h7v4.6"/></svg>الشجرة</button>
+    <button data-v="list"><svg class="i" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.6 3.4-5.5 6.5-5.5s5.7 1.9 6.5 5.5"/><circle cx="17.5" cy="9" r="2.6"/><path d="M17 14c2.4.2 4 1.8 4.6 4.6"/></svg>الأفراد</button>
+    <button data-v="more"><svg class="i" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>المزيد</button>
+  </nav>
+</div>
+<div id="toast"><span></span><button hidden></button></div>
+<div id="printArea"></div>
+<input type="file" id="fileIn" hidden>
+<input type="file" id="photoIn" accept="image/*" hidden>
+<script src="../shared/sync.js"></script>
+<script>
+(function () {
+'use strict';
+const T = window.Tajarib || null;
+/* ---------- أدوات عامة ---------- */
+const $ = (s, r = document) => r.querySelector(s), $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const LS = {
+  get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch (e) { return false; } },
+  raw(k, v) { try { localStorage.setItem(k, v); return true; } catch (e) { return false; } },
+  del(k) { try { localStorage.removeItem(k); } catch (e) { } }
+};
+const latin = s => String(s == null ? '' : s).replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d)).replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d));
+const norm = s => latin(s).toLowerCase().replace(/[ً-ْـ]/g, '').replace(/[أإآ]/g, 'ا').replace(/ى/g, 'ي').replace(/ة/g, 'ه').replace(/ؤ/g, 'و').replace(/ئ/g, 'ي').replace(/\s+/g, ' ').trim();
+const newId = p => T ? T.newId(p) : p + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+const clamp = (x, a, b) => Math.max(a, Math.min(b, x));
+const push = (m, k, v) => { const a = m.get(k); if (a) a.push(v); else m.set(k, [v]); };
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const ICON = {
+  edit: '<svg class="i" viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16v4z"/></svg>',
+  trash: '<svg class="i" viewBox="0 0 24 24"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg>',
+  plus: '<svg class="i" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>',
+  up: '<svg class="i" viewBox="0 0 24 24"><path d="M6 15l6-6 6 6"/></svg>',
+  x: '<svg class="i" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>',
+  target: '<svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/></svg>',
+  link: '<svg class="i" viewBox="0 0 24 24"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg>',
+  user: '<svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c1-4.5 4.2-6.5 8-6.5s7 2 8 6.5"/></svg>',
+  q: '<svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.7.3-1 .9-1 1.6M12 17h.01"/></svg>'
+};
+
+/* ---------- المظهر ---------- */
+function applyTheme() { const l = LS.get('shajara.theme', 'dark') === 'light'; document.body.classList.toggle('light', l); $('meta[name=theme-color]').content = l ? '#e8eee5' : '#0d1411'; }
+applyTheme();
+$('#themeBtn').onclick = () => { LS.set('shajara.theme', document.body.classList.contains('light') ? 'dark' : 'light'); applyTheme(); if (S.view === 'more') renderMore(); };
+
+/* ---------- التنبيه السفلي ---------- */
+let toastT;
+function toast(msg, action) {
+  const t = $('#toast'), b = $('#toast button'); $('#toast span').textContent = msg;
+  if (action) { b.hidden = false; b.textContent = action.text; b.onclick = () => { t.classList.remove('on'); action.fn(); }; } else b.hidden = true;
+  t.classList.add('on'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('on'), action ? 6500 : 2600);
+}
+
+/* ---------- النوافذ ---------- */
+const sheets = [];
+function openSheet(html, o = {}) {
+  const ov = document.createElement('div'); ov.className = 'ov' + (o.dlg ? ' dlg' : '');
+  ov.innerHTML = `<div class="sheet" role="dialog" aria-modal="true">${o.dlg ? '' : '<div class="grab"></div>'}${html}</div>`;
+  document.body.appendChild(ov); requestAnimationFrame(() => ov.classList.add('on'));
+  const rec = { ov, el: ov.firstChild, onClose: o.onClose, kind: o.kind || '', data: o.data };
+  sheets.push(rec);
+  ov.addEventListener('click', e => { if (e.target === ov && !o.modal) closeSheet(rec); else if (e.target.closest('[data-close]')) closeSheet(rec); });
+  return rec;
+}
+function closeSheet(rec, val) {
+  rec = rec || sheets[sheets.length - 1]; if (!rec) return; const i = sheets.indexOf(rec); if (i < 0) return; sheets.splice(i, 1);
+  rec.ov.classList.remove('on'); setTimeout(() => rec.ov.remove(), 180); if (rec.onClose) rec.onClose(val);
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && sheets.length) closeSheet(); });
+function ask(title, text, buttons) {
+  return new Promise(res => {
+    let done = false;
+    const btns = buttons || [{ v: true, t: 'أكيد', cls: 'danger' }, { v: false, t: 'إلغاء', cls: 'ghost' }];
+    const sh = openSheet(`<h2>${esc(title)}</h2>${text ? `<p>${esc(text)}</p>` : ''}<div class="dacts">${btns.map((b, i) => `<button class="btn ${b.cls || ''}" data-i="${i}">${esc(b.t)}</button>`).join('')}</div>`,
+      { dlg: true, onClose: v => { if (!done) { done = true; res(v === undefined ? (btns.find(b => b.cancel) || { v: false }).v : v); } } });
+    sh.el.addEventListener('click', e => { const b = e.target.closest('[data-i]'); if (b) closeSheet(sh, btns[+b.dataset.i].v); });
+  });
+}
+function promptText(title, value, ph) {
+  return new Promise(res => {
+    let ok = false;
+    const sh = openSheet(`<h2>${esc(title)}</h2><input id="ptx" maxlength="60" placeholder="${esc(ph || '')}"><div class="acts"><button class="btn pri" id="pok">تمام</button><button class="btn ghost" data-close>إلغاء</button></div>`, { dlg: true, onClose: () => res(ok ? $('#ptx', sh.el).value.trim() : null) });
+    const inp = $('#ptx', sh.el); inp.value = value || ''; setTimeout(() => inp.focus(), 60);
+    const go = () => { ok = true; closeSheet(sh); };
+    $('#pok', sh.el).onclick = go; inp.onkeydown = e => { if (e.key === 'Enter') go(); };
+  });
+}
+async function copyText(s) {
+  try { await navigator.clipboard.writeText(s); return true; } catch (e) {
+    const ta = document.createElement('textarea'); ta.value = s; ta.style.position = 'fixed'; ta.style.opacity = '0'; document.body.appendChild(ta); ta.select();
+    let ok = false; try { ok = document.execCommand('copy'); } catch (x) { } ta.remove(); return ok;
+  }
+}
+function download(name, data, type) {
+  const blob = data instanceof Blob ? data : new Blob([data], { type: type || 'application/octet-stream' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click();
+  setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 4000);
+}
+function pickFile(accept) {
+  return new Promise(res => {
+    const inp = $('#fileIn'); inp.value = ''; inp.accept = accept || '';
+    inp.onchange = () => res(inp.files[0] || null); inp.click();
+  });
+}
+
+/* ---------- مستند محلي بنفس واجهة مكتبة المزامنة ---------- */
+class LocalDoc {
+  constructor(key, o) { this.key = key; this.onChange = o.onChange || (() => { }); const c = LS.get(key, null) || {}; this.data = { items: c.items || {}, meta: c.meta || null }; this.status = 'local'; this.local = true; }
+  start() { return this; } stop() { }
+  items() { return Object.entries(this.data.items).map(([id, it]) => ({ ...it, id })); }
+  item(id) { const it = this.data.items[id]; return it ? { ...it, id } : null; }
+  meta() { return this.data.meta ? { ...this.data.meta } : null; }
+  canEdit() { return true; } hasPending() { return false; }
+  _save() { if (!LS.set(this.key, this.data)) toast('مساحة التخزين بالجهاز امتلت، صغّر الصور أو احذف بيانات قديمة'); this.onChange({ local: true }); }
+  set(id, obj) { const it = { ...obj, u: Date.now() }; delete it.id; this.data.items[id] = it; this._save(); return it; }
+  del(id) { delete this.data.items[id]; this._save(); }
+  setMeta(obj) { this.data.meta = { ...obj, u: Date.now() }; delete this.data.meta.id; this._save(); }
+  bulk(map) { const t = Date.now(); for (const [id, o] of Object.entries(map)) { if (o) { const it = { ...o, u: t }; delete it.id; this.data.items[id] = it; } else delete this.data.items[id]; } this._save(); }
+}
+
+/* ---------- الحالة ---------- */
+let trees = LS.get('shajara.trees', []);
+const saveTrees = () => LS.set('shajara.trees', trees);
+const S = {
+  cur: null, doc: null, P: new Map(), M: [], kidsF: new Map(), kidsM: new Map(), sp: new Map(), meta: {}, dev: {}, col: new Set(),
+  view: LS.get('shajara.view', 'tree'), gens: LS.get('shajara.gens', 5), dtr: LS.get('shajara.dtr', false), status: 'local', statusMsg: '', lost: null,
+  filter: 'all', sort: 'name', lay: null, renderMs: 0
+};
+function newLocalTree(name) { const rec = { k: 'L' + newId(''), name: name || 'شجرة العائلة' }; trees.push(rec); saveTrees(); return rec; }
+function saveDev() { S.dev.col = [...S.col]; LS.set('shajara.dev.' + S.cur.k, S.dev); }
+function canEdit() {
+  if (!S.doc || S.lost) return false; if (S.doc.local) return true;
+  return S.doc.role ? S.doc.role === 'edit' : !!S.cur.edit;
+}
+function guardEdit() { if (canEdit()) return true; toast(S.doc && !S.doc.local && !S.doc.role ? 'لحظة، أتأكد من صلاحيتك…' : 'عندك رابط عرض بس، ما تقدر تعدّل'); return false; }
+
+function openTree(rec) {
+  if (S.doc) S.doc.stop();
+  S.cur = rec; LS.set('shajara.cur', rec.k); S.dev = LS.get('shajara.dev.' + rec.k, {}) || {}; S.col = new Set(S.dev.col || []); S.lost = null; S.zInit = false;
+  if (rec.id) {
+    if (!T) { S.doc = new LocalDoc('shajara.void', {}); S.lost = 'nolib'; }
+    else { S.status = 'idle'; S.statusMsg = ''; S.doc = T.open({ id: rec.id, key: rec.key, kind: 'shajara', onChange: onDocChange, onStatus: onDocStatus }).start(); }
+  } else { S.status = 'local'; S.doc = new LocalDoc('shajara.local.' + rec.k, { onChange: onDocChange }); }
+  rebuild(); renderAll();
+}
+let rq = 0;
+function onDocChange() { if (rq) return; rq = requestAnimationFrame(() => { rq = 0; rebuild(); renderAll(); }); }
+function onDocStatus(s, msg) {
+  const before = canEdit(); S.status = s; S.statusMsg = msg || '';
+  const code = S.doc && S.doc.error && S.doc.error.code; if (code === 'bad_key' || code === 'not_found') S.lost = code;
+  renderStatus(); if (before !== canEdit() || S.lost) renderAll();
+}
+
+/* ---------- الفهارس ---------- */
+const ord = p => (p.o != null ? +p.o : +(p.c || 0));
+function rebuild() {
+  const P = new Map(), M = [];
+  for (const it of S.doc.items()) { if (it.t === 'p' && it.f) P.set(it.id, it); else if (it.t === 'm') M.push(it); }
+  const kidsF = new Map(), kidsM = new Map(), sp = new Map();
+  for (const p of P.values()) { if (p.fa && P.has(p.fa) && p.fa !== p.id) push(kidsF, p.fa, p); if (p.mo && P.has(p.mo) && p.mo !== p.id) push(kidsM, p.mo, p); }
+  const byO = (a, b) => ord(a) - ord(b) || (a.id < b.id ? -1 : 1);
+  for (const a of kidsF.values()) a.sort(byO); for (const a of kidsM.values()) a.sort(byO);
+  M.sort((a, b) => (+a.o || 0) - (+b.o || 0));
+  const seenPair = new Set();
+  for (const m of M) { if (!P.has(m.a) || !P.has(m.b) || m.a === m.b) continue; const k = m.a + '|' + m.b; if (seenPair.has(k)) continue; seenPair.add(k); push(sp, m.a, m.b); push(sp, m.b, m.a); }
+  Object.assign(S, { P, M, kidsF, kidsM, sp });
+  S.meta = S.doc.meta() || {};
+  if (S.meta.name && S.meta.name !== S.cur.name) { S.cur.name = S.meta.name; saveTrees(); }
+  S._fam = new Map(); S._gen = new Map(); S._nm = new Map();
+}
+const kidsOf = id => [...(S.kidsF.get(id) || []), ...(S.kidsM.get(id) || [])].filter((p, i, a) => a.findIndex(x => x.id === p.id) === i);
+const spousesOf = id => (S.sp.get(id) || []).map(x => S.P.get(x)).filter(Boolean);
+function descendants(id) { const out = new Set(), st = [id]; while (st.length) { const x = st.pop(); for (const k of kidsOf(x)) if (!out.has(k.id) && k.id !== id) { out.add(k.id); st.push(k.id); } } return out; }
+function famOf(p) {
+  if (S._fam.has(p.id)) return S._fam.get(p.id); let c = p, n = 0, f = '';
+  while (c && n < 60) { if (c.fam) { f = c.fam; break; } c = S.P.get(c.fa); n++; }
+  S._fam.set(p.id, f); return f;
+}
+function genOf(p) {
+  if (S._gen.has(p.id)) return S._gen.get(p.id); let c = p, n = 1; const seen = new Set();
+  while (c.fa && S.P.has(c.fa) && !seen.has(c.fa) && n < 80) { seen.add(c.fa); c = S.P.get(c.fa); n++; }
+  S._gen.set(p.id, n); return n;
+}
+function fullName(p, gens, withFam = true) {
+  gens = gens || S.gens; const parts = [p.f]; let c = p; const seen = new Set([p.id]);
+  for (let i = 1; i < gens; i++) { const fa = S.P.get(c.fa); if (!fa || seen.has(fa.id)) break; seen.add(fa.id); parts.push(i === 1 && p.g === 'f' ? 'بنت' : 'بن', fa.f); c = fa; }
+  const fam = withFam ? famOf(p) : ''; let s = parts.join(' ');
+  if (fam && !norm(s).endsWith(norm(fam))) s += ' ' + fam;
+  return s;
+}
+function searchKey(p) { let k = S._nm.get(p.id); if (!k) { k = norm(fullName(p, 4) + ' ' + (p.city || '') + ' ' + (p.fam || '')); S._nm.set(p.id, k); } return k; }
+function curYear(cal) {
+  if (cal === 'g') return new Date().getFullYear();
+  try { return parseInt(new Intl.DateTimeFormat('en-u-ca-islamic-umalqura-nu-latn', { year: 'numeric' }).format(new Date()), 10); } catch (e) { return Math.round((new Date().getFullYear() - 622) * 33 / 32); }
+}
+const calL = p => p.cal === 'g' ? 'م' : 'هـ';
+function yearsText(p, short) {
+  const by = p.by, dy = p.dy, dead = p.dead || dy;
+  if (by && dy) return `${by}–${dy} ${calL(p)}`;
+  if (by && !dead) return short ? `${by} ${calL(p)}` : `مواليد ${by} ${calL(p)}`;
+  if (by && dead) return `${by}–؟ ${calL(p)}`;
+  if (dy) return `توفي ${dy} ${calL(p)}`;
+  if (dead) return p.g === 'f' ? 'رحمها الله' : 'رحمه الله';
+  return '';
+}
+function avatar(p, cls = '') {
+  const dd = (p.dead || p.dy) ? ' dd' : '';
+  if (p.ph) return `<span class="av ${p.g === 'f' ? 'f' : ''}${dd} ${cls}"><img src="${esc(p.ph)}" alt=""></span>`;
+  return `<span class="av ${p.g === 'f' ? 'f' : ''}${dd} ${cls}">${esc((p.f || '؟').trim().charAt(0))}</span>`;
+}
+
+/* ---------- صلة القرابة ---------- */
+function ancestors(id) {
+  const m = new Map([[id, { d: 0, prev: null }]]), q = [id];
+  while (q.length) {
+    const x = q.shift(), p = S.P.get(x), d = m.get(x).d; if (!p || d >= 14) continue;
+    for (const par of [p.fa, p.mo]) if (par && S.P.has(par) && !m.has(par)) { m.set(par, { d: d + 1, prev: x }); q.push(par); }
+  }
+  return m;
+}
+const W = {
+  par: p => p.g === 'f' ? 'أم' : 'أب', kid: p => p.g === 'f' ? 'بنت' : 'ابن', sib: p => p.g === 'f' ? 'أخت' : 'أخ', spo: p => p.g === 'f' ? 'زوجة' : 'زوج'
+};
+function blood(aId, bId) {
+  if (aId === bId) return { self: true, words: [], d: 0 };
+  const ma = ancestors(aId), mb = ancestors(bId); let best = null;
+  for (const [c, ia] of ma) { const ib = mb.get(c); if (ib && (!best || ia.d + ib.d < best.t)) best = { c, a: ia.d, b: ib.d, t: ia.d + ib.d }; }
+  if (!best) return null;
+  const aPath = []; for (let x = best.c; x != null; x = ma.get(x).prev) aPath.push(x); aPath.reverse(); // A ... LCA
+  const bPath = []; for (let x = best.c; x != null; x = mb.get(x).prev) bPath.push(x); // LCA ... B
+  const g = id => S.P.get(id), a = best.a, b = best.b, words = [];
+  for (let i = bPath.length - 1; i >= 2; i--) words.push(W.kid(g(bPath[i])));
+  let half = '';
+  if (b >= 1) {
+    const c1 = g(bPath[1]);
+    if (a >= 1) {
+      words.push(W.sib(c1)); const x = g(aPath[a - 1]);
+      if (c1.fa && x.fa && c1.mo && x.mo && (c1.fa !== x.fa || c1.mo !== x.mo)) half = g(best.c).g === 'f' ? 'من الأم' : 'من الأب';
+    } else words.push(W.kid(c1));
+  }
+  for (let k = b >= 1 ? a - 1 : a; k >= 1; k--) words.push(W.par(g(aPath[k])));
+  return { words, a, b, d: a + b, lca: best.c, half };
+}
+function compact(words) {
+  let w = words.slice(), out = [];
+  for (let i = 0; i < w.length; i++) {
+    const x = w[i], y = w[i + 1];
+    if ((x === 'أخ' || x === 'أخت') && (y === 'أب' || y === 'أم')) { out.push(y === 'أب' ? (x === 'أخ' ? 'عم' : 'عمة') : (x === 'أخ' ? 'خال' : 'خالة')); i++; } else out.push(x);
+  }
+  w = out; out = [];
+  for (let i = 0; i < w.length; i++) {
+    const x = w[i], y = w[i + 1];
+    if ((x === 'أب' || x === 'أم') && (y === 'أب' || y === 'أم')) { out.push(x === 'أب' ? 'جد' : 'جدة'); i++; } else out.push(x);
+  }
+  return out;
+}
+const cons = w => w === 'أب' ? 'أبو' : w === 'أخ' ? 'أخو' : w;
+function phrase(words, poss) {
+  if (!words.length) return '';
+  const ws = words.slice(), last = ws.pop(), head = ws.map(cons).join(' ');
+  let tail;
+  if (poss.you) tail = (last === 'أب' ? 'أبو' : last === 'أخ' ? 'أخو' : last.endsWith('ة') ? last.slice(0, -1) + 'ت' : last) + 'ك';
+  else tail = cons(last) + ' ' + poss.name;
+  return (head ? head + ' ' : '') + tail;
+}
+/* يرجع وصف صلة B بالنسبة لـ A */
+function relation(aId, bId, you) {
+  const A = S.P.get(aId), B = S.P.get(bId); if (!A || !B) return null;
+  const poss = you ? { you: true } : { name: A.f };
+  if (aId === bId) return { text: you ? 'هذا أنت 🙂' : 'نفس الشخص', sub: '' };
+  const pron = B.g === 'f' ? 'هي' : 'هو';
+  let r = blood(aId, bId), kind = 'blood';
+  if ((S.sp.get(aId) || []).includes(bId)) {
+    const main = phrase([W.spo(B)], poss);
+    return { text: `${B.f} ${pron} ${main}`, sub: r && !r.self && r.d <= 10 ? 'وبعد: ' + phrase(compact(r.words), poss) : '', main, words: [W.spo(B)] };
+  }
+  if (!r || r.d > 10) {
+    const cands = [];
+    for (const s of S.sp.get(bId) || []) { const x = blood(aId, s); if (x && !x.self) cands.push({ words: [W.spo(B), ...x.words], d: x.d + 1, lca: x.lca }); }
+    for (const s of S.sp.get(aId) || []) { const x = blood(s, bId); if (x && !x.self) cands.push({ words: [...x.words, W.spo(S.P.get(s))], d: x.d + 1, lca: x.lca }); }
+    if (!cands.length) for (const s1 of S.sp.get(aId) || []) for (const s2 of S.sp.get(bId) || []) { const x = blood(s1, s2); if (x && !x.self) cands.push({ words: [W.spo(B), ...x.words, W.spo(S.P.get(s1))], d: x.d + 2, lca: x.lca }); }
+    cands.sort((x, y) => x.d - y.d);
+    if (cands.length && (!r || cands[0].d < r.d)) { r = cands[0]; kind = 'aff'; }
+  }
+  if (!r) return { text: you ? `ما لقيت صلة مسجلة بينك وبين ${B.f}` : `ما لقيت صلة مسجلة بين ${A.f} و${B.f}`, sub: 'ضيف الآباء والأزواج الناقصين عشان أقدر أحسبها' };
+  if (kind === 'blood' && r.d > 10) {
+    const L = S.P.get(r.lca); return { text: `${B.f} ${B.g === 'f' ? 'قريبة بعيدة' : 'قريب بعيد'}`, sub: `${you ? 'تجتمعون' : 'يجتمعون'} عند ${fullName(L, 3)}` };
+  }
+  const cw = compact(r.words); let main = phrase(cw, poss);
+  if (r.half) main += ' ' + r.half;
+  let label = '';
+  const own = you ? 'ك' : ' ' + A.f;
+  if (kind === 'blood' && r.a === 0 && r.b === 2) label = you ? (B.g === 'f' ? 'حفيدتك' : 'حفيدك') : (B.g === 'f' ? 'حفيدة ' : 'حفيد ') + A.f;
+  if (kind === 'blood' && r.a === 0 && r.b > 2) label = 'من أحفاد' + own;
+  if (kind === 'blood' && r.b === 0 && r.a > 2) label = 'من أجداد' + own;
+  const chain = phrase(r.words, poss);
+  const subs = [];
+  if (chain !== phrase(cw, poss)) subs.push('يعني: ' + chain);
+  if (label) subs.push(label);
+  if (kind === 'blood' && r.lca && r.lca !== aId && r.lca !== bId) subs.push((you ? 'تجتمعون' : 'يجتمعون') + ' عند: ' + fullName(S.P.get(r.lca), 3));
+  return { text: `${B.f} ${pron} ${main}`, sub: subs.join(' · '), main, words: cw };
+}
+
+/* ---------- تخطيط الشجرة (tidy tree بالحدود) ---------- */
+const PW = 124, SW = 96, SG = 6, NH = 60, VG = 54, HG = 18, PAD = 60;
+function treeKids(p, isRoot) {
+  if (p.g === 'f') return (S.dtr || isRoot) ? (S.kidsM.get(p.id) || []) : [];
+  return S.kidsF.get(p.id) || [];
+}
+function hiddenCount(p, isRoot) { const seen = new Set([p.id]); let n = 0; const st = [[p, isRoot]]; while (st.length) { const [x, r] = st.pop(); for (const k of treeKids(x, r)) if (!seen.has(k.id)) { seen.add(k.id); n++; st.push([k, false]); } } return n; }
+function computeLayout(root) {
+  const seen = new Set();
+  function build(p, depth, isRoot) {
+    seen.add(p.id);
+    const sps = spousesOf(p.id), spw = sps.length ? sps.length * (SW + SG) : 0;
+    const n = { p, depth, sps, kids: [], le: PW / 2, re: PW / 2 + spw, spw };
+    const ks = treeKids(p, isRoot).filter(k => !seen.has(k.id));
+    n.has = ks.length > 0; n.col = n.has && S.col.has(p.id);
+    if (n.col) n.hidden = hiddenCount(p, isRoot);
+    else for (const k of ks) if (!seen.has(k.id)) n.kids.push(build(k, depth + 1, false));
+    return n;
+  }
+  const R = build(root, 0, true);
+  (function place(n) {
+    if (!n.kids.length) { n.cl = [-n.le]; n.cr = [n.re]; return; }
+    for (const k of n.kids) place(k);
+    const ks = n.kids, m = ks.length, A = new Array(m), B = new Array(m);
+    A[0] = 0; let L = ks[0].cl.slice(), Rr = ks[0].cr.slice();
+    for (let i = 1; i < m; i++) {
+      const k = ks[i]; let s = -Infinity; const d = Math.min(Rr.length, k.cl.length);
+      for (let j = 0; j < d; j++) s = Math.max(s, Rr[j] - k.cl[j]);
+      A[i] = s + HG;
+      for (let j = 0; j < k.cl.length; j++) { if (j < Rr.length) Rr[j] = A[i] + k.cr[j]; else { L.push(A[i] + k.cl[j]); Rr.push(A[i] + k.cr[j]); } }
+    }
+    B[m - 1] = 0; L = ks[m - 1].cl.slice(); Rr = ks[m - 1].cr.slice();
+    for (let i = m - 2; i >= 0; i--) {
+      const k = ks[i]; let s = Infinity; const d = Math.min(L.length, k.cr.length);
+      for (let j = 0; j < d; j++) s = Math.min(s, L[j] - k.cr[j]);
+      B[i] = s - HG;
+      for (let j = 0; j < k.cl.length; j++) { if (j < L.length) L[j] = B[i] + k.cl[j]; else { L.push(B[i] + k.cl[j]); Rr.push(B[i] + k.cr[j]); } }
+    }
+    const b0 = B[0], X = A.map((a, i) => (a + B[i] - b0) / 2), c = (X[0] + X[m - 1]) / 2;
+    const cl = [-n.le], cr = [n.re];
+    ks.forEach((k, i) => { k.dx = X[i] - c; for (let j = 0; j < k.cl.length; j++) { const v1 = k.dx + k.cl[j], v2 = k.dx + k.cr[j]; if (cl[j + 1] == null || v1 < cl[j + 1]) cl[j + 1] = v1; if (cr[j + 1] == null || v2 > cr[j + 1]) cr[j + 1] = v2; } });
+    n.cl = cl; n.cr = cr;
+  })(R);
+  const list = [];
+  (function abs(n, x) { n.x = x; n.vx = -x; n.y = n.depth * (NH + VG); list.push(n); for (const k of n.kids) abs(k, x + k.dx); })(R, 0);
+  let minX = Infinity, maxX = -Infinity, maxY = 0;
+  for (const n of list) { n.left = n.vx - PW / 2 - n.spw; n.right = n.vx + PW / 2; if (n.left < minX) minX = n.left; if (n.right > maxX) maxX = n.right; if (n.y + NH > maxY) maxY = n.y + NH; }
+  const ox = PAD - minX, oy = PAD + 46;
+  for (const n of list) { n.left += ox; n.right += ox; n.cx = n.vx + ox; n.y += oy; }
+  return { root: R, list, W: maxX - minX + PAD * 2, H: maxY + oy + PAD + 30, pos: new Map(list.map(n => [n.p.id, n])) };
+}
+
+/* ---------- رسم الشجرة ---------- */
+const world = $('#world'), stage = $('#stage');
+const Z = { x: 0, y: 0, s: 1 };
+function setZ(x, y, s, anim) {
+  Z.s = clamp(s, 0.08, 2.6); Z.x = x; Z.y = y;
+  world.style.transition = anim ? 'transform .38s cubic-bezier(.2,.8,.2,1)' : 'none';
+  world.style.transform = `translate3d(${Z.x}px,${Z.y}px,0) scale(${Z.s})`;
+}
+function defaultRoot() {
+  let best = null, bc = -1;
+  for (const p of S.P.values()) {
+    if (p.g === 'f' || (p.fa && S.P.has(p.fa))) continue;
+    const c = hiddenCount(p, false);
+    if (c > bc || (c === bc && best && (+p.by || 1e9) < (+best.by || 1e9))) { best = p; bc = c; }
+  }
+  return best || [...S.P.values()][0] || null;
+}
+function getRoot() { const r = S.dev.root && S.P.get(S.dev.root); return r || defaultRoot(); }
+function nodeHtml(n) {
+  const p = n.p, me = S.dev.me === p.id ? ' me' : '';
+  let h = `<div class="nd ${p.g === 'f' ? 'f' : 'm'}${me}" data-n="${p.id}" style="left:${n.left}px;top:${n.y}px;width:${n.right - n.left}px">`;
+  h += `<div class="pb" data-p="${p.id}">${avatar(p)}<div class="tx"><b>${esc(p.f)}</b><small>${esc(yearsText(p, true) || (n.depth === 0 ? famOf(p) : '') || '')}</small></div></div>`;
+  for (const s of n.sps) { const sf = S.P.get(s.fa); h += `<div class="sc" data-p="${s.id}">${avatar(s)}<div class="tx"><b>${esc(s.f)}</b><small>${esc(sf ? (s.g === 'f' ? 'بنت ' : 'بن ') + sf.f : famOf(s))}</small></div></div>`; }
+  if (n.has) h += `<button class="tg${n.col ? ' c' : ''}" data-t="${p.id}" aria-label="${n.col ? 'افتح الفرع' : 'سكّر الفرع'}">${n.col ? '+' + n.hidden : '−'}</button>`;
+  return h + '</div>';
+}
+function renderTree(keep) {
+  const root = getRoot(), empty = $('#treeEmpty');
+  $('#tbar').hidden = $('#zbar').hidden = !root; stage.hidden = !root; empty.hidden = !!root;
+  if (!root) {
+    world.innerHTML = ''; S.lay = null;
+    empty.innerHTML = `<div class="big"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="5" r="2.4"/><circle cx="5" cy="19" r="2.4"/><circle cx="19" cy="19" r="2.4"/><path d="M12 7.4v4.6M12 12H5v4.6M12 12h7v4.6"/></svg></div>
+      <h2>${S.lost ? 'ما قدرت أفتح الشجرة' : 'شجرتك فاضية'}</h2><p>${S.lost ? esc(lostText()) : canEdit() ? 'ابدأ بأكبر جد تعرفه، وبعدين ضيف عياله وأحفاده. أو ابدأ بنفسك وطلّع لفوق.' : (S.doc && !S.doc.local && !S.doc.role ? 'لحظة، أجيب الشجرة…' : 'ما فيه أحد بالشجرة للحين.')}</p>
+      ${canEdit() ? `<button class="btn pri" id="emAdd">${ICON.plus}ضيف أول شخص</button><button class="btn" id="emImp">استورد نسخة</button>` : ''}`;
+    const a = $('#emAdd'); if (a) a.onclick = () => personForm({ preset: { g: 'm' }, title: 'أول شخص بالشجرة' });
+    const b = $('#emImp'); if (b) b.onclick = importAny;
+    return;
+  }
+  $('#rootName').textContent = 'من: ' + fullName(root, 2);
+  const t0 = performance.now();
+  const anchor = keep && keep.id && S.lay && S.lay.pos.get(keep.id);
+  const before = anchor ? { x: Z.x + anchor.cx * Z.s, y: Z.y + anchor.y * Z.s } : null;
+  const L = computeLayout(root);
+  let d = '';
+  for (const n of L.list) {
+    if (!n.kids.length) continue;
+    const px = n.cx, py = n.y + NH, my = py + VG / 2;
+    d += `M${px} ${py}V${my}`;
+    let mn = Infinity, mx = -Infinity; for (const k of n.kids) { if (k.cx < mn) mn = k.cx; if (k.cx > mx) mx = k.cx; d += `M${k.cx} ${my}V${k.y}`; }
+    if (mx > mn) d += `M${Math.min(mn, px)} ${my}H${Math.max(mx, px)}`;
+  }
+  let h = `<svg width="${L.W}" height="${L.H}" viewBox="0 0 ${L.W} ${L.H}"><path d="${d}"/></svg>`;
+  for (const n of L.list) h += nodeHtml(n);
+  world.innerHTML = h; world.style.width = L.W + 'px'; world.style.height = L.H + 'px';
+  S.lay = L; S.layRoot = root.id;
+  if (before) { const n = L.pos.get(keep.id); if (n) setZ(before.x - n.cx * Z.s, before.y - n.y * Z.s, Z.s); }
+  else if (!S.zInit || S.zRoot !== root.id) initView();
+  S.renderMs = performance.now() - t0;
+}
+function initView() {
+  const L = S.lay; if (!L) return; const w = stage.clientWidth || innerWidth, h = stage.clientHeight || innerHeight - 120;
+  if (!w || !h) return; S.zInit = true; S.zRoot = L.root.p.id;
+  const fit = Math.min(w / L.W, (h - 10) / L.H, 1);
+  if (fit >= 0.55) setZ((w - L.W * fit) / 2, Math.max(0, (h - L.H * fit) / 2 - 10), fit);
+  else { const s = 0.85, r = L.root; setZ(w / 2 - r.cx * s, 4 - (r.y - 70) * s, s); }
+}
+function fitAll() { const L = S.lay; if (!L) return; const w = stage.clientWidth, h = stage.clientHeight; const s = clamp(Math.min(w / L.W, h / L.H), 0.08, 1.2); setZ((w - L.W * s) / 2, (h - L.H * s) / 2, s, true); }
+function zoomAt(mx, my, s, anim) { s = clamp(s, 0.08, 2.6); const wx = (mx - Z.x) / Z.s, wy = (my - Z.y) / Z.s; setZ(mx - wx * s, my - wy * s, s, anim); }
+function centerOn(id, anim = true) {
+  const n = S.lay && S.lay.pos.get(id); if (!n) return false;
+  const w = stage.clientWidth, h = stage.clientHeight, s = Math.max(Z.s, 0.75);
+  setZ(w / 2 - n.cx * s, h * 0.38 - (n.y + NH / 2) * s, s, anim);
+  const el = world.querySelector(`.nd[data-n="${n.p.id}"]`); if (el) { el.classList.remove('hl'); void el.offsetWidth; el.classList.add('hl'); }
+  return true;
+}
+/* يتأكد إن الشخص ظاهر بالشجرة (يغيّر البداية ويفتح الفروع) ثم يركز عليه */
+function revealInTree(id) {
+  const p = S.P.get(id); if (!p) return;
+  setView('tree');
+  if (S.lay && S.lay.pos.has(id)) { requestAnimationFrame(() => centerOn(id)); return; }
+  if (S.lay) for (const n of S.lay.list) if (n.sps.some(s => s.id === id)) { const t = n.p.id; requestAnimationFrame(() => centerOn(t)); return; }
+  let target = id;
+  if (p.g === 'f' && !(p.fa && S.P.has(p.fa))) { const h = spousesOf(id)[0]; if (h) target = h.id; }
+  const chain = [], seen = new Set(); let c = S.P.get(target);
+  while (c && !seen.has(c.id)) { seen.add(c.id); chain.push(c.id); let up = S.P.get(c.fa); if (!up && S.dtr && c.mo) up = S.P.get(c.mo); c = up; }
+  const root = getRoot();
+  if (!root || !chain.includes(root.id)) S.dev.root = chain[chain.length - 1];
+  for (const x of chain.slice(1)) S.col.delete(x);
+  saveDev(); renderTree(); requestAnimationFrame(() => centerOn(target));
+}
+function toggleCol(id) { if (S.col.has(id)) S.col.delete(id); else S.col.add(id); saveDev(); renderTree({ id }); }
+
+/* السحب والتكبير باللمس والماوس */
+const ptrs = new Map(); let drag = null, pinch = null;
+const sp = e => { const r = stage.getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top }; };
+stage.addEventListener('pointerdown', e => {
+  if (e.button > 0) return; try { stage.setPointerCapture(e.pointerId); } catch (x) { }
+  ptrs.set(e.pointerId, sp(e));
+  if (ptrs.size === 1) drag = { ...sp(e), zx: Z.x, zy: Z.y, moved: false, target: e.target };
+  else if (ptrs.size === 2) { const [a, b] = [...ptrs.values()]; pinch = { d: Math.hypot(a.x - b.x, a.y - b.y) || 1, mx: (a.x + b.x) / 2, my: (a.y + b.y) / 2, zx: Z.x, zy: Z.y, s: Z.s }; if (drag) drag.moved = true; }
+});
+stage.addEventListener('pointermove', e => {
+  if (!ptrs.has(e.pointerId)) return; ptrs.set(e.pointerId, sp(e));
+  if (ptrs.size === 1 && drag) {
+    const p = sp(e), dx = p.x - drag.x, dy = p.y - drag.y;
+    if (!drag.moved && Math.hypot(dx, dy) > 7) { drag.moved = true; stage.classList.add('drag'); }
+    if (drag.moved) setZ(drag.zx + dx, drag.zy + dy, Z.s);
+  } else if (ptrs.size >= 2 && pinch) {
+    const [a, b] = [...ptrs.values()], d = Math.hypot(a.x - b.x, a.y - b.y), mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2;
+    const s = clamp(pinch.s * d / pinch.d, 0.08, 2.6), wx = (pinch.mx - pinch.zx) / pinch.s, wy = (pinch.my - pinch.zy) / pinch.s;
+    setZ(mx - wx * s, my - wy * s, s);
+  }
+});
+function ptrEnd(e) {
+  if (!ptrs.has(e.pointerId)) return; ptrs.delete(e.pointerId);
+  if (ptrs.size === 0) { if (drag && !drag.moved && e.type === 'pointerup') treeTap(drag.target); drag = null; pinch = null; stage.classList.remove('drag'); }
+  else if (ptrs.size === 1) { const [p] = [...ptrs.values()]; drag = { x: p.x, y: p.y, zx: Z.x, zy: Z.y, moved: true }; pinch = null; }
+}
+stage.addEventListener('pointerup', ptrEnd); stage.addEventListener('click', e => { if (e.detail === 0) treeTap(e.target); }); stage.addEventListener('pointercancel', ptrEnd);
+stage.addEventListener('wheel', e => { e.preventDefault(); const p = sp(e); zoomAt(p.x, p.y, Z.s * Math.exp(-e.deltaY * (e.ctrlKey ? 0.01 : 0.0018))); }, { passive: false });
+function treeTap(t) {
+  if (!t || !t.closest) return; const tg = t.closest('[data-t]'); if (tg) return toggleCol(tg.dataset.t);
+  const pb = t.closest('[data-p]'); if (pb) openPerson(pb.dataset.p);
+}
+$('#zIn').onclick = () => zoomAt(stage.clientWidth / 2, stage.clientHeight / 2, Z.s * 1.3, true);
+$('#zOut').onclick = () => zoomAt(stage.clientWidth / 2, stage.clientHeight / 2, Z.s / 1.3, true);
+$('#zFit').onclick = fitAll;
+$('#focusMe').onclick = async () => {
+  let me = S.dev.me && S.P.get(S.dev.me);
+  if (!me) { const id = await pickMe(); if (!id) return; me = S.P.get(id); }
+  revealInTree(me.id);
+};
+$('#findBtn').onclick = async () => { const id = await pickPerson({ title: 'دوّر على شخص' }); if (id) revealInTree(id); };
+$('#rootBtn').onclick = async () => {
+  const tops = [...S.P.values()].filter(p => p.g !== 'f' && !(p.fa && S.P.has(p.fa))).map(p => ({ p, c: hiddenCount(p, false) })).sort((a, b) => b.c - a.c);
+  const id = await pickPerson({ title: 'الشجرة تبدأ من مين؟', prefer: tops.map(x => x.p.id), preferLabel: 'كبار العوائل', note: x => { const t = tops.find(y => y.p.id === x.id); return t ? `${t.c} من الذرية` : ''; } });
+  if (!id) return; S.dev.root = id; S.col.clear(); saveDev(); S.zInit = false; renderTree();
+};
+window.addEventListener('resize', () => { if (S.view === 'tree' && S.lay && !S.zInit) initView(); });
+
+/* ---------- القائمة ---------- */
+$('#q').addEventListener('input', () => renderList());
+$('#frow').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  if (b.dataset.f) { S.filter = b.dataset.f; $$('#frow [data-f]').forEach(x => x.classList.toggle('act', x === b)); }
+  if (b.id === 'sortBtn') { S.sort = S.sort === 'name' ? 'gen' : 'name'; b.textContent = S.sort === 'name' ? 'ترتيب: أبجدي' : 'ترتيب: الأجيال'; }
+  renderList();
+});
+$('#addFab').onclick = () => { if (guardEdit()) personForm({ preset: { g: 'm' } }); };
+function personRow(p, extra) {
+  return `<button class="prow" data-p="${p.id}">${avatar(p)}<span class="tx"><b>${esc(fullName(p, 3))}</b><small>${esc([yearsText(p), p.city].filter(Boolean).join(' · ') || ' ')}</small></span>${extra || ''}</button>`;
+}
+function renderList() {
+  const q = norm($('#q').value); let arr = [...S.P.values()];
+  if (S.filter === 'm') arr = arr.filter(p => p.g !== 'f'); else if (S.filter === 'f') arr = arr.filter(p => p.g === 'f'); else if (S.filter === 'alive') arr = arr.filter(p => !p.dead && !p.dy);
+  if (q) { const qs = q.split(' '); arr = arr.filter(p => { const k = searchKey(p); return qs.every(w => k.includes(w)); }); }
+  const coll = new Intl.Collator('ar');
+  if (S.sort === 'gen') arr.sort((a, b) => genOf(a) - genOf(b) || coll.compare(a.f, b.f)); else arr.sort((a, b) => coll.compare(a.f, b.f) || coll.compare(fullName(a, 3), fullName(b, 3)));
+  $('#cnt').textContent = arr.length + ' شخص';
+  $('#addFab').hidden = !canEdit();
+  if (!S.P.size) { $('#plist').innerHTML = `<div class="empty"><p>ما فيه أحد للحين.${canEdit() ? ' اضغط «ضيف شخص» وابدأ.' : ''}</p></div>`; return; }
+  if (!arr.length) { $('#plist').innerHTML = `<div class="empty"><p>ما لقيت أحد بهالبحث</p></div>`; return; }
+  const max = 400;
+  $('#plist').innerHTML = arr.slice(0, max).map(p => personRow(p, S.sort === 'gen' ? `<span class="gen">الجيل ${genOf(p)}</span>` : '')).join('') + (arr.length > max ? `<p class="empty">وفيه ${arr.length - max} غيرهم، دقّق البحث</p>` : '');
+}
+$('#plist').addEventListener('click', e => { const b = e.target.closest('[data-p]'); if (b) openPerson(b.dataset.p); });
+
+/* ---------- اختيار شخص ---------- */
+function pickPerson(o = {}) {
+  return new Promise(res => {
+    let val;
+    const sh = openSheet(`<h2>${esc(o.title || 'اختر شخص')}<button class="ib x" data-close aria-label="سكّر">${ICON.x}</button></h2>
+      <div class="srch"><svg class="i" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><input type="search" id="pq" placeholder="اكتب الاسم…" autocomplete="off"></div>
+      ${o.allowNone ? `<button class="btn sm ghost" id="pnone" style="margin-top:8px">${esc(o.noneText || 'بدون')}</button>` : ''}
+      ${o.newText ? `<button class="btn sm" id="pnew" style="margin-top:8px">${ICON.plus}${esc(o.newText)}</button>` : ''}
+      <div class="plist" id="pl"></div>`, { onClose: () => res(val) });
+    const inp = $('#pq', sh.el), pl = $('#pl', sh.el), coll = new Intl.Collator('ar');
+    const draw = () => {
+      const q = norm(inp.value); let arr = [...S.P.values()].filter(p => !o.filter || o.filter(p));
+      if (q) { const qs = q.split(' '); arr = arr.filter(p => qs.every(w => searchKey(p).includes(w))); }
+      const pref = o.prefer || [];
+      arr.sort((a, b) => { const ia = pref.indexOf(a.id), ib = pref.indexOf(b.id); if (ia !== ib) return (ia < 0 ? 1e9 : ia) - (ib < 0 ? 1e9 : ib); return coll.compare(a.f, b.f); });
+      pl.innerHTML = arr.slice(0, 150).map(p => personRow(p, o.note ? `<span class="gen">${esc(o.note(p) || '')}</span>` : '')).join('') || '<p class="empty">ما فيه نتائج</p>';
+    };
+    draw(); inp.oninput = draw; if (!matchMedia('(pointer:coarse)').matches) setTimeout(() => inp.focus(), 80);
+    pl.onclick = e => { const b = e.target.closest('[data-p]'); if (b) { val = b.dataset.p; closeSheet(sh); } };
+    const n = $('#pnone', sh.el); if (n) n.onclick = () => { val = ''; closeSheet(sh); };
+    const nw = $('#pnew', sh.el); if (nw) nw.onclick = () => { val = '__new'; closeSheet(sh); };
+  });
+}
+async function pickMe() {
+  const id = await pickPerson({ title: 'مين أنت بالشجرة؟' });
+  if (id) { S.dev.me = id; saveDev(); toast('تمام، عرفتك يا ' + S.P.get(id).f); renderAll(); }
+  return id;
+}
+
+/* ---------- صفحة الشخص ---------- */
+let personSheet = null;
+function openPerson(id, keepRel) {
+  const p = S.P.get(id); if (!p) return;
+  if (personSheet && sheets.includes(personSheet)) { personSheet.data.id = id; personSheet.data.rel = keepRel || null; fillPerson(personSheet); personSheet.el.scrollTop = 0; return; }
+  personSheet = openSheet('<div id="pv"></div>', { kind: 'person', data: { id, rel: null }, onClose: () => { personSheet = null; } });
+  fillPerson(personSheet);
+  personSheet.el.addEventListener('click', onPersonClick);
+}
+function fillPerson(sh) {
+  const p = S.P.get(sh.data.id); if (!p) { closeSheet(sh); return; }
+  const fa = S.P.get(p.fa), mo = S.P.get(p.mo), sps = spousesOf(p.id), kids = kidsOf(p.id), ed = canEdit();
+  const sibs = [...new Set([...(p.fa ? S.kidsF.get(p.fa) || [] : []), ...(p.mo ? S.kidsM.get(p.mo) || [] : [])])].filter(x => x.id !== p.id);
+  const chip = (x, note) => `<button class="chip ${x.g === 'f' ? 'f' : 'm'}" data-go="${x.id}">${esc(fullName(x, 2, false))}${note ? ` <small style="color:var(--muted)">${esc(note)}</small>` : ''}</button>`;
+  const he = p.g === 'f' ? 'ها' : 'ه';
+  const facts = [];
+  const yt = yearsText(p); if (yt) facts.push(`<span>${esc(yt)}</span>`);
+  if (p.by && !p.dead && !p.dy) facts.push(`<span>العمر تقريبًا <b>${curYear(p.cal) - p.by}</b></span>`);
+  if (p.city) facts.push(`<span>📍 <b>${esc(p.city)}</b></span>`);
+  facts.push(`<span>الجيل <b>${genOf(p)}</b></span>`);
+  let h = `<div class="phead">${avatar(p)}<div style="min-width:0;flex:1"><h3>${esc(p.f)}</h3><div class="fn">${esc(fullName(p))}</div></div><button class="ib" data-close aria-label="سكّر">${ICON.x}</button></div>
+  <div class="facts">${facts.join('')}</div>${p.nt ? `<div class="note">${esc(p.nt)}</div>` : ''}`;
+  if (ed) {
+    h += `<div class="chips" style="margin-bottom:6px">
+      <button class="chip act" data-a="son">${ICON.plus}ضيف ابن</button><button class="chip act" data-a="dau">${ICON.plus}ضيف بنت</button>
+      <button class="chip act" data-a="spouse">${ICON.plus}${p.g === 'f' ? 'ضيف زوج' : 'ضيف زوجة'}</button>
+      ${fa ? '' : `<button class="chip act" data-a="fa">${ICON.plus}ضيف أب</button>`}${mo ? '' : `<button class="chip act" data-a="mo">${ICON.plus}ضيف أم</button>`}
+      <button class="chip" data-a="edit">${ICON.edit}عدّل</button><button class="chip del" data-a="del">${ICON.trash}احذف</button></div>`;
+  }
+  h += `<div class="chips" style="margin-top:8px"><button class="chip" data-a="rel">${ICON.q}وش صلتي في${he}؟</button><button class="chip" data-a="rel2">صلت${he} بشخص ثاني</button><button class="chip" data-a="show">${ICON.target}ورني إيا${he} بالشجرة</button>${S.dev.me === p.id ? '' : `<button class="chip" data-a="me">${ICON.user}هذا أنا</button>`}</div>`;
+  if (sh.data.rel) h += `<div class="rel"><div class="big">${esc(sh.data.rel.text)}</div>${sh.data.rel.sub ? `<small>${esc(sh.data.rel.sub)}</small>` : ''}</div>`;
+  if (fa || mo) h += `<div class="sec">الوالدين</div><div class="chips">${fa ? chip(fa, 'الأب') : ''}${mo ? chip(mo, 'الأم') : ''}</div>`;
+  if (sps.length) h += `<div class="sec">${p.g === 'f' ? (sps.length > 1 ? 'الأزواج' : 'الزوج') : (sps.length > 1 ? 'الزوجات' : 'الزوجة')}</div><div class="chips">${sps.map(x => chip(x)).join('')}${ed ? sps.map(x => `<button class="chip del" data-unm="${x.id}" title="شيل الزواج">${ICON.x}${esc(x.f)}</button>`).join('') : ''}</div>`;
+  if (kids.length) h += `<div class="sec">العيال (${kids.length})</div><div class="kids">${kids.map((k, i) => `<div class="krow">${chip(k, k.mo && k.mo !== p.id && sps.length > 1 && S.P.get(k.mo) ? 'أمه ' + S.P.get(k.mo).f : '')}${ed && i > 0 ? `<button class="mv" data-up="${k.id}" aria-label="قدّمه">${ICON.up}</button>` : ''}</div>`).join('')}</div>${ed && kids.length > 1 && kids.some(k => k.by) ? '<button class="btn sm ghost" data-a="sortkids" style="margin-top:8px">رتّبهم حسب سنة الميلاد</button>' : ''}`;
+  if (sibs.length) h += `<div class="sec">الإخوان والخوات (${sibs.length})</div><div class="chips">${sibs.map(x => chip(x, (p.fa && p.mo && x.fa && x.mo && (x.fa !== p.fa || x.mo !== p.mo)) ? (x.fa === p.fa ? 'من الأب' : 'من الأم') : '')).join('')}</div>`;
+  $('#pv', sh.el).innerHTML = h;
+}
+async function onPersonClick(e) {
+  const sh = personSheet; if (!sh) return; const id = sh.data.id, p = S.P.get(id); if (!p) return;
+  const go = e.target.closest('[data-go]'); if (go) return openPerson(go.dataset.go);
+  const up = e.target.closest('[data-up]'); if (up) { if (!guardEdit()) return; return moveKidUp(id, up.dataset.up); }
+  const un = e.target.closest('[data-unm]'); if (un) { if (!guardEdit()) return; return unmarry(id, un.dataset.unm); }
+  const a = e.target.closest('[data-a]'); if (!a) return;
+  const act = a.dataset.a;
+  if (['son', 'dau', 'spouse', 'fa', 'mo', 'edit', 'del', 'sortkids'].includes(act) && !guardEdit()) return;
+  if (act === 'son' || act === 'dau') addChild(p, act === 'son' ? 'm' : 'f');
+  else if (act === 'fa' || act === 'mo') addParent(p, act === 'fa' ? 'm' : 'f');
+  else if (act === 'spouse') addSpouse(p);
+  else if (act === 'edit') personForm({ id });
+  else if (act === 'del') deletePerson(id);
+  else if (act === 'sortkids') { const ks = kidsOf(id).slice().sort((x, y) => (+x.by || 1e9) - (+y.by || 1e9) || ord(x) - ord(y)); const base = Date.now(); ks.forEach((k, i) => S.doc.set(k.id, { ...strip(k), o: base + i })); toast('رتّبتهم حسب سنة الميلاد'); }
+  else if (act === 'me') { S.dev.me = id; saveDev(); toast('تمام، هذا أنت'); renderAll(); }
+  else if (act === 'show') { closeSheet(sh); revealInTree(id); }
+  else if (act === 'rel') {
+    let me = S.dev.me && S.P.get(S.dev.me);
+    if (!me) { const m = await pickMe(); if (!m) return; me = S.P.get(m); }
+    sh.data.rel = relation(me.id, id, true); fillPerson(sh);
+  } else if (act === 'rel2') {
+    const o = await pickPerson({ title: `صلة ${p.f} بمين؟`, filter: x => x.id !== id }); if (!o) return;
+    sh.data.rel = relation(o, id, false); fillPerson(sh);
+  }
+}
+const strip = o => { const x = { ...o }; delete x.id; delete x.u; return x; };
+function moveKidUp(pid, kid) {
+  const ks = kidsOf(pid), i = ks.findIndex(k => k.id === kid); if (i < 1) return;
+  const a = ks[i - 1], b = ks[i]; let oa = ord(a), ob = ord(b); if (oa === ob) ob = oa - 1;
+  S.doc.set(b.id, { ...strip(b), o: oa }); S.doc.set(a.id, { ...strip(a), o: ob });
+}
+function marriageId(a, b) { const A = S.P.get(a), B = S.P.get(b); const [h, w] = (A && A.g === 'f') ? [b, a] : [a, b]; return 'm' + h + '_' + w; }
+function ensureMarriage(a, b) {
+  if (!a || !b || a === b || (S.sp.get(a) || []).includes(b)) return;
+  const id = marriageId(a, b), A = S.P.get(a); const [h, w] = (A && A.g === 'f') ? [b, a] : [a, b];
+  S.doc.set(id, { t: 'm', a: h, b: w, o: Date.now() });
+}
+async function unmarry(a, b) {
+  const A = S.P.get(a), B = S.P.get(b);
+  if (!await ask('شيل الزواج؟', `بيتشال الزواج بين ${A.f} و${B.f} من الشجرة، والأشخاص يبقون.`)) return;
+  const ms = S.M.filter(m => (m.a === a && m.b === b) || (m.a === b && m.b === a));
+  const snap = ms.map(m => [m.id, strip(m)]); ms.forEach(m => S.doc.del(m.id));
+  toast('انشال الزواج', { text: 'تراجع', fn: () => snap.forEach(([i, o]) => S.doc.set(i, o)) });
+}
+
+/* ---------- إضافة وتعديل ---------- */
+function addChild(p, g) {
+  const sps = spousesOf(p.id), preset = { g };
+  if (p.g === 'f') { preset.mo = p.id; if (sps.length === 1) preset.fa = sps[0].id; }
+  else { preset.fa = p.id; if (sps.length === 1) preset.mo = sps[0].id; }
+  personForm({ preset, title: `${g === 'f' ? 'بنت' : 'ابن'} ${fullName(p, 2, false)}` });
+}
+function addParent(p, g) {
+  personForm({
+    preset: { g, fam: g === 'm' ? (p.fam || '') : '' }, title: `${g === 'm' ? 'أبو' : 'أم'} ${p.f}`,
+    after: nid => { const cur = S.P.get(p.id) || p; const o = strip(cur); if (g === 'm') o.fa = nid; else o.mo = nid; if (g === 'm' && o.fam && o.fam === S.P.get(nid)?.fam) delete o.fam; S.doc.set(p.id, o); ensureMarriage(o.fa, o.mo); }
+  });
+}
+async function addSpouse(p) {
+  const g = p.g === 'f' ? 'm' : 'f';
+  const id = await pickPerson({ title: p.g === 'f' ? `زوج ${p.f}` : `زوجة ${p.f}`, newText: g === 'f' ? 'زوجة جديدة مو بالشجرة' : 'زوج جديد مو بالشجرة', filter: x => x.g === g && x.id !== p.id && !(S.sp.get(p.id) || []).includes(x.id) });
+  if (!id) return;
+  if (id === '__new') personForm({ preset: { g }, title: p.g === 'f' ? `زوج ${p.f}` : `زوجة ${p.f}`, after: nid => ensureMarriage(p.id, nid) });
+  else { ensureMarriage(p.id, id); toast('انضاف الزواج ✓'); }
+}
+function personForm(o) {
+  if (!guardEdit()) return;
+  const old = o.id ? S.P.get(o.id) : null;
+  const p = old ? { ...old } : { g: 'm', cal: LS.get('shajara.cal', 'h'), ...o.preset };
+  const sh = openSheet(`<h2>${esc(o.title || (old ? 'تعديل ' + old.f : 'شخص جديد'))}<button class="ib x" data-close aria-label="سكّر">${ICON.x}</button></h2>
+    <label class="fld"><span>الاسم الأول</span><input id="fF" maxlength="40" autocomplete="off" enterkeyhint="done"></label>
+    <div class="fld"><span>الجنس</span><div class="seg" id="fG"><button type="button" data-v="m">ذكر</button><button type="button" data-v="f">أنثى</button></div></div>
+    <label class="fld"><span>اسم العائلة أو القبيلة <i>(اختياري)</i></span><input id="fFam" maxlength="40" autocomplete="off"></label>
+    <div class="row2"><div class="fld"><span>الأب</span><button type="button" class="pick" id="fFa"></button></div><div class="fld"><span>الأم</span><button type="button" class="pick" id="fMo"></button></div></div>
+    <div class="chips qc" id="fMoQ" style="margin:-4px 0 12px"></div>
+    <div class="row2"><label class="fld"><span>سنة الميلاد <i>(اختياري)</i></span><input id="fBy" inputmode="numeric" maxlength="4" placeholder="مثل 1400"></label><label class="fld"><span>سنة الوفاة</span><input id="fDy" inputmode="numeric" maxlength="4"></label></div>
+    <div class="fld"><div class="seg" id="fCal"><button type="button" data-v="h">هجري</button><button type="button" data-v="g">ميلادي</button></div></div>
+    <label class="chk"><input type="checkbox" id="fDead"><span id="fDeadL"></span></label>
+    <label class="fld"><span>المدينة</span><input id="fCity" maxlength="40"></label>
+    <label class="fld"><span>ملاحظات</span><textarea id="fNt" rows="2" maxlength="600"></textarea></label>
+    <div class="fld"><span>صورة صغيرة <i>(اختياري)</i></span><div class="phrow"><span id="fPhV"></span><button type="button" class="btn sm" id="fPhB">اختر صورة</button><button type="button" class="btn sm ghost" id="fPhX">شيلها</button></div></div>
+    <div class="acts"><button class="btn pri" id="fSave">حفظ</button><button class="btn ghost" data-close>إلغاء</button></div>`);
+  const E = s => $(s, sh.el);
+  E('#fF').value = p.f || ''; E('#fFam').value = p.fam || ''; E('#fBy').value = p.by || ''; E('#fDy').value = p.dy || ''; E('#fCity').value = p.city || ''; E('#fNt').value = p.nt || ''; E('#fDead').checked = !!(p.dead || p.dy);
+  const seg = (sel, key) => { const el = E(sel); const upd = () => $$('button', el).forEach(b => b.classList.toggle('on', b.dataset.v === p[key])); el.onclick = e => { const b = e.target.closest('button'); if (b) { p[key] = b.dataset.v; upd(); refresh(); } }; upd(); };
+  const excl = old ? new Set([old.id, ...descendants(old.id)]) : new Set();
+  const refresh = () => {
+    const fa = S.P.get(p.fa), mo = S.P.get(p.mo);
+    E('#fFa').innerHTML = fa ? `<span>${esc(fullName(fa, 3))}</span>` : '<span class="ph">اختر…</span>';
+    E('#fMo').innerHTML = mo ? `<span>${esc(fullName(mo, 3))}</span>` : '<span class="ph">اختر…</span>';
+    const inh = fa ? famOf(fa) : ''; E('#fFam').placeholder = inh ? 'يتورث من الأب: ' + inh : 'مثل: القحطاني أو آل سعيد';
+    const wives = fa ? spousesOf(fa.id).filter(w => w.id !== p.mo) : [];
+    E('#fMoQ').innerHTML = !p.mo && wives.length ? `<span style="color:var(--muted);font-size:13px;align-self:center">أمه:</span>` + wives.map(w => `<button type="button" class="chip f" data-w="${w.id}">${esc(w.f)}</button>`).join('') : '';
+    E('#fDeadL').textContent = p.g === 'f' ? 'متوفاة، الله يرحمها' : 'متوفى، الله يرحمه';
+    E('#fPhV').innerHTML = avatar({ ...p, f: E('#fF').value || '؟' }, 'big');
+  };
+  seg('#fG', 'g'); seg('#fCal', 'cal'); refresh();
+  E('#fMoQ').onclick = e => { const b = e.target.closest('[data-w]'); if (b) { p.mo = b.dataset.w; refresh(); } };
+  E('#fF').oninput = () => { if (!p.ph) refresh(); };
+  E('#fFa').onclick = async () => { const id = await pickPerson({ title: 'الأب', allowNone: true, noneText: 'بدون أب', filter: x => x.g !== 'f' && !excl.has(x.id) }); if (id !== undefined) { p.fa = id; refresh(); } };
+  E('#fMo').onclick = async () => { const wives = p.fa ? spousesOf(p.fa).map(x => x.id) : []; const id = await pickPerson({ title: 'الأم', allowNone: true, noneText: 'بدون أم', prefer: wives, filter: x => x.g === 'f' && !excl.has(x.id) }); if (id !== undefined) { p.mo = id; refresh(); } };
+  E('#fPhB').onclick = () => { const inp = $('#photoIn'); inp.value = ''; inp.onchange = async () => { const f = inp.files[0]; if (!f) return; try { p.ph = await shrinkPhoto(f); refresh(); } catch (x) { toast('ما قدرت أقرأ الصورة'); } }; inp.click(); };
+  E('#fPhX').onclick = () => { delete p.ph; refresh(); };
+  E('#fF').onkeydown = e => { if (e.key === 'Enter') E('#fSave').click(); };
+  if (!old && !matchMedia('(pointer:coarse)').matches) setTimeout(() => E('#fF').focus(), 80);
+  E('#fSave').onclick = () => {
+    const f = E('#fF').value.trim().replace(/\s+/g, ' '); if (!f) { toast('اكتب الاسم'); E('#fF').focus(); return; }
+    const yr = v => { v = latin(v).replace(/\D/g, ''); return v ? clamp(parseInt(v, 10), 1, 2200) : null; };
+    const by = yr(E('#fBy').value), dy = yr(E('#fDy').value);
+    if (by && dy && dy < by) { toast('سنة الوفاة قبل الميلاد؟ راجعها'); return; }
+    const obj = { t: 'p', f, g: p.g === 'f' ? 'f' : 'm', fam: E('#fFam').value.trim(), fa: p.fa || '', mo: p.mo || '', by, dy, cal: p.cal === 'g' ? 'g' : 'h', dead: (E('#fDead').checked || !!dy) ? 1 : 0, city: E('#fCity').value.trim(), nt: E('#fNt').value.trim(), ph: p.ph || '', o: p.o != null ? p.o : Date.now(), c: p.c || Date.now() };
+    for (const k of Object.keys(obj)) if (obj[k] === '' || obj[k] == null || obj[k] === 0) delete obj[k];
+    obj.t = 'p'; obj.g = obj.g || 'm';
+    if (o.id && (obj.fa === o.id || obj.mo === o.id)) { toast('ما يصير يكون أبو نفسه'); return; }
+    LS.set('shajara.cal', obj.cal);
+    const id = o.id || newId('p');
+    try { S.doc.set(id, obj); ensureMarriage(obj.fa, obj.mo); if (o.after) o.after(id); } catch (x) { toast(T ? T.errorText(x) : 'ما انحفظ'); return; }
+    closeSheet(sh); toast(old ? 'انحفظ التعديل ✓' : `انضاف ${f} ✓`);
+    if (!old && S.P.size === 0 && S.view !== 'tree') setView('tree');
+  };
+}
+function shrinkPhoto(file) {
+  return new Promise((res, rej) => {
+    const img = new Image(), url = URL.createObjectURL(file);
+    img.onload = () => { const s = 88, c = document.createElement('canvas'); c.width = c.height = s; const x = c.getContext('2d'); const m = Math.min(img.width, img.height); x.drawImage(img, (img.width - m) / 2, (img.height - m) / 2, m, m, 0, 0, s, s); URL.revokeObjectURL(url); res(c.toDataURL('image/jpeg', 0.7)); };
+    img.onerror = () => { URL.revokeObjectURL(url); rej(new Error('img')); }; img.src = url;
+  });
+}
+
+/* ---------- الحذف مع التراجع ---------- */
+async function deletePerson(id) {
+  const p = S.P.get(id); if (!p) return; const kids = kidsOf(id);
+  let mode = 'one';
+  if (kids.length) {
+    const desc = descendants(id);
+    mode = await ask(`حذف ${p.f}`, `${p.f} ${p.g === 'f' ? 'عندها' : 'عنده'} ${kids.length} من العيال بالشجرة. وش تبي تسوي؟`, [
+      { v: 'one', t: `احذف ${p.f} بس وخلّ العيال`, cls: '' }, { v: 'all', t: `احذف ${p.f} وكل ذريت${p.g === 'f' ? 'ها' : 'ه'} (${desc.size + 1} شخص)`, cls: 'danger' }, { v: null, t: 'إلغاء', cls: 'ghost', cancel: true }]);
+    if (!mode) return;
+  } else if (!await ask(`حذف ${p.f}؟`, `متأكد تبي تحذف ${fullName(p, 3)} من الشجرة؟ تقدر تتراجع بعدها على طول.`)) return;
+  const ids = new Set(mode === 'all' ? [id, ...descendants(id)] : [id]);
+  const snap = new Map();
+  for (const x of ids) snap.set(x, strip(S.P.get(x)));
+  for (const m of S.M) if (ids.has(m.a) || ids.has(m.b)) snap.set(m.id, strip(m));
+  const fix = [];
+  for (const q of S.P.values()) if (!ids.has(q.id) && (ids.has(q.fa) || ids.has(q.mo))) { snap.set(q.id, strip(q)); const o = strip(q); if (ids.has(o.fa)) { if (!o.fam) { const fm = famOf(q); if (fm) o.fam = fm; } delete o.fa; } if (ids.has(o.mo)) delete o.mo; fix.push([q.id, o]); }
+  try {
+    for (const m of S.M) if (ids.has(m.a) || ids.has(m.b)) S.doc.del(m.id);
+    for (const x of ids) S.doc.del(x);
+    for (const [i, o] of fix) S.doc.set(i, o);
+  } catch (x) { toast(T ? T.errorText(x) : 'ما انحذف'); return; }
+  if (S.dev.root && ids.has(S.dev.root)) { delete S.dev.root; saveDev(); }
+  if (personSheet && ids.has(personSheet.data.id)) closeSheet(personSheet);
+  toast(ids.size > 1 ? `انحذف ${ids.size} أشخاص` : `انحذف ${p.f}`, { text: 'تراجع', fn: () => { for (const [i, o] of snap) S.doc.set(i, o); toast('رجّعتهم ✓'); } });
+}
+
+/* ---------- العرض العام ---------- */
+function lostText() {
+  if (S.lost === 'nolib') return 'مكتبة المزامنة ما تحمّلت، افتح التطبيق وأنت متصل بالنت.';
+  return S.lost === 'not_found' ? 'الشجرة انحذفت من السيرفر أو انتهت مشاركتها.' : 'الرابط تغيّر أو انتهت صلاحيته، اطلب رابط جديد من صاحب الشجرة.';
+}
+function renderStatus() {
+  const pill = $('#pill'), sp = $('span', pill);
+  $('#treeName').textContent = S.cur ? S.cur.name + (S.P.size ? ` · ${S.P.size} شخص` : '') : '';
+  if (!S.cur || !S.cur.id) { pill.hidden = true; return; }
+  pill.hidden = false;
+  const ro = S.doc && S.doc.role === 'view';
+  const map = { idle: 'يتصل…', ok: ro ? 'عرض فقط' : 'متزامنة', saving: 'يحفظ…', offline: 'بدون نت', error: 'خطأ' };
+  pill.className = 'pill ' + S.status + (ro && S.status === 'ok' ? ' ro' : '');
+  sp.textContent = map[S.status] || '';
+  pill.title = S.statusMsg || '';
+  pill.onclick = () => toast(S.statusMsg || (S.status === 'ok' ? (ro ? 'تشوف الشجرة بس، ما تقدر تعدّل' : 'كل شي محفوظ ومتزامن') : map[S.status]));
+  const lb = $('#lostBanner');
+  lb.innerHTML = S.lost ? `<div class="banner"><span>${esc(lostText())}</span><button class="btn sm" id="lostRm">شيلها من جهازي</button></div>` : '';
+  if (S.lost) $('#lostRm').onclick = () => forgetTree(S.cur);
+}
+function renderAll() {
+  renderStatus();
+  if (S.view === 'tree') renderTree(S.lay ? { id: S.lay.root.p.id === (getRoot() || {}).id ? (S.lay.root.p.id) : null } : null);
+  else if (S.view === 'list') renderList();
+  else renderMore();
+  if (personSheet && sheets.includes(personSheet)) { if (S.P.has(personSheet.data.id)) fillPerson(personSheet); else closeSheet(personSheet); }
+}
+function setView(v) {
+  S.view = v; LS.set('shajara.view', v);
+  $$('.view').forEach(x => x.classList.toggle('on', x.id === 'v' + v[0].toUpperCase() + v.slice(1)));
+  $$('#tabs button').forEach(b => b.classList.toggle('on', b.dataset.v === v));
+  if (v === 'tree') renderTree(S.lay && S.zInit ? { id: S.lay.root.p.id } : null); else if (v === 'list') renderList(); else renderMore();
+}
+$('#tabs').onclick = e => { const b = e.target.closest('[data-v]'); if (b) setView(b.dataset.v); };
+$('#brand').onclick = () => setView('more');
+
+/* ---------- المزيد: الإعدادات والمشاركة والتصدير ---------- */
+function joinBase() { return location.origin + location.pathname.replace(/index\.html$/, ''); }
+function renderMore() {
+  const c = S.cur, shared = !!c.id, ed = canEdit(), role = S.doc && S.doc.role, me = S.dev.me && S.P.get(S.dev.me);
+  const owner = shared && (c.edit || role === 'edit'), creator = shared && !!c.edit && c.key === c.edit;
+  const vk = c.view || (S.meta && S.meta.vk);
+  let share = '';
+  if (!shared) {
+    share = T && T.available() ? `<p class="d">شارك الشجرة مع العائلة: اللي معه <b>رابط التعديل</b> يقدر يضيف ويعدّل، واللي معه <b>رابط العرض</b> يشوف بس. التعديلات توصل للكل أول بأول.</p><button class="btn pri" id="shBtn">${ICON.link}شارك الشجرة</button>`
+      : `<p class="d">المشاركة تحتاج سيرفر المزامنة، وهو مو مفعّل الحين. الشجرة محفوظة على جهازك.</p>`;
+  } else if (S.lost) {
+    share = `<p class="d">${esc(lostText())}</p>`;
+  } else {
+    share = `<p class="d">${owner ? 'أرسل رابط التعديل لأهلك اللي بيساعدون، ورابط العرض للباقين.' : role === 'view' ? 'عندك رابط عرض بس. تقدر ترسله لغيرك عشان يشوفون الشجرة.' : 'لحظة، أتأكد من الرابط…'}</p>
+      ${owner && c.key ? linkBox('رابط التعديل', T.joinLink(joinBase(), c.id, c.key), 'edit') : ''}
+      ${vk ? linkBox('رابط العرض فقط', T.joinLink(joinBase(), c.id, vk), 'view') : ''}
+      ${creator ? `<div class="rowb" style="margin-top:6px"><button class="btn sm" id="rotBtn">غيّر الروابط</button><button class="btn sm danger" id="unshBtn">وقّف المشاركة</button></div>` : ''}`;
+  }
+  $('#more').innerHTML = `
+  <div class="card"><h3>🌳 الشجرة</h3>
+    ${trees.map(t => `<div class="trow ${t.k === c.k ? 'on' : ''}" data-tree="${esc(t.k)}"><span class="tx"><b>${esc(t.name)}</b></span>${t.id ? `<span class="badge sh">مشتركة</span>` : '<span class="badge">على الجهاز</span>'}</div>`).join('')}
+    <div class="rowb" style="margin-top:10px">${ed ? '<button class="btn sm" id="renBtn">غيّر الاسم</button>' : ''}<button class="btn sm" id="newTree">${ICON.plus}شجرة جديدة</button><button class="btn sm danger" id="rmTree">احذفها من جهازي</button></div>
+  </div>
+  <div class="card"><h3>🔗 المشاركة مع العائلة</h3>${share}</div>
+  <div class="card"><h3>🙋 أنا</h3>
+    <div class="set"><div class="l">أنا مين بالشجرة؟<small>${me ? esc(fullName(me, 3)) : 'عشان «ركّز علي» و«وش صلتي فيه؟»'}</small></div><button class="btn sm" id="meBtn">${me ? 'غيّر' : 'اختر'}</button></div>
+  </div>
+  <div class="card"><h3>⚙️ العرض</h3>
+    <div class="set"><div class="l">الاسم الكامل<small>كم اسم يطلع بالنسب: «فلان بن فلان…»</small></div><div class="stepper"><button class="ib" id="gMinus" aria-label="أقل">−</button><b id="gVal">${S.gens}</b><button class="ib" id="gPlus" aria-label="أكثر">+</button></div></div>
+    <div class="set"><div class="l">ذرية البنات بالشجرة<small>الشجرة أصلًا بالنسب للأب، فعّلها لو تبي تشوف عيال البنات</small></div><button class="sw ${S.dtr ? 'on' : ''}" id="dtrSw" aria-label="ذرية البنات"></button></div>
+    <div class="set"><div class="l">الوضع الفاتح</div><button class="sw ${document.body.classList.contains('light') ? 'on' : ''}" id="lightSw" aria-label="الوضع الفاتح"></button></div>
+  </div>
+  <div class="card"><h3>📤 تصدير</h3><p class="d">صورة للشجرة الظاهرة، أو طباعة وPDF، أو نسخة احتياطية تحفظها عندك.</p>
+    <div class="rowb"><button class="btn sm" id="pngBtn">صورة PNG</button><button class="btn sm" id="prBtn">طباعة / PDF</button><button class="btn sm" id="jsonBtn">نسخة احتياطية JSON</button><button class="btn sm" id="gedBtn">ملف GEDCOM</button></div>
+  </div>
+  <div class="card"><h3>📥 استيراد</h3><p class="d">رجّع نسخة احتياطية (JSON) أو ملف GEDCOM من برامج الأنساب.</p>
+    <div class="rowb"><button class="btn sm" id="impBtn">اختر ملف</button></div>
+  </div>
+  <p class="d" style="text-align:center;color:var(--muted);font-size:12.5px;margin:18px 0">شجرتنا · بياناتك محفوظة على جهازك${shared ? ' وعلى سيرفر المزامنة' : ''}</p>`;
+  const on = (id, fn) => { const el = $('#' + id); if (el) el.onclick = fn; };
+  $$('#more [data-tree]').forEach(el => el.onclick = () => { const t = trees.find(x => x.k === el.dataset.tree); if (t && t.k !== S.cur.k) { openTree(t); toast('فتحت ' + t.name); } });
+  on('renBtn', async () => { const n = await promptText('اسم الشجرة', S.cur.name, 'مثل: آل فلان'); if (!n) return; S.cur.name = n; saveTrees(); try { S.doc.setMeta({ ...strip(S.doc.meta() || {}), name: n }); } catch (x) { } renderAll(); });
+  on('newTree', async () => { const n = await promptText('اسم الشجرة الجديدة', '', 'مثل: أهل أمي'); if (!n) return; const r = newLocalTree(n); openTree(r); setView('tree'); });
+  on('rmTree', () => forgetTree(S.cur));
+  on('shBtn', createShare); on('rotBtn', rotateLinks); on('unshBtn', stopSharing);
+  on('meBtn', pickMe);
+  on('gMinus', () => { S.gens = clamp(S.gens - 1, 2, 9); LS.set('shajara.gens', S.gens); S._nm = new Map(); renderMore(); });
+  on('gPlus', () => { S.gens = clamp(S.gens + 1, 2, 9); LS.set('shajara.gens', S.gens); S._nm = new Map(); renderMore(); });
+  on('dtrSw', () => { S.dtr = !S.dtr; LS.set('shajara.dtr', S.dtr); S.lay = null; renderMore(); });
+  on('lightSw', () => $('#themeBtn').click());
+  on('pngBtn', exportPng); on('prBtn', printTree); on('jsonBtn', exportJson); on('gedBtn', exportGed); on('impBtn', importAny);
+  $$('#more [data-copy]').forEach(b => b.onclick = async () => { const ok = await copyText(b.dataset.copy); toast(ok ? 'انسخ الرابط ✓' : 'ما قدرت أنسخ، انسخه يدوي'); });
+  $$('#more [data-wa]').forEach(b => b.onclick = () => shareLink(b.dataset.wa, b.dataset.kind));
+}
+function linkBox(label, url, kind) {
+  return `<div class="fld"><span>${label}</span><div class="linkbox"><input readonly value="${esc(url)}" onclick="this.select()"><button class="btn sm" data-copy="${esc(url)}">انسخ</button><button class="btn sm" data-wa="${esc(url)}" data-kind="${kind}">أرسل</button></div></div>`;
+}
+function shareLink(url, kind) {
+  const text = kind === 'edit' ? `هذي شجرة عائلتنا «${S.cur.name}» على شجرتنا، تقدر تضيف وتعدّل:\n${url}` : `شوف شجرة عائلتنا «${S.cur.name}»:\n${url}`;
+  if (navigator.share) navigator.share({ title: 'شجرتنا', text }).catch(() => { });
+  else window.open('https://wa.me/?text=' + encodeURIComponent(text), '_blank', 'noopener');
+}
+function snapshotBody() {
+  const items = {}; for (const it of S.doc.items()) { const o = { ...it }; delete o.id; items[it.id] = o; }
+  const meta = { ...strip(S.doc.meta() || {}), name: S.cur.name }; delete meta.vk;
+  return { items, meta };
+}
+async function createShare() {
+  if (!T || !T.available()) return toast('المشاركة مو مفعّلة');
+  const b = $('#shBtn'); if (b) { b.disabled = true; b.textContent = 'لحظة…'; }
+  try {
+    const body = snapshotBody(); const r = await T.create('shajara', body);
+    LS.raw('tajarib.doc.' + r.id, JSON.stringify({ body, pending: {}, rev: 0, role: 'edit', kind: 'shajara' }));
+    const oldKey = 'shajara.local.' + S.cur.k;
+    Object.assign(S.cur, { id: r.id, key: r.edit, edit: r.edit, view: r.view }); saveTrees();
+    openTree(S.cur); S.doc.setMeta({ ...body.meta, vk: r.view }); LS.del(oldKey);
+    toast('صارت الشجرة مشتركة ✓ أرسل الروابط لأهلك'); setView('more');
+  } catch (e) { toast(T.errorText(e)); if (b) { b.disabled = false; b.textContent = 'شارك الشجرة'; } }
+}
+async function rotateLinks() {
+  const which = await ask('غيّر الروابط', 'الروابط القديمة بتوقف ومن معه الرابط القديم ما بيقدر يفتح الشجرة. أي رابط تبي تغيّر؟', [
+    { v: 'view', t: 'رابط العرض' }, { v: 'edit', t: 'رابط التعديل' }, { v: 'both', t: 'الاثنين', cls: 'danger' }, { v: null, t: 'إلغاء', cls: 'ghost', cancel: true }]);
+  if (!which) return;
+  try {
+    const r = await T.rotateKeys(S.cur.id, S.cur.key, which);
+    if (r.view) S.cur.view = r.view;
+    if (r.edit) { S.cur.edit = r.edit; S.cur.key = r.edit; }
+    saveTrees();
+    if (r.edit) { const meta = S.doc.meta(); openTree(S.cur); if (r.view) S.doc.setMeta({ ...strip(meta || {}), vk: r.view }); }
+    else S.doc.setMeta({ ...strip(S.doc.meta() || {}), vk: r.view });
+    toast('تغيّرت الروابط ✓ أرسل الجديدة'); renderMore();
+  } catch (e) { toast(T.errorText(e)); }
+}
+async function stopSharing() {
+  if (!await ask('وقّف المشاركة؟', 'بتنحذف الشجرة من السيرفر، وكل اللي معهم الروابط ما بيقدرون يفتحونها. نسختك بتبقى على جهازك.')) return;
+  const body = snapshotBody();
+  try { await T.remove(S.cur.id, S.cur.key); } catch (e) { if (e.code !== 'not_found') return toast(T.errorText(e)); }
+  T.forget(S.cur.id); delete S.cur.id; delete S.cur.key; delete S.cur.edit; delete S.cur.view; saveTrees();
+  LS.set('shajara.local.' + S.cur.k, body); openTree(S.cur); toast('وقفت المشاركة، الشجرة صارت على جهازك بس');
+}
+async function forgetTree(rec) {
+  const shared = !!rec.id;
+  if (!await ask(`احذف «${rec.name}» من جهازك؟`, shared ? 'بتنشال من جهازك بس، وتبقى عند الباقين. تقدر ترجع لها برابطها.' : 'الشجرة محفوظة على جهازك بس، لو حذفتها بتروح نهائيًا. صدّر نسخة احتياطية قبل لو تبي.')) return;
+  if (shared && T) T.forget(rec.id); else LS.del('shajara.local.' + rec.k);
+  LS.del('shajara.dev.' + rec.k);
+  trees = trees.filter(t => t.k !== rec.k); if (!trees.length) newLocalTree(); saveTrees();
+  openTree(trees[0]); toast('انحذفت من جهازك');
+}
+
+/* ---------- التصدير ---------- */
+const stamp = () => new Date().toISOString().slice(0, 10);
+const fname = ext => `${(S.cur.name || 'شجرتنا').replace(/[\\/:*?"<>|]+/g, '-')}-${stamp()}.${ext}`;
+function exportJson() {
+  const b = snapshotBody();
+  download(fname('json'), JSON.stringify({ app: 'shajara', v: 1, name: S.cur.name, exported: new Date().toISOString(), meta: b.meta, items: b.items }, null, 1), 'application/json');
+  toast('نزّلت النسخة الاحتياطية ✓');
+}
+function drawTreeCanvas(maxScale) {
+  const root = getRoot(); if (!root) return null;
+  const L = (S.lay && S.layRoot === root.id) ? S.lay : computeLayout(root);
+  const head = 80, oy = PAD + 46, w = L.W, h = L.H - oy + head + 10;
+  /* حد آمن لحجم اللوحة (سفاري الآيفون يرفض أكبر من ~16 مليون بكسل) */
+  let s = Math.min(maxScale || 2, 16000 / w, 16000 / h, Math.sqrt(16e6 / (w * h))); s = Math.max(s, 0.05);
+  const c = document.createElement('canvas'); c.width = Math.ceil(w * s); c.height = Math.ceil(h * s);
+  const x = c.getContext('2d'); x.scale(s, s);
+  const ff = getComputedStyle(document.body).fontFamily;
+  const col = { bg: '#fbfcf8', card: '#ffffff', line: '#d3ddd0', lines: '#8fae9e', text: '#14211a', muted: '#5b6e63', m: '#2f7fd6', f: '#cc4a88', sp: '#f1f5ee' };
+  x.fillStyle = col.bg; x.fillRect(0, 0, w, h);
+  x.direction = 'rtl'; x.textAlign = 'center'; x.textBaseline = 'middle';
+  x.fillStyle = col.text; x.font = `800 26px ${ff}`; x.fillText(S.cur.name || 'شجرتنا', w / 2, 34);
+  x.fillStyle = col.muted; x.font = `500 13px ${ff}`; x.fillText(`شجرتنا · ${L.list.length} شخص · ${stamp()}`, w / 2, 58);
+  x.translate(0, head + 10 - oy);
+  const rr = (X, Y, W, H, r) => { x.beginPath(); x.moveTo(X + r, Y); x.arcTo(X + W, Y, X + W, Y + H, r); x.arcTo(X + W, Y + H, X, Y + H, r); x.arcTo(X, Y + H, X, Y, r); x.arcTo(X, Y, X + W, Y, r); x.closePath(); };
+  const fit = (t, mw) => { if (x.measureText(t).width <= mw) return t; while (t.length > 1 && x.measureText(t + '…').width > mw) t = t.slice(0, -1); return t + '…'; };
+  x.strokeStyle = col.lines; x.lineWidth = 2; x.beginPath();
+  for (const n of L.list) {
+    if (!n.kids.length) continue; const px = n.cx, py = n.y + NH, my = py + VG / 2;
+    x.moveTo(px, py); x.lineTo(px, my); let mn = px, mx = px;
+    for (const k of n.kids) { x.moveTo(k.cx, my); x.lineTo(k.cx, k.y); mn = Math.min(mn, k.cx); mx = Math.max(mx, k.cx); }
+    x.moveTo(mn, my); x.lineTo(mx, my);
+  }
+  x.stroke();
+  for (const n of L.list) {
+    const p = n.p, bx = n.right - PW, by = n.y;
+    x.fillStyle = col.card; x.strokeStyle = col.line; x.lineWidth = 1; rr(bx, by, PW, NH, 12); x.fill(); x.stroke();
+    x.save(); rr(bx, by, PW, NH, 12); x.clip(); x.fillStyle = p.g === 'f' ? col.f : col.m; x.fillRect(bx, by, PW, 4); x.restore();
+    x.fillStyle = col.text; x.font = `800 15px ${ff}`; x.fillText(fit(p.f, PW - 14), bx + PW / 2, by + 25);
+    const yt = yearsText(p, true); if (yt) { x.fillStyle = col.muted; x.font = `500 11px ${ff}`; x.fillText(fit(yt, PW - 12), bx + PW / 2, by + 44); }
+    if (n.col) { x.fillStyle = '#c99a3a'; rr(bx + PW / 2 - 16, by + NH - 6, 32, 16, 8); x.fill(); x.fillStyle = '#fff'; x.font = `800 11px ${ff}`; x.fillText('+' + n.hidden, bx + PW / 2, by + NH + 2); }
+    n.sps.forEach((s2, i) => {
+      const sx = bx - (i + 1) * (SW + SG), sy = by + 5;
+      x.fillStyle = col.sp; x.strokeStyle = col.line; rr(sx, sy, SW, 50, 10); x.fill(); x.stroke();
+      x.fillStyle = s2.g === 'f' ? col.f : col.m; x.font = `700 13px ${ff}`; x.fillText(fit(s2.f, SW - 12), sx + SW / 2, sy + 20);
+      const sf = S.P.get(s2.fa); const sub = sf ? (s2.g === 'f' ? 'بنت ' : 'بن ') + sf.f : famOf(s2);
+      if (sub) { x.fillStyle = col.muted; x.font = `500 10.5px ${ff}`; x.fillText(fit(sub, SW - 10), sx + SW / 2, sy + 37); }
+    });
+  }
+  return c;
+}
+async function exportPng() {
+  const c = drawTreeCanvas(2); if (!c) return toast('الشجرة فاضية');
+  const blob = await new Promise(r => c.toBlob(r, 'image/png'));
+  if (!blob) return toast('الصورة كبيرة مرة، سكّر بعض الفروع وجرب');
+  download(fname('png'), blob, 'image/png'); toast('نزّلت صورة الشجرة ✓');
+}
+function printTree() {
+  const c = drawTreeCanvas(1.5); if (!c) return toast('الشجرة فاضية');
+  const coll = new Intl.Collator('ar'); const ppl = [...S.P.values()].sort((a, b) => genOf(a) - genOf(b) || coll.compare(a.f, b.f));
+  $('#printArea').innerHTML = `<h1>${esc(S.cur.name)}</h1><div class="sub">شجرتنا · ${S.P.size} شخص · ${stamp()}</div><img src="${c.toDataURL('image/png')}" alt="الشجرة">
+    <table><thead><tr><th>الاسم</th><th>الميلاد والوفاة</th><th>المدينة</th></tr></thead><tbody>${ppl.map(p => `<tr><td>${esc(fullName(p))}</td><td>${esc(yearsText(p))}</td><td>${esc(p.city || '')}</td></tr>`).join('')}</tbody></table>`;
+  setTimeout(() => window.print(), 60);
+}
+window.addEventListener('afterprint', () => { $('#printArea').innerHTML = ''; });
+function exportGed() {
+  const ids = new Map(); let n = 0; for (const p of S.P.values()) ids.set(p.id, '@I' + (++n) + '@');
+  const fams = new Map(); const famKey = (h, w) => (h || '0') + '|' + (w || '0');
+  const fam = (h, w) => { const k = famKey(h, w); if (!fams.has(k)) fams.set(k, { id: '@F' + (fams.size + 1) + '@', h, w, kids: [] }); return fams.get(k); };
+  for (const m of S.M) if (S.P.has(m.a) && S.P.has(m.b)) fam(m.a, m.b);
+  for (const p of S.P.values()) if (p.fa && S.P.has(p.fa) || p.mo && S.P.has(p.mo)) fam(S.P.has(p.fa) ? p.fa : '', S.P.has(p.mo) ? p.mo : '').kids.push(p.id);
+  const L = ['0 HEAD', '1 SOUR SHAJARA', '2 NAME شجرتنا', '1 GEDC', '2 VERS 5.5.1', '2 FORM LINEAGE-LINKED', '1 CHAR UTF-8', '1 DATE ' + stamp()];
+  const lines = (lv, tag, txt) => { const parts = String(txt).split(/\n/); L.push(`${lv} ${tag} ${parts[0]}`); for (const x of parts.slice(1)) L.push(`${lv + 1} CONT ${x}`); };
+  for (const p of S.P.values()) {
+    L.push(`0 ${ids.get(p.id)} INDI`); L.push(`1 NAME ${p.f} /${p.fam || ''}/`); L.push(`2 GIVN ${p.f}`); if (p.fam) L.push(`2 SURN ${p.fam}`);
+    L.push(`1 SEX ${p.g === 'f' ? 'F' : 'M'}`);
+    if (p.by) { L.push('1 BIRT'); L.push('2 DATE ' + p.by); if (p.cal !== 'g') L.push('2 _CAL HIJRI'); }
+    if (p.dy || p.dead) { L.push('1 DEAT' + (p.dy ? '' : ' Y')); if (p.dy) { L.push('2 DATE ' + p.dy); if (p.cal !== 'g') L.push('2 _CAL HIJRI'); } }
+    if (p.city) { L.push('1 RESI'); L.push('2 PLAC ' + p.city); }
+    if (p.nt) lines(1, 'NOTE', p.nt);
+    for (const f of fams.values()) { if (f.h === p.id || f.w === p.id) L.push('1 FAMS ' + f.id); if (f.kids.includes(p.id)) L.push('1 FAMC ' + f.id); }
+  }
+  for (const f of fams.values()) { L.push(`0 ${f.id} FAM`); if (f.h) L.push('1 HUSB ' + ids.get(f.h)); if (f.w) L.push('1 WIFE ' + ids.get(f.w)); for (const k of f.kids) L.push('1 CHIL ' + ids.get(k)); }
+  L.push('0 TRLR');
+  download(fname('ged'), L.join('\r\n'), 'text/plain;charset=utf-8'); toast('نزّلت ملف GEDCOM ✓');
+}
+
+/* ---------- الاستيراد ---------- */
+function parseGed(txt) {
+  const recs = [], path = []; let cur = null;
+  for (const raw of txt.replace(/^﻿/, '').split(/\r?\n/)) {
+    const m = /^\s*(\d+)\s+(@[^@]+@\s+)?(\S+)(?:\s(.*))?$/.exec(raw); if (!m) continue;
+    const lv = +m[1], xref = m[2] ? m[2].trim() : null, tag = m[3].toUpperCase(), val = (m[4] || '').trim();
+    if (lv === 0) { cur = { xref, tag, val, ch: [] }; recs.push(cur); path.length = 0; path[0] = cur; continue; }
+    if (!cur) continue; const node = { tag, val, ch: [] };
+    if (tag === 'CONT' || tag === 'CONC') { const par = path[lv - 1]; if (par) par.val += (tag === 'CONT' ? '\n' : '') + val; continue; }
+    const par = path[lv - 1] || path[path.length - 1]; par.ch.push(node); path[lv] = node; path.length = lv + 1;
+  }
+  const items = {}, map = new Map(), t0 = Date.now(); let o = 0;
+  const kid = (n, t) => n && n.ch.find(c => c.tag === t);
+  const year = n => { const d = kid(n, 'DATE'); const m = d && /(\d{3,4})(?!.*\d{3,4})/.exec(d.val); return m ? +m[1] : null; };
+  for (const r of recs) if (r.tag === 'INDI' && r.xref) {
+    const nm = kid(r, 'NAME'); let given = '', sur = '';
+    if (nm) { const mm = /^([^/]*)\/?([^/]*)\/?(.*)$/.exec(nm.val); given = (mm[1] || '').trim(); sur = (mm[2] || '').trim(); const gv = kid(nm, 'GIVN'), sv = kid(nm, 'SURN'); if (gv && gv.val) given = gv.val.trim(); if (sv && sv.val) sur = sv.val.trim(); }
+    const cut = given.split(/\s+(?:بن|بنت|ابن)\s+/)[0].trim(); given = cut || given || 'بدون اسم';
+    const sx = kid(r, 'SEX'), b = kid(r, 'BIRT'), d = kid(r, 'DEAT');
+    const plc = (b && kid(b, 'PLAC')) || (kid(r, 'RESI') && kid(kid(r, 'RESI'), 'PLAC')) || kid(r, 'PLAC');
+    const by = year(b), dy = year(d), calTag = (b && kid(b, '_CAL')) || (d && kid(d, '_CAL'));
+    const isH = calTag ? /HIJ/i.test(calTag.val) : ((by || dy || 2000) < 1500);
+    const id = 'p' + t0.toString(36) + (o).toString(36) + Math.random().toString(36).slice(2, 5);
+    const p = { t: 'p', f: given.slice(0, 40), g: sx && /^F/i.test(sx.val) ? 'f' : 'm', cal: isH ? 'h' : 'g', o: t0 + o, c: t0 + o }; o++;
+    if (sur) p.fam = sur.slice(0, 40); if (by) p.by = by; if (dy) p.dy = dy; if (d) p.dead = 1; if (plc && plc.val) p.city = plc.val.split(',')[0].trim().slice(0, 40);
+    const nt = kid(r, 'NOTE'); if (nt && nt.val && !/^@/.test(nt.val)) p.nt = nt.val.slice(0, 600);
+    map.set(r.xref, id); items[id] = p;
+  }
+  for (const r of recs) if (r.tag === 'FAM') {
+    const h = map.get((kid(r, 'HUSB') || {}).val), w = map.get((kid(r, 'WIFE') || {}).val);
+    if (h && w) items['m' + h + '_' + w] = { t: 'm', a: h, b: w, o: t0 + (o++) };
+    for (const c of r.ch.filter(c => c.tag === 'CHIL')) { const k = map.get(c.val); if (!k) continue; if (h) items[k].fa = h; if (w) items[k].mo = w; }
+  }
+  for (const p of Object.values(items)) if (p.t === 'p' && p.fa && items[p.fa] && items[p.fa].fam === p.fam) delete p.fam;
+  return items;
+}
+async function importAny() {
+  const f = await pickFile('.json,.ged,.gedcom,application/json,text/plain'); if (!f) return;
+  let txt; try { txt = await f.text(); } catch (e) { return toast('ما قدرت أقرأ الملف'); }
+  let items, name;
+  try {
+    if (/^\s*\{/.test(txt)) { const j = JSON.parse(txt); if (j.app !== 'shajara' || !j.items || typeof j.items !== 'object') throw 0; items = j.items; name = j.name || (j.meta && j.meta.name); }
+    else if (/^\s*(﻿)?0\s+HEAD/m.test(txt)) { items = parseGed(txt); name = f.name.replace(/\.(ged|gedcom)$/i, ''); }
+    else throw 0;
+  } catch (e) { return toast('الملف مو نسخة من شجرتنا ولا GEDCOM'); }
+  const clean = {}; let n = 0;
+  for (const [id, it] of Object.entries(items)) { if (!it || typeof it !== 'object' || it.del || id.length > 80) continue; if (it.t === 'p') { if (!it.f) continue; n++; } else if (it.t !== 'm') continue; clean[id] = strip(it); }
+  if (!n) return toast('ما لقيت أشخاص بالملف');
+  const choice = await ask('استيراد', `لقيت ${n} شخص${name ? ' في «' + name + '»' : ''}. وين تبي تحطهم؟`, [
+    { v: 'new', t: 'شجرة جديدة', cls: 'pri' }, ...(canEdit() && S.P.size ? [{ v: 'replace', t: 'بدال الشجرة الحالية', cls: 'danger' }] : canEdit() ? [{ v: 'replace', t: 'بالشجرة الحالية' }] : []), { v: null, t: 'إلغاء', cls: 'ghost', cancel: true }]);
+  if (!choice) return;
+  if (choice === 'new') {
+    const rec = newLocalTree(name || 'شجرة مستوردة'); const t = Date.now(); const data = { items: {}, meta: { name: rec.name, u: t } };
+    for (const [id, it] of Object.entries(clean)) data.items[id] = { ...it, u: t };
+    if (!LS.set('shajara.local.' + rec.k, data)) { trees = trees.filter(x => x !== rec); saveTrees(); return toast('مساحة التخزين بالجهاز ما تكفي'); }
+    openTree(rec); setView('tree'); toast(`استوردت ${n} شخص ✓`);
+  } else {
+    const map = {}; for (const it of S.doc.items()) if (!clean[it.id]) map[it.id] = null; Object.assign(map, clean);
+    await bulkApply(map); toast(`استوردت ${n} شخص ✓`);
+  }
+}
+async function bulkApply(map) {
+  const d = S.doc, ents = Object.entries(map);
+  if (d.local) return d.bulk(map);
+  const CH = 1500;
+  for (let i = 0; i < ents.length; i += CH) {
+    const part = ents.slice(i, i + CH);
+    if (d.pending && d.pending.items && typeof d._save === 'function' && d.canEdit()) {
+      /* دفعة وحدة بدل set لكل عنصر (كل set يحفظ المستند كامل) */
+      const t = Date.now(); for (const [id, o] of part) { const it = o ? { ...o, u: t } : { del: 1, u: t }; delete it.id; d.pending.items[id] = it; }
+      d._save(); d._schedulePush(0); d._changed({ local: true });
+    } else for (const [id, o] of part) o ? d.set(id, o) : d.del(id);
+    if (i + CH < ents.length) { const t0 = Date.now(); while (d.hasPending() && Date.now() - t0 < 30000) await sleep(300); }
+  }
+}
+
+/* ---------- الانضمام برابط ---------- */
+function handleJoin() {
+  const j = T && T.parseJoin(location.hash); if (!j) return null;
+  history.replaceState(null, '', location.pathname + location.search);
+  if (!T.available()) { toast('المزامنة مو مفعّلة، ما أقدر أفتح الرابط'); return null; }
+  let rec = trees.find(t => t.id === j.id);
+  if (rec) { if (rec.key !== j.key && rec.key !== rec.edit) { rec.key = j.key; T.forget(j.id); } }
+  else { rec = { k: j.id, id: j.id, key: j.key, name: 'شجرة مشتركة' }; trees.push(rec); }
+  saveTrees(); setTimeout(() => toast('فتحت الشجرة المشتركة ✓'), 300); return rec;
+}
+window.addEventListener('hashchange', () => { const r = handleJoin(); if (r) { openTree(r); setView('tree'); } });
+
+/* ---------- البداية ---------- */
+let start = handleJoin();
+if (!trees.length) newLocalTree();
+if (!start) start = trees.find(t => t.k === LS.get('shajara.cur', '')) || trees[0];
+openTree(start);
+setView(start && start.id && LS.get('shajara.view', null) == null ? 'tree' : S.view);
+if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => { });
+
+/* واجهة صغيرة للاختبارات الآلية */
+window.__shajara = { S, relation, fullName: id => fullName(S.P.get(id)), computeLayout, getRoot, canEdit, revealInTree, centerOn, Z, parseGed, trees: () => trees };
+})();
+</script>
+</body>
+</html>

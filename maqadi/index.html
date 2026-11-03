@@ -1,0 +1,894 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#14110f">
+<meta name="description" content="قوائم مقاضي البيت المشتركة: ضيف الأغراض، رتّبها حسب أقسام السوبرماركت، وشاركها مع أهلك أول بأول">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="مقاضي">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>مقاضي</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#14110f;--bg2:#1b1714;--card:#221d19;--card2:#2b2520;--line:#3a322b;--text:#f6efe8;--muted:#b3a497;--acc:#ff8a3d;--acc2:#e46b1c;--ok:#4cc38a;--danger:#f0645f;--warn:#f0b44a;--onacc:#1d0e03;--shadow:0 10px 28px rgba(0,0,0,.45);--hl:rgba(255,138,61,.15)}
+body.light{--bg:#fbf7f2;--bg2:#f3ece4;--card:#ffffff;--card2:#f6f0ea;--line:#e6dacd;--text:#2a1d12;--muted:#7d6a5a;--acc:#e8711f;--acc2:#c95c10;--ok:#22975f;--danger:#d64541;--warn:#bb7a12;--onacc:#ffffff;--shadow:0 8px 22px rgba(60,35,10,.13);--hl:rgba(232,113,31,.12)}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+[hidden]{display:none!important}
+html,body{height:100%;overflow:hidden}
+body{font-family:'Tajawal',system-ui,-apple-system,'Segoe UI',Tahoma,sans-serif;background:var(--bg);color:var(--text);font-size:15px;line-height:1.5}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer;border:0;background:none}
+input,select,textarea{background:var(--card);border:1px solid var(--line);border-radius:13px;padding:10px 12px;width:100%;outline:none;font-size:16px}
+input:focus,select:focus,textarea:focus{border-color:var(--acc)}
+svg.i{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+#app{position:fixed;inset:0;display:flex;flex-direction:column}
+header{display:flex;align-items:center;gap:6px;padding:9px 10px 9px 12px;padding-top:max(9px,env(safe-area-inset-top));background:var(--bg2);border-bottom:1px solid var(--line);z-index:10;min-height:58px}
+.ttl{display:flex;align-items:center;gap:9px;min-width:0;flex:1}
+.logo{width:36px;height:36px;border-radius:11px;background:linear-gradient(140deg,#ffa25a,#d9531a);display:grid;place-items:center;flex-shrink:0;color:#fff;font-size:20px}
+.ttl .em{font-size:26px;line-height:1;flex-shrink:0}
+.ttl div{min-width:0}
+.ttl h1{font-size:18px;font-weight:800;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ttl small{display:block;font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pill{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;padding:5px 10px;border-radius:20px;background:var(--card);border:1px solid var(--line);color:var(--muted);white-space:nowrap;flex-shrink:0;cursor:pointer}
+.pill i{width:8px;height:8px;border-radius:50%;background:var(--muted)}
+.pill.ok i{background:var(--ok)}.pill.saving i{background:var(--warn);animation:blink 1s infinite}.pill.offline i{background:var(--warn)}.pill.error i{background:var(--danger)}
+.pill.ro{color:var(--warn)}
+@keyframes blink{50%{opacity:.3}}
+.ib{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;color:var(--text);flex-shrink:0}
+.ib:hover{background:var(--card)}
+main{flex:1;min-height:0;position:relative}
+.view{position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;display:none}
+.view.on{display:block}
+.wrap{max-width:680px;margin:0 auto;padding:14px 14px 110px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:11px 16px;border-radius:14px;background:var(--card2);border:1px solid var(--line);font-weight:700;font-size:15px;white-space:nowrap;color:var(--text)}
+.btn:hover{filter:brightness(1.06)}
+.btn.pri{background:var(--acc);border-color:var(--acc);color:var(--onacc)}
+.btn.danger{background:transparent;border-color:var(--danger);color:var(--danger)}
+.btn.ghost{background:transparent}
+.btn.sm{padding:7px 12px;font-size:13.5px;border-radius:11px}
+.btn.wide{width:100%}
+.btn:disabled{opacity:.5;cursor:default}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:7px 12px;border-radius:20px;background:var(--card);border:1px solid var(--line);font-size:13.5px;font-weight:700;white-space:nowrap;cursor:pointer;color:var(--text)}
+.chip.on{background:var(--hl);border-color:color-mix(in srgb,var(--acc) 50%,var(--line));color:var(--acc)}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:15px;margin-bottom:12px}
+.card h3{font-size:16px;margin-bottom:10px}
+.card p.d{color:var(--muted);font-size:13.5px;margin-bottom:10px}
+.rowb{display:flex;flex-wrap:wrap;gap:8px}
+/* home */
+.lists{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-bottom:14px}
+.lc{position:relative;background:var(--card);border:1px solid var(--line);border-radius:18px;padding:14px;text-align:right;display:flex;flex-direction:column;gap:6px;min-height:118px;cursor:pointer}
+.lc:hover{border-color:var(--acc)}
+.lc .em{font-size:32px;line-height:1}
+.lc b{font-size:16px;font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lc small{color:var(--muted);font-size:13px}
+.lc .tag{position:absolute;top:12px;left:12px;font-size:11px;font-weight:700;color:var(--ok);display:flex;align-items:center;gap:4px}
+.lc .tag i{width:7px;height:7px;border-radius:50%;background:currentColor}
+.lc .tag.offline,.lc .tag.saving{color:var(--warn)}.lc .tag.error{color:var(--danger)}
+.lc.new{border-style:dashed;align-items:center;justify-content:center;color:var(--muted);font-weight:700}
+.lc .bar{height:5px;border-radius:3px;background:var(--card2);overflow:hidden;margin-top:auto}
+.lc .bar i{display:block;height:100%;background:var(--ok);border-radius:3px}
+.hello{display:flex;gap:8px;align-items:center}
+.set{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 0;border-top:1px solid var(--line)}
+.set:first-of-type{border-top:0}
+.set .l{flex:1;min-width:0}
+.set .l small{display:block;color:var(--muted);font-size:12.5px}
+.set .rowb{flex-wrap:nowrap}
+.sw{width:48px;height:28px;border-radius:15px;background:var(--line);position:relative;flex-shrink:0;transition:.2s}
+.sw:after{content:"";position:absolute;top:3px;right:3px;width:22px;height:22px;border-radius:50%;background:#fff;transition:.2s}
+.sw.on{background:var(--acc)}
+.sw.on:after{right:23px}
+/* list */
+.addbar{position:sticky;top:0;z-index:6;background:var(--bg);padding:12px 14px 8px;margin:-14px -14px 4px}
+.addrow{display:flex;gap:8px;position:relative}
+.addrow input{height:48px;font-size:16.5px;border-radius:15px;padding-inline:14px}
+.addrow .go{width:48px;height:48px;border-radius:15px;background:var(--acc);color:var(--onacc);display:grid;place-items:center;flex-shrink:0}
+.addrow .go svg{width:24px;height:24px}
+.sugg{position:absolute;top:calc(100% + 6px);right:0;left:56px;background:var(--bg2);border:1px solid var(--line);border-radius:15px;box-shadow:var(--shadow);overflow:hidden;z-index:8}
+.sugg button{display:flex;align-items:center;gap:10px;width:100%;padding:10px 13px;text-align:right;border-top:1px solid var(--line)}
+.sugg button:first-child{border-top:0}
+.sugg button.act,.sugg button:hover{background:var(--hl)}
+.sugg b{font-weight:700}
+.sugg small{color:var(--muted);font-size:12.5px;margin-right:auto;white-space:nowrap}
+.sugg .ex{color:var(--ok);font-size:12px}
+.quick{display:flex;gap:8px;margin-top:9px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
+.quick::-webkit-scrollbar{display:none}
+.quick .lbl{font-size:12.5px;color:var(--muted);align-self:center;white-space:nowrap}
+.cat{margin-top:12px}
+.cath{display:flex;align-items:center;gap:8px;font-size:13.5px;font-weight:800;color:var(--muted);padding:4px 4px 7px}
+.cath .n{font-weight:700;font-size:12px;background:var(--card2);border-radius:9px;padding:1px 7px}
+.it{display:flex;align-items:center;gap:6px;background:var(--card);border:1px solid var(--line);border-radius:15px;margin-bottom:7px;padding:4px 4px 4px 6px;min-height:56px;position:relative;transition:box-shadow .15s,opacity .2s}
+.it .ck{width:44px;height:44px;flex-shrink:0;display:grid;place-items:center}
+.it .ck span{width:26px;height:26px;border-radius:50%;border:2.5px solid var(--line);display:grid;place-items:center;color:transparent;transition:.15s}
+.it .ck span svg{width:16px;height:16px;stroke-width:3}
+.it.done .ck span{background:var(--ok);border-color:var(--ok);color:#fff}
+.it .tx{flex:1;min-width:0;cursor:pointer;padding:6px 0}
+.it .tx b{font-size:16px;font-weight:700;overflow-wrap:anywhere}
+.it .q{display:inline-block;font-size:12.5px;font-weight:800;color:var(--acc);background:var(--hl);border-radius:8px;padding:1px 7px;margin-inline-start:6px;white-space:nowrap;vertical-align:1px}
+.it .tx small{display:block;font-size:12.5px;color:var(--muted);overflow-wrap:anywhere}
+.it.done{opacity:.62}
+.it.done .tx b{text-decoration:line-through;text-decoration-thickness:2px}
+.it .ed,.it .hd{width:38px;height:44px;display:grid;place-items:center;color:var(--muted);flex-shrink:0}
+.it .hd{cursor:grab;touch-action:none}
+.it.drag{z-index:20;box-shadow:var(--shadow);opacity:.95;transition:none;border-color:var(--acc)}
+.it.insb{box-shadow:0 -3px 0 var(--acc)}
+.it.insa{box-shadow:0 3px 0 var(--acc)}
+.cat.insc .cath{color:var(--acc)}
+.it.flash{animation:flash 1.2s ease}
+@keyframes flash{30%{background:var(--hl);border-color:var(--acc)}}
+.doneh{display:flex;align-items:center;gap:8px;margin:22px 0 8px;padding:0 4px}
+.doneh b{font-size:14px;color:var(--muted);flex:1;cursor:pointer;display:flex;align-items:center;gap:6px}
+.empty{text-align:center;padding:40px 18px;color:var(--muted)}
+.empty .big{font-size:52px;margin-bottom:8px}
+.empty h2{color:var(--text);font-size:19px;margin-bottom:6px}
+.empty .btn{margin:12px 4px 0}
+.banner{margin:10px 0;padding:11px 13px;border-radius:14px;background:color-mix(in srgb,var(--danger) 14%,var(--card));border:1px solid color-mix(in srgb,var(--danger) 40%,var(--line));font-size:14px;display:flex;gap:10px;align-items:center}
+.banner span{flex:1}
+.banner.info{background:var(--hl);border-color:color-mix(in srgb,var(--acc) 35%,var(--line))}
+/* sheets */
+.ov{position:fixed;inset:0;background:rgba(0,0,0,.52);z-index:50;display:flex;align-items:flex-end;justify-content:center;opacity:0;transition:opacity .18s}
+.ov.on{opacity:1}
+.sheet{background:var(--bg2);width:100%;max-width:560px;max-height:92dvh;overflow-y:auto;overflow-x:hidden;border-radius:22px 22px 0 0;padding:8px 16px calc(18px + env(safe-area-inset-bottom));transform:translateY(40px);transition:transform .2s;box-shadow:var(--shadow)}
+.ov.on .sheet{transform:none}
+.grab{width:42px;height:5px;border-radius:3px;background:var(--line);margin:4px auto 10px}
+.sheet h2{font-size:19px;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.sheet h2 .x{margin-right:auto}
+.ov.dlg{align-items:center;padding:20px}
+.ov.dlg .sheet{border-radius:20px;max-width:400px;padding:20px}
+.dlg p{color:var(--muted);margin-bottom:16px;white-space:pre-line}
+.dacts{display:flex;flex-direction:column;gap:8px}
+@media(min-width:700px){.ov{align-items:center}.sheet{border-radius:22px}}
+.fld{display:block;margin-bottom:12px}
+.fld>span{display:block;font-size:13.5px;font-weight:700;margin-bottom:5px;color:var(--muted)}
+.row2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px}
+.qty{display:flex;align-items:center;gap:6px}
+.qty input{text-align:center;min-width:0}
+.qty .ib{background:var(--card);border:1px solid var(--line);width:44px;height:44px}
+.cats{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:7px}
+.cats button{display:flex;align-items:center;gap:7px;padding:9px 10px;border-radius:12px;background:var(--card);border:1px solid var(--line);font-size:14px;font-weight:700;text-align:right}
+.cats button.on{background:var(--hl);border-color:var(--acc);color:var(--acc)}
+.acts{display:flex;gap:10px;margin-top:10px}
+.acts .btn{flex:1}
+.meta{font-size:12.5px;color:var(--muted);margin:2px 0 10px}
+.mrow{display:flex;align-items:center;gap:12px;width:100%;padding:13px 6px;border-top:1px solid var(--line);text-align:right;font-weight:700;font-size:15.5px}
+.mrow:first-of-type{border-top:0}
+.mrow .e{font-size:20px;width:28px;text-align:center}
+.mrow.danger{color:var(--danger)}
+.ords{display:flex;flex-direction:column;gap:6px}
+.ord{display:flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--line);border-radius:13px;padding:6px 10px}
+.ord b{flex:1}
+.ord .ib{width:36px;height:36px}
+.emojis{display:grid;grid-template-columns:repeat(8,1fr);gap:5px;margin-bottom:12px}
+.emojis button{font-size:24px;padding:6px 0;border-radius:11px;border:1px solid transparent}
+.emojis button.on{background:var(--hl);border-color:var(--acc)}
+.tlist{max-height:46dvh;overflow-y:auto;margin:10px 0;border:1px solid var(--line);border-radius:14px;background:var(--card)}
+.tlist label{display:flex;align-items:center;gap:10px;padding:10px 12px;border-top:1px solid var(--line);cursor:pointer}
+.tlist label:first-child{border-top:0}
+.tlist input{width:20px;height:20px;accent-color:var(--acc)}
+.tlist small{color:var(--muted);margin-right:auto;font-size:12px}
+.tlist label.has{opacity:.55}
+.linkbox{display:flex;gap:6px;align-items:center}
+.linkbox input{direction:ltr;text-align:left;font-size:13px;padding:9px;min-width:0}
+pre.wa{white-space:pre-wrap;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px;font-family:inherit;font-size:14px;max-height:42dvh;overflow:auto;margin-bottom:10px}
+#toast{position:fixed;left:0;right:0;margin:0 auto;width:max-content;bottom:calc(22px + env(safe-area-inset-bottom));transform:translateY(30px);background:#2a211b;color:#fff;border-radius:14px;padding:11px 16px;font-weight:700;font-size:14.5px;display:flex;align-items:center;gap:14px;opacity:0;pointer-events:none;transition:.22s;z-index:90;max-width:calc(100vw - 28px);box-shadow:var(--shadow)}
+#toast.on{opacity:1;transform:none;pointer-events:auto}
+#toast button{color:#ffb27a;font-weight:800;white-space:nowrap}
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <button class="ib" id="backBtn" aria-label="رجوع" hidden><svg class="i" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button>
+    <div class="ttl" id="ttl"></div>
+    <span class="pill" id="pill" hidden><i></i><span></span></span>
+    <button class="ib" id="themeBtn" aria-label="الوضع الفاتح أو الداكن"><svg class="i" viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button>
+    <button class="ib" id="menuBtn" aria-label="خيارات القائمة" hidden><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="19" r="1.6"/></svg></button>
+  </header>
+  <main>
+    <section class="view" id="vHome"><div class="wrap" id="home"></div></section>
+    <section class="view" id="vList">
+      <div class="wrap">
+        <div class="addbar" id="addbar">
+          <div class="addrow">
+            <input id="addIn" type="text" placeholder="ضيف غرض… مثل: 2 كيلو طماط" autocomplete="off" enterkeyhint="done" maxlength="80" aria-label="ضيف غرض">
+            <button class="go" id="addGo" aria-label="ضيف"><svg class="i" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
+            <div class="sugg" id="sugg" hidden></div>
+          </div>
+          <div class="quick" id="quick"></div>
+        </div>
+        <div id="lostBanner"></div>
+        <div id="items"></div>
+      </div>
+    </section>
+  </main>
+</div>
+<div id="toast"><span></span><button hidden></button></div>
+<input type="file" id="fileIn" hidden>
+<script src="../shared/sync.js"></script>
+<script>
+(function () {
+'use strict';
+const T = window.Tajarib || null;
+/* ---------- أدوات ---------- */
+const $ = (s, r = document) => r.querySelector(s), $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const LS = {
+  get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch (e) { return false; } },
+  raw(k, v) { try { localStorage.setItem(k, v); return true; } catch (e) { return false; } },
+  del(k) { try { localStorage.removeItem(k); } catch (e) { } }
+};
+const latin = s => String(s == null ? '' : s).replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d)).replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d)).replace(/٫/g, '.');
+const norm = s => latin(s).toLowerCase().replace(/[ً-ْـ]/g, '').replace(/[أإآ]/g, 'ا').replace(/ى/g, 'ي').replace(/ة/g, 'ه').replace(/ؤ/g, 'و').replace(/ئ/g, 'ي').replace(/[^\p{L}\p{N}\s.]/gu, ' ').replace(/\s+/g, ' ').trim();
+const newId = p => T ? T.newId(p) : p + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+const strip = o => { const x = { ...o }; delete x.id; delete x.u; return x; };
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const ICON = {
+  x: '<svg class="i" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>',
+  check: '<svg class="i" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
+  edit: '<svg class="i" viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16v4z"/></svg>',
+  grip: '<svg class="i" viewBox="0 0 24 24"><circle cx="9" cy="6" r="1.3"/><circle cx="15" cy="6" r="1.3"/><circle cx="9" cy="12" r="1.3"/><circle cx="15" cy="12" r="1.3"/><circle cx="9" cy="18" r="1.3"/><circle cx="15" cy="18" r="1.3"/></svg>',
+  up: '<svg class="i" viewBox="0 0 24 24"><path d="M6 15l6-6 6 6"/></svg>',
+  down: '<svg class="i" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>',
+  plus: '<svg class="i" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>'
+};
+
+/* ---------- الأقسام والقاموس ---------- */
+const CATS = [
+  { k: 'veg', n: 'خضار وفواكه', e: '🥬' }, { k: 'meat', n: 'لحوم ودجاج', e: '🍗' }, { k: 'dairy', n: 'ألبان وبيض', e: '🥛' },
+  { k: 'bakery', n: 'مخبوزات', e: '🍞' }, { k: 'pantry', n: 'تموينات', e: '🍚' }, { k: 'canned', n: 'معلبات', e: '🥫' },
+  { k: 'spices', n: 'بهارات', e: '🧂' }, { k: 'drinks', n: 'مشروبات', e: '🧃' }, { k: 'frozen', n: 'مجمدات', e: '🧊' },
+  { k: 'clean', n: 'منظفات', e: '🧽' }, { k: 'other', n: 'غيرها', e: '🛒' }
+];
+const CAT = Object.fromEntries(CATS.map(c => [c.k, c])), DEF_ORDER = CATS.map(c => c.k);
+const DICT = {
+  veg: 'طماط،طماطم،بندورة،بطاط،بطاطس،بطاطا،بصل،بصل أخضر،ثوم،خيار،خس،جزر،فلفل،فلفل رومي،فلفل حار،فلفل أخضر،فلفل بارد،بقدونس،كزبرة،نعناع،جرجير،ملفوف،زهرة،قرنبيط،بروكلي،كوسة،كوسا،باذنجان،بامية،فاصوليا خضراء،لوبيا،ذرة،شمندر،فجل،سبانخ،ملوخية،كرفس،ليمون،تفاح،موز،برتقال،يوسفي،عنب،بطيخ،حبحب،شمام،فراولة،مانجو،مانجا،رمان،كيوي،خوخ،مشمش،أناناس،أفوكادو،جوافة،تين،رطب،تمر،كرز،توت،خضار،فواكه،فاكهة،ورق عنب،زنجبيل طازج',
+  meat: 'لحم،لحمة،حاشي،غنم،نعيمي،حري،سواكني،تيس،عجل،بقر،دجاج،فراخ،صدور،صدر دجاج،أفخاذ،فخذ،أجنحة،جناح،كبدة،قلوب،مفروم،لحم مفروم،كفتة،ستيك،شرائح،سمك،هامور،سلمون،بلطي،روبيان،جمبري،نقانق،سجق،مرتديلا،ريش،مقادم،كوارع،ديك رومي،حبش',
+  dairy: 'حليب،لبن،روب،زبادي،جبن،جبنة،لبنة،قشطة،زبدة،بيض،كريمة،كريمة طبخ،شيدر،موزاريلا،حلوم،فيتا،كيري،جبن مثلثات،حليب طويل الأجل',
+  bakery: 'خبز،عيش،صامولي،تميس،توست،كرواسون،كعك،بسكويت،كيك،صمون،شابورة،بقسماط،فطائر،خبز بر،خبز أسمر،معمول،دونات،خبز عربي،رقاق',
+  pantry: 'رز،أرز،سكر،دقيق،طحين،زيت،زيت زيتون،زيت دوار الشمس،مكرونة،معكرونة،باستا،اسباجيتي،شعيرية،عدس،برغل،شوفان،كورن فليكس،حبوب الإفطار،جريش،قرصان،هريس،سميد،نشا،عسل،مربى،طحينة،حلاوة،نوتيلا،شوربة،حب شوربة،كاسترد،جلي،بيكنج باودر،خميرة،فانيلا،كاكاو بودرة،قمح',
+  canned: 'تونة،فول،حمص،ذرة معلبة،صلصة،معجون طماطم،صلصة طماطم،فاصوليا،زيتون،مخلل،مخللات،كاتشب،مايونيز،خردل،حليب مكثف،حليب مبخر،ساردين،قشطة معلبة،بازلاء،مشروم،فطر،أناناس معلب،فواكه معلبة،فول مدمس',
+  spices: 'ملح،فلفل أسود،فلفل أبيض،كمون،كركم،هيل،زعفران،قرنفل،دارسين،قرفة،بهارات،بهار،بهارات كبسة،بهارات مشكلة،زنجبيل،لومي،ليمون أسود،بابريكا،ورق غار،شطة،مرقة،ماجي،مكعبات مرق،زعتر،سماق،حبة البركة،حبة سوداء،يانسون،كزبرة ناشفة،ثوم بودرة،كاري،خلطة',
+  drinks: 'ماء،موية،مويه،مياه،عصير،ببسي،بيبسي،كولا،كوكاكولا،سفن،سفن أب،ميرندا،مشروب،شاي،قهوة،قهوة عربية،نسكافيه،كابتشينو،مشروب طاقة،ريدبول،فيمتو،تانج،شاي أخضر،كاكاو،قمر الدين،لبن عيران،ماء غازي،صودا،شراب',
+  frozen: 'آيس كريم،ايسكريم،آيسكريم،ثلج،سمبوسة،رقائق سمبوسة،بطاطس مقلية،بطاطس مجمدة،خضار مجمدة،ناجتس،برجر،بيتزا مجمدة،عجينة بف،عجينة،كنافة،فطائر مجمدة،دجاج مجمد،لحم مجمد،شاورما مجمدة,سبرينج رول',
+  clean: 'صابون،صابون يد،شامبو،بلسم،كلوركس،فلاش،سائل جلي،سائل غسيل،فيري،تايد،اريال،مسحوق غسيل،منظف،منظفات،منظف أرضيات،منعم،داوني،مناديل،كلينكس،فاين،ورق تواليت،ورق حمام،مناديل مبللة،معطر،معطر جو،مطهر،ديتول،ليزول,اسفنج،سلك جلي،أكياس زبالة،أكياس نفايات،كيس زبالة،زبالة،معجون أسنان،فرشاة أسنان،مزيل عرق،حفاضات،بامبرز،ورق ألمنيوم،قصدير،نايلون،مكنسة،ممسحة،ليف،جل استحمام،شفرات،مبيد،بف باف،قفازات،كمامات،غسول',
+  other: 'فحم،ولاعة،صحون ورق،صحون بلاستيك،أكواب ورق،أكواب،ملاعق بلاستيك،شيبس،فصفص،مكسرات،لوز،فستق،كاجو،شوكولاتة،حلاوى،علك،بطاريات،لمبة،أدوية،بنادول'
+};
+const DICT_E = [], DICT_PH = new Set();
+for (const [c, s] of Object.entries(DICT)) for (const w of s.split(/[،,]/)) { const t = norm(w).split(' ').map(x => x.replace(/^ال(?=..)/, '')).filter(Boolean); if (t.length) DICT_E.push({ t, c, w: w.trim() }); if (t.length > 1) DICT_PH.add(norm(w)); }
+DICT_E.sort((a, b) => b.t.length - a.t.length || b.t.join('').length - a.t.join('').length);
+const toks = s => norm(s).split(' ').filter(Boolean).map(x => x.replace(/^(?:وال|بال|ال)(?=..)/, ''));
+function dictCat(name) {
+  const tk = toks(name); if (!tk.length) return null;
+  if (tk.some(t => /^(مجمد|مجمده|مثلج|فريزر)$/.test(t))) return 'frozen';
+  if (tk.some(t => /^(معلب|معلبه|معلبات)$/.test(t))) return 'canned';
+  const eq = (a, b) => a === b || (b.length >= 3 && a.startsWith(b) && a.length - b.length <= 2);
+  for (const e of DICT_E) {
+    for (let i = 0; i + e.t.length <= tk.length; i++) { let ok = true; for (let j = 0; j < e.t.length; j++) if (!eq(tk[i + j], e.t[j])) { ok = false; break; } if (ok) return e.c; }
+  }
+  return null;
+}
+function guessCat(name) { const h = HIST[norm(name)]; if (h && h.c && CAT[h.c]) return h.c; return dictCat(name) || 'other'; }
+
+/* ---------- الكميات والوحدات ---------- */
+const UNITS = [
+  ['حبة', 'حبه حبات حبة', 'حبتين', 'حبات'], ['كيلو', 'كيلو كيلوات كيلوغرام كيلوجرام كغ كجم كيلوغرامات', 'كيلوين', 'كيلو'], ['غرام', 'غرام جرام غم جم غرامات جرامات', '', 'غرام'],
+  ['لتر', 'لتر لترات ليتر', 'لترين', 'لترات'], ['كرتون', 'كرتون كراتين كرتونه كرتونة', 'كرتونين', 'كراتين'], ['علبة', 'علبة علبه علب', 'علبتين', 'علب'],
+  ['ربطة', 'ربطة ربطه ربطات', 'ربطتين', 'ربطات'], ['كيس', 'كيس اكياس أكياس', 'كيسين', 'أكياس'], ['باكيت', 'باكيت باكت باكيتات بكت', 'باكيتين', 'باكيتات'],
+  ['شدة', 'شدة شده شدات', 'شدتين', 'شدات'], ['درزن', 'درزن دزينة درزنات', 'درزنين', 'درزن'], ['جالون', 'جالون جالونات', 'جالونين', 'جالونات'],
+  ['قارورة', 'قارورة قاروره قوارير', 'قارورتين', 'قوارير'], ['صحن', 'صحن صحون', 'صحنين', 'صحون'], ['طبق', 'طبق اطباق أطباق', 'طبقين', 'أطباق'],
+  ['صندوق', 'صندوق صناديق', 'صندوقين', 'صناديق'], ['رول', 'رول رولات', 'رولين', 'رولات'], ['ظرف', 'ظرف ظروف', 'ظرفين', 'ظروف'], ['مل', 'مل ملي', '', 'مل']
+];
+const UNIT_MAP = new Map(), UNIT_INFO = {};
+const MEASURE = new Set(['كيلو', 'غرام', 'لتر', 'مل']);
+for (const [u, al, dual, pl] of UNITS) { UNIT_INFO[u] = { dual: MEASURE.has(u) ? '' : dual, pl }; for (const a of al.split(' ')) UNIT_MAP.set(norm(a), { u }); if (dual) UNIT_MAP.set(norm(dual), { u, two: 1 }); }
+const UNIT_LIST = UNITS.map(x => x[0]);
+const NUMW = { 'واحد': 1, 'وحده': 1, 'واحده': 1, 'اثنين': 2, 'ثنتين': 2, 'اثنان': 2, 'ثلاث': 3, 'ثلاثه': 3, 'اربع': 4, 'اربعه': 4, 'خمس': 5, 'خمسه': 5, 'ست': 6, 'سته': 6, 'سبع': 7, 'سبعه': 7, 'ثمان': 8, 'ثمانيه': 8, 'تسع': 9, 'تسعه': 9, 'عشر': 10, 'عشره': 10, 'نص': 0.5, 'نصف': 0.5, 'ربع': 0.25 };
+function parseEntry(text) {
+  let s = latin(text).replace(/[×xX*]\s*(\d+(?:[.,]\d+)?)/g, ' $1 ').replace(/(\d+(?:[.,]\d+)?)\s*[×xX*]/g, ' $1 ');
+  s = s.replace(/(\d)(?=[^\d\s.,])/g, '$1 ').replace(/([^\d\s.,])(?=\d)/g, '$1 ');
+  const tk = s.split(/\s+/).filter(Boolean); let q = null, un = null; const name = [];
+  for (let i = 0; i < tk.length; i++) {
+    const t = tk[i], n = norm(t), nx = tk[i + 1] && norm(tk[i + 1]);
+    if (/^\d+(?:[.,]\d+)?$/.test(t) && q == null) { q = parseFloat(t.replace(',', '.')); continue; }
+    if (NUMW[n] != null && q == null && nx && UNIT_MAP.has(nx)) { q = NUMW[n]; continue; }
+    const um = UNIT_MAP.get(n);
+    /* «أكياس زبالة» و«صحون ورق» أسماء أغراض مو وحدات */
+    if (um && nx && DICT_PH.has(n + ' ' + nx)) { name.push(t); continue; }
+    if (um && !un && (name.length || i < tk.length - 1)) { un = um.u; if (um.two) q = q == null ? 2 : q * 2; continue; }
+    if ((n === 'ونص' || n === 'ونصف') && un) { q = (q == null ? 1 : q) + 0.5; continue; }
+    if (n === 'وربع' && un) { q = (q == null ? 1 : q) + 0.25; continue; }
+    name.push(t);
+  }
+  if (un && q == null) q = 1;
+  if (q != null && !(q > 0)) q = null; if (q != null) q = Math.min(Math.round(q * 100) / 100, 9999);
+  return { name: name.join(' ').replace(/^[\s\-–,،:]+|[\s\-–,،:]+$/g, '').slice(0, 60), q, un };
+}
+const fmtN = n => String(Math.round(n * 100) / 100);
+function fmtQty(q, un) {
+  if (!un) return q && q !== 1 ? '×' + fmtN(q) : '';
+  const inf = UNIT_INFO[un] || {};
+  if (q == null || q === 1) return un;
+  if (q === 2 && inf.dual) return inf.dual;
+  if (q === 0.5) return 'نص ' + un; if (q === 0.25) return 'ربع ' + un; if (q === 1.5) return un + ' ونص';
+  if (q >= 3 && q <= 10 && Number.isInteger(q)) return q + ' ' + (inf.pl || un);
+  return fmtN(q) + ' ' + un;
+}
+
+/* ---------- المظهر والتنبيهات والنوافذ ---------- */
+function applyTheme() { const l = LS.get('maqadi.theme', 'dark') === 'light'; document.body.classList.toggle('light', l); $('meta[name=theme-color]').content = l ? '#f3ece4' : '#14110f'; }
+applyTheme();
+$('#themeBtn').onclick = () => { LS.set('maqadi.theme', document.body.classList.contains('light') ? 'dark' : 'light'); applyTheme(); if (!S.cur) renderHome(); };
+let toastT;
+function toast(msg, action) {
+  const t = $('#toast'), b = $('#toast button'); $('#toast span').textContent = msg;
+  if (action) { b.hidden = false; b.textContent = action.text; b.onclick = () => { t.classList.remove('on'); action.fn(); }; } else b.hidden = true;
+  t.classList.add('on'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('on'), action ? 6500 : 2600);
+}
+const sheets = [];
+function openSheet(html, o = {}) {
+  const ov = document.createElement('div'); ov.className = 'ov' + (o.dlg ? ' dlg' : '');
+  ov.innerHTML = `<div class="sheet" role="dialog" aria-modal="true">${o.dlg ? '' : '<div class="grab"></div>'}${html}</div>`;
+  document.body.appendChild(ov); requestAnimationFrame(() => ov.classList.add('on'));
+  const rec = { ov, el: ov.firstChild, onClose: o.onClose };
+  sheets.push(rec);
+  ov.addEventListener('click', e => { if (e.target === ov) closeSheet(rec); else if (e.target.closest('[data-close]')) closeSheet(rec); });
+  return rec;
+}
+function closeSheet(rec, val) {
+  rec = rec || sheets[sheets.length - 1]; if (!rec) return; const i = sheets.indexOf(rec); if (i < 0) return; sheets.splice(i, 1);
+  rec.ov.classList.remove('on'); setTimeout(() => rec.ov.remove(), 180); if (rec.onClose) rec.onClose(val);
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && sheets.length) closeSheet(); });
+function ask(title, text, buttons) {
+  return new Promise(res => {
+    let done = false;
+    const btns = buttons || [{ v: true, t: 'أكيد', cls: 'danger' }, { v: false, t: 'إلغاء', cls: 'ghost' }];
+    const sh = openSheet(`<h2>${esc(title)}</h2>${text ? `<p>${esc(text)}</p>` : ''}<div class="dacts">${btns.map((b, i) => `<button class="btn ${b.cls || ''}" data-i="${i}">${esc(b.t)}</button>`).join('')}</div>`,
+      { dlg: true, onClose: v => { if (!done) { done = true; res(v === undefined ? (btns.find(b => b.cancel) || { v: false }).v : v); } } });
+    sh.el.addEventListener('click', e => { const b = e.target.closest('[data-i]'); if (b) closeSheet(sh, btns[+b.dataset.i].v); });
+  });
+}
+function promptText(title, value, ph) {
+  return new Promise(res => {
+    let ok = false;
+    const sh = openSheet(`<h2>${esc(title)}</h2><input id="ptx" maxlength="40" placeholder="${esc(ph || '')}"><div class="acts"><button class="btn pri" id="pok">تمام</button><button class="btn ghost" data-close>إلغاء</button></div>`, { dlg: true, onClose: () => res(ok ? $('#ptx', sh.el).value.trim() : null) });
+    const inp = $('#ptx', sh.el); inp.value = value || ''; setTimeout(() => inp.focus(), 60);
+    const go = () => { ok = true; closeSheet(sh); };
+    $('#pok', sh.el).onclick = go; inp.onkeydown = e => { if (e.key === 'Enter') go(); };
+  });
+}
+async function copyText(s) {
+  try { await navigator.clipboard.writeText(s); return true; } catch (e) {
+    const ta = document.createElement('textarea'); ta.value = s; ta.style.position = 'fixed'; ta.style.opacity = '0'; document.body.appendChild(ta); ta.select();
+    let ok = false; try { ok = document.execCommand('copy'); } catch (x) { } ta.remove(); return ok;
+  }
+}
+function download(name, data, type) {
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([data], { type })); a.download = name; document.body.appendChild(a); a.click();
+  setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 4000);
+}
+
+/* ---------- مستند محلي بنفس واجهة مكتبة المزامنة ---------- */
+class LocalDoc {
+  constructor(key, o) { this.key = key; this.onChange = o.onChange || (() => { }); const c = LS.get(key, null) || {}; this.data = { items: c.items || {}, meta: c.meta || null }; this.local = true; }
+  start() { return this; } stop() { }
+  items() { return Object.entries(this.data.items).map(([id, it]) => ({ ...it, id })); }
+  item(id) { const it = this.data.items[id]; return it ? { ...it, id } : null; }
+  meta() { return this.data.meta ? { ...this.data.meta } : null; }
+  canEdit() { return true; } hasPending() { return false; }
+  _save() { if (!LS.set(this.key, this.data)) toast('مساحة التخزين بالجهاز امتلت'); this.onChange({ local: true }); }
+  set(id, obj) { const it = { ...obj, u: Date.now() }; delete it.id; this.data.items[id] = it; this._save(); return it; }
+  del(id) { delete this.data.items[id]; this._save(); }
+  setMeta(obj) { this.data.meta = { ...obj, u: Date.now() }; delete this.data.meta.id; this._save(); }
+}
+
+/* ---------- الحالة ---------- */
+let lists = LS.get('maqadi.lists', []);
+const saveLists = () => LS.set('maqadi.lists', lists);
+let HIST = LS.get('maqadi.hist', {});
+const saveHist = () => { const e = Object.entries(HIST); if (e.length > 400) { e.sort((a, b) => (b[1].t || 0) - (a[1].t || 0)); HIST = Object.fromEntries(e.slice(0, 300)); } LS.set('maqadi.hist', HIST); };
+const S = { cur: null, me: LS.get('maqadi.me', ''), showDone: LS.get('maqadi.showDone', true), flash: null };
+const docs = new Map(), stat = new Map();
+function newLocalList(name, emoji) { const rec = { k: 'L' + newId(''), name: name || 'مقاضي البيت', emoji: emoji || '🏠' }; lists.push(rec); saveLists(); const d = docOf(rec); d.setMeta({ name: rec.name, emoji: rec.emoji, cats: LS.get('maqadi.cats', DEF_ORDER) }); return rec; }
+function docOf(rec) {
+  let d = docs.get(rec.k); if (d) return d;
+  if (rec.id) {
+    if (!T) { d = new LocalDoc('maqadi.void', {}); stat.set(rec.k, { s: 'error', lost: 'nolib' }); }
+    else { stat.set(rec.k, { s: 'idle' }); d = T.open({ id: rec.id, key: rec.key, kind: 'maqadi', onChange: () => changed(rec), onStatus: (s, m) => onStat(rec, s, m) }).start(); }
+  } else d = new LocalDoc('maqadi.local.' + rec.k, { onChange: () => changed(rec) });
+  docs.set(rec.k, d); return d;
+}
+function dropDoc(rec) { const d = docs.get(rec.k); if (d) d.stop(); docs.delete(rec.k); stat.delete(rec.k); }
+function canEdit(rec) {
+  rec = rec || S.cur; if (!rec) return false; const d = docOf(rec), st = stat.get(rec.k) || {};
+  if (st.lost) return false; if (d.local) return true; return d.role ? d.role === 'edit' : !!rec.edit;
+}
+function guardEdit() { if (canEdit()) return true; const d = docOf(S.cur); toast(!d.local && !d.role ? 'لحظة، أتأكد من صلاحيتك…' : 'عندك رابط عرض بس، ما تقدر تعدّل'); return false; }
+let rq = 0;
+function changed(rec) {
+  const d = docs.get(rec.k), m = d && d.meta();
+  if (m && (m.name && m.name !== rec.name || m.emoji && m.emoji !== rec.emoji)) { rec.name = m.name || rec.name; rec.emoji = m.emoji || rec.emoji; saveLists(); }
+  if (rq) return; rq = requestAnimationFrame(() => { rq = 0; render(); });
+}
+function onStat(rec, s, msg) {
+  const d = docs.get(rec.k), before = canEdit(rec), st = { s, msg: msg || '' };
+  const code = d && d.error && d.error.code; if (code === 'bad_key' || code === 'not_found') st.lost = code;
+  stat.set(rec.k, st);
+  if (S.cur === rec) { renderHeader(); if (before !== canEdit(rec) || st.lost) render(); } else if (!S.cur) renderHome();
+}
+
+/* ---------- العرض ---------- */
+function render() { if (S.cur) renderList(); else renderHome(); renderHeader(); }
+function counts(rec) { const it = docOf(rec).items(); const left = it.filter(x => !x.done).length; return { left, all: it.length }; }
+function renderHeader() {
+  const rec = S.cur, pill = $('#pill');
+  $('#backBtn').hidden = !rec; $('#menuBtn').hidden = !rec;
+  if (!rec) {
+    $('#ttl').innerHTML = `<div class="logo">🛒</div><div><h1>مقاضي</h1><small>${S.me ? 'هلا ' + esc(S.me) : 'قوائم مقاضي البيت'}</small></div>`;
+    pill.hidden = true; document.title = 'مقاضي'; return;
+  }
+  const c = counts(rec);
+  $('#ttl').innerHTML = `<span class="em">${esc(rec.emoji || '🛒')}</span><div><h1>${esc(rec.name)}</h1><small>${c.all ? (c.left ? `باقي ${c.left} من ${c.all}` : 'خلصت كلها 👏') : 'فاضية'}</small></div>`;
+  document.title = rec.name + ' · مقاضي';
+  if (!rec.id) { pill.hidden = true; return; }
+  const st = stat.get(rec.k) || { s: 'idle' }, d = docOf(rec), ro = d.role === 'view';
+  const map = { idle: 'يتصل…', ok: ro ? 'عرض فقط' : 'متزامنة', saving: 'يحفظ…', offline: 'بدون نت', error: 'خطأ' };
+  pill.hidden = false; pill.className = 'pill ' + st.s + (ro && st.s === 'ok' ? ' ro' : ''); $('span', pill).textContent = map[st.s] || '';
+  pill.onclick = () => toast(st.msg || (st.s === 'ok' ? (ro ? 'تشوف القائمة بس، ما تقدر تعدّل' : 'كل شي محفوظ ومتزامن مع أهلك') : map[st.s]));
+}
+function renderHome() {
+  const sts = l => { if (!l.id) return ''; const st = stat.get(l.k) || { s: 'idle' }; const t = { ok: 'مشتركة', saving: 'يحفظ', offline: 'بدون نت', error: 'خطأ', idle: 'مشتركة' }[st.s]; return `<span class="tag ${st.s}"><i></i>${t}</span>`; };
+  $('#home').innerHTML = `
+    ${S.me ? '' : `<div class="card"><h3>👋 أنا مين؟</h3><p class="d">اكتب اسمك عشان أهلك يعرفون مين ضاف الأغراض ومين اشتراها.</p><div class="hello"><input id="meIn" maxlength="24" placeholder="مثل: أبو فهد أو أم سعود"><button class="btn pri" id="meSave">حفظ</button></div></div>`}
+    <div class="lists">${lists.map(l => { const c = counts(l); const pct = c.all ? Math.round((c.all - c.left) / c.all * 100) : 0; return `<button class="lc" data-l="${esc(l.k)}">${sts(l)}<span class="em">${esc(l.emoji || '🛒')}</span><b>${esc(l.name)}</b><small>${c.all ? (c.left ? `باقي ${c.left} من ${c.all}` : 'خلصت كلها 👏') : 'فاضية'}</small><span class="bar"><i style="width:${pct}%"></i></span></button>`; }).join('')}
+      <button class="lc new" id="newList">${ICON.plus}قائمة جديدة</button></div>
+    <div class="card"><h3>⚙️ الإعدادات</h3>
+      <div class="set"><div class="l">اسمي<small>${S.me ? esc(S.me) : 'ما كتبته للحين'}</small></div><button class="btn sm" id="meEdit">${S.me ? 'غيّر' : 'اكتب'}</button></div>
+      <div class="set"><div class="l">الوضع الفاتح</div><button class="sw ${document.body.classList.contains('light') ? 'on' : ''}" id="lightSw" aria-label="الوضع الفاتح"></button></div>
+      <div class="set"><div class="l">نسخة احتياطية<small>كل القوائم والأغراض اللي تشتريها كثير</small></div><div class="rowb"><button class="btn sm" id="expBtn">صدّر</button><button class="btn sm" id="impBtn">استورد</button></div></div>
+    </div>
+    <p style="text-align:center;color:var(--muted);font-size:12.5px;margin-top:16px">مقاضي · القوائم محفوظة على جهازك، والمشتركة تتزامن مع أهلك</p>`;
+  const on = (id, fn) => { const el = $('#' + id); if (el) el.onclick = fn; };
+  $$('#home [data-l]').forEach(b => b.onclick = () => openList(lists.find(l => l.k === b.dataset.l)));
+  on('newList', newListSheet);
+  on('meSave', () => { const v = $('#meIn').value.trim(); if (!v) return toast('اكتب اسمك'); setMe(v); });
+  const mi = $('#meIn'); if (mi) mi.onkeydown = e => { if (e.key === 'Enter') $('#meSave').click(); };
+  on('meEdit', async () => { const v = await promptText('وش اسمك؟', S.me, 'مثل: أبو فهد'); if (v != null) setMe(v); });
+  on('lightSw', () => $('#themeBtn').click());
+  on('expBtn', exportAll); on('impBtn', importAll);
+}
+function setMe(v) { S.me = v.slice(0, 24); LS.set('maqadi.me', S.me); toast(S.me ? 'هلا والله ' + S.me : 'انشال الاسم'); render(); }
+function sortedOrder(meta) { const o = (meta && Array.isArray(meta.cats) ? meta.cats : []).filter(k => CAT[k]); for (const k of DEF_ORDER) if (!o.includes(k)) o.push(k); return o; }
+function itemHtml(it, ed) {
+  const qty = fmtQty(it.q, it.un), sub = [];
+  if (it.nt) sub.push(esc(it.nt));
+  if (it.done && it.dby) sub.push('اشتراه ' + esc(it.dby)); else if (it.by) sub.push('ضافه ' + esc(it.by));
+  return `<div class="it${it.done ? ' done' : ''}${S.flash === it.id ? ' flash' : ''}" data-id="${it.id}">
+    <button class="ck" data-ck aria-label="${it.done ? 'رجّعه' : 'اشتريته'}"><span>${ICON.check}</span></button>
+    <div class="tx" data-ck><b>${esc(it.n)}</b>${qty ? `<span class="q">${esc(qty)}</span>` : ''}${sub.length ? `<small>${sub.join(' · ')}</small>` : ''}</div>
+    ${ed ? `<button class="ed" data-ed aria-label="عدّل">${ICON.edit}</button>${it.done ? '' : `<span class="hd" aria-label="اسحب لترتيبه">${ICON.grip}</span>`}` : ''}</div>`;
+}
+const byO = (a, b) => (+a.o || 0) - (+b.o || 0) || (a.id < b.id ? -1 : 1);
+function renderList() {
+  const rec = S.cur, d = docOf(rec), ed = canEdit(rec), st = stat.get(rec.k) || {};
+  $('#addbar').hidden = !ed;
+  $('#lostBanner').innerHTML = st.lost ? `<div class="banner"><span>${st.lost === 'not_found' ? 'القائمة انحذفت من السيرفر أو انتهت مشاركتها.' : st.lost === 'nolib' ? 'مكتبة المزامنة ما تحمّلت، افتح التطبيق وأنت متصل.' : 'الرابط تغيّر أو انتهت صلاحيته، اطلب رابط جديد.'}</span><button class="btn sm" id="lostRm">شيلها</button></div>`
+    : (!ed && d.role === 'view' ? `<div class="banner info"><span>👀 تشوف القائمة بس. لو تبي تضيف، اطلب رابط التعديل.</span></div>` : '');
+  if (st.lost) $('#lostRm').onclick = () => removeList(rec);
+  const items = d.items(), order = sortedOrder(d.meta()), pend = items.filter(i => !i.done), done = items.filter(i => i.done).sort((a, b) => (b.dat || 0) - (a.dat || 0));
+  const groups = new Map(); for (const it of pend) { const c = CAT[it.c] ? it.c : 'other'; if (!groups.has(c)) groups.set(c, []); groups.get(c).push(it); }
+  let h = '';
+  if (!items.length) {
+    h = `<div class="empty"><div class="big">${esc(rec.emoji || '🛒')}</div><h2>القائمة فاضية</h2><p>${ed ? 'اكتب فوق وش تبي، مثل «2 كيلو طماط» أو «كرتون ماء»، وأنا أرتبها حسب أقسام السوبرماركت.' : 'ما فيه أغراض للحين.'}</p>${ed ? `<button class="btn pri" id="tplBtn2">🧾 وش الناقص؟ اختر من قوائم جاهزة</button>` : ''}</div>`;
+  } else {
+    h += '<div class="pend">';
+    for (const c of order) { const g = groups.get(c); if (!g) continue; g.sort(byO); h += `<div class="cat" data-c="${c}"><div class="cath">${CAT[c].e} ${CAT[c].n} <span class="n">${g.length}</span></div>${g.map(it => itemHtml(it, ed)).join('')}</div>`; }
+    h += '</div>';
+    if (!pend.length) h += `<div class="empty" style="padding:24px"><div class="big">👏</div><h2>خلصت المقاضي</h2></div>`;
+    if (done.length) {
+      h += `<div class="doneh"><b id="doneTg">${S.showDone ? '▾' : '◂'} تم شراؤها (${done.length})</b>${ed ? '<button class="btn sm danger" id="clearDone">امسح المشتراة</button>' : ''}</div>`;
+      if (S.showDone) h += `<div class="dn">${done.map(it => itemHtml(it, ed)).join('')}</div>`;
+    }
+  }
+  $('#items').innerHTML = h; S.flash = null;
+  const t2 = $('#tplBtn2'); if (t2) t2.onclick = templatesSheet;
+  const dt = $('#doneTg'); if (dt) dt.onclick = () => { S.showDone = !S.showDone; LS.set('maqadi.showDone', S.showDone); renderList(); };
+  const cd = $('#clearDone'); if (cd) cd.onclick = clearDone;
+  renderQuick();
+}
+function renderQuick() {
+  const q = $('#quick'), inp = $('#addIn');
+  if (document.activeElement === inp && !inp.value.trim()) {
+    const have = new Set(docOf(S.cur).items().filter(i => !i.done).map(i => norm(i.n)));
+    const fr = Object.entries(HIST).filter(([k]) => !have.has(k)).sort((a, b) => (b[1].cnt || 0) - (a[1].cnt || 0) || (b[1].t || 0) - (a[1].t || 0)).slice(0, 10);
+    if (fr.length) { q.innerHTML = `<span class="lbl">تشتريها كثير:</span>` + fr.map(([k, h]) => `<button class="chip" data-fr="${esc(k)}">${CAT[h.c] ? CAT[h.c].e : '🛒'} ${esc(h.n)}</button>`).join(''); return; }
+  }
+  q.innerHTML = `<button class="chip" data-qa="tpl">🧾 وش الناقص؟</button><button class="chip" data-qa="wa">💬 واتساب</button><button class="chip" data-qa="share">🔗 شارك</button><button class="chip" data-qa="order">↕️ ترتيب الأقسام</button>`;
+}
+$('#quick').addEventListener('pointerdown', e => { if (e.target.closest('[data-fr]')) e.preventDefault(); });
+$('#quick').addEventListener('click', e => {
+  const f = e.target.closest('[data-fr]'); if (f) { const h = HIST[f.dataset.fr]; if (h) addItem({ name: h.n, q: h.q, un: h.un }); return; }
+  const a = e.target.closest('[data-qa]'); if (!a) return;
+  ({ tpl: templatesSheet, wa: waSheet, share: shareSheet, order: orderSheet })[a.dataset.qa]();
+});
+
+/* ---------- الإضافة والاقتراحات ---------- */
+const inp = $('#addIn'), sugg = $('#sugg'); let sIdx = -1, sList = [];
+function suggestions(text) {
+  const p = parseEntry(text), q = norm(p.name); if (!q) return [];
+  const have = new Map(docOf(S.cur).items().map(i => [norm(i.n), i]));
+  const out = [], seen = new Set();
+  const add = (n, src) => { const k = norm(n); if (seen.has(k) || !k) return; seen.add(k); out.push({ n, k, src }); };
+  const hs = Object.entries(HIST).map(([k, h]) => ({ k, h, s: k.startsWith(q) ? 2 : k.includes(q) ? 1 : 0 })).filter(x => x.s).sort((a, b) => b.s - a.s || (b.h.cnt || 0) - (a.h.cnt || 0));
+  for (const x of hs.slice(0, 5)) add(x.h.n, x.h);
+  const qt = q.replace(/^ال(?=..)/, '');
+  for (const e of DICT_E) { if (out.length >= 7) break; const k = norm(e.w); if (k.startsWith(qt) || (qt.length >= 2 && k.split(' ').some(w => w.startsWith(qt)))) add(e.w, null); }
+  return out.slice(0, 6).map(s => ({ ...s, ex: have.get(s.k), p }));
+}
+function drawSugg() {
+  const v = inp.value; sList = v.trim() ? suggestions(v) : []; sIdx = -1;
+  if (!sList.length || (sList.length === 1 && sList[0].k === norm(parseEntry(v).name) && !sList[0].src)) { sugg.hidden = true; return; }
+  sugg.innerHTML = sList.map((s, i) => { const h = s.src, c = (h && CAT[h.c]) ? h.c : guessCat(s.n); const q = s.p.q || s.p.un ? fmtQty(s.p.q, s.p.un) : (h ? fmtQty(h.q, h.un) : ''); return `<button data-s="${i}">${CAT[c].e} <b>${esc(s.n)}</b>${s.ex ? `<span class="ex">${s.ex.done ? 'مشترى' : 'موجود'}</span>` : ''}<small>${esc(q || (h ? 'من قبل' : ''))}</small></button>`; }).join('');
+  sugg.hidden = false;
+}
+function hideSugg() { sugg.hidden = true; sIdx = -1; }
+inp.addEventListener('input', () => { drawSugg(); renderQuick(); });
+inp.addEventListener('focus', () => { renderQuick(); if (inp.value.trim()) drawSugg(); });
+inp.addEventListener('blur', () => setTimeout(() => { hideSugg(); if (S.cur) renderQuick(); }, 150));
+inp.addEventListener('keydown', e => {
+  if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { if (sugg.hidden) return; e.preventDefault(); sIdx = (sIdx + (e.key === 'ArrowDown' ? 1 : -1) + sList.length) % sList.length; $$('button', sugg).forEach((b, i) => b.classList.toggle('act', i === sIdx)); }
+  else if (e.key === 'Enter') { e.preventDefault(); if (sIdx >= 0 && !sugg.hidden) pickSugg(sIdx); else submitAdd(); }
+  else if (e.key === 'Escape') hideSugg();
+});
+sugg.addEventListener('pointerdown', e => e.preventDefault());
+sugg.addEventListener('click', e => { const b = e.target.closest('[data-s]'); if (b) pickSugg(+b.dataset.s); });
+$('#addGo').addEventListener('pointerdown', e => e.preventDefault());
+$('#addGo').onclick = submitAdd;
+function pickSugg(i) { const s = sList[i]; if (!s) return; const h = s.src || HIST[s.k]; const hasQ = s.p.q != null || s.p.un; addItem({ name: s.n, q: hasQ ? s.p.q : (h ? h.q : null), un: hasQ ? s.p.un : (h ? h.un : null) }); }
+function submitAdd() { const v = inp.value.trim(); if (!v) { inp.focus(); return; } const p = parseEntry(v); if (!p.name) { toast('اكتب اسم الغرض'); return; } addItem(p); }
+function addItem(p) {
+  if (!guardEdit()) return; const d = docOf(S.cur), k = norm(p.name);
+  const ex = d.items().find(i => norm(i.n) === k);
+  try {
+    if (ex) {
+      const o = strip(ex), before = strip(ex); let msg;
+      const setQ = () => { if (p.q != null) o.q = p.q; else delete o.q; if (p.un) o.un = p.un; else delete o.un; };
+      if (ex.done) { o.done = 0; delete o.dby; delete o.dat; if (p.q != null || p.un) setQ(); msg = `رجّعت «${ex.n}» للقائمة`; }
+      else if (p.q != null && (o.un || '') === (p.un || '') && o.q != null) { o.q = Math.round((o.q + p.q) * 100) / 100; msg = `«${ex.n}» موجود، زودت الكمية`; }
+      else if (p.q != null || p.un) { setQ(); msg = `«${ex.n}» موجود، حدّثت الكمية`; }
+      else msg = `«${ex.n}» موجود بالقائمة`;
+      S.flash = ex.id;
+      if (JSON.stringify(o) !== JSON.stringify(before)) { d.set(ex.id, o); toast(msg, { text: 'تراجع', fn: () => d.set(ex.id, before) }); } else { toast(msg); renderList(); }
+    } else {
+      const id = newId('i'), c = guessCat(p.name);
+      const it = { n: p.name, c, o: Date.now(), at: Date.now() }; if (p.q != null) it.q = p.q; if (p.un) it.un = p.un; if (S.me) it.by = S.me;
+      d.set(id, it); S.flash = id;
+    }
+  } catch (x) { toast(T ? T.errorText(x) : 'ما انحفظ'); return; }
+  const h = HIST[k] || { n: p.name, cnt: 0 }; h.n = p.name; h.cnt = (h.cnt || 0) + 1; h.t = Date.now(); if (p.q != null || p.un) { h.q = p.q; h.un = p.un || ''; } if (!h.c) h.c = guessCat(p.name); HIST[k] = h; saveHist();
+  inp.value = ''; hideSugg(); renderQuick();
+}
+
+/* ---------- الضغط على الأغراض ---------- */
+$('#items').addEventListener('click', e => {
+  const row = e.target.closest('.it'); if (!row) return; const id = row.dataset.id;
+  if (e.target.closest('[data-ed]')) return editItem(id);
+  if (e.target.closest('[data-ck]')) toggleItem(id);
+});
+function toggleItem(id) {
+  if (!guardEdit()) return; const d = docOf(S.cur), it = d.item(id); if (!it) return; const o = strip(it);
+  if (it.done) { o.done = 0; delete o.dby; delete o.dat; } else { o.done = 1; o.dat = Date.now(); if (S.me) o.dby = S.me; else delete o.dby; }
+  d.set(id, o);
+}
+async function clearDone() {
+  const d = docOf(S.cur), done = d.items().filter(i => i.done); if (!done.length) return;
+  if (!await ask('امسح المشتراة؟', `بتنمسح ${done.length} من الأغراض اللي اشتريتوها.`)) return;
+  const snap = done.map(i => [i.id, strip(i)]); snap.forEach(([id]) => d.del(id));
+  toast(`انمسحت ${done.length}`, { text: 'تراجع', fn: () => snap.forEach(([id, o]) => d.set(id, o)) });
+}
+function editItem(id) {
+  if (!guardEdit()) return; const d = docOf(S.cur), it = d.item(id); if (!it) return;
+  const st = { c: CAT[it.c] ? it.c : 'other' };
+  const sh = openSheet(`<h2>عدّل الغرض<button class="ib x" data-close aria-label="سكّر">${ICON.x}</button></h2>
+    <label class="fld"><span>الاسم</span><input id="eN" maxlength="60"></label>
+    <div class="row2"><div class="fld"><span>الكمية</span><div class="qty"><button class="ib" id="eM" aria-label="أقل">−</button><input id="eQ" inputmode="decimal" placeholder="—"><button class="ib" id="eP" aria-label="أكثر">+</button></div></div>
+    <label class="fld"><span>الوحدة</span><select id="eU"><option value="">بدون</option>${UNIT_LIST.map(u => `<option>${u}</option>`).join('')}</select></label></div>
+    <div class="fld"><span>القسم</span><div class="cats" id="eC">${CATS.map(c => `<button data-c="${c.k}">${c.e} ${c.n}</button>`).join('')}</div></div>
+    <label class="fld"><span>ملاحظة</span><input id="eT" maxlength="80" placeholder="مثل: النوع الكبير، أو من المحل الفلاني"></label>
+    <div class="meta">${[it.by ? 'ضافه ' + esc(it.by) : '', it.at ? new Date(it.at).toLocaleString('ar-SA-u-nu-latn', { dateStyle: 'medium', timeStyle: 'short' }) : '', it.done && it.dby ? 'اشتراه ' + esc(it.dby) : ''].filter(Boolean).join(' · ')}</div>
+    <div class="acts"><button class="btn pri" id="eS">حفظ</button><button class="btn danger" id="eD">احذف</button></div>`);
+  const E = s => $(s, sh.el);
+  E('#eN').value = it.n; E('#eQ').value = it.q != null ? fmtN(it.q) : ''; E('#eU').value = it.un || ''; E('#eT').value = it.nt || '';
+  const drawC = () => $$('#eC button', sh.el).forEach(b => b.classList.toggle('on', b.dataset.c === st.c)); drawC();
+  E('#eC').onclick = e => { const b = e.target.closest('[data-c]'); if (b) { st.c = b.dataset.c; drawC(); } };
+  const qv = () => { const v = parseFloat(latin(E('#eQ').value).replace(',', '.')); return v > 0 ? v : null; };
+  E('#eM').onclick = () => { const v = qv(); E('#eQ').value = v && v > 1 ? fmtN(v - 1) : ''; };
+  E('#eP').onclick = () => { const v = qv(); E('#eQ').value = fmtN((v || 0) + 1); };
+  E('#eS').onclick = () => {
+    const n = E('#eN').value.trim(); if (!n) return toast('اكتب الاسم');
+    const cur = d.item(id) || it, o = strip(cur); o.n = n.slice(0, 60); const q = qv(); if (q != null) o.q = q; else delete o.q;
+    const un = E('#eU').value; if (un) o.un = un; else delete o.un; const nt = E('#eT').value.trim(); if (nt) o.nt = nt; else delete o.nt;
+    if (o.c !== st.c) { o.c = st.c; const h = HIST[norm(n)] || { n, cnt: 1, t: Date.now() }; h.c = st.c; HIST[norm(n)] = h; saveHist(); }
+    try { d.set(id, o); } catch (x) { return toast(T.errorText(x)); }
+    closeSheet(sh); toast('انحفظ ✓');
+  };
+  E('#eD').onclick = () => { const snap = strip(d.item(id) || it); d.del(id); closeSheet(sh); toast(`انحذف «${snap.n}»`, { text: 'تراجع', fn: () => d.set(id, snap) }); };
+}
+
+/* ---------- السحب لترتيب الأغراض ---------- */
+let dg = null;
+const sc = () => $('#vList');
+$('#items').addEventListener('pointerdown', e => {
+  const h = e.target.closest('.hd'); if (!h || !canEdit()) return;
+  const row = h.closest('.it'); e.preventDefault(); try { h.setPointerCapture(e.pointerId); } catch (x) { }
+  dg = { row, id: row.dataset.id, y0: e.clientY, st0: sc().scrollTop, pid: e.pointerId, h, lastY: e.clientY };
+  dg.secs = $$('#items .pend .cat').map(s => ({ el: s, c: s.dataset.c, r: s.getBoundingClientRect(), rows: $$('.it', s).filter(x => x !== row).map(x => ({ el: x, id: x.dataset.id, r: x.getBoundingClientRect() })) }));
+  dg.r0 = row.getBoundingClientRect(); row.classList.add('drag');
+  dg.timer = setInterval(autoScroll, 30);
+});
+function autoScroll() {
+  if (!dg) return; const v = sc(), r = v.getBoundingClientRect(); let dy = 0;
+  if (dg.lastY < r.top + 70) dy = -10; else if (dg.lastY > r.bottom - 50) dy = 10;
+  if (dy) { v.scrollTop += dy; dragMove(dg.lastY); }
+}
+function dragMove(y) {
+  const ds = sc().scrollTop - dg.st0, dy = y - dg.y0 + ds; dg.row.style.transform = `translateY(${dy}px)`;
+  /* مركز الغرض المسحوب بإحداثيات لحظة بداية السحب */
+  const yy = dg.r0.top + dg.r0.height / 2 + (y - dg.y0) + ds;
+  let sec = dg.secs.find(s => yy >= s.r.top && yy <= s.r.bottom); if (!sec) sec = yy < dg.secs[0].r.top ? dg.secs[0] : dg.secs[dg.secs.length - 1];
+  let before = null; for (const r of sec.rows) if (yy < r.r.top + r.r.height / 2) { before = r; break; }
+  dg.target = { c: sec.c, before, after: before ? null : sec.rows[sec.rows.length - 1] || null, sec };
+  $$('#items .insb, #items .insa, #items .insc').forEach(x => x.classList.remove('insb', 'insa', 'insc'));
+  if (before) before.el.classList.add('insb'); else if (dg.target.after) dg.target.after.el.classList.add('insa'); else sec.el.classList.add('insc');
+}
+$('#items').addEventListener('pointermove', e => { if (!dg || e.pointerId !== dg.pid) return; dg.lastY = e.clientY; dragMove(e.clientY); });
+function dragEnd(e) {
+  if (!dg || e.pointerId !== dg.pid) return; clearInterval(dg.timer); const g = dg; dg = null;
+  g.row.classList.remove('drag'); g.row.style.transform = '';
+  $$('#items .insb, #items .insa, #items .insc').forEach(x => x.classList.remove('insb', 'insa', 'insc'));
+  if (!g.target || Math.abs(e.clientY - g.y0) < 6) return;
+  const d = docOf(S.cur), it = d.item(g.id); if (!it) return;
+  const rows = g.target.sec.rows, t = g.target; let o;
+  const oo = id => +(d.item(id) || {}).o || 0;
+  if (t.before) { const i = rows.indexOf(t.before), prev = rows[i - 1]; o = prev ? (oo(prev.id) + oo(t.before.id)) / 2 : oo(t.before.id) - 1000; }
+  else if (t.after) o = oo(t.after.id) + 1000; else o = it.o;
+  const nw = strip(it); nw.o = o;
+  if (t.c !== it.c) { nw.c = t.c; const k = norm(it.n), h = HIST[k] || { n: it.n, cnt: 1, t: Date.now() }; h.c = t.c; HIST[k] = h; saveHist(); toast(`نقلت «${it.n}» لقسم ${CAT[t.c].n}`); }
+  if (nw.o === it.o && nw.c === it.c) return;
+  d.set(g.id, nw);
+}
+$('#items').addEventListener('pointerup', dragEnd); $('#items').addEventListener('pointercancel', dragEnd);
+
+/* ---------- القوائم ---------- */
+function openList(rec, nopush) {
+  if (!rec) return; S.cur = rec; LS.set('maqadi.cur', rec.k); docOf(rec);
+  $('#vHome').classList.remove('on'); $('#vList').classList.add('on'); $('#vList').scrollTop = 0; inp.value = ''; hideSugg();
+  if (!nopush) try { history.pushState({ l: rec.k }, ''); } catch (e) { }
+  render();
+}
+function goHome(fromPop) {
+  S.cur = null; LS.set('maqadi.cur', ''); $('#vList').classList.remove('on'); $('#vHome').classList.add('on'); hideSugg(); render();
+  if (!fromPop && history.state && history.state.l) history.back();
+}
+$('#backBtn').onclick = () => goHome();
+window.addEventListener('popstate', () => { while (sheets.length) closeSheet(); if (S.cur) goHome(true); });
+const EMOJIS = ['🏠', '🛒', '🏕️', '🌙', '🎉', '🍖', '👶', '🧹', '🏢', '🧺', '🍳', '🎂', '☕', '🐑', '🚗', '🥗'];
+function listForm(rec) {
+  return new Promise(res => {
+    const st = { e: rec ? rec.emoji : '🏠' }; let out = null;
+    const sh = openSheet(`<h2>${rec ? 'الاسم والإيموجي' : 'قائمة جديدة'}<button class="ib x" data-close aria-label="سكّر">${ICON.x}</button></h2>
+      <label class="fld"><span>اسم القائمة</span><input id="lN" maxlength="30" placeholder="مثل: مقاضي البيت"></label>
+      ${rec ? '' : `<div class="chips" style="margin:-4px 0 12px">${[['مقاضي البيت', '🏠'], ['الاستراحة', '🏕️'], ['رمضان', '🌙'], ['العزيمة', '🍖'], ['المكتب', '🏢']].map(([n, e]) => `<button class="chip" data-n="${n}" data-e="${e}">${e} ${n}</button>`).join('')}</div>`}
+      <div class="emojis" id="lE">${EMOJIS.map(e => `<button data-e="${e}">${e}</button>`).join('')}</div>
+      <div class="acts"><button class="btn pri" id="lS">${rec ? 'حفظ' : 'سوّها'}</button><button class="btn ghost" data-close>إلغاء</button></div>`, { onClose: () => res(out) });
+    const E = s => $(s, sh.el); E('#lN').value = rec ? rec.name : '';
+    const drawE = () => $$('#lE button', sh.el).forEach(b => b.classList.toggle('on', b.dataset.e === st.e)); drawE();
+    E('#lE').onclick = e => { const b = e.target.closest('[data-e]'); if (b) { st.e = b.dataset.e; drawE(); } };
+    sh.el.addEventListener('click', e => { const c = e.target.closest('.chip[data-n]'); if (c) { E('#lN').value = c.dataset.n; st.e = c.dataset.e; drawE(); } });
+    const go = () => { const n = E('#lN').value.trim(); if (!n) return toast('اكتب اسم القائمة'); out = { name: n, emoji: st.e }; closeSheet(sh); };
+    E('#lS').onclick = go; E('#lN').onkeydown = e => { if (e.key === 'Enter') go(); };
+  });
+}
+async function newListSheet() { const r = await listForm(null); if (!r) return; const rec = newLocalList(r.name, r.emoji); openList(rec); toast('سوّيت ' + r.name + ' ✓'); }
+$('#menuBtn').onclick = () => {
+  const rec = S.cur, ed = canEdit(rec), creator = rec.id && rec.edit && rec.key === rec.edit;
+  const sh = openSheet(`<h2>${esc(rec.emoji)} ${esc(rec.name)}<button class="ib x" data-close aria-label="سكّر">${ICON.x}</button></h2>
+    <button class="mrow" data-m="share"><span class="e">🔗</span>${rec.id ? 'روابط المشاركة' : 'شارك القائمة مع أهلك'}</button>
+    <button class="mrow" data-m="wa"><span class="e">💬</span>أرسلها نص بالواتساب</button>
+    ${ed ? `<button class="mrow" data-m="tpl"><span class="e">🧾</span>وش الناقص؟ قوائم جاهزة</button>
+    <button class="mrow" data-m="order"><span class="e">↕️</span>ترتيب أقسام السوبرماركت</button>
+    <button class="mrow" data-m="saveTpl"><span class="e">💾</span>احفظها كقائمة جاهزة</button>
+    <button class="mrow" data-m="rename"><span class="e">✏️</span>الاسم والإيموجي</button>` : ''}
+    ${creator ? '<button class="mrow danger" data-m="unshare"><span class="e">⛔</span>وقّف المشاركة</button>' : ''}
+    <button class="mrow danger" data-m="del"><span class="e">🗑️</span>${rec.id ? 'شيلها من جهازي' : 'احذف القائمة'}</button>`);
+  sh.el.addEventListener('click', async e => {
+    const b = e.target.closest('[data-m]'); if (!b) return; closeSheet(sh); const m = b.dataset.m;
+    if (m === 'share') shareSheet(); else if (m === 'wa') waSheet(); else if (m === 'tpl') templatesSheet(); else if (m === 'order') orderSheet();
+    else if (m === 'saveTpl') saveTemplate(); else if (m === 'del') removeList(rec); else if (m === 'unshare') stopSharing(rec);
+    else if (m === 'rename') { const r = await listForm(rec); if (!r) return; rec.name = r.name; rec.emoji = r.emoji; saveLists(); const d = docOf(rec); try { d.setMeta({ ...strip(d.meta() || {}), name: r.name, emoji: r.emoji }); } catch (x) { } render(); }
+  });
+};
+async function removeList(rec) {
+  const shared = !!rec.id;
+  if (!await ask(`${shared ? 'تشيل' : 'تحذف'} «${rec.name}»؟`, shared ? 'بتنشال من جهازك بس، وتبقى عند أهلك. تقدر ترجع لها برابطها.' : 'القائمة على جهازك بس، لو حذفتها بتروح.')) return;
+  dropDoc(rec); if (shared && T) T.forget(rec.id); else LS.del('maqadi.local.' + rec.k);
+  lists = lists.filter(l => l.k !== rec.k); saveLists(); goHome(); toast('انشالت القائمة');
+}
+
+/* ---------- ترتيب الأقسام ---------- */
+function orderSheet() {
+  if (!guardEdit()) return; const d = docOf(S.cur); let ord = sortedOrder(d.meta());
+  const sh = openSheet(`<h2>ترتيب أقسام السوبرماركت<button class="ib x" data-close aria-label="سكّر">${ICON.x}</button></h2><p class="d" style="color:var(--muted);font-size:13.5px;margin-bottom:10px">رتّبها حسب مشيك بالسوبرماركت، والقائمة تمشي بنفس الترتيب.</p><div class="ords" id="ords"></div>
+    <div class="acts"><button class="btn pri" id="oS">حفظ</button><button class="btn ghost" id="oR">الترتيب الأصلي</button></div>`);
+  const draw = () => { $('#ords', sh.el).innerHTML = ord.map((k, i) => `<div class="ord"><span>${CAT[k].e}</span><b>${CAT[k].n}</b><button class="ib" data-u="${i}" ${i ? '' : 'disabled'} aria-label="فوق">${ICON.up}</button><button class="ib" data-d="${i}" ${i < ord.length - 1 ? '' : 'disabled'} aria-label="تحت">${ICON.down}</button></div>`).join(''); };
+  draw();
+  $('#ords', sh.el).onclick = e => { const u = e.target.closest('[data-u]'), dn = e.target.closest('[data-d]'); const i = u ? +u.dataset.u : dn ? +dn.dataset.d : -1; if (i < 0) return; const j = u ? i - 1 : i + 1; if (j < 0 || j >= ord.length) return;[ord[i], ord[j]] = [ord[j], ord[i]]; draw(); };
+  $('#oR', sh.el).onclick = () => { ord = DEF_ORDER.slice(); draw(); };
+  $('#oS', sh.el).onclick = () => { try { d.setMeta({ ...strip(d.meta() || {}), name: S.cur.name, emoji: S.cur.emoji, cats: ord }); } catch (x) { return toast(T.errorText(x)); } LS.set('maqadi.cats', ord); closeSheet(sh); toast('انحفظ الترتيب ✓'); };
+}
+
+/* ---------- القوائم الجاهزة (وش الناقص؟) ---------- */
+const TPL = [
+  { n: 'أساسيات البيت', e: '🏠', it: 'خبز،حليب،بيض،رز،سكر،شاي،زيت،ملح،طماط،بصل،بطاطس،خيار،ليمون،دجاج،لحم مفروم،جبن،لبن،زبادي،ماء،مناديل،صابون،سائل جلي،مسحوق غسيل،أكياس زبالة،معجون أسنان' },
+  { n: 'مقاضي رمضان', e: '🌙', it: 'تمر،فيمتو،تانج،قمر الدين،رقائق سمبوسة،شوفان،حب شوربة،عدس،جريش،هريس،لبن،حليب،قشطة،دقيق،قهوة عربية،هيل،زعفران،ماء،عصير،زيت،بهارات' },
+  { n: 'الاستراحة والكشتة', e: '🏕️', it: 'فحم،ولاعة،ماء،ببسي،شاي،قهوة عربية،هيل،تمر،دجاج،لحم،خبز،صحون ورق،أكواب ورق،مناديل،أكياس زبالة،ثلج،شيبس،فصفص،مكسرات،فواكه' },
+  { n: 'فطور الجمعة', e: '🍳', it: 'بيض،فول،جبن،زيتون،تميس،لبنة،عسل،قشطة،شاي،حليب،زعتر،مربى،طماط،خيار' }
+];
+function templatesSheet() {
+  if (!guardEdit()) return;
+  const all = [...TPL, ...LS.get('maqadi.tpl', []).map(t => ({ ...t, own: 1 }))]; let cur = 0;
+  const sh = openSheet(`<h2>وش الناقص؟<button class="ib x" data-close aria-label="سكّر">${ICON.x}</button></h2><p style="color:var(--muted);font-size:13.5px;margin-bottom:10px">اختر قائمة جاهزة وعلّم على الناقص عندك.</p>
+    <div class="chips" id="tC"></div><div class="tlist" id="tL"></div>
+    <div class="acts"><button class="btn pri" id="tA">ضيف المحدد</button><button class="btn ghost" id="tX" hidden>احذف هالقائمة</button></div>`);
+  const have = () => new Set(docOf(S.cur).items().filter(i => !i.done).map(i => norm(i.n)));
+  const draw = () => {
+    $('#tC', sh.el).innerHTML = all.map((t, i) => `<button class="chip ${i === cur ? 'on' : ''}" data-t="${i}">${esc(t.e)} ${esc(t.n)}</button>`).join('');
+    const h = have(), t = all[cur], its = t.it.split('،').filter(Boolean);
+    $('#tL', sh.el).innerHTML = its.map((n, i) => { const ex = h.has(norm(n)); return `<label class="${ex ? 'has' : ''}"><input type="checkbox" data-i="${i}" ${ex ? 'disabled' : ''}><span>${CAT[guessCat(n)].e} ${esc(n)}</span>${ex ? '<small>موجود</small>' : ''}</label>`; }).join('');
+    $('#tX', sh.el).hidden = !t.own; upd();
+  };
+  const upd = () => { const n = $$('#tL input:checked', sh.el).length; $('#tA', sh.el).textContent = n ? `ضيف المحدد (${n})` : 'علّم على الناقص'; $('#tA', sh.el).disabled = !n; };
+  $('#tC', sh.el).onclick = e => { const b = e.target.closest('[data-t]'); if (b) { cur = +b.dataset.t; draw(); } };
+  $('#tL', sh.el).onchange = upd;
+  $('#tA', sh.el).onclick = () => {
+    const its = all[cur].it.split('،'), sel = $$('#tL input:checked', sh.el).map(x => its[+x.dataset.i]); if (!sel.length) return;
+    const d = docOf(S.cur); let o = Date.now();
+    try { for (const n of sel) { const p = parseEntry(n), it = { n: p.name || n, c: guessCat(p.name || n), o: o++, at: Date.now() }; if (p.q != null) it.q = p.q; if (p.un) it.un = p.un; if (S.me) it.by = S.me; d.set(newId('i'), it); } } catch (x) { return toast(T.errorText(x)); }
+    closeSheet(sh); toast(`ضفت ${sel.length} من «${all[cur].n}» ✓`);
+  };
+  $('#tX', sh.el).onclick = async () => { const t = all[cur]; if (!await ask('تحذف القائمة الجاهزة؟', `«${t.n}» بتنحذف من جهازك.`)) return; const own = LS.get('maqadi.tpl', []).filter(x => x.n !== t.n); LS.set('maqadi.tpl', own); all.splice(cur, 1); cur = 0; draw(); };
+  draw();
+}
+async function saveTemplate() {
+  const d = docOf(S.cur), names = [...new Set(d.items().map(i => i.n))]; if (!names.length) return toast('القائمة فاضية');
+  const n = await promptText('اسم القائمة الجاهزة', S.cur.name, 'مثل: مقاضي الشهر'); if (!n) return;
+  const own = LS.get('maqadi.tpl', []).filter(x => x.n !== n); own.push({ n, e: S.cur.emoji || '🧾', it: names.join('،') }); LS.set('maqadi.tpl', own);
+  toast('انحفظت كقائمة جاهزة ✓ تلقاها في «وش الناقص؟»');
+}
+
+/* ---------- نص الواتساب ---------- */
+function waText(rec) {
+  const d = docOf(rec), order = sortedOrder(d.meta()), pend = d.items().filter(i => !i.done);
+  let t = `🛒 ${rec.name}\n`;
+  if (!pend.length) return t + '\nما فيه شي ناقص 👏';
+  for (const c of order) { const g = pend.filter(i => (CAT[i.c] ? i.c : 'other') === c).sort(byO); if (!g.length) continue; t += `\n${CAT[c].e} ${CAT[c].n}\n`; for (const i of g) { const q = fmtQty(i.q, i.un); t += `▫️ ${i.n}${q ? ' (' + q + ')' : ''}${i.nt ? ' - ' + i.nt : ''}\n`; } }
+  return t.trim();
+}
+function waSheet() {
+  const txt = waText(S.cur);
+  const sh = openSheet(`<h2>أرسلها نص<button class="ib x" data-close aria-label="سكّر">${ICON.x}</button></h2><pre class="wa" id="waT"></pre>
+    <div class="acts"><a class="btn pri" id="waGo" target="_blank" rel="noopener">💬 واتساب</a><button class="btn" id="waC">انسخ</button>${navigator.share ? '<button class="btn" id="waS">شارك</button>' : ''}</div>`);
+  $('#waT', sh.el).textContent = txt; $('#waGo', sh.el).href = 'https://wa.me/?text=' + encodeURIComponent(txt);
+  $('#waC', sh.el).onclick = async () => toast(await copyText(txt) ? 'انسخ النص ✓' : 'ما قدرت أنسخ');
+  const s = $('#waS', sh.el); if (s) s.onclick = () => navigator.share({ text: txt }).catch(() => { });
+}
+
+/* ---------- المشاركة ---------- */
+function joinBase() { return location.origin + location.pathname.replace(/index\.html$/, ''); }
+function shareSheet() {
+  const rec = S.cur, d = docOf(rec), st = stat.get(rec.k) || {};
+  let h;
+  if (!rec.id) {
+    h = T && T.available() ? `<p style="color:var(--muted);margin-bottom:14px">شارك «${esc(rec.name)}» مع أهلك: أي أحد معه <b>رابط التعديل</b> يقدر يضيف ويعلّم على اللي اشتراه، والتغييرات توصل للكل أول بأول. و<b>رابط العرض</b> يشوف القائمة بس (مثلًا للسواق).</p><button class="btn pri wide" id="shGo">🔗 شارك القائمة</button>`
+      : `<p style="color:var(--muted)">المشاركة تحتاج سيرفر المزامنة، وهو مو مفعّل الحين. القائمة محفوظة على جهازك.</p>`;
+  } else if (st.lost) h = `<p style="color:var(--muted)">الرابط ما عاد يشتغل.</p>`;
+  else {
+    const ed = d.role ? d.role === 'edit' : !!rec.edit, vk = rec.view || (d.meta() || {}).vk, creator = rec.edit && rec.key === rec.edit;
+    h = `${ed ? lbox('رابط التعديل (للأهل)', T.joinLink(joinBase(), rec.id, rec.key), 'edit') : ''}${vk ? lbox('رابط العرض فقط', T.joinLink(joinBase(), rec.id, vk), 'view') : ''}
+      ${creator ? `<div class="rowb" style="margin-top:4px"><button class="btn sm" id="rotV">غيّر رابط العرض</button><button class="btn sm" id="rotE">غيّر رابط التعديل</button></div>` : ''}`;
+  }
+  const sh = openSheet(`<h2>المشاركة<button class="ib x" data-close aria-label="سكّر">${ICON.x}</button></h2>${h}`);
+  const go = $('#shGo', sh.el); if (go) go.onclick = async () => { go.disabled = true; go.textContent = 'لحظة…'; if (await createShare(rec)) { closeSheet(sh); shareSheet(); } else { go.disabled = false; go.textContent = '🔗 شارك القائمة'; } };
+  $$('[data-copy]', sh.el).forEach(b => b.onclick = async () => toast(await copyText(b.dataset.copy) ? 'انسخ الرابط ✓' : 'ما قدرت أنسخ'));
+  $$('[data-send]', sh.el).forEach(b => b.onclick = () => { const t = b.dataset.kind === 'edit' ? `قائمة «${rec.name}» على مقاضي، ضيف اللي تبيه وعلّم على اللي تشتريه:\n${b.dataset.send}` : `قائمة «${rec.name}» على مقاضي:\n${b.dataset.send}`; if (navigator.share) navigator.share({ text: t }).catch(() => { }); else window.open('https://wa.me/?text=' + encodeURIComponent(t), '_blank', 'noopener'); });
+  const rv = $('#rotV', sh.el); if (rv) rv.onclick = () => rotate(rec, 'view', sh);
+  const re = $('#rotE', sh.el); if (re) re.onclick = () => rotate(rec, 'edit', sh);
+}
+function lbox(label, url, kind) { return `<div class="fld"><span>${label}</span><div class="linkbox"><input readonly value="${esc(url)}" onclick="this.select()"><button class="btn sm" data-copy="${esc(url)}">انسخ</button><button class="btn sm" data-send="${esc(url)}" data-kind="${kind}">أرسل</button></div></div>`; }
+async function createShare(rec) {
+  try {
+    const d = docOf(rec), items = {}, t = Date.now(); for (const it of d.items()) { const o = { ...it, u: it.u || t }; delete o.id; items[it.id] = o; }
+    const meta = { ...strip(d.meta() || {}), name: rec.name, emoji: rec.emoji }; delete meta.vk;
+    const r = await T.create('maqadi', { items, meta });
+    /* نحط نسخة بكاش المكتبة عشان القائمة ما تطلع فاضية لين يرجع أول سحب */
+    LS.raw('tajarib.doc.' + r.id, JSON.stringify({ body: { items, meta }, pending: {}, rev: 0, role: 'edit', kind: 'maqadi' }));
+    dropDoc(rec); const old = 'maqadi.local.' + rec.k;
+    Object.assign(rec, { id: r.id, key: r.edit, edit: r.edit, view: r.view }); saveLists();
+    const nd = docOf(rec); nd.setMeta({ ...meta, vk: r.view }); LS.del(old); render();
+    toast('صارت القائمة مشتركة ✓ أرسل الرابط لأهلك'); return true;
+  } catch (e) { toast(T ? T.errorText(e) : 'ما قدرت'); return false; }
+}
+async function rotate(rec, which, sh) {
+  if (!await ask(which === 'view' ? 'تغيّر رابط العرض؟' : 'تغيّر رابط التعديل؟', 'الرابط القديم بيوقف، واللي معهم لازم ترسل لهم الجديد.')) return;
+  try {
+    const r = await T.rotateKeys(rec.id, rec.key, which); const meta = strip(docOf(rec).meta() || {});
+    if (r.view) rec.view = r.view; if (r.edit) { rec.edit = rec.key = r.edit; dropDoc(rec); }
+    saveLists(); if (r.view) docOf(rec).setMeta({ ...meta, vk: r.view }); else docOf(rec);
+    closeSheet(sh); shareSheet(); render(); toast('تغيّر الرابط ✓');
+  } catch (e) { toast(T.errorText(e)); }
+}
+async function stopSharing(rec) {
+  if (!await ask('وقّف المشاركة؟', 'القائمة بتنحذف من السيرفر، واللي معهم الرابط ما بيقدرون يفتحونها. نسختك تبقى على جهازك.')) return;
+  const d = docOf(rec), items = {}; for (const it of d.items()) items[it.id] = strip(it); const meta = { ...strip(d.meta() || {}) }; delete meta.vk;
+  try { await T.remove(rec.id, rec.key); } catch (e) { if (e.code !== 'not_found') return toast(T.errorText(e)); }
+  dropDoc(rec); T.forget(rec.id); delete rec.id; delete rec.key; delete rec.edit; delete rec.view; saveLists();
+  LS.set('maqadi.local.' + rec.k, { items: Object.fromEntries(Object.entries(items).map(([k, v]) => [k, { ...v, u: Date.now() }])), meta: { ...meta, u: Date.now() } });
+  render(); toast('وقفت المشاركة، القائمة صارت على جهازك بس');
+}
+function handleJoin() {
+  const j = T && T.parseJoin(location.hash); if (!j) return null;
+  history.replaceState(null, '', location.pathname + location.search);
+  if (!T.available()) { toast('المزامنة مو مفعّلة، ما أقدر أفتح الرابط'); return null; }
+  let rec = lists.find(l => l.id === j.id);
+  if (rec) { if (rec.key !== j.key && rec.key !== rec.edit) { dropDoc(rec); rec.key = j.key; T.forget(j.id); } }
+  else { rec = { k: j.id, id: j.id, key: j.key, name: 'قائمة مشتركة', emoji: '🛒' }; lists.push(rec); }
+  saveLists(); setTimeout(() => toast('انضميت للقائمة ✓'), 300); return rec;
+}
+window.addEventListener('hashchange', () => { const r = handleJoin(); if (r) openList(r); });
+
+/* ---------- النسخة الاحتياطية ---------- */
+function exportAll() {
+  const out = { app: 'maqadi', v: 1, exported: new Date().toISOString(), me: S.me, hist: HIST, tpl: LS.get('maqadi.tpl', []), cats: LS.get('maqadi.cats', null), lists: [] };
+  for (const l of lists) { const d = docOf(l), items = {}; for (const it of d.items()) items[it.id] = strip(it); const meta = strip(d.meta() || {}); delete meta.vk; out.lists.push({ name: l.name, emoji: l.emoji, meta, items, link: l.id ? { id: l.id, key: l.key } : null }); }
+  download(`مقاضي-${new Date().toISOString().slice(0, 10)}.json`, JSON.stringify(out, null, 1), 'application/json'); toast('نزّلت النسخة الاحتياطية ✓');
+}
+function importAll() {
+  const f = $('#fileIn'); f.value = ''; f.accept = '.json,application/json';
+  f.onchange = async () => {
+    const file = f.files[0]; if (!file) return; let j;
+    try { j = JSON.parse(await file.text()); if (j.app !== 'maqadi' || !Array.isArray(j.lists)) throw 0; } catch (e) { return toast('الملف مو نسخة من مقاضي'); }
+    let n = 0, joined = 0; const t = Date.now();
+    for (const l of j.lists) {
+      if (l.link && l.link.id && T && T.available()) { if (!lists.some(x => x.id === l.link.id)) { lists.push({ k: l.link.id, id: l.link.id, key: l.link.key, name: l.name || 'قائمة', emoji: l.emoji || '🛒' }); joined++; } continue; }
+      const rec = { k: 'L' + newId(''), name: String(l.name || 'قائمة').slice(0, 30), emoji: l.emoji || '🛒' }; const items = {};
+      for (const [id, it] of Object.entries(l.items || {})) if (it && it.n && !it.del) items[id] = { ...strip(it), u: t };
+      LS.set('maqadi.local.' + rec.k, { items, meta: { ...(l.meta || {}), name: rec.name, emoji: rec.emoji, u: t } }); lists.push(rec); n++;
+    }
+    if (j.hist && typeof j.hist === 'object') { for (const [k, h] of Object.entries(j.hist)) if (!HIST[k]) HIST[k] = h; saveHist(); }
+    if (Array.isArray(j.tpl)) { const own = LS.get('maqadi.tpl', []); for (const x of j.tpl) if (!own.some(y => y.n === x.n)) own.push(x); LS.set('maqadi.tpl', own); }
+    if (!S.me && j.me) { S.me = j.me; LS.set('maqadi.me', S.me); }
+    saveLists(); render(); toast(`رجّعت ${n + joined} قائمة ✓`);
+  };
+  f.click();
+}
+
+/* ---------- البداية ---------- */
+let start = handleJoin();
+if (!lists.length) newLocalList('مقاضي البيت', '🏠');
+for (const l of lists) docOf(l);
+if (start) openList(start);
+else { const last = lists.find(l => l.k === LS.get('maqadi.cur', '')); if (last) openList(last, true); else { $('#vHome').classList.add('on'); render(); } }
+if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => { });
+window.__maqadi = { S, parseEntry, guessCat, fmtQty, docOf, lists: () => lists, canEdit, waText: () => waText(S.cur), hist: () => HIST };
+})();
+</script>
+</body>
+</html>
