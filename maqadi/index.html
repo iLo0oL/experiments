@@ -230,6 +230,16 @@ const norm = s => latin(s).toLowerCase().replace(/[ً-ْـ]/g, '').replace(/[أ�
 const newId = p => T ? T.newId(p) : p + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
 const strip = o => { const x = { ...o }; delete x.id; delete x.u; return x; };
 const sleep = ms => new Promise(r => setTimeout(r, ms));
+/* تخمين بسيط إذا الاسم لحرمة عشان الفعل: ضافه/ضافته */
+const FEM = new Set('هند ريم مها نوف أمل منى هيا دلال عبير رنا لمى جود غلا شهد رهف وعد بشرى سلمى ليلى هدى نجلاء أسماء هيفاء وفاء علياء حنان إيمان مريم زينب عهود أريج شوق جواهر وجدان سعاد نجود سحر أثير'.split(' '));
+const MASC_TA = new Set('حمزة أسامة اسامة طلحة عبيدة معاوية عروة حذيفة قتيبة خليفة عطية'.split(' '));
+const isFem = n => {
+  const f = String(n || '').trim().split(/\s+/)[0];
+  if (/^(أم|ام|خالتي|عمتي|جدتي|أختي|اختي|بنتي|زوجتي|ماما|الوالدة)$/.test(f)) return true;
+  if (/^(أبو|ابو|خالي|عمي|جدي|أخوي|اخوي|ولدي|بابا|الوالد)$/.test(f)) return false;
+  return f.endsWith('ة') ? !MASC_TA.has(f) : FEM.has(f);
+};
+const by = (verbM, verbF, n) => (isFem(n) ? verbF : verbM) + ' ' + n;
 const ICON = {
   x: '<svg class="i" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>',
   check: '<svg class="i" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
@@ -430,7 +440,7 @@ function render() { if (S.cur) renderList(); else renderHome(); renderHeader(); 
 function counts(rec) { const it = docOf(rec).items(); const left = it.filter(x => !x.done).length; return { left, all: it.length }; }
 function renderHeader() {
   const rec = S.cur, pill = $('#pill');
-  $('#backBtn').hidden = !rec; $('#menuBtn').hidden = !rec;
+  $('#backBtn').hidden = !rec; $('#menuBtn').hidden = !rec; $('#themeBtn').hidden = !!rec;
   if (!rec) {
     $('#ttl').innerHTML = `<div class="logo">🛒</div><div><h1>مقاضي</h1><small>${S.me ? 'هلا ' + esc(S.me) : 'قوائم مقاضي البيت'}</small></div>`;
     pill.hidden = true; document.title = 'مقاضي'; return;
@@ -470,7 +480,7 @@ function sortedOrder(meta) { const o = (meta && Array.isArray(meta.cats) ? meta.
 function itemHtml(it, ed) {
   const qty = fmtQty(it.q, it.un), sub = [];
   if (it.nt) sub.push(esc(it.nt));
-  if (it.done && it.dby) sub.push('اشتراه ' + esc(it.dby)); else if (it.by) sub.push('ضافه ' + esc(it.by));
+  if (it.done && it.dby) sub.push(esc(by('اشتراه', 'اشترته', it.dby))); else if (it.by) sub.push(esc(by('ضافه', 'ضافته', it.by)));
   return `<div class="it${it.done ? ' done' : ''}${S.flash === it.id ? ' flash' : ''}" data-id="${it.id}">
     <button class="ck" data-ck aria-label="${it.done ? 'رجّعه' : 'اشتريته'}"><span>${ICON.check}</span></button>
     <div class="tx" data-ck><b>${esc(it.n)}</b>${qty ? `<span class="q">${esc(qty)}</span>` : ''}${sub.length ? `<small>${sub.join(' · ')}</small>` : ''}</div>
@@ -478,6 +488,7 @@ function itemHtml(it, ed) {
 }
 const byO = (a, b) => (+a.o || 0) - (+b.o || 0) || (a.id < b.id ? -1 : 1);
 function renderList() {
+  if (dg) { S.later = true; return; } /* لا نعيد الرسم والسحب شغال */
   const rec = S.cur, d = docOf(rec), ed = canEdit(rec), st = stat.get(rec.k) || {};
   $('#addbar').hidden = !ed;
   $('#lostBanner').innerHTML = st.lost ? `<div class="banner"><span>${st.lost === 'not_found' ? 'القائمة انحذفت من السيرفر أو انتهت مشاركتها.' : st.lost === 'nolib' ? 'مكتبة المزامنة ما تحمّلت، افتح التطبيق وأنت متصل.' : 'الرابط تغيّر أو انتهت صلاحيته، اطلب رابط جديد.'}</span><button class="btn sm" id="lostRm">شيلها</button></div>`
@@ -603,7 +614,7 @@ function editItem(id) {
     <label class="fld"><span>الوحدة</span><select id="eU"><option value="">بدون</option>${UNIT_LIST.map(u => `<option>${u}</option>`).join('')}</select></label></div>
     <div class="fld"><span>القسم</span><div class="cats" id="eC">${CATS.map(c => `<button data-c="${c.k}">${c.e} ${c.n}</button>`).join('')}</div></div>
     <label class="fld"><span>ملاحظة</span><input id="eT" maxlength="80" placeholder="مثل: النوع الكبير، أو من المحل الفلاني"></label>
-    <div class="meta">${[it.by ? 'ضافه ' + esc(it.by) : '', it.at ? new Date(it.at).toLocaleString('ar-SA-u-nu-latn', { dateStyle: 'medium', timeStyle: 'short' }) : '', it.done && it.dby ? 'اشتراه ' + esc(it.dby) : ''].filter(Boolean).join(' · ')}</div>
+    <div class="meta">${[it.by ? esc(by('ضافه', 'ضافته', it.by)) : '', it.at ? new Date(it.at).toLocaleString('ar-SA-u-nu-latn', { dateStyle: 'medium', timeStyle: 'short' }) : '', it.done && it.dby ? esc(by('اشتراه', 'اشترته', it.dby)) : ''].filter(Boolean).join(' · ')}</div>
     <div class="acts"><button class="btn pri" id="eS">حفظ</button><button class="btn danger" id="eD">احذف</button></div>`);
   const E = s => $(s, sh.el);
   E('#eN').value = it.n; E('#eQ').value = it.q != null ? fmtN(it.q) : ''; E('#eU').value = it.un || ''; E('#eT').value = it.nt || '';
@@ -653,6 +664,7 @@ $('#items').addEventListener('pointermove', e => { if (!dg || e.pointerId !== dg
 function dragEnd(e) {
   if (!dg || e.pointerId !== dg.pid) return; clearInterval(dg.timer); const g = dg; dg = null;
   g.row.classList.remove('drag'); g.row.style.transform = '';
+  if (S.later) { S.later = false; setTimeout(renderList, 0); }
   $$('#items .insb, #items .insa, #items .insc').forEach(x => x.classList.remove('insb', 'insa', 'insc'));
   if (!g.target || Math.abs(e.clientY - g.y0) < 6) return;
   const d = docOf(S.cur), it = d.item(g.id); if (!it) return;
@@ -665,7 +677,7 @@ function dragEnd(e) {
   if (nw.o === it.o && nw.c === it.c) return;
   d.set(g.id, nw);
 }
-$('#items').addEventListener('pointerup', dragEnd); $('#items').addEventListener('pointercancel', dragEnd);
+$('#items').addEventListener('pointerup', dragEnd); $('#items').addEventListener('pointercancel', dragEnd); $('#items').addEventListener('lostpointercapture', dragEnd);
 
 /* ---------- القوائم ---------- */
 function openList(rec, nopush) {
@@ -787,7 +799,7 @@ function waSheet() {
   const sh = openSheet(`<h2>أرسلها نص<button class="ib x" data-close aria-label="سكّر">${ICON.x}</button></h2><pre class="wa" id="waT"></pre>
     <div class="acts"><a class="btn pri" id="waGo" target="_blank" rel="noopener">💬 واتساب</a><button class="btn" id="waC">انسخ</button>${navigator.share ? '<button class="btn" id="waS">شارك</button>' : ''}</div>`);
   $('#waT', sh.el).textContent = txt; $('#waGo', sh.el).href = 'https://wa.me/?text=' + encodeURIComponent(txt);
-  $('#waC', sh.el).onclick = async () => toast(await copyText(txt) ? 'انسخ النص ✓' : 'ما قدرت أنسخ');
+  $('#waC', sh.el).onclick = async () => toast(await copyText(txt) ? 'نسخت النص ✓' : 'ما قدرت أنسخ');
   const s = $('#waS', sh.el); if (s) s.onclick = () => navigator.share({ text: txt }).catch(() => { });
 }
 
@@ -807,7 +819,7 @@ function shareSheet() {
   }
   const sh = openSheet(`<h2>المشاركة<button class="ib x" data-close aria-label="سكّر">${ICON.x}</button></h2>${h}`);
   const go = $('#shGo', sh.el); if (go) go.onclick = async () => { go.disabled = true; go.textContent = 'لحظة…'; if (await createShare(rec)) { closeSheet(sh); shareSheet(); } else { go.disabled = false; go.textContent = '🔗 شارك القائمة'; } };
-  $$('[data-copy]', sh.el).forEach(b => b.onclick = async () => toast(await copyText(b.dataset.copy) ? 'انسخ الرابط ✓' : 'ما قدرت أنسخ'));
+  $$('[data-copy]', sh.el).forEach(b => b.onclick = async () => toast(await copyText(b.dataset.copy) ? 'نسخت الرابط ✓' : 'ما قدرت أنسخ'));
   $$('[data-send]', sh.el).forEach(b => b.onclick = () => { const t = b.dataset.kind === 'edit' ? `قائمة «${rec.name}» على مقاضي، ضيف اللي تبيه وعلّم على اللي تشتريه:\n${b.dataset.send}` : `قائمة «${rec.name}» على مقاضي:\n${b.dataset.send}`; if (navigator.share) navigator.share({ text: t }).catch(() => { }); else window.open('https://wa.me/?text=' + encodeURIComponent(t), '_blank', 'noopener'); });
   const rv = $('#rotV', sh.el); if (rv) rv.onclick = () => rotate(rec, 'view', sh);
   const re = $('#rotE', sh.el); if (re) re.onclick = () => rotate(rec, 'edit', sh);
@@ -850,7 +862,7 @@ function handleJoin() {
   let rec = lists.find(l => l.id === j.id);
   if (rec) { if (rec.key !== j.key && rec.key !== rec.edit) { dropDoc(rec); rec.key = j.key; T.forget(j.id); } }
   else { rec = { k: j.id, id: j.id, key: j.key, name: 'قائمة مشتركة', emoji: '🛒' }; lists.push(rec); }
-  saveLists(); setTimeout(() => toast('انضميت للقائمة ✓'), 300); return rec;
+  saveLists(); toast('انضميت للقائمة ✓'); return rec;
 }
 window.addEventListener('hashchange', () => { const r = handleJoin(); if (r) openList(r); });
 
@@ -875,7 +887,7 @@ function importAll() {
     if (j.hist && typeof j.hist === 'object') { for (const [k, h] of Object.entries(j.hist)) if (!HIST[k]) HIST[k] = h; saveHist(); }
     if (Array.isArray(j.tpl)) { const own = LS.get('maqadi.tpl', []); for (const x of j.tpl) if (!own.some(y => y.n === x.n)) own.push(x); LS.set('maqadi.tpl', own); }
     if (!S.me && j.me) { S.me = j.me; LS.set('maqadi.me', S.me); }
-    saveLists(); render(); toast(`رجّعت ${n + joined} قائمة ✓`);
+    saveLists(); render(); const nn = n + joined; toast(nn === 1 ? 'رجّعت قائمة وحدة ✓' : nn === 2 ? 'رجّعت قائمتين ✓' : nn <= 10 ? `رجّعت ${nn} قوائم ✓` : `رجّعت ${nn} قائمة ✓`);
   };
   f.click();
 }
@@ -887,7 +899,7 @@ for (const l of lists) docOf(l);
 if (start) openList(start);
 else { const last = lists.find(l => l.k === LS.get('maqadi.cur', '')); if (last) openList(last, true); else { $('#vHome').classList.add('on'); render(); } }
 if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => { });
-window.__maqadi = { S, parseEntry, guessCat, fmtQty, docOf, lists: () => lists, canEdit, waText: () => waText(S.cur), hist: () => HIST };
+window.__maqadi = { S, parseEntry, guessCat, fmtQty, isFem, docOf, lists: () => lists, canEdit, waText: () => waText(S.cur), hist: () => HIST };
 })();
 </script>
 </body>

@@ -409,7 +409,7 @@ function errMsg(e){
   const m=String((e&&(e.name+' '+e.message))||e);
   const pre=e&&e.fileName?`«${short(e.fileName,30)}»: `:'';
   if(/encrypt|password/i.test(m))return pre+'الملف محمي بكلمة مرور أو مشفّر. أزل الحماية عنه أول وبعدين جرّب مرة ثانية.';
-  if(/Invalid PDF|No PDF header|Failed to parse|InvalidPDF|parse|Invalid object|corrupt|MissingPDF|Unexpected/i.test(m))return pre+'الملف تالف أو ليس ملف PDF صحيح.';
+  if(/Invalid PDF|No PDF header|Failed to parse|InvalidPDF|parse|Invalid object|corrupt|MissingPDF|Unexpected/i.test(m))return pre+'الملف تالف أو مو ملف PDF صحيح.';
   if(/lib-load/.test(m))return 'ما قدرنا نحمّل أدوات PDF. افتح التطبيق مرة وأنت متصل بالإنترنت عشان ينحفظ للاستخدام بدونه.';
   if(/memory|allocation|Array buffer|too large|RangeError/i.test(m))return pre+'الملف كبير على ذاكرة الجهاز. جرّب ملف أصغر أو جودة أقل.';
   if(/image-decode/.test(m))return pre+'ما قدرنا نقرأ الصورة. تأكد إنها JPG أو PNG أو WEBP سليمة.';

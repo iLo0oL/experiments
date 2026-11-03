@@ -338,7 +338,7 @@ input[type=range]{width:100%;accent-color:var(--pri)}
 <script>try{if(JSON.parse(localStorage.getItem('seerati_theme'))==='light')document.body.classList.add('light')}catch(e){}</script>
 <header class="app"><div class="hrow">
   <div class="brand"><span class="logo" id="logoIc"></span><span>سيرتي</span></div>
-  <button class="cvbtn" id="cvBtn" type="button" aria-label="سيري المحفوظة"><span id="cvName">سيرتي</span></button>
+  <button class="cvbtn" id="cvBtn" type="button" aria-label="السير المحفوظة"><span id="cvName">سيرتي</span></button>
   <button class="ibtn" id="themeBtn" type="button" title="تبديل المظهر" aria-label="تبديل المظهر"></button>
   <button class="ibtn" id="setBtn" type="button" title="الإعدادات" aria-label="الإعدادات"></button>
 </div></header>
@@ -366,7 +366,7 @@ input[type=range]{width:100%;accent-color:var(--pri)}
   <h3 id="mTitle"></h3><p id="mText"></p><input class="inp" id="mInput" hidden maxlength="80" dir="auto">
   <div class="row"><button class="btn" id="mCancel" type="button">إلغاء</button><button class="btn danger" id="mOk" type="button">تأكيد</button></div>
 </div></div>
-<div class="overlay" id="listDlg" hidden><div class="dlg wide" role="dialog" aria-modal="true" aria-label="سيري المحفوظة" id="listBody"></div></div>
+<div class="overlay" id="listDlg" hidden><div class="dlg wide" role="dialog" aria-modal="true" aria-label="السير المحفوظة" id="listBody"></div></div>
 <div class="overlay" id="setDlg" hidden><div class="dlg wide" role="dialog" aria-modal="true" aria-label="الإعدادات" id="setBody"></div></div>
 <div class="overlay" id="cropDlg" hidden><div class="dlg" role="dialog" aria-modal="true" aria-labelledby="cropT">
   <h3 id="cropT">اضبط الصورة</h3><p>اسحب الصورة لتحريكها، واستخدم الشريط للتكبير.</p>
@@ -915,7 +915,7 @@ function setTab(t){
 function openList(){
   const b=$('#listBody');let showNew=false;
   const draw=()=>{
-    b.replaceChildren(...[h('div',{class:'head'},h('h3',{},'سيري المحفوظة'),ibtn('x','إغلاق',()=>closeOverlay('listDlg'))),
+    b.replaceChildren(...[h('div',{class:'head'},h('h3',{},'السير المحفوظة'),ibtn('x','إغلاق',()=>closeOverlay('listDlg'))),
       h('div',{class:'cvlist'},state.cvs.map((c,i)=>h('div',{class:'cvi'+(c.id===state.cur?' cur':'')},
         h('button',{type:'button',class:'open',onclick:()=>{switchCV(c.id);closeOverlay('listDlg')}},h('b',{dir:'auto'},c.name),h('small',{},`${c.lang==='en'?'إنجليزية':'عربية'} · ${TPL_SHORT[c.tpl]}`),h('small',{},`آخر تعديل ${ltr(fmtDate(c.updated))}`)),
         ibtn('edit','إعادة تسمية',async()=>{const n=await dialog({title:'اسم السيرة',input:c.name,ok:'حفظ',danger:false});if(n&&n.trim()){c.name=n.trim().slice(0,80);c.updated=Date.now();saveNow();draw();refreshHeader()}}),

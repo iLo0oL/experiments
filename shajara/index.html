@@ -287,6 +287,8 @@ const newId = p => T ? T.newId(p) : p + Date.now().toString(36) + Math.random().
 const clamp = (x, a, b) => Math.max(a, Math.min(b, x));
 const push = (m, k, v) => { const a = m.get(k); if (a) a.push(v); else m.set(k, [v]); };
 const sleep = ms => new Promise(r => setTimeout(r, ms));
+/* العدد مع المعدود: شخص واحد، شخصين، 3 أشخاص، 11 شخص */
+const ppl = n => n === 1 ? 'شخص واحد' : n === 2 ? 'شخصين' : (n % 100 >= 3 && n % 100 <= 10) ? n + ' أشخاص' : n + ' شخص';
 const ICON = {
   edit: '<svg class="i" viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16v4z"/></svg>',
   trash: '<svg class="i" viewBox="0 0 24 24"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg>',
@@ -460,7 +462,7 @@ function yearsText(p, short) {
   if (by && dy) return `${by}–${dy} ${calL(p)}`;
   if (by && !dead) return short ? `${by} ${calL(p)}` : `مواليد ${by} ${calL(p)}`;
   if (by && dead) return `${by}–؟ ${calL(p)}`;
-  if (dy) return `توفي ${dy} ${calL(p)}`;
+  if (dy) return `${p.g === 'f' ? 'توفيت' : 'توفي'} ${dy} ${calL(p)}`;
   if (dead) return p.g === 'f' ? 'رحمها الله' : 'رحمه الله';
   return '';
 }
@@ -772,7 +774,7 @@ function renderList() {
   if (q) { const qs = q.split(' '); arr = arr.filter(p => { const k = searchKey(p); return qs.every(w => k.includes(w)); }); }
   const coll = new Intl.Collator('ar');
   if (S.sort === 'gen') arr.sort((a, b) => genOf(a) - genOf(b) || coll.compare(a.f, b.f)); else arr.sort((a, b) => coll.compare(a.f, b.f) || coll.compare(fullName(a, 3), fullName(b, 3)));
-  $('#cnt').textContent = arr.length + ' شخص';
+  $('#cnt').textContent = ppl(arr.length);
   $('#addFab').hidden = !canEdit();
   if (!S.P.size) { $('#plist').innerHTML = `<div class="empty"><p>ما فيه أحد للحين.${canEdit() ? ' اضغط «ضيف شخص» وابدأ.' : ''}</p></div>`; return; }
   if (!arr.length) { $('#plist').innerHTML = `<div class="empty"><p>ما لقيت أحد بهالبحث</p></div>`; return; }
@@ -983,7 +985,7 @@ async function deletePerson(id) {
   if (kids.length) {
     const desc = descendants(id);
     mode = await ask(`حذف ${p.f}`, `${p.f} ${p.g === 'f' ? 'عندها' : 'عنده'} ${kids.length} من العيال بالشجرة. وش تبي تسوي؟`, [
-      { v: 'one', t: `احذف ${p.f} بس وخلّ العيال`, cls: '' }, { v: 'all', t: `احذف ${p.f} وكل ذريت${p.g === 'f' ? 'ها' : 'ه'} (${desc.size + 1} شخص)`, cls: 'danger' }, { v: null, t: 'إلغاء', cls: 'ghost', cancel: true }]);
+      { v: 'one', t: `احذف ${p.f} بس وخلّ العيال`, cls: '' }, { v: 'all', t: `احذف ${p.f} وكل ذريت${p.g === 'f' ? 'ها' : 'ه'} (${ppl(desc.size + 1)})`, cls: 'danger' }, { v: null, t: 'إلغاء', cls: 'ghost', cancel: true }]);
     if (!mode) return;
   } else if (!await ask(`حذف ${p.f}؟`, `متأكد تبي تحذف ${fullName(p, 3)} من الشجرة؟ تقدر تتراجع بعدها على طول.`)) return;
   const ids = new Set(mode === 'all' ? [id, ...descendants(id)] : [id]);
@@ -999,7 +1001,7 @@ async function deletePerson(id) {
   } catch (x) { toast(T ? T.errorText(x) : 'ما انحذف'); return; }
   if (S.dev.root && ids.has(S.dev.root)) { delete S.dev.root; saveDev(); }
   if (personSheet && ids.has(personSheet.data.id)) closeSheet(personSheet);
-  toast(ids.size > 1 ? `انحذف ${ids.size} أشخاص` : `انحذف ${p.f}`, { text: 'تراجع', fn: () => { for (const [i, o] of snap) S.doc.set(i, o); toast('رجّعتهم ✓'); } });
+  toast(ids.size > 1 ? `انحذف ${ppl(ids.size)}` : `انحذف ${p.f}`, { text: 'تراجع', fn: () => { for (const [i, o] of snap) S.doc.set(i, o); toast('رجّعتهم ✓'); } });
 }
 
 /* ---------- العرض العام ---------- */
@@ -1009,7 +1011,7 @@ function lostText() {
 }
 function renderStatus() {
   const pill = $('#pill'), sp = $('span', pill);
-  $('#treeName').textContent = S.cur ? S.cur.name + (S.P.size ? ` · ${S.P.size} شخص` : '') : '';
+  $('#treeName').textContent = S.cur ? S.cur.name + (S.P.size ? ` · ${ppl(S.P.size)}` : '') : '';
   if (!S.cur || !S.cur.id) { pill.hidden = true; return; }
   pill.hidden = false;
   const ro = S.doc && S.doc.role === 'view';
@@ -1089,7 +1091,7 @@ function renderMore() {
   on('dtrSw', () => { S.dtr = !S.dtr; LS.set('shajara.dtr', S.dtr); S.lay = null; renderMore(); });
   on('lightSw', () => $('#themeBtn').click());
   on('pngBtn', exportPng); on('prBtn', printTree); on('jsonBtn', exportJson); on('gedBtn', exportGed); on('impBtn', importAny);
-  $$('#more [data-copy]').forEach(b => b.onclick = async () => { const ok = await copyText(b.dataset.copy); toast(ok ? 'انسخ الرابط ✓' : 'ما قدرت أنسخ، انسخه يدوي'); });
+  $$('#more [data-copy]').forEach(b => b.onclick = async () => { const ok = await copyText(b.dataset.copy); toast(ok ? 'نسخت الرابط ✓' : 'ما قدرت أنسخ، انسخه يدوي'); });
   $$('#more [data-wa]').forEach(b => b.onclick = () => shareLink(b.dataset.wa, b.dataset.kind));
 }
 function linkBox(label, url, kind) {
@@ -1168,7 +1170,7 @@ function drawTreeCanvas(maxScale) {
   x.fillStyle = col.bg; x.fillRect(0, 0, w, h);
   x.direction = 'rtl'; x.textAlign = 'center'; x.textBaseline = 'middle';
   x.fillStyle = col.text; x.font = `800 26px ${ff}`; x.fillText(S.cur.name || 'شجرتنا', w / 2, 34);
-  x.fillStyle = col.muted; x.font = `500 13px ${ff}`; x.fillText(`شجرتنا · ${L.list.length} شخص · ${stamp()}`, w / 2, 58);
+  x.fillStyle = col.muted; x.font = `500 13px ${ff}`; x.fillText(`شجرتنا · ${ppl(L.list.length)} · ${stamp()}`, w / 2, 58);
   x.translate(0, head + 10 - oy);
   const rr = (X, Y, W, H, r) => { x.beginPath(); x.moveTo(X + r, Y); x.arcTo(X + W, Y, X + W, Y + H, r); x.arcTo(X + W, Y + H, X, Y + H, r); x.arcTo(X, Y + H, X, Y, r); x.arcTo(X, Y, X + W, Y, r); x.closePath(); };
   const fit = (t, mw) => { if (x.measureText(t).width <= mw) return t; while (t.length > 1 && x.measureText(t + '…').width > mw) t = t.slice(0, -1); return t + '…'; };
@@ -1190,8 +1192,8 @@ function drawTreeCanvas(maxScale) {
     n.sps.forEach((s2, i) => {
       const sx = bx - (i + 1) * (SW + SG), sy = by + 5;
       x.fillStyle = col.sp; x.strokeStyle = col.line; rr(sx, sy, SW, 50, 10); x.fill(); x.stroke();
-      x.fillStyle = s2.g === 'f' ? col.f : col.m; x.font = `700 13px ${ff}`; x.fillText(fit(s2.f, SW - 12), sx + SW / 2, sy + 20);
       const sf = S.P.get(s2.fa); const sub = sf ? (s2.g === 'f' ? 'بنت ' : 'بن ') + sf.f : famOf(s2);
+      x.fillStyle = s2.g === 'f' ? col.f : col.m; x.font = `700 13px ${ff}`; x.fillText(fit(s2.f, SW - 12), sx + SW / 2, sy + (sub ? 20 : 26));
       if (sub) { x.fillStyle = col.muted; x.font = `500 10.5px ${ff}`; x.fillText(fit(sub, SW - 10), sx + SW / 2, sy + 37); }
     });
   }
@@ -1205,9 +1207,9 @@ async function exportPng() {
 }
 function printTree() {
   const c = drawTreeCanvas(1.5); if (!c) return toast('الشجرة فاضية');
-  const coll = new Intl.Collator('ar'); const ppl = [...S.P.values()].sort((a, b) => genOf(a) - genOf(b) || coll.compare(a.f, b.f));
-  $('#printArea').innerHTML = `<h1>${esc(S.cur.name)}</h1><div class="sub">شجرتنا · ${S.P.size} شخص · ${stamp()}</div><img src="${c.toDataURL('image/png')}" alt="الشجرة">
-    <table><thead><tr><th>الاسم</th><th>الميلاد والوفاة</th><th>المدينة</th></tr></thead><tbody>${ppl.map(p => `<tr><td>${esc(fullName(p))}</td><td>${esc(yearsText(p))}</td><td>${esc(p.city || '')}</td></tr>`).join('')}</tbody></table>`;
+  const coll = new Intl.Collator('ar'); const people = [...S.P.values()].sort((a, b) => genOf(a) - genOf(b) || coll.compare(a.f, b.f));
+  $('#printArea').innerHTML = `<h1>${esc(S.cur.name)}</h1><div class="sub">شجرتنا · ${ppl(S.P.size)} · ${stamp()}</div><img src="${c.toDataURL('image/png')}" alt="الشجرة">
+    <table><thead><tr><th>الاسم</th><th>الميلاد والوفاة</th><th>المدينة</th></tr></thead><tbody>${people.map(p => `<tr><td>${esc(fullName(p))}</td><td>${esc(yearsText(p))}</td><td>${esc(p.city || '')}</td></tr>`).join('')}</tbody></table>`;
   setTimeout(() => window.print(), 60);
 }
 window.addEventListener('afterprint', () => { $('#printArea').innerHTML = ''; });
@@ -1281,17 +1283,17 @@ async function importAny() {
   const clean = {}; let n = 0;
   for (const [id, it] of Object.entries(items)) { if (!it || typeof it !== 'object' || it.del || id.length > 80) continue; if (it.t === 'p') { if (!it.f) continue; n++; } else if (it.t !== 'm') continue; clean[id] = strip(it); }
   if (!n) return toast('ما لقيت أشخاص بالملف');
-  const choice = await ask('استيراد', `لقيت ${n} شخص${name ? ' في «' + name + '»' : ''}. وين تبي تحطهم؟`, [
+  const choice = await ask('استيراد', `لقيت ${ppl(n)}${name ? ' في «' + name + '»' : ''}. وين تبي تحطهم؟`, [
     { v: 'new', t: 'شجرة جديدة', cls: 'pri' }, ...(canEdit() && S.P.size ? [{ v: 'replace', t: 'بدال الشجرة الحالية', cls: 'danger' }] : canEdit() ? [{ v: 'replace', t: 'بالشجرة الحالية' }] : []), { v: null, t: 'إلغاء', cls: 'ghost', cancel: true }]);
   if (!choice) return;
   if (choice === 'new') {
     const rec = newLocalTree(name || 'شجرة مستوردة'); const t = Date.now(); const data = { items: {}, meta: { name: rec.name, u: t } };
     for (const [id, it] of Object.entries(clean)) data.items[id] = { ...it, u: t };
     if (!LS.set('shajara.local.' + rec.k, data)) { trees = trees.filter(x => x !== rec); saveTrees(); return toast('مساحة التخزين بالجهاز ما تكفي'); }
-    openTree(rec); setView('tree'); toast(`استوردت ${n} شخص ✓`);
+    openTree(rec); setView('tree'); toast(`استوردت ${ppl(n)} ✓`);
   } else {
     const map = {}; for (const it of S.doc.items()) if (!clean[it.id]) map[it.id] = null; Object.assign(map, clean);
-    await bulkApply(map); toast(`استوردت ${n} شخص ✓`);
+    await bulkApply(map); toast(`استوردت ${ppl(n)} ✓`);
   }
 }
 async function bulkApply(map) {
@@ -1317,7 +1319,7 @@ function handleJoin() {
   let rec = trees.find(t => t.id === j.id);
   if (rec) { if (rec.key !== j.key && rec.key !== rec.edit) { rec.key = j.key; T.forget(j.id); } }
   else { rec = { k: j.id, id: j.id, key: j.key, name: 'شجرة مشتركة' }; trees.push(rec); }
-  saveTrees(); setTimeout(() => toast('فتحت الشجرة المشتركة ✓'), 300); return rec;
+  saveTrees(); toast('فتحت الشجرة المشتركة ✓'); return rec;
 }
 window.addEventListener('hashchange', () => { const r = handleJoin(); if (r) { openTree(r); setView('tree'); } });
 

@@ -84,7 +84,7 @@ svg.i{width:22px;height:22px;flex:none;fill:none;stroke:currentColor;stroke-widt
 .chip.on .ck:after{content:"";width:8px;height:4px;border:2.5px solid var(--ink);border-top:0;border-right:0;transform:rotate(-45deg) translate(1px,-1px)}
 .chip span.t{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .seg{display:flex;background:var(--card2);border-radius:13px;padding:4px;gap:4px}
-.seg button{flex:1;min-width:0;padding:9px 3px;border-radius:10px;font-size:13.5px;font-weight:700;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.seg button{flex:1;min-width:0;display:flex;align-items:center;justify-content:center;gap:6px;padding:9px 3px;border-radius:10px;font-size:13.5px;font-weight:700;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .seg button.on{background:var(--card);color:var(--text);box-shadow:0 1px 4px rgba(0,0,0,.18)}
 body.light .seg button.on{background:#fff}
 .av{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-weight:800;font-size:14px;flex:none;color:#1a1206;background:var(--c,#999)}
@@ -189,9 +189,12 @@ details.arch[open] summary:after{transform:rotate(90deg)}
 .clabs{display:flex;gap:6px;margin-top:6px}
 .clabs span{flex:1;min-width:0;text-align:center;font-size:12px;color:var(--muted);line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .clabs span i{display:block;font-style:normal;font-size:16px}
-.tbl{width:100%;border-collapse:collapse;font-size:14px;margin-top:12px}
-.tbl th{font-weight:700;color:var(--muted);font-size:12.5px;text-align:start;padding:6px 4px;border-bottom:1px solid var(--line)}
+.tbl-wrap{overflow-x:auto;margin-top:12px;-webkit-overflow-scrolling:touch}
+.tbl{width:100%;border-collapse:collapse;font-size:13.5px}
+.tbl th{font-weight:700;color:var(--muted);font-size:12.5px;text-align:start;padding:6px 4px;border-bottom:1px solid var(--line);white-space:nowrap}
 .tbl td{padding:8px 4px;border-bottom:1px solid var(--line)}
+.tbl td:first-child{min-width:70px;max-width:120px;overflow-wrap:anywhere}
+.tbl td.n small{display:block;font-size:11px;font-weight:700}
 .tbl tr:last-child td{border-bottom:0}
 .tbl td.n,.tbl th.n{text-align:end;font-variant-numeric:tabular-nums;white-space:nowrap}
 .sumtext{white-space:pre-wrap;background:var(--card2);border-radius:12px;padding:12px;font-size:13.5px;max-height:220px;overflow:auto;margin:10px 0 12px;font-family:inherit;line-height:1.65}
@@ -283,7 +286,7 @@ details.arch[open] summary:after{transform:rotate(90deg)}
 .dlg-s{color:var(--muted);font-size:14px;margin-bottom:6px}
 .dlg-b{display:flex;gap:10px;margin-top:16px}
 .dlg-b .btn{flex:1}
-@media (min-width:700px){.screen{padding-top:6px}.stats{grid-template-columns:repeat(4,1fr)}}
+@media (min-width:700px){.screen{padding-top:6px;max-width:680px}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
 </head>
@@ -562,6 +565,11 @@ function docOf(r) {
   d._qk = docKey(r); docs.set(r.gid, d); models.delete(r.gid); return d;
 }
 const canEdit = r => r.type === 'local' || (!r.dead && r.role === 'edit');
+/* المستند الموقوف ممكن يرجع يكتب كاشه لو كان فيه طلب بالطريق، فنمسحه مرة ثانية بعد شوي */
+function forgetDoc(id) {
+  if (!T || !id) return; T.forget(id);
+  setTimeout(() => { if (!refs.some(x => x.type === 'shared' && x.id === id)) T.forget(id); }, 4000);
+}
 function seedCache(id, body, role) {
   /* نعبّي كاش المكتبة بالنسخة اللي عندنا عشان ما تطلع القطّة فاضية لين يرد السيرفر (rev 0 = أول سحب يستبدلها بنسخة السيرفر) */
   if (LS.raw('tajarib.doc.' + id)) return;
@@ -606,7 +614,7 @@ const money = (M, v) => `${Calc.fmt(v, M.dec)} ${M.cur.s}`;
 function plural(n, zero, one, two, few, many) { return n === 0 ? zero : n === 1 ? one : n === 2 ? two : (n % 100 >= 3 && n % 100 <= 10) ? `${n} ${few}` : `${n} ${many}`; }
 const pPeople = n => plural(n, 'ما فيه أحد', 'شخص واحد', 'شخصين', 'أشخاص', 'شخص');
 const pExp = n => plural(n, 'ما فيه مصاريف', 'مصروف واحد', 'مصروفين', 'مصاريف', 'مصروف');
-const pShare = n => (Number.isInteger(n) ? plural(n, 'ولا حصة', 'حصة', 'حصتين', 'حصص', 'حصة') : `${n} حصة`);
+const pShare = n => (Number.isInteger(n) ? plural(n, 'ولا حصة', 'حصة وحدة', 'حصتين', 'حصص', 'حصة') : `${n} حصة`);
 const DF = new Intl.DateTimeFormat('ar-u-nu-latn-ca-gregory', { weekday: 'long', day: 'numeric', month: 'long' });
 const DFY = new Intl.DateTimeFormat('ar-u-nu-latn-ca-gregory', { day: 'numeric', month: 'long', year: 'numeric' });
 function dayLabel(iso) {
@@ -675,7 +683,10 @@ function go(gid) { history.pushState({ g: gid }, ''); navDepth++; showGroup(gid)
 function goHome() { if (history.state && history.state.g && navDepth > 0) history.back(); else { history.replaceState({}, ''); showHome(); } }
 function scheduleRender() {
   if (renderQ) return;
-  renderQ = requestAnimationFrame(() => { renderQ = 0; if (openGid) renderGroup(); else renderHome(); });
+  renderQ = requestAnimationFrame(() => {
+    renderQ = 0; if (openGid) renderGroup(); else renderHome();
+    const gb = $('#gs-body'); if (gsRender && gb && !gb.contains(document.activeElement)) gsRender();
+  });
 }
 function onDocChange(gid) { models.delete(gid); if (openGid === gid || !openGid) scheduleRender(); }
 function onDocStatus(gid, s) {
@@ -863,13 +874,13 @@ function renderSummary(M) {
   let h = `<div class="stats"><div class="stat"><small>المجموع</small><b class="amt">${Calc.fmt(M.total, M.dec)}</b></div><div class="stat"><small>عدد المصاريف</small><b>${M.okCount}</b></div>
     <div class="stat"><small>متوسط نصيب الشخص</small><b class="amt">${Calc.fmt(Math.round(M.total / n), M.dec)}</b></div><div class="stat"><small>أكثر فئة</small><b>${top ? CAT[top[0]].e + ' ' + CAT[top[0]].n : '—'}</b></div></div>`;
   const cats = CATS.filter(c => M.byCat[c.k]).map(c => ({ n: c.n, e: c.e, v: M.byCat[c.k] }));
-  h += `<div class="card"><h3>حسب الفئة</h3><p class="sub">بالـ${esc(M.cur.n.split(' ')[0])}، المبالغ مقرّبة</p>${barChart(cats, M, 'المصاريف حسب الفئة')}</div>`;
+  h += `<div class="card"><h3>حسب الفئة</h3><p class="sub">بال${esc(M.cur.n.split(' ')[0])}، المبالغ مقرّبة</p>${barChart(cats, M, 'المصاريف حسب الفئة')}</div>`;
   const ids = M.mids.concat(Object.keys(M.paidBy).filter(id => !M.mmap.has(id)));
   const ppl = ids.map(id => ({ n: nameOf(M, id), v: M.paidBy[id] || 0 }));
   h += `<div class="card"><h3>مين دفع كم</h3><p class="sub">كم دفع كل واحد من جيبه</p>${barChart(ppl, M, 'المدفوع لكل شخص')}
-    <table class="tbl"><thead><tr><th>الاسم</th><th class="n">دفع</th><th class="n">نصيبه</th><th class="n">الصافي</th></tr></thead><tbody>
-    ${ids.map(id => { const v = M.net[id] || 0; return `<tr><td>${esc(nameOf(M, id))}</td><td class="n">${Calc.fmt(M.paidBy[id] || 0, M.dec)}</td><td class="n">${Calc.fmt(M.share[id] || 0, M.dec)}</td><td class="n ${v > 0 ? 'pos' : v < 0 ? 'neg' : 'muted'}">${v > 0 ? 'له ' : v < 0 ? 'عليه ' : ''}${v ? Calc.fmt(Math.abs(v), M.dec) : 'خالص'}</td></tr>`; }).join('')}
-    </tbody></table><p class="hint">الصافي يحسب التسويات اللي انسجلت كمان.</p></div>`;
+    <div class="tbl-wrap"><table class="tbl"><thead><tr><th>الاسم</th><th class="n">دفع</th><th class="n">نصيبه</th><th class="n">الصافي</th></tr></thead><tbody>
+    ${ids.map(id => { const v = M.net[id] || 0; return `<tr><td>${esc(nameOf(M, id))}</td><td class="n">${Calc.fmt(M.paidBy[id] || 0, M.dec)}</td><td class="n">${Calc.fmt(M.share[id] || 0, M.dec)}</td><td class="n ${v > 0 ? 'pos' : v < 0 ? 'neg' : 'muted'}">${v ? `<small>${v > 0 ? 'له' : 'عليه'}</small>${Calc.fmt(Math.abs(v), M.dec)}` : 'خالص'}</td></tr>`; }).join('')}
+    </tbody></table></div><p class="hint">الصافي يحسب التسويات اللي انسجلت كمان.</p></div>`;
   h += `<div class="card"><h3>شارك الملخص</h3><p class="sub">انسخه أو أرسله لقروب الشلة بالواتساب</p><pre class="sumtext" id="sumtext">${esc(summaryText(M))}</pre>
     <div class="btns"><button class="btn" data-act="copySum">${ic('copy')}انسخ</button><button class="btn" data-act="waSum">${ic('wa')}واتساب</button>${navigator.share ? `<button class="btn" data-act="shareSum">${ic('share')}شارك</button>` : ''}</div></div>`;
   $('#tab-sum').innerHTML = h;
@@ -1025,7 +1036,7 @@ async function removeGroup(r) {
   const d = docs.get(r.gid); if (d) d.stop();
   const saved = LS.raw(key); const idx = refs.indexOf(r);
   refs.splice(idx, 1); saveRefs(); docs.delete(r.gid); models.delete(r.gid);
-  if (r.type === 'shared' && T) T.forget(r.id); else LS.del(key);
+  if (r.type === 'shared') forgetDoc(r.id); else LS.del(key);
   if (openGid === r.gid) goHome(); else scheduleRender();
   toast(r.type === 'shared' ? 'انشالت القطّة من جهازك' : 'انحذفت القطّة', { fn: () => { if (saved) LS.set(key, saved); refs.splice(Math.min(idx, refs.length), 0, r); saveRefs(); scheduleRender(); } });
 }
@@ -1423,7 +1434,7 @@ async function makeShared(r) {
 function toLocal(r) {
   const d = docOf(r); const body = snapshot(d); d.stop(); const id = r.id;
   Object.assign(r, { type: 'local' }); ['id', 'key', 'edit', 'view', 'role', 'dead', 'askedWho'].forEach(k => delete r[k]);
-  LS.set('qatta.g.' + r.gid, JSON.stringify(body)); if (T && id) T.forget(id);
+  LS.set('qatta.g.' + r.gid, JSON.stringify(body)); forgetDoc(id);
   saveRefs(); docs.delete(r.gid); models.delete(r.gid); if (openGid === r.gid) docOf(r); scheduleRender();
 }
 
