@@ -269,7 +269,7 @@ const TV = {
       if (last) sound('pop');
     } else {
       h = `${TV.lobby(my.M.icon, my.M.name, 'صوّروا الكود وشاركوا من جوالاتكم 🤫')}${my.cfg.prompt ? `<div class="prompt">${esc(my.cfg.prompt)}</div>` : ''}
-        <div class="card center"><div class="tvbig" id="tvn">${my.msgs.length}</div><p class="muted">${my.M.unit || 'مشاركة'} وصلت لين الحين</p></div>`;
+        <div class="card center"><div class="tvbig" id="tvn">${my.msgs.length}</div><p class="muted">${(u => `${u} ${/ة$/.test(u) ? 'وصلت' : 'وصل'}`)(my.M.unit || 'مشاركة')} لين الحين</p></div>`;
     }
     A.innerHTML = h || TV.lobby('⏳', 'لحظة…', '');
     if (timer) {
@@ -367,7 +367,7 @@ const Season = {
   current(now = new Date()) {
     const h = Season.hijri(now), gm = now.getMonth() + 1, gd = now.getDate();
     if (h.m === 9) return { icon: '🌙', title: 'رمضان كريم', text: 'جرّبوا «سؤال اليوم» بأسئلة رمضان، وأسئلة رمضانية في «سباق الأسئلة» و«صراحة ولا جرأة».', href: '#new/daily' };
-    if ((h.m === 10 && h.d <= 5) || (h.m === 12 && h.d >= 9 && h.d <= 14)) return { icon: '🎉', title: 'عيدكم مبارك', text: 'جمعة العيد تحلى بـ«سباق الأسئلة» (باقة رمضان والعيد) و«عجلة الحظ» للعيديات.', href: '#new/quiz' };
+    if ((h.m === 10 && h.d <= 5) || (h.m === 12 && h.d >= 9 && h.d <= 14)) return { icon: '🎉', title: 'عيدكم مبارك', text: 'جمعة العيد تحلى بـ«سباق الأسئلة» (باقة رمضان والعيد) و«دولاب القرار» للعيديات.', href: '#new/quiz' };
     if (gm === 9 && gd >= 15) return { icon: '🇸🇦', title: 'اليوم الوطني', text: 'جرّبوا باقة «اليوم الوطني السعودي» في سباق الأسئلة.', href: '#new/quiz' };
     if (gm === 2 && gd >= 15 && gd <= 23) return { icon: '🇸🇦', title: 'يوم التأسيس', text: 'جرّبوا باقة «اليوم الوطني السعودي» في سباق الأسئلة.', href: '#new/quiz' };
     return null;
@@ -504,7 +504,7 @@ function viewChamps() {
         <p class="hint">🥇 فوز · 🏅 من أول ثلاثة · 🎮 لعب</p></section>
       <section class="card"><h3>🕘 آخر الفايزين</h3>${wins.slice(0, 20).map(w => `<div class="brow"><span>🏆 ${esc(w.name)}</span><small class="muted">${(MODES[w.mode] || {}).icon || ''} ${esc(w.title)}${w.at ? ` · ${esc(fmtDay(isoDay(new Date(w.at)), { day: 'numeric', month: 'short' }))}` : ''}</small></div>`).join('') || '<p class="muted">ما فيه فايزين للحين</p>'}</section>
       <button class="btn big" id="chImg">📸 شارك السجل كصورة</button>`
-    : `<div class="card center"><div class="big-ic">🎮</div><h3>ما فيه نتائج للحين</h3><p class="muted">العبوا «سباق الأسئلة» أو «اسم حيوان جماد» أو «أضحك جواب» أو «أقرب تخمين» أو «المزاد»، والفايزين يُسجَّلون هنا تلقائيًا.</p></div>`}
+    : `<div class="card center"><div class="big-ic">🎮</div><h3>ما فيه نتائج للحين</h3><p class="muted">العبوا «سباق الأسئلة» أو «اسم، حيوان، جماد، نبات» أو «أضحك جواب» أو «أقرب تخمين» أو «مزاد الشلة»، والفايزين يُسجَّلون هنا تلقائيًا.</p></div>`}
     <p class="fine">الأسماء تُجمع إذا كُتبت بنفس الطريقة في كل لعبة.</p>`;
   const b = $('#chImg');
   if (b) b.onclick = async () => {
@@ -605,7 +605,7 @@ function bindBackup() {
     if (!f) return;
     try {
       const n = Backup.merge(await Backup.read(await f.text(), $('#bpw').value));
-      toast(`تم ✓ أُضيفت ${n} جلسة`);
+      toast(`تم ✓ أُضيفت ${n === 1 ? 'جلسة وحدة' : n === 2 ? 'جلستين' : n >= 3 && n <= 10 ? `${n} جلسات` : `${n} جلسة`}`);
     } catch (err) {
       toast(err.message === 'pw' ? 'الملف عليه كلمة سر، اكتبها فوق وافتحه مرة ثانية' : err.message === 'wrongpw' ? 'كلمة السر غلط' : 'الملف مو ملف صراحة', true);
     }
@@ -704,7 +704,7 @@ async function viewPack(data) {
   const M = MODES[p.mode], Q = M.form.questions;
   const label = v => !Array.isArray(v) ? esc(v) : Q.kind === 'guess' ? `${esc(v[0])} <em>(${fmtNum(v[1])})</em>` : v.length > 2 ? `${esc(v[0])} <em>✅ ${esc(v[1])}</em>` : `${esc(v[0])} <em>ولا</em> ${esc(v[1])}`;
   document.title = `${p.name} · صراحة`;
-  app.innerHTML = `${backLink()}<header class="mhead"><div class="big-ic">📦</div><h2 class="ttl">${esc(p.name)}</h2><p class="muted">باقة أسئلة لـ ${M.icon} ${M.name} · ${p.items.length} سؤال</p></header>
+  app.innerHTML = `${backLink()}<header class="mhead"><div class="big-ic">📦</div><h2 class="ttl">${esc(p.name)}</h2><p class="muted">باقة أسئلة لـ ${M.icon} ${M.name} · ${(n => n === 1 ? 'سؤال واحد' : n === 2 ? 'سؤالين' : n >= 3 && n <= 10 ? `${n} أسئلة` : `${n} سؤال`)(p.items.length)}</p></header>
     <section class="card">${p.items.map(v => `<div class="brow"><span>${label(v)}</span></div>`).join('')}</section>
     <button class="btn primary big" id="pkPlay">▶️ احفظها وابدأ جلسة</button><button class="btn big" id="pkKeep">💾 احفظها بس</button>`;
   const keep = () => {
@@ -817,7 +817,7 @@ function wipeCard(my, board) {
 function bindWipe(my) {
   const b = $('#wipeBtn'); if (!b) return;
   b.onclick = async () => {
-    if (!confirm('متأكد؟ الحذف من السيرفر نهائي وما يتراجع.')) return;
+    if (!confirm('متأكد؟ الحذف من السيرفر نهائي وما فيه تراجع.')) return;
     b.disabled = true;
     try {
       await FbRelay.wipe(my.topic, store.get(my.topic).own);

@@ -664,7 +664,7 @@ TAB.book = () => {
     <div class="card"><h2>${ico('eye')}شوف صفحتك كزبون</h2><button class="btn sec block" data-act="preview">${ico('eye')} معاينة</button></div>`;
   const m = meta(), now = Date.now(), t = todayStr();
   let h = '';
-  if (m.closed) h += `<div class="banner bad">${ico('pause')}<div>الحجز موقف مؤقتاً، والزبائن ما يقدرون يحجزون. <button class="btn ghost sm" data-act="tab" data-tab="hours">شغّله</button></div></div>`;
+  if (m.closed) h += `<div class="banner bad">${ico('pause')}<div>الحجز موقّف مؤقتاً، والزبائن ما يقدرون يحجزون. <button class="btn ghost sm" data-act="tab" data-tab="hours">شغّله</button></div></div>`;
   if (!LS.get('mawid.push.' + S.docId)) h += `<div class="banner info">${ico('bell')}<div class="grow">فعّل التنبيهات عشان يوصلك إشعار أول ما ينحجز موعد. <button class="btn ghost sm" data-act="tab" data-tab="set">فعّلها</button></div></div>`;
   if (S.bk == null) return h + (S.bkErr ? `<div class="banner bad">${ico('warn')}<div>${esc(S.bkErr)} <button class="btn ghost sm" data-act="reload">جرّب مرة ثانية</button></div></div>` : `<div class="center" style="min-height:40vh"><div class="spin"></div></div>`);
   const all = S.bk.map(b => ({ ...b, at: fmtAt(b.start) }));
@@ -709,7 +709,7 @@ async function loadBookings(first) {
   try {
     const list = (await Tajarib.bookings.list(e.id, e.edit)).sort((a, b) => a.start - b.start);
     const prev = S.bk ? new Set(S.bk.map(b => b.id)) : null; S.bk = list; S.bkErr = '';
-    if (prev) { const fresh = list.filter(b => !prev.has(b.id) && b.status === 'new'); if (fresh.length) { S.fresh = new Set([...(S.fresh || []), ...fresh.map(b => b.id)]); toast(fresh.length === 1 ? `وصلك حجز جديد من ${fresh[0].name} 🎉` : `وصلك ${fresh.length} حجوزات جديدة 🎉`); } }
+    if (prev) { const fresh = list.filter(b => !prev.has(b.id) && b.status === 'new'); if (fresh.length) { S.fresh = new Set([...(S.fresh || []), ...fresh.map(b => b.id)]); toast(fresh.length === 1 ? `وصلك حجز جديد من ${fresh[0].name} 🎉` : `وصلك ${cnt(fresh.length, 'حجز جديد', 'حجزين جديدين', 'حجوزات جديدة', 'حجز جديد')} 🎉`); } }
   } catch (er) { S.bkErr = Tajarib.errorText(er); if (er.code === 'bad_key' || er.code === 'not_found') S.lost = er.code; }
   if (S.mode !== 'owner') return;
   const n = S.bk ? S.bk.filter(b => b.status === 'new' && b.end > Date.now()).length : 0;
@@ -812,7 +812,7 @@ TAB.set = () => {
     ${f('wa', 'رقم الواتساب', '05xxxxxxxx', { ltr: 1, im: 'tel', max: 20, hint: 'يوصلك عليه الزبون، ويطلع زر واتساب بالصفحة' })}
     ${f('phone', 'رقم الاتصال (اختياري)', '05xxxxxxxx', { ltr: 1, im: 'tel', max: 20 })}
     ${f('loc', 'رابط الموقع (اختياري)', 'https://maps.app.goo.gl/…', { ltr: 1, max: 300 })}
-    <label class="field"><span>ملاحظة تطلع للزبون قبل ما يؤكّد (اختياري)</span><textarea class="inp" data-m="note" maxlength="300" placeholder="مثلاً: الرجاء الحضور قبل الموعد بـ5 دقايق">${esc(m.note || '')}</textarea></label>
+    <label class="field"><span>ملاحظة تطلع للزبون قبل ما يؤكّد (اختياري)</span><textarea class="inp" data-m="note" maxlength="300" placeholder="مثلاً: الرجاء الحضور قبل الموعد بـ5 دقائق">${esc(m.note || '')}</textarea></label>
     <div class="two">${f('cur', 'العملة', 'ر.س', { max: 8 })}<div></div></div></div>
   <div class="card"><h2>${ico('eye')}شكل صفحة الحجز</h2>
     <div class="field"><span>اللون</span><div class="chips" id="accs">${ACCENTS.map(a => `<button class="chip ${a === acc ? 'on' : ''}" data-act="accent" data-v="${a}" style="width:36px;height:36px;padding:0;border-radius:50%;background:${a};border:3px solid ${a === acc ? 'var(--text)' : 'transparent'}" aria-label="لون"></button>`).join('')}</div></div>
@@ -910,7 +910,7 @@ function renderCustomer(soft) {
     <header class="bh">${logo ? `<img class="blogo" src="${logo}" alt="">` : `<div class="blogo">${esc((m.name || 'م').trim().charAt(0))}</div>`}<h1>${esc(m.name || 'احجز موعدك')}</h1>${m.desc ? `<div class="ds">${esc(m.desc)}</div>` : ''}${acts.length ? `<div class="bacts">${acts.join('')}</div>` : ''}</header>`;
   const mineHtml = myBookingsHtml();
   if (m.closed) {
-    app.innerHTML = `<div class="c">${head}<div class="cw"><div class="step closedbox"><div class="big">⏸️</div><h2 style="justify-content:center">الحجز موقف مؤقتاً</h2><p class="muted">${esc(m.closedMsg || 'تقدر تتواصل معنا بالواتساب أو الاتصال.')}</p></div>${mineHtml}</div>${foot()}</div>`;
+    app.innerHTML = `<div class="c">${head}<div class="cw"><div class="step closedbox"><div class="big">⏸️</div><h2 style="justify-content:center">الحجز موقّف مؤقتاً</h2><p class="muted">${esc(m.closedMsg || 'تقدر تتواصل معنا بالواتساب أو الاتصال.')}</p></div>${mineHtml}</div>${foot()}</div>`;
     return;
   }
   const focusIn = soft && document.activeElement && document.activeElement.closest && document.activeElement.closest('#st4');

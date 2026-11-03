@@ -900,7 +900,7 @@ async function renderChannel(cid) {
     save();
     const sub = st.subs.some((x) => x.id === cid);
     app.innerHTML = `<main>${c.banner ? `<div class="chban" style="background-image:url('${esc(c.banner)}')"></div>` : ""}
-    <div class="chhead">${av(c.name, c.img)}<div style="flex:1;min-width:0"><h1>${esc(c.name)}</h1><small>${c.subs ? c.subs + " مشترك • " : ""}${c.list.length} مقطع حديث</small></div>
+    <div class="chhead">${av(c.name, c.img)}<div style="flex:1;min-width:0"><h1>${esc(c.name)}</h1><small>${c.subs ? c.subs + " مشترك • " : ""}${c.list.length} ${c.list.length > 2 && c.list.length < 11 ? "مقاطع حديثة" : "مقطع حديث"}</small></div>
     <button class="btn sub ${sub ? "on" : ""}" id="chSub" onclick="toggleSubC('${jsq(cid)}','${jsq(c.name)}','${jsq(c.img || "")}')">${sub ? "✓ مشترك" : "اشتراك"}</button>
     ${c.list.length ? `<button class="btn" onclick="queueAll()">＋ الكل للقائمة</button>` : ""}</div>
     ${c.desc ? `<div class="desc" onclick="this.classList.toggle('open')" style="margin-bottom:18px">${linkify(esc(c.desc))}</div>` : ""}
@@ -915,7 +915,8 @@ function queueAll() {
     if (!st.queue.includes(v.id)) st.queue.push(v.id);
   });
   save();
-  toast("انضافت " + (window._chList || []).length + " مقاطع للقائمة");
+  const n = (window._chList || []).length;
+  toast("انضافت " + n + (n > 2 && n < 11 ? " مقاطع" : " مقطع") + " للقائمة");
 }
 function toggleSubC(id, n, img) {
   const i = st.subs.findIndex((c) => c.id === id || !c.id && c.n === n);

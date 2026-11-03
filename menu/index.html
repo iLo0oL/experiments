@@ -307,6 +307,7 @@ const latin = s => String(s == null ? '' : s).replace(/[٠-٩]/g, d => '٠١٢٣
 const num = v => { const s = latin(v).replace('٫', '.').replace(/,/g, '.').replace(/[^\d.]/g, ''); if (!s) return null; const n = parseFloat(s); return isFinite(n) ? Math.round(n * 100) / 100 : null; };
 const fmtN = n => { n = Math.round((+n || 0) * 100) / 100; return String(n); };
 const cnt = (n, one, two, few, many) => n === 1 ? one : n === 2 ? two : n >= 3 && n <= 10 ? `${n} ${few}` : `${n} ${many}`; /* العدد مع المعدود */
+const calTxt = (v, L) => L !== 'en' && Number.isInteger(+v) ? cnt(+v, 'سعرة واحدة', 'سعرتين', 'سعرات', 'سعرة') : `${esc(v)} ${L === 'en' ? 'kcal' : 'سعرة'}`;
 const kb = n => n >= 1e6 ? (n / 1e6).toFixed(2) + ' ميقا' : Math.max(1, Math.round(n / 1000)) + ' كيلوبايت';
 const norm = s => String(s || '').toLowerCase().replace(/[ً-ٰٟـ]/g, '').replace(/[أإآٱ]/g, 'ا').replace(/ة/g, 'ه').replace(/ى/g, 'ي').replace(/ؤ/g, 'و').replace(/ئ/g, 'ي');
 const isImg = s => typeof s === 'string' && /^data:image\/(png|jpeg|webp|gif);base64,/.test(s);
@@ -574,7 +575,7 @@ TAB.menu = () => {
   const m = meta(), cs = cats(), ps = prods(), size = docSize();
   const offN = ps.filter(p => p.off).length;
   let h = `<div class="card"><div class="row"><div class="grow"><h2 style="margin:0">${esc(m.name || 'منيوي')}</h2>
-    <div class="stat"><span>${cnt(cs.length, 'قسم واحد', 'قسمين', 'أقسام', 'قسم')}</span><span>${cnt(ps.length, 'منتج واحد', 'منتجين', 'منتجات', 'منتج')}</span>${offN ? `<span style="color:var(--bad)">${offN} خلص اليوم</span>` : ''}</div></div>
+    <div class="stat"><span>${cnt(cs.length, 'قسم واحد', 'قسمين', 'أقسام', 'قسم')}</span><span>${cnt(ps.length, 'منتج واحد', 'منتجين', 'منتجات', 'منتج')}</span>${offN ? `<span style="color:var(--bad)">${cnt(offN, 'منتج واحد خلص اليوم', 'منتجين خلصوا اليوم', 'منتجات خلصت اليوم', 'منتج خلص اليوم')}</span>` : ''}</div></div>
     ${isPub() ? `<span class="pill ok">${ico('check')}منشور</span>` : `<span class="pill warn">مسودة</span>`}</div>
     <div class="btns mt"><button class="btn sec sm" data-act="preview">${ico('eye')} شوفه كزبون</button>${(cs.length > 1 || ps.length > 1) ? `<button class="btn sec sm" data-act="sorting">${ico('sort')} ${S.sorting ? 'خلّصت الترتيب' : 'رتّب'}</button>` : ''}</div>
     ${!isPub() ? `<p class="small mt">المنيو محفوظ بجهازك بس. لما تخلص، انشره من تبويب «المشاركة» عشان تاخذ الرابط والكود.</p>` : ''}</div>`;
@@ -605,7 +606,7 @@ function itemRow(p, k, n) {
     : `<label class="sw" title="متوفر"><input type="checkbox" data-chg="avail" data-id="${p.id}" ${p.off ? '' : 'checked'} aria-label="متوفر"><i></i></label>`;
   return `<div class="it ${p.off ? 'off' : ''}" data-act="editItem" data-id="${p.id}">
     ${ph ? `<img class="thumb" src="${ph}" alt="" loading="lazy">` : `<div class="thumb">${ico('img')}</div>`}
-    <div class="grow"><div class="nm">${esc(p.name)}${p.off ? '<span class="offtag">خلص اليوم</span>' : ''}</div><div class="pr">${priceLine(p)}${p.cal != null && p.cal !== '' ? ' · ' + esc(p.cal) + ' سعرة' : ''}</div></div>${right}</div>`;
+    <div class="grow"><div class="nm">${esc(p.name)}${p.off ? '<span class="offtag">خلص اليوم</span>' : ''}</div><div class="pr">${priceLine(p)}${p.cal != null && p.cal !== '' ? ' · ' + calTxt(p.cal, 'ar') : ''}</div></div>${right}</div>`;
 }
 function swapO(list, id, dir) {
   const i = list.findIndex(x => x.id === id), j = i + dir; if (i < 0 || j < 0 || j >= list.length) return;
@@ -665,7 +666,7 @@ function editItem(id, catId) {
     <div class="hint" id="eDisc" style="margin:-6px 0 12px"></div>
     <div class="two"><label class="field"><span>السعرات الحرارية</span><input class="inp" id="eCal" inputmode="numeric" value="${w.cal != null ? esc(w.cal) : ''}" placeholder="مثلاً: 180"></label>
       <label class="field"><span>القسم</span><select class="inp" id="eCat">${cs.map(c => `<option value="${c.id}" ${c.id === w.cat ? 'selected' : ''}>${esc(c.name)}</option>`).join('')}</select></label></div>
-    <div class="hint" style="margin:-6px 0 12px">عرض السعرات مطلوب في منيوهات المطاعم بالسعودية.</div>
+    <div class="hint" style="margin:-6px 0 12px">عرض السعرات مطلوب في منيوات المطاعم بالسعودية.</div>
     <div class="sep"></div>
     <div class="sec-t">الأحجام <span class="muted small">(اختياري، كل حجم بسعره)</span></div><div id="eSizes">${(w.sizes || []).map(r => lrow(r, 'sizes')).join('')}</div>
     <button class="btn ghost sm" type="button" data-add="sizes">${ico('plus')} أضف حجم</button>
@@ -957,7 +958,7 @@ function custList(L) {
       h += `<div class="mi ${na ? 'na' : ''}" data-act="openItem" data-id="${p.id}" data-s="${esc(search)}" role="button" tabindex="0">
         <div class="tx">${tags.length ? `<div class="badges">${tags.map(t => `<span class="bdg ${t[0]}">${t[3]} ${L === 'en' ? t[2] : t[1]}</span>`).join('')}</div>` : ''}
           <h3>${esc(tName(p, L))}</h3>${tDesc(p, L) ? `<p>${esc(tDesc(p, L))}</p>` : ''}
-          <div class="pr">${na ? `<span class="natag">${tx('na')}</span>` : `<span class="price">${priceLine(p, L)}</span>${disc ? `<span class="old">${money(p.old, L)}</span><span class="disc">-${disc}%</span>` : ''}`}${p.cal != null && p.cal !== '' ? `<span class="cal">🔥 ${esc(p.cal)} ${tx('cal')}</span>` : ''}</div></div>
+          <div class="pr">${na ? `<span class="natag">${tx('na')}</span>` : `<span class="price">${priceLine(p, L)}</span>${disc ? `<span class="old">${money(p.old, L)}</span><span class="disc">-${disc}%</span>` : ''}`}${p.cal != null && p.cal !== '' ? `<span class="cal">🔥 ${calTxt(p.cal, L)}</span>` : ''}</div></div>
         ${ph ? `<div class="phw"><img class="ph" src="${ph}" alt="" loading="lazy" decoding="async">${qtyOf[p.id] ? `<span class="qb">${qtyOf[p.id]}</span>` : ''}${add}</div>` : (add || (qtyOf[p.id] ? `<span class="qb" style="position:static">${qtyOf[p.id]}</span>` : ''))}</div>`;
     }
     h += `</div></section>`;
@@ -1006,7 +1007,7 @@ function openItem(id) {
     <div class="dname">${esc(tName(p, L))}</div>${L === 'ar' && p.en ? `<div class="muted ltr" dir="ltr" style="text-align:right">${esc(p.en)}</div>` : ''}
     ${tDesc(p, L) ? `<div class="ddesc">${esc(tDesc(p, L))}</div>` : ''}
     <div class="row mt">${p.off ? `<span class="natag">${tx('na')}</span>` : `<span class="price" style="font-size:20px">${priceLine(p, L)}</span>${disc ? `<span class="old">${money(p.old, L)}</span><span class="disc">-${disc}%</span>` : ''}`}</div>
-    <div class="dinfo">${p.cal != null && p.cal !== '' ? `<span>🔥 ${esc(p.cal)} ${tx('cal')}</span>` : ''}${alg.length ? `<span>⚠️ ${tx('contains')} ${alg.map(a => L === 'en' ? a[2] : a[1]).join(L === 'en' ? ', ' : '، ')}</span>` : ''}</div>
+    <div class="dinfo">${p.cal != null && p.cal !== '' ? `<span>🔥 ${calTxt(p.cal, L)}</span>` : ''}${alg.length ? `<span>⚠️ ${tx('contains')} ${alg.map(a => L === 'en' ? a[2] : a[1]).join(L === 'en' ? ', ' : '، ')}</span>` : ''}</div>
     ${order && sizes.length ? `<div class="sec-t mt" style="margin-top:18px">${tx('size')}</div><div id="dSizes">${sizes.map((s, i) => `<div class="opt ${i === 0 ? 'on' : ''}" data-size="${i}"><span class="dot">${ico('check')}</span><span class="grow">${esc(s.n)}</span><span class="price" style="font-size:15px">${money(s.p, L)}</span></div>`).join('')}</div>` : ''}
     ${!order && sizes.length ? `<div class="dinfo">${sizes.map(s => `<span>${esc(s.n)}: ${money(s.p, L)}</span>`).join('')}</div>` : ''}
     ${order && extras.length ? `<div class="sec-t mt" style="margin-top:18px">${tx('extras')}</div><div id="dExtras">${extras.map((s, i) => `<div class="opt chk" data-extra="${i}"><span class="dot">${ico('check')}</span><span class="grow">${esc(s.n)}</span><span class="muted small">+${money(s.p, L)}</span></div>`).join('')}</div>` : ''}
@@ -1127,7 +1128,7 @@ const ACT = {
   },
   forget: async () => {
     if (isPub()) {
-      if (!await confirmBox('انسَ المنيو من الجهاز', 'بيتشال المنيو من هالجهاز بس ويبقى منشور. إذا ما عندك رابط التعديل بجهاز ثاني، ما تقدر ترجع تعدّله. متأكد؟', 'انسَه')) return;
+      if (!await confirmBox('انسَ المنيو من الجهاز', 'بينشال المنيو من هالجهاز بس ويبقى منشور. إذا ما عندك رابط التعديل بجهاز ثاني، ما تقدر ترجع تعدّله. متأكد؟', 'انسَه')) return;
       const id = S.docId; stopStore(); setMine(mine().filter(x => x.id !== id)); Tajarib.forget(id);
     } else {
       if (!await confirmBox('حذف المسودة', 'بتنحذف المسودة من هالجهاز نهائياً. تبي تصدّر نسخة احتياطية أول؟ إذا متأكد اضغط «احذف».', 'احذف')) return;

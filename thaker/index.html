@@ -349,7 +349,7 @@ function fmtDays(n){
   const m=Math.round(n/30);if(n<365){if(m<=1)return 'شهر';if(m===2)return 'شهرين';return m+(m<=10?' أشهر':' شهر')}
   const y=Math.round(n/365);return y<=1?'سنة':y===2?'سنتين':y+(y<=10?' سنوات':' سنة');
 }
-function fmtCount(n,one,two,few,many){if(n===1)return one;if(n===2)return two;if(n>=3&&n<=10)return n+' '+few;return n+' '+many}
+function fmtCount(n,one,two,few,many){if(n===1)return one;if(n===2)return two;if(n%100>=3&&n%100<=10)return n+' '+few;return n+' '+many}
 const cardsWord=n=>fmtCount(n,'بطاقة وحدة','بطاقتين','بطاقات','بطاقة');
 const daysWord=n=>fmtCount(n,'يوم واحد','يومين','أيام','يوم');
 const blurActive=()=>{const a=document.activeElement;if(a&&a!==document.body&&a.blur)a.blur()};
@@ -565,7 +565,7 @@ function drawChart(){
   s+='</svg><div class="ctip" id="ctip"></div>';
   if(!max)s+='<div class="small muted" style="text-align:center;margin-top:-110px;margin-bottom:84px;position:relative">ما فيه مراجعات للحين، ابدأ اليوم ✨</div>';
   box.innerHTML=s;
-  const tip=$('#ctip');const show=i=>{const d=days[i];const dt=parseKey(d.k);const cx=pl+plotW-(+i+0.5)*slot;tip.textContent=(d.k===t?'اليوم':WD[dt.getDay()])+' '+dt.getDate()+'/'+(dt.getMonth()+1)+' · '+(d.v===1?'مراجعة وحدة':d.v===2?'مراجعتين':d.v+' مراجعة');const bwid=box.clientWidth,tw=tip.offsetWidth||120;tip.style.left=Math.max(tw/2,Math.min(bwid-tw/2,cx/W*bwid))+'px';tip.style.top=(Math.min(y(d.v),base-10)/H*box.querySelector('svg').getBoundingClientRect().height-6)+'px';tip.classList.add('on')};
+  const tip=$('#ctip');const show=i=>{const d=days[i];const dt=parseKey(d.k);const cx=pl+plotW-(+i+0.5)*slot;tip.textContent=(d.k===t?'اليوم':WD[dt.getDay()])+' '+dt.getDate()+'/'+(dt.getMonth()+1)+' · '+fmtCount(d.v,'مراجعة وحدة','مراجعتين','مراجعات','مراجعة');const bwid=box.clientWidth,tw=tip.offsetWidth||120;tip.style.left=Math.max(tw/2,Math.min(bwid-tw/2,cx/W*bwid))+'px';tip.style.top=(Math.min(y(d.v),base-10)/H*box.querySelector('svg').getBoundingClientRect().height-6)+'px';tip.classList.add('on')};
   $$('rect[data-i]',box).forEach(r=>{r.addEventListener('pointerenter',()=>show(r.dataset.i));r.addEventListener('click',()=>show(r.dataset.i));r.addEventListener('pointerleave',()=>tip.classList.remove('on'))});
   const tb=$('#chartTable');if(tb)tb.innerHTML='<table><tr><th>اليوم</th><th>المراجعات</th></tr>'+days.slice().reverse().map(d=>{const dt=parseKey(d.k);return '<tr><td>'+WD[dt.getDay()]+' '+dt.getDate()+'/'+(dt.getMonth()+1)+'</td><td>'+d.v+'</td></tr>'}).join('')+'</table>';
 }
@@ -647,7 +647,7 @@ function bulkSheet(deck){
   const upd=()=>{rows=parseBulk($('#bText',w).value,$('#bSep',w).value,$('#bSwap',w).checked);const seen=new Set(deck.cards.map(c=>norm(c.front,true)));const skip=$('#bDup',w).checked;
     rows.forEach(r=>{if(r.err)return;const k=norm(r.front,true);r.dup=seen.has(k);seen.add(k)});
     const good=rows.filter(r=>!r.err&&!(skip&&r.dup)),bad=rows.filter(r=>r.err).length,dups=rows.filter(r=>r.dup).length;
-    $('#bPrev',w).innerHTML=rows.length?'<div class="row small" style="margin-top:8px;gap:6px;flex-wrap:wrap"><span class="chip good">'+good.length+' جاهزة</span>'+(bad?'<span class="chip bad">'+bad+' سطر ما انفهم</span>':'')+(dups?'<span class="chip warn">'+dups+' مكررة</span>':'')+'</div><div class="preview">'+rows.slice(0,200).map((r,i)=>r.err?'<div class="prow err"><span class="n">'+r.line+'</span><span class="a" dir="auto">'+esc(r.raw)+' ← ما لقيت فاصل</span></div>':'<div class="prow'+(r.dup&&skip?' dup':'')+'"><span class="n">'+r.line+'</span><span class="q" dir="auto">'+esc(r.front)+'</span><span class="faint">←</span><span class="a" dir="auto">'+esc(r.back)+(r.hint?' <span class="faint">('+esc(r.hint)+')</span>':'')+'</span>'+(r.dup?'<span class="chip warn" style="margin-inline-start:auto">مكررة</span>':'')+'</div>').join('')+'</div>':'';
+    $('#bPrev',w).innerHTML=rows.length?'<div class="row small" style="margin-top:8px;gap:6px;flex-wrap:wrap"><span class="chip good">'+good.length+' جاهزة</span>'+(bad?'<span class="chip bad">'+fmtCount(bad,'سطر ما انفهم','سطرين ما انفهموا','أسطر ما انفهمت','سطر ما انفهم')+'</span>':'')+(dups?'<span class="chip warn">'+dups+' مكررة</span>':'')+'</div><div class="preview">'+rows.slice(0,200).map((r,i)=>r.err?'<div class="prow err"><span class="n">'+r.line+'</span><span class="a" dir="auto">'+esc(r.raw)+' ← ما لقيت فاصل</span></div>':'<div class="prow'+(r.dup&&skip?' dup':'')+'"><span class="n">'+r.line+'</span><span class="q" dir="auto">'+esc(r.front)+'</span><span class="faint">←</span><span class="a" dir="auto">'+esc(r.back)+(r.hint?' <span class="faint">('+esc(r.hint)+')</span>':'')+'</span>'+(r.dup?'<span class="chip warn" style="margin-inline-start:auto">مكررة</span>':'')+'</div>').join('')+'</div>':'';
     const b=$('#bGo',w);b.disabled=!good.length;b.textContent=good.length?'أضف '+cardsWord(good.length):'أضف';b._rows=good};
   let tm;$('#bText',w).oninput=()=>{clearTimeout(tm);tm=setTimeout(upd,150)};$('#bSep',w).onchange=upd;$('#bSwap',w).onchange=upd;$('#bDup',w).onchange=upd;
   $('#bFile',w).onclick=async()=>{const f=await pickFile('.csv,.txt,.tsv,text/plain,text/csv');if(!f)return;$('#bText',w).value=await f.text();upd()};
@@ -670,21 +670,21 @@ function exportDeck(deck){download('ذاكر - '+safeName(deck.name)+'.json',{ap
 function importPreview(deckData,source){
   const d=normDeck(deckData);d.cards.forEach(c=>c.srs=null);
   if(!d.cards.length){toast('الرزمة ما فيها بطاقات',{type:'err'});return}
-  const w=openSheet(sheetHead('معاينة الرزمة')+'<div class="dhead" style="margin:0 0 12px"><span class="demo" style="background:'+d.color+'26">'+esc(d.emoji)+'</span><div class="grow"><b style="font-size:18px" dir="auto">'+esc(d.name)+'</b><div class="small muted">'+cardsWord(d.cards.length)+' · '+esc(source)+'</div></div></div><div class="preview">'+d.cards.slice(0,30).map((c,i)=>'<div class="prow"><span class="n">'+(i+1)+'</span><span class="q" dir="auto">'+esc(c.front)+'</span><span class="faint">←</span><span class="a" dir="auto">'+esc(c.back)+'</span></div>').join('')+(d.cards.length>30?'<div class="prow small muted">و'+(d.cards.length-30)+' بطاقة ثانية…</div>':'')+'</div><div class="acts"><button class="btn primary" id="ipGo">أضفها لرزمي</button><button class="btn ghost" data-close>إلغاء</button></div>');
+  const w=openSheet(sheetHead('معاينة الرزمة')+'<div class="dhead" style="margin:0 0 12px"><span class="demo" style="background:'+d.color+'26">'+esc(d.emoji)+'</span><div class="grow"><b style="font-size:18px" dir="auto">'+esc(d.name)+'</b><div class="small muted">'+cardsWord(d.cards.length)+' · '+esc(source)+'</div></div></div><div class="preview">'+d.cards.slice(0,30).map((c,i)=>'<div class="prow"><span class="n">'+(i+1)+'</span><span class="q" dir="auto">'+esc(c.front)+'</span><span class="faint">←</span><span class="a" dir="auto">'+esc(c.back)+'</span></div>').join('')+(d.cards.length>30?'<div class="prow small muted">و'+cardsWord(d.cards.length-30)+' ثانية…</div>':'')+'</div><div class="acts"><button class="btn primary" id="ipGo">أضفها لرزمي</button><button class="btn ghost" data-close>إلغاء</button></div>');
   $('#ipGo',w).onclick=async()=>{if(db.decks.some(x=>x.name===d.name))d.name+=' (مستوردة)';d.id=uid();db.decks.push(d);if(!save()){db.decks.pop();return}await popLayer();state.tab='home';render();toast('انضافت رزمة «'+d.name+'» ✓')};
 }
 async function importFile(){
   const f=await pickFile('.json,application/json');if(!f)return;let obj;try{obj=JSON.parse(await f.text())}catch(e){toast('الملف هذا مو JSON صالح',{type:'err'});return}
   if(obj&&obj.type==='deck'&&obj.deck){importPreview(obj.deck,'من ملف');return}
   if(obj&&(obj.type==='backup'||Array.isArray(obj.decks)||(obj.data&&Array.isArray(obj.data.decks)))){const data=normalizeDb(obj.data||obj);
-    const ok=await confirmDlg({title:'استيراد نسخة احتياطية',text:'بيستبدل كل بياناتك الحالية ('+db.decks.length+' رزمة) بالنسخة اللي في الملف ('+data.decks.length+' رزمة). متأكد؟',ok:'استبدل'});if(!ok)return;
+    const ok=await confirmDlg({title:'استيراد نسخة احتياطية',text:'بيستبدل كل بياناتك الحالية ('+fmtCount(db.decks.length,'رزمة وحدة','رزمتين','رزم','رزمة')+') بالنسخة اللي في الملف ('+fmtCount(data.decks.length,'رزمة وحدة','رزمتين','رزم','رزمة')+'). متأكد؟',ok:'استبدل'});if(!ok)return;
     const prev=db;db=data;if(!save()){db=prev;return}state.deckId=null;render();toast('تم استيراد النسخة ✓',{action:'تراجع',onAction:()=>{db=prev;save();render()}});return}
   toast('الملف هذا مو من ذاكر',{type:'err'});
 }
 async function handleHash(){
   const h=location.hash;if(!h.startsWith('#deck='))return;const p=decodeURIComponent(h.slice(6));
   try{history.replaceState(null,'',linkBase())}catch(e){}
-  try{const d=await decodeDeckPayload(p);importPreview(d,'من رابط')}catch(e){toast(e.message==='nodecomp'?'متصفحك ما يدعم فك الرابط، اطلب منه يرسل الملف':'الرابط تالف أو ناقص',{type:'err'})}
+  try{const d=await decodeDeckPayload(p);importPreview(d,'من رابط')}catch(e){toast(e.message==='nodecomp'?'متصفحك ما يدعم فك الرابط، اطلب من المرسل يرسل لك الملف':'الرابط تالف أو ناقص',{type:'err'})}
 }
 addEventListener('hashchange',handleHash);
 
@@ -760,7 +760,7 @@ function doneBox(){const r=S.res;const n=S.items.length;let stats='',title='كف
   if(S.mode==='review'||S.mode==='practice')stats='<div class="grid"><div class="stat"><b style="color:var(--bad)">'+r.g[0]+'</b><span>نسيتها</span></div><div class="stat"><b style="color:var(--warn)">'+r.g[1]+'</b><span>صعبة</span></div><div class="stat"><b>'+r.g[2]+'</b><span>متوسطة</span></div><div class="stat"><b style="color:var(--good)">'+r.g[3]+'</b><span>سهلة</span></div></div>';
   else{const pct=Math.round(r.right/Math.max(1,r.right+r.wrong)*100);title=pct>=90?'ممتاز! '+pct+'% 🏆':pct>=60?'زين! '+pct+'% 👍':pct+'%، تحتاج مراجعة 💪';stats='<div class="grid"><div class="stat"><b style="color:var(--good)">'+r.right+'</b><span>صح</span></div><div class="stat"><b style="color:var(--bad)">'+r.wrong+'</b><span>غلط</span></div>'+(r.close?'<div class="stat"><b style="color:var(--warn)">'+r.close+'</b><span>قريبة</span></div>':'')+'</div>'}
   const nx=nextDue();
-  return '<div class="done-box"><div class="big">'+(S.mode==='review'?'🎉':'🏁')+'</div><h2>'+title+'</h2><p class="muted">'+(S.mode==='review'?'راجعت '+cardsWord(n)+'.'+(nx?' الموعد الجاي: '+fmtDays(nx.days)+'.':''):'خلّصت '+n+' سؤال.')+'</p>'+stats+'</div><div class="foot"><button class="btn" data-act="study-close">رجوع</button><button class="btn primary" data-act="study-again">'+(S.mode==='review'?'تدرّب على الكل':'مرة ثانية')+'</button></div>'}
+  return '<div class="done-box"><div class="big">'+(S.mode==='review'?'🎉':'🏁')+'</div><h2>'+title+'</h2><p class="muted">'+(S.mode==='review'?'راجعت '+cardsWord(n)+'.'+(nx?' الموعد الجاي: '+fmtDays(nx.days)+'.':''):'خلّصت '+fmtCount(n,'سؤال واحد','سؤالين','أسئلة','سؤال')+'.')+'</p>'+stats+'</div><div class="foot"><button class="btn" data-act="study-close">رجوع</button><button class="btn primary" data-act="study-again">'+(S.mode==='review'?'تدرّب على الكل':'مرة ثانية')+'</button></div>'}
 function noneDue(){const nx=nextDue();return '<div class="done-box"><div class="big">👌</div><h2>ما فيه بطاقات مستحقة الحين</h2><p class="muted">'+(nx?'الموعد الجاي: '+fmtDays(nx.days)+' ('+cardsWord(nx.count)+').':'')+(newAvailable()?'':' وخلّصت حد البطاقات الجديدة لليوم.')+'</p></div><div class="foot"><button class="btn" data-act="study-close">رجوع</button><button class="btn primary" data-act="study-practice">تدرّب على الكل</button></div>'}
 function renderMatch(){
   const el=$('#study');const done=S.matched.size===S.items.length;

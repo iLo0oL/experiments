@@ -538,7 +538,7 @@ const Board = {
           <div class="chips" id="ptype">${PLACE_TYPES.map(([k, t], i) => `<button class="chip${i ? '' : ' on'}" data-t="${k}">${t}</button>`).join('')}</div>
           <button class="btn primary big" id="padd">إضافة المكان</button></section>
         <div id="blist"></div>`}
-      <p class="fine">📌 ${trip ? 'القائمة' : 'الدليل'} محفوظ في جوالك وجوال كل واحد فتحه، ويتزامن كل ما أحد فتح الرابط.</p>
+      <p class="fine">📌 ${trip ? 'القائمة محفوظة في جوالك وجوال كل واحد فتحها، وتتزامن' : 'الدليل محفوظ في جوالك وجوال كل واحد فتحه، ويتزامن'} كل ما أحد فتح الرابط.</p>
       ${howCard(my.M)}`;
     $('#cp').onclick = () => copyText(inviteLink());
     $('#qrb').onclick = () => qrSheet(inviteLink(my), 'كود الرابط');

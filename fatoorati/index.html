@@ -295,6 +295,10 @@ function num(v){if(typeof v==='number')return isFinite(v)?v:0;let s=latin(v).rep
 const H=x=>Math.round(+(+x).toPrecision(12));// round to integer (halalas), robust to float noise
 const fmt=n=>(+n||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
 const pad=n=>String(n).padStart(2,'0');
+function fmtCount(n,one,two,few,many){if(n===1)return one;if(n===2)return two;if(n%100>=3&&n%100<=10)return n+' '+few;return n+' '+many}
+const invWord=n=>fmtCount(n,'فاتورة واحدة','فاتورتين','فواتير','فاتورة');
+const docWord=n=>fmtCount(n,'مستند واحد','مستندين','مستندات','مستند');
+const custWord=n=>fmtCount(n,'عميل واحد','عميلين','عملاء','عميل');
 function dkey(d){return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())}
 const todayKey=()=>dkey(new Date());
 function addDays(k,n){const p=k.split('-').map(Number);const d=new Date(p[0],p[1]-1,p[2]);d.setDate(d.getDate()+n);return dkey(d)}
@@ -478,11 +482,11 @@ function renderHome(){
   const p=P(),s=monthStats(),cur=p.currency,mName=MONTHS[new Date().getMonth()];
   let h=bar('<div class="brand"><span class="logo">'+I.logo+'</span><span style="min-width:0">فاتورتي<small>'+(p.name?esc(p.name):'فواتير وعروض أسعار بسهولة')+'</small></span></div>'+themeBtn())+'<div class="wrap">';
   if(!p.name||(p.vatRegistered&&!validVat(p.vat)))h+='<div class="banner"><span class="e">🏪</span><div class="grow"><b>كمّل بيانات منشأتك</b><div class="small muted">الاسم والرقم الضريبي يطلعون في الفاتورة ورمز QR.</div></div><button class="btn sm primary" data-act="tab" data-tab="settings">ابدأ</button></div>';
-  h+='<div class="kpis"><div class="kpi main"><div class="l">مبيعات '+mName+' (شامل الضريبة)</div><div class="v">'+fmt(s.sales)+' <small>'+CUR[cur].sym+'</small></div><div class="s">'+s.count+' فاتورة'+(p.vatRegistered?' · الضريبة '+fmt(s.vat):'')+'</div></div>'+
-    '<div class="kpi"><div class="l">غير مدفوعة</div><div class="v" style="color:var(--warn)">'+fmt(s.unpaid)+'</div><div class="s">'+s.unpaidN+' فاتورة مسودة أو مرسلة</div></div>'+
+  h+='<div class="kpis"><div class="kpi main"><div class="l">مبيعات '+mName+' (شامل الضريبة)</div><div class="v">'+fmt(s.sales)+' <small>'+CUR[cur].sym+'</small></div><div class="s">'+invWord(s.count)+(p.vatRegistered?' · الضريبة '+fmt(s.vat):'')+'</div></div>'+
+    '<div class="kpi"><div class="l">غير مدفوعة</div><div class="v" style="color:var(--warn)">'+fmt(s.unpaid)+'</div><div class="s">'+invWord(s.unpaidN)+' مسودة أو مرسلة</div></div>'+
     '<div class="kpi"><div class="l">المحصّل هذا الشهر</div><div class="v" style="color:var(--good)">'+fmt(s.received)+'</div><div class="s">من إيصالات الاستلام</div></div>'+
     '<div class="kpi"><div class="l">عروض أسعار مفتوحة</div><div class="v">'+s.quotes+'</div><div class="s">بقيمة '+fmt(s.quotesAmt)+'</div></div>'+
-    '<div class="kpi"><div class="l">العملاء</div><div class="v">'+db.customers.length+'</div><div class="s">'+db.products.length+' صنف بالكتالوج</div></div></div>';
+    '<div class="kpi"><div class="l">العملاء</div><div class="v">'+db.customers.length+'</div><div class="s">'+fmtCount(db.products.length,'صنف واحد','صنفين','أصناف','صنف')+' بالكتالوج</div></div></div>';
   h+='<div class="sec"><h2>مستند جديد</h2></div><div class="quick" style="grid-template-columns:repeat('+newTypes().length+',1fr)">'+newTypes().map(t=>'<button data-act="new-doc" data-type="'+t+'"><span class="e">'+TYPES[t].e+'</span>'+(t==='simplified'&&!p.vatRegistered?'فاتورة':TYPES[t].short)+'</button>').join('')+'</div>';
   const recent=db.docs.slice().sort((a,b)=>b.createdAt-a.createdAt).slice(0,5);
   h+='<div class="sec"><h2>آخر المستندات</h2>'+(db.docs.length>5?'<button class="btn sm ghost" data-act="tab" data-tab="docs">الكل</button>':'')+'</div>';
@@ -498,11 +502,11 @@ function renderDocList(){
   if(!db.docs.length){el.innerHTML='<div class="card empty"><div class="big">🗂️</div><h3>القائمة فاضية</h3><p>كل الفواتير وعروض الأسعار والإيصالات بتطلع هنا.</p><button class="btn primary" data-act="new-menu">'+I.plus+'مستند جديد</button></div>';return}
   const q=latin(state.q).trim().toLowerCase();
   const list=db.docs.filter(d=>(state.fType==='all'||(state.fType==='inv'?isInvoice(d.type):d.type===state.fType))&&(state.fStatus==='all'||d.status===state.fStatus)&&(!q||(d.number+' '+d.customer.name+' '+d.customer.phone).toLowerCase().includes(q))).sort((a,b)=>b.date<a.date?-1:b.date>a.date?1:b.createdAt-a.createdAt);
-  const invs=list.filter(d=>isInvoice(d.type)&&d.status!=='cancelled');el.innerHTML=list.length?'<div class="small muted" style="margin-bottom:2px">'+list.length+' مستند'+(invs.length?' · مجموع الفواتير '+fmt(invs.reduce((a,d)=>a+docTotal(d),0)):'')+'</div>'+list.map(docItem).join(''):'<div class="empty"><p>ما فيه نتائج تطابق البحث.</p></div>'}
+  const invs=list.filter(d=>isInvoice(d.type)&&d.status!=='cancelled');el.innerHTML=list.length?'<div class="small muted" style="margin-bottom:2px">'+docWord(list.length)+(invs.length?' · مجموع الفواتير '+fmt(invs.reduce((a,d)=>a+docTotal(d),0)):'')+'</div>'+list.map(docItem).join(''):'<div class="empty"><p>ما فيه نتائج تطابق البحث.</p></div>'}
 function renderCustomers(){return bar('<div class="ttl">العملاء</div><button class="btn sm primary" data-act="new-cust">'+I.plus+'عميل</button>')+'<div class="wrap">'+(db.customers.length>5?'<div class="search">'+I.search+'<input class="inp" type="search" id="custQ" placeholder="ابحث بالاسم أو الجوال" value="'+esc(state.cq)+'"></div>':'')+'<div class="list" id="custList" style="margin-top:10px"></div><div style="height:20px"></div></div>'}
 function renderCustList(){const el=$('#custList');if(!el)return;if(!db.customers.length){el.innerHTML='<div class="card empty"><div class="big">👥</div><h3>ما عندك عملاء للحين</h3><p>أضف عملاءك عشان تختارهم بسرعة في الفواتير. الرقم الضريبي مطلوب للفاتورة الضريبية.</p><button class="btn primary" data-act="new-cust">'+I.plus+'عميل جديد</button></div>';return}
   const q=latin(state.cq).trim().toLowerCase();const list=db.customers.filter(c=>!q||(c.name+' '+c.phone+' '+c.vat).toLowerCase().includes(q));
-  el.innerHTML=list.map(c=>{const ds=db.docs.filter(d=>d.customer.id===c.id&&isInvoice(d.type)&&d.status!=='cancelled');const tot=ds.reduce((a,d)=>a+docTotal(d),0);return '<button class="item" data-act="edit-cust" data-id="'+c.id+'"><span class="ic0">👤</span><span class="tx"><span class="t1">'+esc(c.name)+'</span><span class="t2">'+[c.phone,c.vat?'ضريبي: '+c.vat:''].filter(Boolean).map(esc).join(' · ')+'</span></span><span class="amt"><b>'+fmt(tot)+'</b><span class="small faint">'+ds.length+' فاتورة</span></span></button>'}).join('')||'<div class="empty"><p>ما فيه نتائج.</p></div>'}
+  el.innerHTML=list.map(c=>{const ds=db.docs.filter(d=>d.customer.id===c.id&&isInvoice(d.type)&&d.status!=='cancelled');const tot=ds.reduce((a,d)=>a+docTotal(d),0);return '<button class="item" data-act="edit-cust" data-id="'+c.id+'"><span class="ic0">👤</span><span class="tx"><span class="t1">'+esc(c.name)+'</span><span class="t2">'+[c.phone,c.vat?'ضريبي: '+c.vat:''].filter(Boolean).map(esc).join(' · ')+'</span></span><span class="amt"><b>'+fmt(tot)+'</b><span class="small faint">'+invWord(ds.length)+'</span></span></button>'}).join('')||'<div class="empty"><p>ما فيه نتائج.</p></div>'}
 function renderProducts(){return bar('<div class="ttl">الأصناف والخدمات</div><button class="btn sm primary" data-act="new-prod">'+I.plus+'صنف</button>')+'<div class="wrap">'+(db.products.length>5?'<div class="search">'+I.search+'<input class="inp" type="search" id="prodQ" placeholder="ابحث في الأصناف" value="'+esc(state.pq)+'"></div>':'')+'<div class="list" id="prodList" style="margin-top:10px"></div><div style="height:20px"></div></div>'}
 function renderProdList(){const el=$('#prodList');if(!el)return;if(!db.products.length){el.innerHTML='<div class="card empty"><div class="big">📦</div><h3>الكتالوج فاضي</h3><p>أضف منتجاتك وخدماتك بأسعارها عشان تضيفها للفاتورة بضغطة.</p><button class="btn primary" data-act="new-prod">'+I.plus+'صنف جديد</button></div>';return}
   const q=state.pq.trim().toLowerCase();el.innerHTML=db.products.filter(p=>!q||p.name.toLowerCase().includes(q)).map(p=>'<button class="item" data-act="edit-prod" data-id="'+p.id+'"><span class="ic0">📦</span><span class="tx"><span class="t1">'+esc(p.name)+'</span><span class="t2">'+esc(p.unit||'—')+'</span></span><span class="amt"><b>'+money(p.price,P().currency)+'</b></span></button>').join('')||'<div class="empty"><p>ما فيه نتائج.</p></div>'}
@@ -560,7 +564,7 @@ function custSheet(c,onSaved){
 }
 function prodSheet(p){
   const isNew=!p;p=p||{name:'',price:'',unit:'حبة'};
-  const w=openSheet(sheetHead(isNew?'صنف جديد':'تعديل الصنف')+'<label class="f"><span>اسم المنتج أو الخدمة</span><input class="inp" id="prName" maxlength="200" value="'+esc(p.name)+'" autofocus></label><div class="g2"><label class="f"><span>السعر ('+(P().vatRegistered?'قبل الضريبة':'')+')</span><input class="inp ltr" id="prPrice" inputmode="decimal" value="'+esc(p.price)+'" placeholder="0.00"></label><label class="f"><span>الوحدة</span><input class="inp" id="prUnit" list="dlUnits" maxlength="30" value="'+esc(p.unit)+'"></label></div><datalist id="dlUnits">'+UNITS.map(u=>'<option value="'+u+'">').join('')+'</datalist>'+
+  const w=openSheet(sheetHead(isNew?'صنف جديد':'تعديل الصنف')+'<label class="f"><span>اسم المنتج أو الخدمة</span><input class="inp" id="prName" maxlength="200" value="'+esc(p.name)+'" autofocus></label><div class="g2"><label class="f"><span>السعر'+(P().vatRegistered?' (قبل الضريبة)':'')+'</span><input class="inp ltr" id="prPrice" inputmode="decimal" value="'+esc(p.price)+'" placeholder="0.00"></label><label class="f"><span>الوحدة</span><input class="inp" id="prUnit" list="dlUnits" maxlength="30" value="'+esc(p.unit)+'"></label></div><datalist id="dlUnits">'+UNITS.map(u=>'<option value="'+u+'">').join('')+'</datalist>'+
   '<div class="sacts"><button class="btn primary" id="prSave">احفظ</button>'+(isNew?'<button class="btn ghost" data-close>إلغاء</button>':'<button class="btn danger" id="prDel">'+I.trash+'احذف</button>')+'</div>');
   $('#prSave',w).onclick=async()=>{const name=$('#prName',w).value.trim();if(!name){toast('اكتب اسم الصنف');return}const data={name,price:num($('#prPrice',w).value),unit:$('#prUnit',w).value.trim()};if(isNew)db.products.push(Object.assign({id:uid()},data));else Object.assign(p,data);if(!save())return;await popLayer();render();toast(isNew?'انضاف الصنف ✓':'تم الحفظ ✓')};
   if(!isNew)$('#prDel',w).onclick=async()=>{const i=db.products.indexOf(p);db.products.splice(i,1);save();await popLayer();render();toast('انحذف الصنف',{action:'تراجع',onAction:()=>{db.products.splice(i,0,p);save();render()}})};
@@ -582,7 +586,7 @@ function custFields(){const c=E.customer;const isTax=E.type==='tax';return '<div
   (E.type==='receipt'?'':'<div class="g2 r"><label class="f"><span>الرقم الضريبي للعميل'+(isTax?' (مطلوب)':'')+'</span><input class="inp ltr" data-f="customer.vat" inputmode="numeric" maxlength="20" value="'+esc(c.vat)+'" placeholder="3xxxxxxxxxxxxx3"></label><label class="f"><span>جوال العميل</span><input class="inp ltr" data-f="customer.phone" inputmode="tel" value="'+esc(c.phone)+'" placeholder="05xxxxxxxx"></label></div><label class="f" style="margin-bottom:0"><span>عنوان العميل</span><input class="inp" data-f="customer.address" value="'+esc(c.address)+'"></label>')+
   (E.type==='receipt'?'<label class="f" style="margin-bottom:0"><span>جوال العميل</span><input class="inp ltr" data-f="customer.phone" inputmode="tel" value="'+esc(c.phone)+'" placeholder="05xxxxxxxx"></label>':'')+'</div>'}
 function lineHTML(l,i){return '<div class="line" data-li="'+i+'"><div class="r1"><span class="n">'+(i+1)+'</span><input class="inp grow" data-l="'+i+'" data-k="name" list="dlProd" value="'+esc(l.name)+'" placeholder="وصف المنتج أو الخدمة" autocomplete="off"><button class="ibtn sm" data-act="ed-del-line" data-i="'+i+'" aria-label="احذف البند">'+I.trash+'</button></div>'+
-  '<div class="g3"><label><span>الكمية</span><input class="inp ltr" data-l="'+i+'" data-k="qty" inputmode="decimal" value="'+esc(l.qty)+'"></label><label><span>سعر الوحدة</span><input class="inp ltr" data-l="'+i+'" data-k="price" inputmode="decimal" value="'+esc(l.price||'')+'" placeholder="0.00"></label><label><span>الخصم</span><div class="dg"><input class="inp ltr" data-l="'+i+'" data-k="disc" inputmode="decimal" value="'+esc(l.disc||'')+'" placeholder="0"><button type="button" data-act="ed-ldt" data-i="'+i+'" aria-label="نوع الخصم">'+(l.dt==='amt'?'ر.س':'%')+'</button></div></label></div>'+
+  '<div class="g3"><label><span>الكمية</span><input class="inp ltr" data-l="'+i+'" data-k="qty" inputmode="decimal" value="'+esc(l.qty)+'"></label><label><span>سعر الوحدة</span><input class="inp ltr" data-l="'+i+'" data-k="price" inputmode="decimal" value="'+esc(l.price||'')+'" placeholder="0.00"></label><label><span>الخصم</span><div class="dg"><input class="inp ltr" data-l="'+i+'" data-k="disc" inputmode="decimal" value="'+esc(l.disc||'')+'" placeholder="0"><button type="button" data-act="ed-ldt" data-i="'+i+'" aria-label="نوع الخصم">'+(l.dt==='amt'?(CUR[E.currency]||CUR.SAR).sym:'%')+'</button></div></label></div>'+
   '<div class="ls"><span>'+(l.unit?'الوحدة: '+esc(l.unit):'')+'</span><span>المجموع: <b class="lt" data-lt="'+i+'">0.00</b></span></div></div>'}
 function renderEditor(){
   const el=$('#ed');const d=E;const reg=d.vatReg!==false;const cur=CUR[d.currency].sym;
@@ -599,7 +603,7 @@ function renderEditor(){
     '<label class="check"><input type="checkbox" id="markPaid" '+(d.refId?'checked':'')+'>علّم الفاتورة المرتبطة كمدفوعة</label></div>';
   }else{
     h+='<div class="ecard"><h3><span class="grow">البنود</span><button class="btn sm" data-act="ed-catalog">'+I.box+'من الأصناف</button></h3><div id="edLines">'+d.lines.map(lineHTML).join('')+'</div><button class="btn block" data-act="ed-add-line">'+I.plus+'أضف بند</button><datalist id="dlProd">'+db.products.map(p=>'<option value="'+esc(p.name)+'">').join('')+'</datalist></div>';
-    h+='<div class="ecard"><h3>الخصم والضريبة</h3>'+(d.type==='tax'?'<p class="small muted" style="margin-bottom:8px">في الفاتورة الضريبية يكون الخصم على مستوى البند عشان تطلع ضريبة كل بند صحيحة.</p>':'<label class="f"><span>خصم إضافي على الإجمالي</span><div class="dg"><input class="inp ltr" data-f="disc" inputmode="decimal" value="'+esc(d.disc||'')+'" placeholder="0"><button type="button" data-act="ed-dt">'+(d.dt==='amt'?'ر.س':'%')+'</button></div></label>')+
+    h+='<div class="ecard"><h3>الخصم والضريبة</h3>'+(d.type==='tax'?'<p class="small muted" style="margin-bottom:8px">في الفاتورة الضريبية يكون الخصم على مستوى البند عشان تطلع ضريبة كل بند صحيحة.</p>':'<label class="f"><span>خصم إضافي على الإجمالي</span><div class="dg"><input class="inp ltr" data-f="disc" inputmode="decimal" value="'+esc(d.disc||'')+'" placeholder="0"><button type="button" data-act="ed-dt">'+(d.dt==='amt'?(CUR[d.currency]||CUR.SAR).sym:'%')+'</button></div></label>')+
     (reg?'<div class="set" style="padding-top:4px"><div class="grow"><b>الأسعار شاملة الضريبة</b><small>فعّلها لو الأسعار اللي كتبتها فيها الضريبة</small></div><label class="switch"><input type="checkbox" data-f="incl" '+(d.incl?'checked':'')+' aria-label="الأسعار شاملة الضريبة"><i></i></label></div><div class="set"><div class="grow"><b>نسبة الضريبة %</b></div><input class="inp ltr" data-f="vatRate" inputmode="decimal" style="width:84px;text-align:center" value="'+d.vatRate+'"></div>':'<p class="small muted">منشأتك غير مسجّلة في ضريبة القيمة المضافة، فالمستند بدون ضريبة.</p>')+'</div>';
   }
   h+='<div class="ecard"><label class="f" style="margin-bottom:0"><span>ملاحظات (تطلع في المستند)</span><textarea class="inp" data-f="notes" maxlength="1000" placeholder="'+(d.type==='quote'?'مثال: الأسعار تشمل التركيب، مدة التنفيذ 7 أيام':'مثال: شكرًا لتعاملكم')+'">'+esc(d.notes)+'</textarea></label></div>';
@@ -672,7 +676,7 @@ function renderViewer(){
     '<button class="btn wa" data-act="vw-wa">'+I.wa+'واتساب</button>'+
     '<button class="btn" data-act="vw-edit">'+I.edit+'تعديل</button>'+
     '<button class="btn" data-act="vw-dup">'+I.copy+'تكرار</button>'+
-    (d.type==='quote'?'<button class="btn" data-act="vw-convert">'+I.conv+'حوّلها لفاتورة</button>':'')+
+    (d.type==='quote'?'<button class="btn" data-act="vw-convert">'+I.conv+'حوّله لفاتورة</button>':'')+
     (isInvoice(d.type)&&d.status!=='paid'&&d.status!=='cancelled'?'<button class="btn" data-act="vw-pay">'+I.cash+'سجّل دفعة</button>':'')+
     '<button class="btn danger" data-act="vw-del">'+I.trash+'حذف</button></div>';
   h+='<div class="pv" id="pv">'+paperHTML(d)+'</div><div style="height:24px"></div></div></div>';
@@ -684,8 +688,8 @@ addEventListener('resize',()=>{if(VID)fitPaper()});
 /* ================= paper (printable) ================= */
 const LBL={date:['التاريخ','Date'],time:['الوقت','Time'],due:['تاريخ الاستحقاق','Due Date'],valid:['صالح حتى','Valid Until'],no:['الرقم','No.'],customer:['العميل','Customer'],cname:['الاسم','Name'],seller:['البائع','Seller'],vat:['الرقم الضريبي','VAT No.'],cr:['السجل التجاري','CR No.'],phone:['الجوال','Phone'],address:['العنوان','Address'],
   item:['الوصف','Description'],qty:['الكمية','Qty'],price:['سعر الوحدة','Unit Price'],disc:['الخصم','Discount'],amount:['المبلغ','Amount'],taxable:['المبلغ الخاضع للضريبة','Taxable Amount'],vatRate:['نسبة الضريبة','VAT Rate'],vatAmt:['مبلغ الضريبة','VAT Amount'],lineTotal:['الإجمالي شامل الضريبة','Total incl. VAT'],
-  sub:['المجموع','Subtotal'],xdisc:['الخصم','Discount'],totTaxable:['الإجمالي الخاضع للضريبة','Total Taxable'],vatTot:['ضريبة القيمة المضافة','VAT'],grand:['الإجمالي المستحق','Total Due'],grandQ:['الإجمالي','Total'],
-  words:['المبلغ كتابة','Amount in words'],notes:['ملاحظات','Notes'],bank:['بيانات التحويل البنكي','Bank Details'],ref:['مرجع عرض السعر','Quotation Ref.'],
+  sub:['المجموع','Subtotal'],xdisc:['الخصم','Discount'],totTaxable:['الإجمالي الخاضع للضريبة','Total Taxable Amount'],vatTot:['ضريبة القيمة المضافة','VAT'],grand:['الإجمالي المستحق','Total Due'],grandQ:['الإجمالي','Total'],
+  words:['المبلغ كتابة','Amount in Words'],notes:['ملاحظات','Notes'],bank:['بيانات التحويل البنكي','Bank Details'],ref:['مرجع عرض السعر','Quotation Ref.'],
   recFrom:['استلمنا من','Received from'],recAmt:['مبلغ وقدره','The sum of'],recFor:['وذلك عن','For'],method:['طريقة الدفع','Payment Method'],invRef:['مرجع الفاتورة','Invoice Ref.'],receiver:['المستلم','Received by'],signature:['توقيع الدافع','Payer Signature'],cash:['عميل نقدي','Cash Customer']};
 function paperHTML(d){
   const p=P(),bi=p.bilingual,c=calc(d),cur=CUR[d.currency],reg=d.vatReg!==false;
@@ -746,13 +750,13 @@ async function convertQuote(q){
   if(!save())return;renderViewer();render();await popLayer();openViewer(inv.id);toast('تحوّل العرض إلى '+typeName(inv)+' '+inv.number+' ✓');
 }
 async function duplicateDoc(d){const n=blankDoc(d.type);Object.assign(n,{customer:clone(d.customer),lines:clone(d.lines),disc:d.disc,dt:d.dt,incl:d.incl,vatRate:d.vatRate,notes:d.notes,amount:d.amount,method:d.method,forText:d.forText,currency:d.currency});await popLayer();openEditor(n,true);toast('نسخة جديدة من '+d.number+'، عدّلها واحفظ')}
-async function deleteDoc(d){if(!(await confirmDlg({title:'حذف المستند',text:'بينحذف '+typeName(d)+' '+d.number+'. الأفضل للفواتير المرسلة إنك تغيّر حالتها لـ«ملغاة» بدال الحذف.',ok:'احذف'})))return;
+async function deleteDoc(d){if(!(await confirmDlg({title:'حذف المستند',text:'بتحذف '+typeName(d)+' '+d.number+'. الأفضل للفواتير المرسلة إنك تغيّر حالتها لـ«ملغاة» بدال الحذف.',ok:'احذف'})))return;
   const i=db.docs.indexOf(d);db.docs.splice(i,1);const linked=db.docs.filter(x=>x.convertedTo===d.id);linked.forEach(x=>x.convertedTo='');save();await popLayer();render();toast('انحذف '+d.number,{action:'تراجع',onAction:()=>{db.docs.splice(i,0,d);linked.forEach(x=>x.convertedTo=d.id);save();render()}})}
 
 /* ================= backup ================= */
 async function importBackup(){const f=await pickFile('.json,application/json');if(!f)return;let obj;try{obj=JSON.parse(await f.text())}catch(e){toast('الملف هذا مو JSON صالح',{type:'err'});return}
   const data=obj&&obj.app==='fatoorati'&&obj.data?obj.data:obj;if(!data||typeof data!=='object'||!(Array.isArray(data.docs)||data.profile)){toast('الملف هذا مو نسخة من فاتورتي',{type:'err'});return}
-  const nd=normalizeDb(data);if(!(await confirmDlg({title:'استيراد نسخة احتياطية',text:'بيستبدل كل بياناتك الحالية ('+db.docs.length+' مستند، '+db.customers.length+' عميل) بالنسخة اللي في الملف ('+nd.docs.length+' مستند، '+nd.customers.length+' عميل). متأكد؟',ok:'استبدل'})))return;
+  const nd=normalizeDb(data);if(!(await confirmDlg({title:'استيراد نسخة احتياطية',text:'بيستبدل كل بياناتك الحالية ('+docWord(db.docs.length)+'، '+custWord(db.customers.length)+') بالنسخة اللي في الملف ('+docWord(nd.docs.length)+'، '+custWord(nd.customers.length)+'). متأكد؟',ok:'استبدل'})))return;
   const prev=db;db=nd;if(!save()){db=prev;return}render();toast('تم استيراد النسخة ✓',{action:'تراجع',onAction:()=>{db=prev;save();render()}})}
 
 /* ================= events ================= */
@@ -778,8 +782,8 @@ const ACT={
   'ed-save':()=>saveEditor(),
   'ed-add-line':()=>{E.lines.push({name:'',qty:1,price:0,disc:0,dt:'pct',unit:''});rerenderLines();const ins=$$('#edLines [data-k=name]');ins[ins.length-1].focus()},
   'ed-del-line':el=>{const i=+el.dataset.i;const old=E.lines.splice(i,1)[0];if(!E.lines.length)E.lines.push({name:'',qty:1,price:0,disc:0,dt:'pct',unit:''});rerenderLines();if(old&&(old.name||num(old.price)))toast('انحذف البند',{action:'تراجع',onAction:()=>{if(!E)return;if(E.lines.length===1&&!E.lines[0].name&&!num(E.lines[0].price))E.lines.splice(0,1);E.lines.splice(i,0,old);rerenderLines()}})},
-  'ed-ldt':el=>{const l=E.lines[+el.dataset.i];l.dt=l.dt==='amt'?'pct':'amt';el.textContent=l.dt==='amt'?'ر.س':'%';updTotals()},
-  'ed-dt':el=>{E.dt=E.dt==='amt'?'pct':'amt';el.textContent=E.dt==='amt'?'ر.س':'%';updTotals()},
+  'ed-ldt':el=>{const l=E.lines[+el.dataset.i];l.dt=l.dt==='amt'?'pct':'amt';el.textContent=l.dt==='amt'?(CUR[E.currency]||CUR.SAR).sym:'%';updTotals()},
+  'ed-dt':el=>{E.dt=E.dt==='amt'?'pct':'amt';el.textContent=E.dt==='amt'?(CUR[E.currency]||CUR.SAR).sym:'%';updTotals()},
   'ed-catalog':()=>catalogSheet(),
   'ed-new-cust':()=>custSheet(null,c=>{if(!E)return;E.customer={id:c.id,name:c.name,vat:c.vat,phone:c.phone,address:c.address};$$('[data-f^="customer."]',$('#ed')).forEach(i=>{i.value=E.customer[i.dataset.f.split('.')[1]]||''});const dl=$('#dlCust');if(dl)dl.innerHTML=db.customers.map(x=>'<option value="'+esc(x.name)+'">').join('')}),
   'vw-back':()=>popLayer(),

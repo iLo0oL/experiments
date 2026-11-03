@@ -356,7 +356,7 @@ input[type=range]{width:100%;accent-color:var(--pri)}
       <div class="tb-btns"><button class="btn pri" id="printBtn" type="button"></button><button class="btn" id="copyBtn" type="button"></button><button class="btn" id="jsonBtn" type="button" title="تصدير السيرة كملف JSON"></button></div>
     </div>
     <div class="stage" id="stage"><div class="cv" id="cv"></div></div>
-    <p class="prnote">المعاينة تطابق الطباعة. للحفظ PDF اضغط «حفظ PDF» واختر «حفظ كملف PDF» من نافذة الطباعة.</p>
+    <p class="prnote">المعاينة تطابق الطباعة. للحفظ بصيغة PDF اضغط «حفظ PDF» واختر «حفظ كملف PDF» من نافذة الطباعة.</p>
   </section>
 </div>
 <div class="welcome" id="welcome" hidden></div>
@@ -435,6 +435,8 @@ const ico=n=>{const t=document.createElement('template');t.innerHTML=svg(n);retu
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
 const debounce=(fn,ms)=>{let t;return (...a)=>{clearTimeout(t);t=setTimeout(()=>fn(...a),ms)}};
 const ltr=s=>'⁦'+s+'⁩';
+function fmtCount(n,one,two,few,many){if(n===1)return one;if(n===2)return two;if(n%100>=3&&n%100<=10)return n+' '+few;return n+' '+many}
+const pagesWord=n=>fmtCount(n,'صفحة واحدة','صفحتين','صفحات','صفحة');
 function fmtDate(t){const d=new Date(t);return `${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')}`}
 function ibtn(icon,label,on,disabled,cls=''){return h('button',{type:'button',class:'ibtn sm '+cls,title:label,'aria-label':label,disabled:!!disabled,onclick:on,html:svg(icon)})}
 function btn(label,icon,on,cls=''){const b=h('button',{type:'button',class:'btn '+cls,onclick:on});if(icon)b.append(ico(icon));b.append(label);return b}
@@ -646,7 +648,7 @@ function renderPreview(){
       b.el.remove();pi++;q.unshift(b)}};
   flow(bl.main,'main');if(side)flow(bl.side,'side');
   pageCount=pages.length;
-  $('#pageCount').textContent=pageCount===1?'صفحة واحدة':pageCount===2?'صفحتين':`${pageCount} صفحات`;
+  $('#pageCount').textContent=pagesWord(pageCount);
   fitPreview();
 }
 function fitPreview(){
@@ -774,7 +776,7 @@ function secEditor(k,cnt){
   }
   if(k==='summary'){
     const ta=bind(d,'summary',{area:true,rows:5,ph:cv.lang==='en'?'2–3 lines: who you are, your strongest achievement, and what you are looking for.':'سطرين لثلاثة: من أنت، وش أبرز إنجاز لك، ووش الفرصة اللي تبيها.',onInput:()=>{c.textContent=cnt2();upd()}});
-    const cnt2=()=>`${d.summary.trim().length} حرف`;const c=h('small',{class:'hint'},cnt2());
+    const cnt2=()=>fmtCount(d.summary.trim().length,'حرف واحد','حرفين','أحرف','حرف');const c=h('small',{class:'hint'},cnt2());
     return h('div',{},fld('النبذة المهنية',ta,true),h('div',{style:'display:flex;justify-content:space-between;gap:8px'},h('small',{class:'hint'},'المثالي بين 250 و500 حرف.'),c));
   }
   if(k==='skills'||k==='languages'){
@@ -888,11 +890,11 @@ function renderTips(){
   const label=s<40?'بداية حلوة، كمّل':s<70?'قربت، باقي شوي':s<90?'سيرة قوية':'سيرتك جاهزة للإرسال';
   const bulletsAll=cv.d.experience.map(e=>e.bullets).join('\n');
   const extra=[];
-  if(pageCount>2)extra.push(h('div',{class:'warnbox'},`سيرتك ${pageCount} صفحات. حاول تختصرها لصفحتين كحد أقصى.`));
+  if(pageCount>2)extra.push(h('div',{class:'warnbox'},`سيرتك ${pagesWord(pageCount)}. حاول تختصرها لصفحتين كحد أقصى.`));
   if(cv.d.experience.length&&lines(bulletsAll).length&&!/\d/.test(bulletsAll))extra.push(h('div',{class:'warnbox'},'نقاط خبراتك ما فيها أي أرقام. أضف نتائج قابلة للقياس مثل نسبة أو عدد أو مبلغ.'));
   p.replaceChildren(
     h('div',{class:'card'},h('h3',{},ico('check'),'اكتمال السيرة'),
-      h('div',{class:'meter'},h('div',{class:'ring',style:`--p:${s}`},h('b',{},s+'%')),h('div',{},h('b',{style:'font-size:17px'},label),h('div',{class:'hint'},`أكملت ${cs.filter(c=>c[0]).length} من ${cs.length} عناصر`))),
+      h('div',{class:'meter'},h('div',{class:'ring',style:`--p:${s}`},h('b',{},s+'%')),h('div',{},h('b',{style:'font-size:17px'},label),h('div',{class:'hint'},`أكملت ${cs.filter(c=>c[0]).length} من ${fmtCount(cs.length,'عنصر واحد','عنصرين','عناصر','عنصر')}`))),
       h('ul',{class:'checks',style:'margin-top:12px'},cs.map(([ok,w,t])=>h('li',{class:ok?'done':''},ico(ok?'check':'dot'),h('span',{},t),h('small',{},ltr('+'+w))))),...extra),
     h('div',{class:'card'},h('h3',{},ico('bulb'),'نصائح لسيرة أقوى'),h('ul',{class:'tips'},TIPS.map((t,i)=>h('li',{},h('b',{},i+1),h('span',{},t))))));
 }
@@ -957,7 +959,7 @@ async function importFile(f){
   if(!list.length)return toast('الملف ما فيه سيرة من «سيرتي»',{err:true});
   const added=list.map(x=>{const c=normCV(x);c.id=uid();c.name=uniqueName(c.name);return c});
   state.cvs.unshift(...added);state.cur=added[0].id;saveNow();renderAll();closeOverlay('listDlg');closeOverlay('setDlg');
-  toast(added.length===1?'استوردنا السيرة':added.length===2?'استوردنا سيرتين':`استوردنا ${added.length} سير`,{undo:()=>{state.cvs=state.cvs.filter(c=>!added.includes(c));state.cur=state.cvs[0]&&state.cvs[0].id;saveNow();renderAll()}});
+  toast(added.length===1?'استوردنا السيرة':'استوردنا '+fmtCount(added.length,'','سيرتين','سير','سيرة'),{undo:()=>{state.cvs=state.cvs.filter(c=>!added.includes(c));state.cur=state.cvs[0]&&state.cvs[0].id;saveNow();renderAll()}});
 }
 $('#jsonIn').addEventListener('change',e=>{const f=e.target.files[0];e.target.value='';if(f)importFile(f)});
 async function clearAll(){

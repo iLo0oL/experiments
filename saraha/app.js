@@ -674,7 +674,7 @@ function voteCard() {
 
 function sentText() {
   const { M, topic } = S;
-  if (M.kind === 'vote' || M.kind === 'rank') return store.kv('voted.' + topic) ? 'صوّت من هذا الجوال ✓ لو غيّرت رأيك عدّل وأرسل مرة ثانية، ويُحسب آخر تصويت بس.' : '';
+  if (M.kind === 'vote' || M.kind === 'rank') return store.kv('voted.' + topic) ? 'سجّلت صوتك من هذا الجوال ✓ لو غيّرت رأيك عدّل وأرسل مرة ثانية، ويُحسب آخر تصويت بس.' : '';
   if (M.kind === 'know') return store.kv('voted.' + topic) ? 'وصلت أجوبتك ✓ تقدر تعدّل وترسل مرة ثانية، ويُحسب آخر إرسال بس.' : '';
   const k = store.sent(topic);
   return k ? `أرسلت ${k} من هذا الجوال${M.target === 'author' ? '' : '، ومحد يعرف إنها منك 🤫'}` : '';
@@ -1072,7 +1072,7 @@ async function cardImage(title, subtitle, texts) {
     y += h + GAP;
   }
   ctx.textAlign = 'center';
-  if (extra) { ctx.fillStyle = '#a59fc0'; ctx.font = FONT; ctx.fillText(`+ ${extra} رسائل ثانية`, W / 2, y + 30); }
+  if (extra) { ctx.fillStyle = '#a59fc0'; ctx.font = FONT; ctx.fillText(`+ ${extra === 1 ? 'رسالة ثانية' : extra === 2 ? 'رسالتين ثانيتين' : extra <= 10 ? `${extra} رسائل ثانية` : `${extra} رسالة ثانية`}`, W / 2, y + 30); }
   ctx.fillStyle = '#a59fc0'; ctx.font = '700 30px Tajawal, sans-serif'; ctx.fillText('صراحة 🤫', W / 2, c.height - 50);
   return new Promise(r => c.toBlob(r, 'image/png'));
 }
@@ -1305,7 +1305,7 @@ function sessItem(s) {
   const expired = !s.results && !isFb(s.topic) && M.kind !== 'santa' && M.kind !== 'board' && Date.now() - (s.created || 0) > KEEP_HOURS * 3600e3;
   const cap = s.mode === 'capsule' && s.results && s.results.cfg;
   const cdLeft = s.mode === 'countdown' && s.at ? Math.ceil((s.at - Date.now()) / 864e5) : null;
-  const st = cdLeft !== null ? (cdLeft > 0 ? `⏳ باقي ${cdLeft} يوم` : '🎉 جا اليوم') : cap ? (capLocked(cap.open) ? `🔒 تنفتح ${fmtDay(cap.open, { day: 'numeric', month: 'short', year: 'numeric' })}` : '🔓 مفتوحة')
+  const st = cdLeft !== null ? (cdLeft > 0 ? `⏳ باقي ${cdLeft === 1 ? 'يوم' : cdLeft === 2 ? 'يومين' : cdLeft <= 10 ? `${cdLeft} أيام` : `${cdLeft} يوم`}` : '🎉 جا اليوم') : cap ? (capLocked(cap.open) ? `🔒 تنفتح ${fmtDay(cap.open, { day: 'numeric', month: 'short', year: 'numeric' })}` : '🔓 مفتوحة')
     : M.kind === 'board' ? '📌 محفوظة' : s.results ? (s.mode === 'when' ? '📌 تثبّت الموعد' : s.mode === 'quiz' ? '🏁 خلصت' : '✅ انكشفت') : expired ? '⌛ انتهت' : '🟣 شغالة';
   return `<div class="item"><a href="${esc(href)}"><b>${M.icon} ${esc(s.title || M.name)}</b><small>${M.name} · ${s.mode === 'countdown' ? 'عدّاد' : s.caplink ? 'كبسولة محفوظة' : M.kind === 'board' ? 'قائمة مشتركة' : s.d ? 'أنت المشرف' : 'مشارك'} · ${st}</small></a><button class="x" data-del="${esc(s.topic)}" aria-label="حذف">✕</button></div>`;
 }
@@ -1387,7 +1387,7 @@ function viewMode(id) {
     };
     $('#qlist').onchange = e => {
       const i = e.target.dataset.i; if (i === undefined) return;
-      if (e.target.checked && qs.filter(q => q.on).length >= MAX_Q) { e.target.checked = false; return toast(`الحد ${MAX_Q} أسئلة`, true); }
+      if (e.target.checked && qs.filter(q => q.on).length >= MAX_Q) { e.target.checked = false; return toast(`الحد ${MAX_Q} سؤال`, true); }
       qs[+i].on = e.target.checked; qs[+i].mine = true;
     };
     $('#qadd').onclick = () => {
@@ -1404,7 +1404,7 @@ function viewMode(id) {
         $('#qa').value = $('#qnum').value = '';
       } else if (F.questions.kind === 'quiz') {
         const q = $('#qa').value.trim(), ans = [0, 1, 2, 3].map(i => $('#qc' + i).value.trim().slice(0, OPT_LEN));
-        if (!q || ans.some(x => !x)) return toast('اكتب السؤال والأربع أجوبة', true);
+        if (!q || ans.some(x => !x)) return toast('اكتب السؤال والأربعة أجوبة', true);
         if (new Set(ans).size < 4) return toast('الأجوبة لازم تكون مختلفة', true);
         v = [q.slice(0, Q_LEN), ...ans];
         ['qa', 'qc0', 'qc1', 'qc2', 'qc3'].forEach(id => { $('#' + id).value = ''; });
@@ -1416,7 +1416,7 @@ function viewMode(id) {
         v = (v + (Q.suffix || '')).slice(0, Q_LEN);
         $('#qa').value = '';
       }
-      if (qs.filter(q => q.on).length >= MAX_Q) return toast(`الحد ${MAX_Q} أسئلة، شيل سؤال أول`, true);
+      if (qs.filter(q => q.on).length >= MAX_Q) return toast(`الحد ${MAX_Q} سؤال، شيل سؤال أول`, true);
       qs.unshift({ v, on: true, custom: true }); draw();
     };
     if (F.questions.packs) {
