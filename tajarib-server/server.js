@@ -257,7 +257,7 @@ route('POST', '/api/docs/:id/suggest', async (req, b, p) => {
   const id = rid(12), by = str(b.by, 60).trim();
   await q('insert into suggestions(id, doc_id, body, by_name, status, created_at) values($1,$2,$3,$4,$5,$6)', [id, doc.id, json, by, 'new', now()]);
   /* تاريخ مخفي: اللي اقترح يشوفه كأنه انقبل عنده بس، وصاحب الشجرة يجيه تذكير */
-  const items = (doc.body && doc.body.items) || {}, cos = (Array.isArray(body.fixes) ? body.fixes : []).filter(x => x && items[x.p] && items[x.p].hd && x.set && ['by', 'dy'].some(k => k in x.set)).map(x => str(x.p, 40));
+  const items = (doc.body && doc.body.items) || {}, cos = (Array.isArray(body.fixes) ? body.fixes : []).filter(x => x && items[x.p] && isHid(items[x.p], doc.body.meta && doc.body.meta.hdr) && x.set && ['by', 'dy'].some(k => k in x.set)).map(x => str(x.p, 40));
   const names = cos.map(pid => str(items[pid].f, 40)).join(' و');
   notifyDoc(doc.id, cos.length ? { title: '🙈 تذكير: التاريخ مخفي', body: `${by || 'واحد من العائلة'} اقترح تاريخ لـ${names}، وأنت مخفي تاريخ${cos.length > 1 ? 'هم' : items[cos[0]].g === 'f' ? 'ها' : 'ه'}. اقتراحه يبان عنده كأنه انقبل، وما تغيّر شي عند الباقين`, url: SITE + 'shajara/', tag: 'sugg-' + id }
     : { title: '✍️ اقتراح جديد للشجرة', body: (by ? by + ' ' : '') + 'اقترح إضافة على الشجرة', url: SITE + 'shajara/', tag: 'sugg-' + id }, 'edit').catch(() => {});
@@ -291,16 +291,23 @@ route('POST', '/api/docs/:id/push/test', async (req, b, p) => { const doc = awai
 
 /* شجرتنا لأصحاب رابط العرض: التواريخ المخفية ما توصلهم أبد (ولا علامة إنها مخفية)، والرسائل المقفلة توصل بدون نصها */
 const DATE_KEYS = ['by', 'bmo', 'bda', 'dy', 'dmo', 'dda', 'hd'];
+/* مخفي: hd=1 لشخص بعينه، أو قاعدة عامة (meta.hdr) إلا إذا كان مستثنى (hd=-1) */
+function isHid(it, rule) {
+  if (!it || it.t !== 'p') return false; if (+it.hd === 1) return true; if (+it.hd === -1) return false;
+  const alive = !(it.dead || it.dy), f = it.g === 'f';
+  return rule === 'all' || (rule === 'alive' && alive) || (rule === 'women' && f) || (rule === 'wa' && f && alive);
+}
 const todayISO = () => { const g = ymd('g'); return `${g.y}-${String(g.m).padStart(2, '0')}-${String(g.d).padStart(2, '0')}`; };
 function openedCaps(body) { const t = todayISO(); let n = 0; for (const it of Object.values((body && body.items) || {})) if (it && it.t === 'cap' && !it.del && it.open && it.open <= t) n++; return n; }
 function viewBody(body) {
-  const items = (body && body.items) || {}, out = {}, today = todayISO();
+  const items = (body && body.items) || {}, out = {}, today = todayISO(), rule = body && body.meta && body.meta.hdr;
   for (const [id, it] of Object.entries(items)) {
-    if (it && it.t === 'p' && it.hd) { const c = { ...it }; for (const k of DATE_KEYS) delete c[k]; out[id] = c; }
+    if (it && it.t === 'p') { const c = { ...it }; if (isHid(it, rule)) for (const k of DATE_KEYS) delete c[k]; else delete c.hd; delete c.tel; out[id] = c; }
     else if (it && it.t === 'cap' && it.open > today) { const c = { ...it }; delete c.txt; out[id] = c; }
     else out[id] = it;
   }
-  return { ...body, items: out };
+  let meta = body && body.meta; if (meta && 'hdr' in meta) { meta = { ...meta }; delete meta.hdr; }
+  return { ...body, meta, items: out };
 }
 
 /* ---------- غرف «مين هذا؟» الجماعية (بالذاكرة، تنمسح بعد 4 ساعات) ---------- */
@@ -353,9 +360,9 @@ function ymd(cal, d = new Date()) {
   const g = t => parseInt((f.find(x => x.type === t) || {}).value, 10); return { y: g('year'), m: g('month'), d: g('day') };
 }
 function occasionsToday(body, d = new Date()) {
-  const items = (body && body.items) || {}, T = { h: ymd('h', d), g: ymd('g', d) }, born = [], died = [];
+  const items = (body && body.items) || {}, rule = body && body.meta && body.meta.hdr, T = { h: ymd('h', d), g: ymd('g', d) }, born = [], died = [];
   for (const it of Object.values(items)) {
-    if (!it || it.del || it.t !== 'p' || !it.f || it.hd) continue; const t = T[it.cal === 'g' ? 'g' : 'h'];
+    if (!it || it.del || it.t !== 'p' || !it.f || isHid(it, rule)) continue; const t = T[it.cal === 'g' ? 'g' : 'h'];
     const fa = it.fa && items[it.fa] && !items[it.fa].del ? items[it.fa] : null, nm = str(it.f, 40) + (fa && fa.f ? (it.g === 'f' ? ' بنت ' : ' بن ') + str(fa.f, 40) : '');
     if (!it.dead && !it.dy && +it.bmo === t.m && +it.bda === t.d) born.push({ nm, age: +it.by > 0 ? t.y - it.by : 0 });
     if ((it.dead || it.dy) && +it.dmo === t.m && +it.dda === t.d) died.push({ nm, f: it.g === 'f', n: +it.dy > 0 ? t.y - it.dy : 0 });
