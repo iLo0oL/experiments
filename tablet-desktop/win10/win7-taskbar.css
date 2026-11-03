@@ -1,0 +1,23 @@
+/* Windows 7 look: dark blue "glass" taskbar and the round Start button.
+   "desktop-theme 7" puts win7-menu.css (the Start menu) and this file
+   together in ~/.config/gtk-3.0/look.css. */
+
+/* ---------- taskbar ---------- */
+#XfcePanelWindow {
+  background-image: linear-gradient(to bottom, #6f8fb0 0%, #3d5f84 6%, #23446a 48%, #1a375a 52%, #203f63 100%);
+  border-top: 1px solid #a9c4e0;
+}
+#XfcePanelWindow label { color: #ffffff; text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.7); }
+
+/* ---------- round Start button: just the orb, no label ---------- */
+#whiskermenu-button {
+  background: transparent;
+  background-image: none;
+  border: none;
+  box-shadow: none;
+  padding: 0 6px;
+}
+#whiskermenu-button:hover,
+#whiskermenu-button:checked {
+  background-image: radial-gradient(circle, rgba(140, 210, 255, 0.55) 0%, rgba(140, 210, 255, 0) 70%);
+}
