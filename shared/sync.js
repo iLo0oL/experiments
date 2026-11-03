@@ -9,7 +9,7 @@
 */
 (function () {
   'use strict';
-  const DEFAULT_SERVER = '';
+  const DEFAULT_SERVER = 'https://experiments-production-0455.up.railway.app';
   const ERR = {
     net: 'ما قدرت أوصل للسيرفر، تأكد من النت', bad_key: 'الرابط غلط أو انتهت صلاحيته', not_found: 'ما لقيته، يمكن انحذف',
     rate: 'محاولات كثيرة، استنى شوي وجرّب', too_big: 'البيانات كبيرة مرة', too_many: 'تعديلات كثيرة مرة وحدة',
