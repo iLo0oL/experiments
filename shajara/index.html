@@ -113,6 +113,7 @@ nav.tabs svg.i{width:23px;height:23px}
 .qbar>*{pointer-events:auto}
 .qc2{flex-shrink:0;height:32px;padding:0 11px;border-radius:16px;background:var(--bg2);border:1px solid var(--line);font-size:12.5px;font-weight:700;color:var(--muted);white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,.18)}
 .qc2.on{color:var(--acc);border-color:color-mix(in srgb,var(--acc) 55%,var(--line));background:var(--hl)}
+.nd.brc>.pb{border-top:5px solid var(--br);background:color-mix(in srgb,var(--br) 13%,var(--card))}
 .nd.ln>.pb{box-shadow:0 0 0 2.5px #2fb877,0 2px 8px rgba(0,0,0,.18)}
 .zbar{position:absolute;left:10px;bottom:14px;display:flex;flex-direction:column;gap:8px;z-index:5}
 .empty{max-width:420px;margin:0 auto;padding:46px 22px;text-align:center}
@@ -189,6 +190,8 @@ nav.tabs svg.i{width:23px;height:23px}
 .city .cb{position:absolute;inset-block:0;right:0;background:var(--hl)}.city b,.city i{position:relative;font-style:normal}.city i{color:var(--muted);font-size:13px}
 #lock{position:fixed;inset:0;z-index:300;background:var(--bg);display:grid;place-items:center;padding:20px}
 #lock .lk{width:100%;max-width:320px;display:flex;flex-direction:column;gap:10px;text-align:center}#lock .big{font-size:54px}#lock p{color:var(--muted);margin:0}#lock input{text-align:center;font-size:24px;letter-spacing:8px}#lock small{color:var(--danger);min-height:18px}
+.story{white-space:pre-line;line-height:2;font-size:15.5px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px}
+#printArea .story{white-space:pre-line;line-height:2;font-size:13pt}
 .dua{background:var(--hl);border-radius:14px;padding:12px 14px;font-weight:700;line-height:1.8;text-align:center}
 .dm{display:flex;gap:6px}.dm select{flex:1;min-width:0;padding-inline:6px}
 .seg{display:flex;background:var(--card);border:1px solid var(--line);border-radius:13px;padding:3px;gap:3px}
@@ -435,7 +438,7 @@ let trees = LS.get('shajara.trees', []);
 const saveTrees = () => LS.set('shajara.trees', trees);
 const S = {
   cur: null, doc: null, P: new Map(), M: [], kidsF: new Map(), kidsM: new Map(), sp: new Map(), meta: {}, dev: {}, col: new Set(),
-  view: LS.get('shajara.view', 'tree'), gens: LS.get('shajara.gens', 5), dkids: LS.get('shajara.dkids', true), subMom: LS.get('shajara.subMom', false), hlLine: LS.get('shajara.hlLine', false), depthLim: 0, status: 'local', statusMsg: '', lost: null,
+  view: LS.get('shajara.view', 'tree'), gens: LS.get('shajara.gens', 5), dkids: LS.get('shajara.dkids', true), brCol: LS.get('shajara.brCol', false), subMom: LS.get('shajara.subMom', false), hlLine: LS.get('shajara.hlLine', false), depthLim: 0, status: 'local', statusMsg: '', lost: null,
   filter: 'all', sort: 'name', lay: null, renderMs: 0
 };
 function newLocalTree(name) { const rec = { k: 'L' + newId(''), name: name || 'شجرة العائلة' }; trees.push(rec); saveTrees(); return rec; }
@@ -805,6 +808,9 @@ function computeLayout(root) {
   for (const n of list) { n.left = n.vx - PW / 2 - n.spw; n.right = n.vx + PW / 2; if (n.left < minX) minX = n.left; if (n.right > maxX) maxX = n.right; if (n.y + NH > maxY) maxY = n.y + NH; }
   const ox = PAD - minX, oy = PAD + 46;
   for (const n of list) { n.left += ox; n.right += ox; n.cx = n.vx + ox; n.y += oy; }
+  /* ألوان الفروع: كل ولد من عيال الجد الكبير (أو كبير كل عائلة) وذريته بلون */
+  const tint = (n, b) => { n.br = b; for (const k of n.kids) tint(k, b); };
+  for (const top of (R.virtual ? R.kids : [R])) top.kids.forEach((k, i) => tint(k, i));
   const anchor = R.virtual ? R.kids[0] : R;
   return { root: R, anchor, anchorId: anchor.p.id, list, W: maxX - minX + PAD * 2, H: maxY + oy + PAD + 30, pos: new Map(list.map(n => [n.p.id, n])) };
 }
@@ -874,9 +880,10 @@ function myLine() {
   while (c && !out.has(c.id) && n++ < 80) { out.add(c.id); c = viaMother(c) ? S.P.get(c.mo) : S.P.get(c.fa); }
   return out;
 }
+const BRC = ['#e2b866', '#5aa2ef', '#46c08a', '#e886b6', '#b48cf2', '#f08a5d', '#4fc3d9', '#c9d65a'];
 function nodeHtml(n) {
-  const p = n.p, me = (S.dev.me === p.id ? ' me' : '') + (S.lineSet && S.lineSet.has(p.id) ? ' ln' : '');
-  let h = `<div class="nd ${p.g === 'f' ? 'f' : 'm'}${me}" data-n="${p.id}" style="left:${n.left}px;top:${n.y}px;width:${n.right - n.left}px">`;
+  const p = n.p, me = (S.dev.me === p.id ? ' me' : '') + (S.lineSet && S.lineSet.has(p.id) ? ' ln' : ''), br = S.brCol && n.br != null ? BRC[n.br % BRC.length] : '';
+  let h = `<div class="nd ${p.g === 'f' ? 'f' : 'm'}${me}${br ? ' brc' : ''}" data-n="${p.id}" style="left:${n.left}px;top:${n.y}px;width:${n.right - n.left}px${br ? ';--br:' + br : ''}">`;
   const sub = nodeSub(n);
   h += `<div class="pb" data-p="${p.id}">${avatar(p)}<div class="tx"><b>${esc(p.f)}</b><small>${sub.c ? `<i class="wd" style="background:${sub.c}"></i>` : ''}${esc(sub.t)}</small></div></div>`;
   n.sps.forEach((s, i) => { const dv = divorced(p.id, s.id); h += `<div class="sc${dv ? ' dv' : ''}" data-p="${s.id}" title="${esc((dv ? (s.g === 'f' ? 'طليقة ' : 'طليق ') : (s.g === 'f' ? 'زوجة ' : 'زوج ')) + p.f)}"><span class="ring" aria-hidden="true">💍</span>${avatar(s)}<div class="tx"><b>${n.multi ? `<i class="wd" style="background:${wcol(i)}"></i>` : ''}${esc(s.f)}</b><small>${esc(spouseSub(p, s))}</small></div></div>`; });
@@ -950,6 +957,7 @@ function renderQbar() {
   q.innerHTML = `<button class="qc2 ${S.dkids ? 'on' : ''}" data-q="dkids">👧 عيال البنات</button>
     <button class="qc2 ${S.subMom ? 'on' : ''}" data-q="mom">👩 الأمهات</button>
     <button class="qc2 ${S.hlLine ? 'on' : ''}" data-q="line">⭐ نسبي</button>
+    <button class="qc2 ${S.brCol ? 'on' : ''}" data-q="br">🎨 الفروع</button>
     <button class="qc2 ${S.depthLim ? 'on' : ''}" data-q="depth">📏 ${lim}</button>
     <button class="qc2" data-q="open">📂 افتح الكل</button>
     <button class="qc2" data-q="png">📷 صورة</button>${canEdit() ? '<button class="qc2" data-q="quick">⚡ أضف بالنسب</button>' : ''}${canSuggest() ? '<button class="qc2 on" data-q="sugg">✍️ اقترح إضافة</button>' : ''}${canEdit() && S.sugg && S.sugg.length ? `<button class="qc2 on" data-q="review">📨 اقتراحات (${S.sugg.length})</button>` : ''}`;
@@ -957,6 +965,7 @@ function renderQbar() {
 $('#qbar').addEventListener('click', async e => {
   const b = e.target.closest('[data-q]'); if (!b) return; const k = b.dataset.q;
   if (k === 'dkids') { S.dkids = !S.dkids; LS.set('shajara.dkids', S.dkids); toast(S.dkids ? 'عيال البنات المتزوجات من برّا بيطلعون تحت أمهم' : 'صارت الشجرة بالنسب للأب بس'); }
+  else if (k === 'br') { S.brCol = !S.brCol; LS.set('shajara.brCol', S.brCol); toast(S.brCol ? 'كل فرع من عيال الجد الكبير بلون' : 'رجعت الألوان العادية'); }
   else if (k === 'mom') { S.subMom = !S.subMom; LS.set('shajara.subMom', S.subMom); toast(S.subMom ? 'تحت كل اسم يطلع اسم أمه' : 'تحت كل اسم ترجع سنة الميلاد'); }
   else if (k === 'line') {
     if (!S.hlLine && !(S.dev.me && S.P.get(S.dev.me))) { const id = await pickMe(); if (!id) return; }
@@ -1690,11 +1699,17 @@ function renderMore() {
   const owner = shared && (c.edit || role === 'edit'), creator = shared && !!c.edit && c.key === c.edit;
   const vk = c.view || (S.meta && S.meta.vk);
   let share = '';
+  const priv = shared && !!(S.meta && S.meta.priv);
   if (!shared) {
-    share = T && T.available() ? `<p class="d">شارك الشجرة مع العائلة: اللي معه <b>رابط التعديل</b> يقدر يضيف ويعدّل، واللي معه <b>رابط العرض</b> يشوف بس. التعديلات توصل للكل أول بأول.</p><button class="btn pri" id="shBtn">${ICON.link}شارك الشجرة</button>`
+    share = T && T.available() ? `<p class="d">🔐 احفظ نسخة خاصة على السيرفر عشان ما تضيع شجرتك إذا انمسح الجوال، أو شاركها مع أهلك.</p><button class="btn" id="bkBtn" style="margin-bottom:10px">🔐 احفظ نسخة على السيرفر</button><p class="d">شارك الشجرة مع العائلة: اللي معه <b>رابط التعديل</b> يقدر يضيف ويعدّل، واللي معه <b>رابط العرض</b> يشوف بس. التعديلات توصل للكل أول بأول.</p><button class="btn pri" id="shBtn">${ICON.link}شارك الشجرة</button>`
       : `<p class="d">المشاركة تحتاج سيرفر المزامنة، وهو مو مفعّل الحين. الشجرة محفوظة على جهازك.</p>`;
   } else if (S.lost) {
     share = `<p class="d">${esc(lostText())}</p>`;
+  } else if (priv && owner && c.key) {
+    share = `<p class="d">🔐 شجرتك محفوظة على السيرفر بشكل خاص وتتحدّث تلقائي، ومحد عنده رابطها غيرك.</p>
+      ${linkBox('رابط الاسترجاع (لك بس)', T.joinLink(joinBase(), c.id, c.key), 'edit')}
+      <p class="d" style="color:var(--warn)">احفظ هالرابط عندك (مثلًا أرسله لنفسك بالواتساب). تفتحه بأي جهاز وترجع لك الشجرة. وانتبه: اللي معه الرابط يقدر يعدّل.</p>
+      <div class="rowb"><button class="btn sm pri" id="unprivBtn">شاركها مع العائلة</button><button class="btn sm danger" id="unshBtn">شيل النسخة من السيرفر</button></div>`;
   } else {
     share = `<p class="d">${owner ? 'أرسل رابط التعديل لأهلك اللي بيساعدون، ورابط العرض للباقين.' : role === 'view' ? 'عندك رابط عرض بس. تقدر ترسله لغيرك عشان يشوفون الشجرة.' : 'لحظة، أتأكد من الرابط…'}</p>
       ${owner && c.key ? linkBox('رابط التعديل', T.joinLink(joinBase(), c.id, c.key), 'edit') : ''}
@@ -1703,13 +1718,13 @@ function renderMore() {
   }
   $('#more').innerHTML = `
   <div class="card"><h3>🌳 الشجرة</h3>
-    ${trees.map(t => `<div class="trow ${t.k === c.k ? 'on' : ''}" data-tree="${esc(t.k)}"><span class="tx"><b>${esc(t.name)}</b></span>${t.id ? `<span class="badge sh">مشتركة</span>` : '<span class="badge">على الجهاز</span>'}</div>`).join('')}
+    ${trees.map(t => `<div class="trow ${t.k === c.k ? 'on' : ''}" data-tree="${esc(t.k)}"><span class="tx"><b>${esc(t.name)}</b></span>${t.id ? `<span class="badge sh">${t.k === c.k && priv ? 'محفوظة بالسيرفر' : 'مشتركة'}</span>` : '<span class="badge">على الجهاز</span>'}</div>`).join('')}
     <div class="rowb" style="margin-top:10px">${ed ? '<button class="btn sm" id="renBtn">غيّر الاسم</button>' : ''}<button class="btn sm" id="newTree">${ICON.plus}شجرة جديدة</button><button class="btn sm danger" id="rmTree">احذفها من جهازي</button></div>
   </div>
-  <div class="card"><h3>🔗 المشاركة مع العائلة</h3>${share}${shared && owner ? `<p class="d" style="margin-top:10px">اللي معه رابط العرض يقدر يقترح إضافات، وتوصلك هنا عشان توافق عليها أو ترفضها.</p><div class="rowb"><button class="btn sm" id="sgRev">📨 الاقتراحات${S.sugg && S.sugg.length ? ` (${S.sugg.length})` : ''}</button></div>` : ''}${canSuggest() ? `<div class="rowb" style="margin-top:10px"><button class="btn sm pri" id="sgNew">✍️ اقترح إضافة على الشجرة</button></div>` : ''}</div>
+  <div class="card"><h3>🔗 المشاركة مع العائلة</h3>${share}${shared && owner && !priv ? `<p class="d" style="margin-top:10px">اللي معه رابط العرض يقدر يقترح إضافات، وتوصلك هنا عشان توافق عليها أو ترفضها.</p><div class="rowb"><button class="btn sm" id="pushBtn">🔔 نبّهني لما ينضاف أحد</button><button class="btn sm" id="sgRev">📨 الاقتراحات${S.sugg && S.sugg.length ? ` (${S.sugg.length})` : ''}</button></div>` : ''}${canSuggest() ? `<div class="rowb" style="margin-top:10px"><button class="btn sm pri" id="sgNew">✍️ اقترح إضافة على الشجرة</button><button class="btn sm" id="pushBtn">🔔 نبّهني لما ينضاف أحد</button></div>` : ''}</div>
   ${statsHtml()}
   <div class="card"><h3>🧰 أدوات</h3>
-    <div class="rowb">${ed ? '<button class="btn sm" id="qaBtn">⚡ أضف بالنسب</button><button class="btn sm" id="chkBtn">🩺 فحص الشجرة</button>' : ''}<button class="btn sm" id="rhmBtn">🤲 اللهم ارحمهم</button><button class="btn sm" id="occBtn">📅 مناسبات الشهر</button><button class="btn sm" id="cityBtn">🏙️ مدن العائلة</button>${shared ? '<button class="btn sm" id="logBtn">🕘 آخر التعديلات</button>' : ''}</div>
+    <div class="rowb">${ed ? '<button class="btn sm" id="qaBtn">⚡ أضف بالنسب</button><button class="btn sm" id="chkBtn">🩺 فحص الشجرة</button>' : ''}<button class="btn sm" id="rhmBtn">🤲 اللهم ارحمهم</button><button class="btn sm" id="occBtn">📅 مناسبات الشهر</button><button class="btn sm" id="cityBtn">🏙️ مدن العائلة</button><button class="btn sm" id="storyBtn">📖 قصة العائلة</button>${ed ? '<button class="btn sm" id="mergeBtn">🔀 دمج شجرة ثانية</button>' : ''}${shared ? '<button class="btn sm" id="logBtn">🕘 آخر التعديلات</button>' : ''}</div>
   </div>
   <div class="card"><h3>🙋 أنا</h3>
     <div class="set"><div class="l">أنا مين بالشجرة؟<small>${me ? esc(fullName(me, 3)) : 'عشان «ركّز عليّ» و«وش صلتي فيه؟»'}</small></div><button class="btn sm" id="meBtn">${me ? 'غيّر' : 'اختر'}</button></div>
@@ -1735,7 +1750,10 @@ function renderMore() {
   on('renBtn', async () => { const n = await promptText('اسم الشجرة', S.cur.name, 'مثل: آل فلان'); if (!n) return; S.cur.name = n; saveTrees(); try { S.doc.setMeta({ ...strip(S.doc.meta() || {}), name: n }); } catch (x) { } renderAll(); });
   on('newTree', async () => { const n = await promptText('اسم الشجرة الجديدة', '', 'مثل: أهل أمي'); if (!n) return; const r = newLocalTree(n); openTree(r); setView('tree'); });
   on('rmTree', () => forgetTree(S.cur));
-  on('shBtn', createShare); on('rotBtn', rotateLinks); on('unshBtn', stopSharing);
+  on('shBtn', () => createShare(false)); on('bkBtn', () => createShare(true)); on('rotBtn', rotateLinks); on('unshBtn', stopSharing);
+  on('unprivBtn', () => { try { S.doc.setMeta({ ...strip(S.doc.meta() || {}), priv: 0 }); } catch (e) { } S.meta.priv = 0; toast('صارت الشجرة مشتركة ✓ أرسل الروابط لأهلك'); renderMore(); });
+  on('pushBtn', async () => { try { await T.push.subscribe(S.cur.id, S.cur.key); toast('🔔 تفعّل، بيوصلك تنبيه لما ينضاف أحد للشجرة'); } catch (e) { toast(T.errorText(e)); } });
+  on('mergeBtn', mergeTreesUI); on('storyBtn', openStory);
   on('meBtn', pickMe); on('sgRev', reviewSugg); on('sgNew', () => suggestComposer()); on('qaBtn', quickAdd); on('chkBtn', openChecks); on('rhmBtn', openDeceased);
   on('gMinus', () => { S.gens = clamp(S.gens - 1, 2, 9); LS.set('shajara.gens', S.gens); S._nm = new Map(); renderMore(); });
   on('gPlus', () => { S.gens = clamp(S.gens + 1, 2, 9); LS.set('shajara.gens', S.gens); S._nm = new Map(); renderMore(); });
@@ -1760,17 +1778,30 @@ function snapshotBody() {
   const meta = { ...strip(S.doc.meta() || {}), name: S.cur.name }; delete meta.vk;
   return { items, meta };
 }
-async function createShare() {
+/* priv = نسخة احتياطية خاصة على السيرفر (ما نطلّع روابط المشاركة لين صاحبها يختار يشاركها) */
+async function createShare(priv) {
+  priv = priv === true;
   if (!T || !T.available()) return toast('المشاركة مو مفعّلة');
-  const b = $('#shBtn'); if (b) { b.disabled = true; b.textContent = 'لحظة…'; }
+  const b = $(priv ? '#bkBtn' : '#shBtn'); if (b) { b.disabled = true; b.textContent = 'لحظة…'; }
   try {
-    const body = snapshotBody(); const r = await T.create('shajara', body);
+    const body = snapshotBody(); if (priv) body.meta.priv = 1; else delete body.meta.priv; const r = await T.create('shajara', body);
     LS.raw('tajarib.doc.' + r.id, JSON.stringify({ body, pending: {}, rev: 0, role: 'edit', kind: 'shajara' }));
     const oldKey = 'shajara.local.' + S.cur.k;
     Object.assign(S.cur, { id: r.id, key: r.edit, edit: r.edit, view: r.view }); saveTrees();
     openTree(S.cur); S.doc.setMeta({ ...body.meta, vk: r.view }); LS.del(oldKey);
-    toast('صارت الشجرة مشتركة ✓ أرسل الروابط لأهلك'); setView('more');
-  } catch (e) { toast(T.errorText(e)); if (b) { b.disabled = false; b.textContent = 'شارك الشجرة'; } }
+    if (priv) { toast('🔐 انحفظت نسخة خاصة على السيرفر، وبتتحدّث تلقائي'); if (S.view === 'more') renderMore(); }
+    else { toast('صارت الشجرة مشتركة ✓ أرسل الروابط لأهلك'); setView('more'); }
+  } catch (e) { toast(T.errorText(e)); if (b) { b.disabled = false; b.textContent = priv ? '🔐 احفظ نسخة على السيرفر' : 'شارك الشجرة'; } }
+}
+/* نسأل مرة وحدة: نحفظ نسخة على السيرفر للشجرة اللي على الجهاز بس؟ */
+function offerBackup() {
+  const c = S.cur; if (!c || c.id || !T || !T.available() || S.P.size < 3) return;
+  const k = 'shajara.bkAsk.' + c.k; if (LS.get(k, null) != null) return;
+  /* تنبيه خفيف (مو نافذة) عشان ما يقطع عليك شغلك */
+  setTimeout(() => {
+    if (sheets.length || S.cur !== c || c.id || $('#lock')) return; LS.set(k, 1);
+    toast('🔐 شجرتك على هالجهاز بس، وممكن تضيع إذا انمسح', { text: 'احفظ نسخة', fn: () => createShare(true) });
+  }, 3500);
 }
 async function rotateLinks() {
   const which = await ask('غيّر الروابط', 'الروابط القديمة بتوقف ومن معه الرابط القديم ما بيقدر يفتح الشجرة. أي رابط تبي تغيّر؟', [
@@ -1787,11 +1818,12 @@ async function rotateLinks() {
   } catch (e) { toast(T.errorText(e)); }
 }
 async function stopSharing() {
-  if (!await ask('وقّف المشاركة؟', 'بتنحذف الشجرة من السيرفر، وكل اللي معهم الروابط ما بيقدرون يفتحونها. نسختك بتبقى على جهازك.')) return;
+  const pv = !!(S.meta && S.meta.priv);
+  if (!await ask(pv ? 'شيل النسخة من السيرفر؟' : 'وقّف المشاركة؟', pv ? 'بتنحذف النسخة اللي على السيرفر، والشجرة تبقى على جهازك بس.' : 'بتنحذف الشجرة من السيرفر، وكل اللي معهم الروابط ما بيقدرون يفتحونها. نسختك بتبقى على جهازك.')) return;
   const body = snapshotBody();
   try { await T.remove(S.cur.id, S.cur.key); } catch (e) { if (e.code !== 'not_found') return toast(T.errorText(e)); }
   T.forget(S.cur.id); delete S.cur.id; delete S.cur.key; delete S.cur.edit; delete S.cur.view; saveTrees();
-  LS.set('shajara.local.' + S.cur.k, body); openTree(S.cur); toast('وقّفت المشاركة، الشجرة صارت على جهازك بس');
+  delete body.meta.priv; LS.set('shajara.local.' + S.cur.k, body); LS.set('shajara.bkAsk.' + S.cur.k, 1); openTree(S.cur); toast(pv ? 'انشالت النسخة من السيرفر، والشجرة على جهازك بس' : 'وقّفت المشاركة، الشجرة صارت على جهازك بس');
 }
 async function forgetTree(rec) {
   const shared = !!rec.id;
@@ -1832,7 +1864,7 @@ function drawTreeCanvas(maxScale) {
   for (const n of L.list) {
     const p = n.p, bx = n.right - PW, by = n.y;
     x.fillStyle = col.card; x.strokeStyle = col.line; x.lineWidth = 1; rr(bx, by, PW, NH, 12); x.fill(); x.stroke();
-    x.save(); rr(bx, by, PW, NH, 12); x.clip(); x.fillStyle = p.g === 'f' ? col.f : col.m; x.fillRect(bx, by, PW, 4); x.restore();
+    x.save(); rr(bx, by, PW, NH, 12); x.clip(); x.fillStyle = S.brCol && n.br != null ? BRC[n.br % BRC.length] : (p.g === 'f' ? col.f : col.m); x.fillRect(bx, by, PW, S.brCol && n.br != null ? 6 : 4); x.restore();
     x.fillStyle = col.text; x.font = `800 15px ${ff}`; x.fillText(fit(p.f, PW - 14), bx + PW / 2, by + 25);
     const ns = nodeSub(n); if (ns.t) { x.fillStyle = ns.c || col.muted; x.font = `${ns.c ? 700 : 500} 11px ${ff}`; x.fillText(fit(ns.t, PW - 12), bx + PW / 2, by + 44); }
     if (n.col) { x.fillStyle = '#c99a3a'; rr(bx + PW / 2 - 16, by + NH - 6, 32, 16, 8); x.fill(); x.fillStyle = '#fff'; x.font = `800 11px ${ff}`; x.fillText('+' + n.hidden, bx + PW / 2, by + NH + 2); }
@@ -1846,6 +1878,107 @@ function drawTreeCanvas(maxScale) {
   }
   return c;
 }
+/* ========== دمج شجرة ثانية (مع ربط المكررين) ========== */
+function itemsOfTree(t) {
+  if (!t.id) { const c = LS.get('shajara.local.' + t.k, null); return c && c.items ? c.items : {}; }
+  const c = LS.get('tajarib.doc.' + t.id, null) || {}, b = (c.body && c.body.items) || {}, pd = (c.pending && c.pending.items) || {}, out = { ...b };
+  for (const [k, v] of Object.entries(pd)) if (!out[k] || +v.u >= +(out[k].u || 0)) out[k] = v; return out;
+}
+function mergePlan(src) {
+  const P2 = new Map(); for (const [id, it] of Object.entries(src)) if (it && !it.del && it.t === 'p' && it.f) P2.set(id, { ...it, id });
+  const nm2 = (x, n) => { const parts = [x.f]; let c = x; for (let i = 1; i < n; i++) { const fa = P2.get(c.fa); if (!fa) break; parts.push(fa.f); c = fa; } return norm(parts.join(' ')); };
+  const nmD = (x, n) => { const parts = [x.f]; let c = x; for (let i = 1; i < n; i++) { const fa = S.P.get(c.fa); if (!fa) break; parts.push(fa.f); c = fa; } return norm(parts.join(' ')); };
+  const depth = x => { let d = 0, c = x; const seen = new Set(); while (c && c.fa && P2.has(c.fa) && !seen.has(c.id) && d < 80) { seen.add(c.id); c = P2.get(c.fa); d++; } return d; };
+  const order = [...P2.values()].sort((a, b) => depth(a) - depth(b)), map = new Map(), used = new Set();
+  const pick = cands => { cands = cands.filter(x => !used.has(x.id)); return cands.length ? cands[0] : null; };
+  for (const x of order) {
+    const g = x.g === 'f' ? 'f' : 'm', n1 = norm(x.f); let m = null;
+    const fa = map.get(x.fa), mo = map.get(x.mo);
+    if (fa) m = pick(kidsOf(fa).filter(y => (y.g === 'f' ? 'f' : 'm') === g && norm(y.f) === n1));
+    else if (mo) m = pick(kidsOf(mo).filter(y => (y.g === 'f' ? 'f' : 'm') === g && norm(y.f) === n1));
+    else { const key = nm2(x, 3), cand = [...S.P.values()].filter(y => (y.g === 'f' ? 'f' : 'm') === g && nmD(y, 3) === key && (!x.by || !y.by || Math.abs(x.by - y.by) <= 2)); if (cand.length === 1 && (key.includes(' ') || x.by)) m = pick(cand); }
+    if (m) { map.set(x.id, m.id); used.add(m.id); }
+  }
+  /* الزوجات اللي ما لهن أهل: نربطهن عن طريق أزواجهن */
+  for (const [id, it] of Object.entries(src)) if (it && !it.del && it.t === 'm') for (const [a, b] of [[it.a, it.b], [it.b, it.a]]) {
+    const x = P2.get(b); if (!x || map.has(b) || !map.has(a)) continue;
+    const m = pick(spousesOf(map.get(a)).filter(y => norm(y.f) === norm(x.f))); if (m) { map.set(b, m.id); used.add(m.id); }
+  }
+  return { P2, map };
+}
+async function mergeTreesUI() {
+  if (!guardEdit()) return;
+  const others = trees.filter(t => t.k !== S.cur.k);
+  const v = await ask('دمج شجرة ثانية', 'وش الشجرة اللي تبي تدمجها بهالشجرة؟ اللي موجودين بالاثنتين ينربطون ببعض، والباقي ينضافون.', [...others.map(t => ({ v: 't:' + t.k, t: '🌳 ' + t.name })), { v: 'file', t: '📄 ملف نسخة احتياطية (JSON)' }, { v: null, t: 'إلغاء', cls: 'ghost', cancel: true }]);
+  if (!v) return;
+  let src = {}, name = '';
+  if (v === 'file') { const f = await pickFile('.json,application/json'); if (!f) return; try { const j = JSON.parse(await f.text()); src = j.items || (j.body && j.body.items) || {}; name = (j.meta && j.meta.name) || f.name; } catch (e) { return toast('ما قدرت أقرأ الملف'); } }
+  else { const t = trees.find(x => x.k === v.slice(2)); src = itemsOfTree(t); name = t.name; }
+  const { P2, map } = mergePlan(src); const nNew = P2.size - map.size;
+  if (!P2.size) return toast('الشجرة الثانية فاضية');
+  const sample = [...map.entries()].slice(0, 12).map(([a, b]) => fullName(S.P.get(b), 3));
+  const sh = openSheet(`<h2>🔀 دمج «${esc(name)}»<button class="ib x" data-close aria-label="سكّر">${ICON.x}</button></h2>
+    <p style="font-size:15px;line-height:1.8">فيها ${ppl(P2.size)}:<br>✓ <b>${ppl(map.size)}</b> موجودين عندك وبينربطون (والمعلومات الناقصة تنكمل)<br>＋ <b>${ppl(nNew)}</b> جدد بينضافون</p>
+    ${sample.length ? `<div class="sec">أمثلة على اللي بينربطون</div><div class="chips">${sample.map(x => `<span class="chip">${esc(x)}</span>`).join('')}</div>` : ''}
+    <p style="color:var(--muted);font-size:13px">بعد الدمج شغّل «🩺 فحص الشجرة» عشان تشوف إذا فيه مكررين ما انربطوا.</p>
+    <div class="acts"><button class="btn pri" id="mgGo">ادمجها</button><button class="btn ghost" data-close>إلغاء</button></div>`);
+  $('#mgGo', sh.el).onclick = () => { closeSheet(sh); applyMerge(src, P2, map); };
+}
+function applyMerge(src, P2, map) {
+  const idOf = new Map(map), made = [], snap = [], t = Date.now();
+  for (const x of P2.values()) if (!idOf.has(x.id)) idOf.set(x.id, newId('p'));
+  const R = id => idOf.get(id) || '';
+  try {
+    for (const x of P2.values()) {
+      const nid = R(x.id), o = strip(x); delete o.ed; o.fa = R(x.fa); o.mo = R(x.mo); for (const k of ['fa', 'mo']) if (!o[k]) delete o[k];
+      if (map.has(x.id)) { const cur = S.P.get(nid), co = strip(cur); let ch = false; for (const k of ['fam', 'fa', 'mo', 'by', 'bmo', 'bda', 'dy', 'dmo', 'dda', 'dead', 'city', 'nt', 'ph']) if ((co[k] == null || co[k] === '' || co[k] === 0) && o[k] != null && o[k] !== '' && o[k] !== 0 && !(k === 'fa' || k === 'mo') || ((k === 'fa' || k === 'mo') && !S.P.has(co[k]) && o[k])) { co[k] = o[k]; ch = true; } if (ch) { snap.push([nid, strip(cur)]); S.doc.set(nid, co); } }
+      else { o.o = o.o || t; o.c = o.c || t; S.doc.set(nid, o); made.push(nid); }
+    }
+    for (const [id, it] of Object.entries(src)) {
+      if (!it || it.del) continue;
+      if (it.t === 'm' && R(it.a) && R(it.b)) { const a = R(it.a), b = R(it.b), mid = 'm' + a + '_' + b; if (!S.doc.item(mid) && !(S.sp.get(a) || []).includes(b)) { const o = { t: 'm', a, b, o: it.o || t }; if (it.x) o.x = 1; S.doc.set(mid, o); made.push(mid); } }
+      if (it.t === 'r' && R(it.c) && (R(it.m) || R(it.f))) { const o = { t: 'r', c: R(it.c), o: it.o || t }; if (R(it.m)) o.m = R(it.m); if (R(it.f)) o.f = R(it.f); const rid = 'r' + o.c + '_' + (o.m || o.f); if (!S.doc.item(rid)) { S.doc.set(rid, o); made.push(rid); } }
+      if (it.t === 'rs' && R(it.a) && R(it.b)) { const rid = 'rs' + [R(it.a), R(it.b)].sort().join('_'); if (!S.doc.item(rid)) { S.doc.set(rid, { t: 'rs', a: R(it.a), b: R(it.b), o: it.o || t }); made.push(rid); } }
+    }
+  } catch (e) { return toast(T ? T.errorText(e) : 'ما انحفظ'); }
+  toast(`دمجتها ✓ ${ppl(P2.size - map.size)} جدد، و${ppl(map.size)} انربطوا`, { text: 'تراجع', fn: () => { for (const id of made) S.doc.del(id); for (const [id, o] of snap) S.doc.set(id, o); toast('رجّعتها مثل ما كانت'); } });
+}
+
+/* ========== قصة العائلة ========== */
+function familyStory() {
+  const ps = [...S.P.values()]; if (!ps.length) return 'الشجرة فاضية للحين.';
+  const col0 = S.col; S.col = new Set(); const L = computeLayout(ALL); S.col = col0; const roots = L ? (L.root.virtual ? L.root.kids : [L.root]) : [];
+  const gens = Math.max(...ps.map(genOf)), alive = ps.filter(p => !p.dead && !p.dy).length, out = [];
+  out.push(`شجرة «${S.cur.name || 'العائلة'}» فيها ${ppl(ps.length)} من ${cnt(gens, 'جيل واحد', 'جيلين', 'أجيال', 'جيل')}، والأحياء منهم ${alive}.`);
+  const names = arr => arr.map(x => x.f).join('، ');
+  const say = (n, d) => {
+    const p = n.p, f = p.g === 'f', sps = spousesOf(p.id), ks = kidsOf(p.id), yt = yearsText(p);
+    let t = `${d === 0 ? 'تبدأ العائلة من ' : ''}${fullName(p, d === 0 ? 3 : 2)}${yt ? ` (${yt})` : ''}`;
+    if (sps.length) t += `، ${f ? 'تزوّجت' : 'تزوّج'} ${names(sps)}`;
+    if (ks.length) t += `، و${f ? 'عيالها' : 'عياله'} (${ks.length}): ${names(ks)}`;
+    else if (!sps.length && d > 0) return null;
+    return t + '.';
+  };
+  let budget = 40;
+  for (const r of roots.slice(0, 3)) {
+    const q = [[r, 0]];
+    while (q.length && budget > 0) { const [n, d] = q.shift(); const line = say(n, d); if (line) { out.push(line); budget--; } if (d < 3) for (const k of n.kids) if (kidsOf(k.p.id).length) q.push([k, d + 1]); }
+  }
+  const dead = ps.filter(p => p.dead || p.dy).length; if (dead) out.push(`ومن العائلة ${ppl(dead)} متوفين، الله يرحمهم.`);
+  const old = ps.filter(p => p.by && !p.dead && !p.dy).map(p => ({ p, a: ageOf(p) })).filter(x => x.a > 0 && x.a < 130).sort((a, b) => b.a - a.a)[0];
+  if (old) out.push(`وأكبر الأحياء ${fullName(old.p, 2)}، ${old.p.g === 'f' ? 'عمرها' : 'عمره'} تقريبًا ${cnt(old.a, 'سنة', 'سنتين', 'سنين', 'سنة')}.`);
+  return out.join('\n\n');
+}
+function openStory() {
+  const txt = familyStory();
+  const sh = openSheet(`<h2>📖 قصة العائلة<button class="ib x" data-close aria-label="سكّر">${ICON.x}</button></h2>
+    <div class="story">${esc(txt)}</div>
+    <div class="rowb" style="margin-top:12px"><button class="btn sm pri" id="stCopy">📋 انسخها</button>${navigator.share ? '<button class="btn sm" id="stShare">📤 شاركها</button>' : ''}<button class="btn sm" id="stPrint">🖨️ اطبعها</button></div>`);
+  $('#stCopy', sh.el).onclick = async () => toast(await copyText(txt) ? 'نسخت القصة ✓' : 'ما قدرت أنسخ');
+  const sb = $('#stShare', sh.el); if (sb) sb.onclick = () => navigator.share({ title: 'قصة العائلة', text: txt }).catch(() => { });
+  $('#stPrint', sh.el).onclick = () => { $('#printArea').innerHTML = `<h1>📖 قصة ${esc(S.cur.name || 'العائلة')}</h1><div class="story">${esc(txt)}</div>`; setTimeout(() => window.print(), 60); };
+}
+
 /* ========== اسم المعدّل وسجل التعديلات ========== */
 function editorName() { const n = LS.get('shajara.editor', ''); if (n) return n; const me = S.dev && S.dev.me && S.P.get(S.dev.me); return me ? fullName(me, 2, false) : ''; }
 function ago(t) {
@@ -2115,8 +2248,47 @@ function openPedigree(id) {
   }));
   const sh = openSheet(`<h2>🧬 أجداد ${esc(p.f)}<button class="ib x" data-close aria-label="سكّر">${ICON.x}</button></h2>
     <p style="color:var(--muted);font-size:13.5px;margin:0 0 8px">${count ? `${ppl(count)} من جهة الأب والأم، لين ${n - 1 === 1 ? 'جيل واحد' : cnt(n - 1, 'جيل واحد', 'جيلين', 'أجيال', 'جيل')} فوق` : `ما فيه آباء مسجّلين ل${p.g === 'f' ? 'ها' : 'ه'} للحين`}</p>
-    <div class="pedw"><div class="ped" style="width:${Wd}px;height:${H}px"><svg width="${Wd}" height="${H}"><path d="${svg}"/></svg>${cards}</div></div>`);
-  sh.el.addEventListener('click', e => { const b = e.target.closest('[data-go]'); if (b) { closeSheet(sh); openPerson(b.dataset.go); } });
+    <div class="rowb" style="margin-bottom:8px"><button class="btn sm pri" data-pv="chart">مخطط</button><button class="btn sm" data-pv="fan">🪭 مروحة</button><button class="btn sm ghost" data-pv="png" hidden>⬇️ نزّلها صورة</button></div>
+    <div class="pedw" id="pedChart"><div class="ped" style="width:${Wd}px;height:${H}px"><svg width="${Wd}" height="${H}"><path d="${svg}"/></svg>${cards}</div></div><div id="pedFan" hidden></div>`);
+  sh.el.addEventListener('click', e => {
+    const v = e.target.closest('[data-pv]');
+    if (v) {
+      const k = v.dataset.pv; if (k === 'png') return fanPng(id, G);
+      $$('[data-pv]', sh.el).forEach(b => b.classList.toggle('pri', b === v)); $('[data-pv="png"]', sh.el).hidden = k !== 'fan';
+      $('#pedChart', sh.el).hidden = k !== 'chart'; const f = $('#pedFan', sh.el); f.hidden = k !== 'fan'; if (k === 'fan' && !f.innerHTML) f.innerHTML = fanSvg(id, G, false); return;
+    }
+    const b = e.target.closest('[data-go]'); if (b) { closeSheet(sh); openPerson(b.dataset.go); }
+  });
+}
+/* شجرة المروحة: الشخص بالنص، وكل حلقة جيل (جهة الأب يسار وجهة الأم يمين) */
+function fanSvg(id, G, forImg) {
+  const n = G.length, r0 = 64, rw = n > 4 ? 58 : 70, R = r0 + (n - 1) * rw, W = 2 * R + 40, H = R + 70, cx = W / 2, cy = R + 20;
+  const light = forImg || document.body.classList.contains('light'), C = light ? { m: '#d9e8f8', f: '#f7dce9', e: '#f1f4ee', s: '#ffffff', t: '#14211a', mu: '#5b6e63', bg: '#fbfcf8' } : { m: '#1d3349', f: '#3a2230', e: '#18231e', s: '#0d1411', t: '#ecf2ee', mu: '#93a89d', bg: '#0d1411' };
+  const ff = (getComputedStyle(document.body).fontFamily || 'sans-serif').replace(/"/g, "'");
+  const pt = (r, a) => [cx + r * Math.cos(a), cy - r * Math.sin(a)];
+  let out = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" width="${forImg ? W * 2 : '100%'}" ${forImg ? `height="${H * 2}"` : ''} style="max-width:100%;display:block;margin:auto" font-family="${ff}">${forImg ? `<rect width="${W}" height="${H}" fill="${C.bg}"/>` : ''}`;
+  const me = S.P.get(id);
+  out += `<path d="M${cx - r0} ${cy}A${r0} ${r0} 0 0 1 ${cx + r0} ${cy}Z" fill="${me.g === 'f' ? C.f : C.m}" stroke="${C.s}" stroke-width="2"/><text x="${cx}" y="${cy - r0 / 2 + 4}" text-anchor="middle" font-size="16" font-weight="800" fill="${C.t}">${esc(me.f)}</text>`;
+  for (let g = 1; g < n; g++) {
+    const ri = r0 + (g - 1) * rw, ro = ri + rw, segs = 2 ** g, span = Math.PI / segs;
+    G[g].forEach((x, i) => {
+      const a1 = Math.PI - i * span, a2 = a1 - span, q = x && S.P.get(x);
+      const [x1, y1] = pt(ri, a1), [x2, y2] = pt(ro, a1), [x3, y3] = pt(ro, a2), [x4, y4] = pt(ri, a2);
+      out += `<path d="M${x1} ${y1}L${x2} ${y2}A${ro} ${ro} 0 0 1 ${x3} ${y3}L${x4} ${y4}A${ri} ${ri} 0 0 0 ${x1} ${y1}Z" fill="${q ? (q.g === 'f' ? C.f : C.m) : C.e}" stroke="${C.s}" stroke-width="1.5"${q && !forImg ? ` data-go="${q.id}" style="cursor:pointer"` : ''}/>`;
+      if (!q) return;
+      const am = (a1 + a2) / 2, rm = (ri + ro) / 2, [tx, ty] = pt(rm, am), fs = [0, 15, 13, 11.5, 10, 9][g] || 9;
+      let deg = 90 - am * 180 / Math.PI; if (g <= 2) deg = 0;
+      const nm = q.f.length > 12 ? q.f.slice(0, 11) + '…' : q.f;
+      out += `<text x="${tx}" y="${ty}" text-anchor="middle" dominant-baseline="middle" font-size="${fs}" font-weight="700" fill="${C.t}" transform="rotate(${deg} ${tx} ${ty})" pointer-events="none">${esc(nm)}</text>`;
+    });
+  }
+  out += `<text x="${cx - R / 2}" y="${H - 14}" text-anchor="middle" font-size="13" fill="${C.mu}">جهة الأب</text><text x="${cx + R / 2}" y="${H - 14}" text-anchor="middle" font-size="13" fill="${C.mu}">جهة الأم</text>`;
+  return out + '</svg>';
+}
+async function fanPng(id, G) {
+  const svg = fanSvg(id, G, true), img = new Image(), url = URL.createObjectURL(new Blob([svg], { type: 'image/svg+xml' }));
+  try { img.src = url; await img.decode(); const c = document.createElement('canvas'); c.width = img.width; c.height = img.height; c.getContext('2d').drawImage(img, 0, 0); const b = await new Promise(r => c.toBlob(r, 'image/png')); download(`${S.P.get(id).f}-مروحة-الأجداد.png`, b, 'image/png'); toast('نزّلت المروحة ✓'); }
+  catch (e) { toast('ما قدرت أسوي الصورة'); } finally { URL.revokeObjectURL(url); }
 }
 
 /* ========== أقاربي (مجموعات حسب الصلة) ========== */
@@ -2352,12 +2524,12 @@ if (LS.get('shajara.pin', null)) showLock();
 let start = handleJoin();
 if (!trees.length) newLocalTree();
 if (!start) start = trees.find(t => t.k === LS.get('shajara.cur', '')) || trees[0];
-openTree(start); birthdayToast();
+openTree(start); birthdayToast(); offerBackup();
 setView(start && start.id && LS.get('shajara.view', null) == null ? 'tree' : S.view);
 if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => { });
 
 /* واجهة صغيرة للاختبارات الآلية */
-window.__shajara = { S, occasionsFor, openOccasions, openCities, openLog, posterPrint, pinSettings, showLock, editorName, birthdayToast, applySuggestion, reviewSugg, suggestComposer, loadSugg, canSuggest, parseLineage, planLineage, quickAdd, treeIssues, kinGroups, openPedigree, openKin, openChecks, openDeceased, personCard, relation, mahramOf, bloodAll, getRoot, addChild, addParent, addSibling, dupsOf, mergeInto, Z, NH, fullName: id => fullName(S.P.get(id)), computeLayout, getRoot, canEdit, revealInTree, centerOn, Z, parseGed, trees: () => trees, nodeSub, divorced, openPerson, deletePerson, drawTreeCanvas, exportGed, setZ, stage, setDownload: f => { dlHook = f; } };
+window.__shajara = { S, mergePlan, applyMerge, mergeTreesUI, familyStory, openStory, fanSvg, createShare, offerBackup, itemsOfTree, occasionsFor, openOccasions, openCities, openLog, posterPrint, pinSettings, showLock, editorName, birthdayToast, applySuggestion, reviewSugg, suggestComposer, loadSugg, canSuggest, parseLineage, planLineage, quickAdd, treeIssues, kinGroups, openPedigree, openKin, openChecks, openDeceased, personCard, relation, mahramOf, bloodAll, getRoot, addChild, addParent, addSibling, dupsOf, mergeInto, Z, NH, fullName: id => fullName(S.P.get(id)), computeLayout, getRoot, canEdit, revealInTree, centerOn, Z, parseGed, trees: () => trees, nodeSub, divorced, openPerson, deletePerson, drawTreeCanvas, exportGed, setZ, stage, setDownload: f => { dlHook = f; } };
 })();
 </script>
 </body>

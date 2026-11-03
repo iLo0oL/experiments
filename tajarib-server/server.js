@@ -106,10 +106,11 @@ route('PATCH', '/api/docs/:id', async (req, b, p) => {
     await c.query('begin');
     const r = await c.query('select * from docs where id=$1 for update', [str(p.id, 40)]);
     const doc = r.rows[0]; if (!doc) fail(404, 'not_found'); if (roleOf(doc, b.k) !== 'edit') fail(403, 'bad_key');
-    const body = cleanBody(doc.body); let changed = 0;
+    const body = cleanBody(doc.body); let changed = 0; const born = [];
     for (const [id, it] of Object.entries(items)) {
       if (id.length > 80 || !isObj(it) || !Number.isFinite(+it.u)) continue;
       const cur = body.items[id];
+      if (!cur && doc.kind === 'shajara' && it.t === 'p' && !it.del && it.f) born.push(it);
       if (!cur || +it.u >= +(cur.u || 0)) { body.items[id] = it; changed++; }
     }
     if (meta && Number.isFinite(+meta.u) && (!body.meta || +meta.u >= +(body.meta.u || 0))) { body.meta = meta; changed++; }
@@ -120,6 +121,7 @@ route('PATCH', '/api/docs/:id', async (req, b, p) => {
     let rev = doc.rev;
     if (changed) { rev = doc.rev + 1; await c.query('update docs set body=$1, rev=$2, updated_at=$3 where id=$4', [json, rev, now(), doc.id]); }
     await c.query('commit');
+    if (born.length) birthNews(doc.id, body, born);
     return { rev, applied: changed };
   } catch (e) { await c.query('rollback').catch(() => {}); throw e; }
   finally { c.release(); }
@@ -223,6 +225,19 @@ async function notifyDoc(docId, payload) {
   }
   return n;
 }
+/* تنبيه شجرتنا: «انضاف للشجرة …» — نجمع الإضافات 20 ثانية ونرسل تنبيه واحد */
+const bornQ = new Map();
+function birthNews(docId, body, born) {
+  const q0 = bornQ.get(docId) || { names: [], body }; q0.body = body;
+  for (const it of born) { const fa = it.fa && body.items[it.fa]; q0.names.push(str(it.f, 40) + (fa && fa.f ? (it.g === 'f' ? ' بنت ' : ' بن ') + str(fa.f, 40) : '')); }
+  if (q0.t) { bornQ.set(docId, q0); return; }
+  q0.t = setTimeout(() => {
+    bornQ.delete(docId); const n = q0.names.length, tree = str((q0.body.meta && q0.body.meta.name) || 'شجرتنا', 60);
+    const txt = n <= 3 ? 'انضاف للشجرة: ' + q0.names.join('، ') : `انضاف للشجرة ${n <= 10 ? n + ' أشخاص' : n + ' شخص'}، منهم ${q0.names.slice(0, 2).join('، ')}`;
+    notifyDoc(docId, { title: '🌳 ' + tree, body: txt, url: SITE + 'shajara/', tag: 'born-' + docId }).catch(() => {});
+  }, 20000);
+  bornQ.set(docId, q0);
+}
 route('GET', '/api/push/key', async () => ({ key: (await vapid()).publicKey }));
 
 /* ---------- اقتراحات (شجرتنا): اللي معه رابط العرض يقترح، وصاحب رابط التعديل يعتمد أو يرفض ---------- */
@@ -249,13 +264,15 @@ route('POST', '/api/docs/:id/suggest/:sid', async (req, b, p) => {
   const r = await q('update suggestions set status=$1 where id=$2 and doc_id=$3', [st, str(p.sid, 40), doc.id]); if (!r.rowCount) fail(404, 'not_found');
   return { ok: true };
 });
+/* التنبيهات: صاحب رابط التعديل، أو أي أحد معه رابط شجرتنا (عشان تنبيه المواليد للعائلة) */
+const canSub = (doc, k) => { const r = roleOf(doc, k); return r === 'edit' || (r === 'view' && doc.kind === 'shajara'); };
 route('POST', '/api/docs/:id/push', async (req, b, p) => {
-  const doc = await loadDoc(p.id); if (roleOf(doc, b.k) !== 'edit') fail(403, 'bad_key');
+  const doc = await loadDoc(p.id); if (!canSub(doc, b.k)) fail(403, 'bad_key');
   const s = b.sub || {}; if (!/^https:\/\//.test(s.endpoint || '') || !s.keys || !s.keys.p256dh || !s.keys.auth) fail(400, 'bad_sub');
   await q('insert into doc_subs(endpoint,doc_id,keys,created_at) values($1,$2,$3,$4) on conflict(endpoint,doc_id) do update set keys=excluded.keys', [str(s.endpoint, 1000), doc.id, JSON.stringify({ p256dh: str(s.keys.p256dh, 200), auth: str(s.keys.auth, 100) }), now()]);
   return { ok: true };
 });
-route('DELETE', '/api/docs/:id/push', async (req, b, p) => { const doc = await loadDoc(p.id); if (roleOf(doc, b.k) !== 'edit') fail(403, 'bad_key'); await q('delete from doc_subs where endpoint=$1 and doc_id=$2', [str(b.endpoint, 1000), doc.id]); return { ok: true }; });
+route('DELETE', '/api/docs/:id/push', async (req, b, p) => { const doc = await loadDoc(p.id); if (!canSub(doc, b.k)) fail(403, 'bad_key'); await q('delete from doc_subs where endpoint=$1 and doc_id=$2', [str(b.endpoint, 1000), doc.id]); return { ok: true }; });
 route('POST', '/api/docs/:id/push/test', async (req, b, p) => { const doc = await loadDoc(p.id); if (roleOf(doc, b.k) !== 'edit') fail(403, 'bad_key'); limit(req, 'ptest', 10, 600e3); return { sent: await notifyDoc(doc.id, { title: '🔔 التنبيهات شغّالة', body: 'بيوصلك تنبيه أول ما يجيك حجز جديد.', url: SITE + 'mawid/', tag: 'test' }) }; });
 
 const server = http.createServer(async (req, res) => {
