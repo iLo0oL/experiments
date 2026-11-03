@@ -15,7 +15,7 @@
     rate: 'محاولات كثيرة، استنى شوي وجرّب', too_big: 'البيانات كبيرة مرة', too_many: 'تعديلات كثيرة مرة وحدة',
     taken: 'هالموعد انحجز قبل شوي، اختار وقت ثاني', outside: 'هالوقت برا أوقات الدوام', closed: 'الحجز مقفل الحين',
     bad_time: 'اختار وقت بالمستقبل', too_soon: 'هالموعد صار قريب مرة، اختار وقت أبعد', bad_name: 'اكتب اسمك', bad_phone: 'رقم الجوال غلط', bad_service: 'الخدمة مو موجودة',
-    bad_code: 'رمز الإلغاء غلط', noserver: 'المزامنة مو مفعّلة', nopush: 'متصفحك ما يدعم التنبيهات', denied: 'ما سمحت بالتنبيهات',
+    bad_code: 'رمز الإلغاء غلط', ended: 'اللعبة خلصت', full: 'الغرفة مليانة', late: 'خلص وقت السؤال', done: 'جاوبت من قبل', noserver: 'المزامنة مو مفعّلة', nopush: 'متصفحك ما يدعم التنبيهات', denied: 'ما سمحت بالتنبيهات',
     nosw: 'ثبّت التطبيق أو افتحه من رابطه عشان تشتغل التنبيهات', server: 'صار خطأ بالسيرفر، جرّب بعد شوي',
     quota: 'مساحة التخزين بالمتصفح امتلأت، والتعديلات الأخيرة ممكن تضيع إذا قفلت الصفحة', bad_body: 'البيانات ناقصة'
   };
@@ -151,6 +151,13 @@
       send(id, key, by, body) { return req('POST', `/api/docs/${enc(id)}/suggest`, { k: key, by, body }); },
       list(id, key) { return req('GET', `/api/docs/${enc(id)}/suggest?k=${enc(key)}`).then(r => r.suggestions); },
       resolve(id, key, sid, status) { return req('POST', `/api/docs/${enc(id)}/suggest/${enc(sid)}`, { k: key, status }); }
+    },
+    rooms: {
+      create(qs) { return req('POST', '/api/rooms', { qs }); },
+      get(code, pid) { return req('GET', `/api/rooms/${enc(code)}${pid ? '?p=' + enc(pid) : ''}`); },
+      join(code, name) { return req('POST', `/api/rooms/${enc(code)}/join`, { name }); },
+      answer(code, pid, tok, qi, k) { return req('POST', `/api/rooms/${enc(code)}/answer`, { pid, tok, qi, k }); },
+      next(code, host) { return req('POST', `/api/rooms/${enc(code)}/next`, { host }); }
     },
     push: {
       async subscribe(id, key, opts) {

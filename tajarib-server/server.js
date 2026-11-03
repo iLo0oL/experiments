@@ -283,6 +283,50 @@ route('POST', '/api/docs/:id/push', async (req, b, p) => {
 route('DELETE', '/api/docs/:id/push', async (req, b, p) => { const doc = await loadDoc(p.id); if (!canSub(doc, b.k)) fail(403, 'bad_key'); await q('delete from doc_subs where endpoint=$1 and doc_id=$2', [str(b.endpoint, 1000), doc.id]); return { ok: true }; });
 route('POST', '/api/docs/:id/push/test', async (req, b, p) => { const doc = await loadDoc(p.id); if (roleOf(doc, b.k) !== 'edit') fail(403, 'bad_key'); limit(req, 'ptest', 10, 600e3); return { sent: await notifyDoc(doc.id, { title: '🔔 التنبيهات شغّالة', body: 'بيوصلك تنبيه أول ما يجيك حجز جديد.', url: SITE + 'mawid/', tag: 'test' }) }; });
 
+/* ---------- غرف «مين هذا؟» الجماعية (بالذاكرة، تنمسح بعد 4 ساعات) ---------- */
+const rooms = new Map(), QDUR = 20000;
+const roomCode = () => { let c, n = 0; do c = String(1000 + crypto.randomInt(9000)); while (rooms.has(c) && n++ < 50); return c; };
+function getRoom(code) { const r = rooms.get(str(code, 8)); if (!r) fail(404, 'not_found'); return r; }
+function roomTick(r) { if (r.state === 'q' && (now() > r.ends || (r.players.size && [...r.players.values()].every(p => p.ans[r.qi])))) r.state = 'r'; }
+route('POST', '/api/rooms', async (req, b) => {
+  limit(req, 'room-new', 30, 3600e3);
+  const qs = Array.isArray(b.qs) ? b.qs.slice(0, 20).map(x => ({ q: str(x && x.q, 200), o: Array.isArray(x && x.o) ? x.o.slice(0, 4).map(t => str(t, 60)) : [], a: int(x && x.a) })).filter(x => x.q && x.o.length >= 2 && x.a >= 0 && x.a < x.o.length) : [];
+  if (!qs.length) fail(400, 'bad_body');
+  if (rooms.size >= 400) { const old = [...rooms.entries()].sort((x, y) => x[1].t - y[1].t)[0]; rooms.delete(old[0]); }
+  const code = roomCode(), host = rid(16); rooms.set(code, { code, host, qs, players: new Map(), state: 'lobby', qi: -1, ends: 0, t: now() });
+  return { code, host };
+});
+route('GET', '/api/rooms/:code', async (req, b, p, url) => {
+  limit(req, 'room', 40000, 600e3);
+  const r = getRoom(p.code); roomTick(r); const q = r.qs[r.qi], pid = url.searchParams.get('p'), me = pid && r.players.get(pid);
+  const players = [...r.players.values()].map(x => ({ name: x.name, score: x.score, got: r.state === 'r' || r.state === 'end' ? !!(x.ans[r.qi] && x.ans[r.qi].ok) : undefined })).sort((x, y) => y.score - x.score);
+  const out = { state: r.state, qi: r.qi, n: r.qs.length, left: r.state === 'q' ? Math.max(0, r.ends - now()) : 0, players, answered: q ? [...r.players.values()].filter(x => x.ans[r.qi]).length : 0 };
+  if (q && (r.state === 'q' || r.state === 'r')) out.q = { q: q.q, o: q.o };
+  if (q && r.state === 'r') out.a = q.a;
+  if (me) { const a = me.ans[r.qi]; out.me = { score: me.score, ans: a ? a.k : null, ok: r.state === 'r' && a ? a.ok : undefined, pts: r.state === 'r' && a ? a.pts : 0, rank: players.findIndex(x => x.name === me.name) + 1 }; }
+  return out;
+});
+route('POST', '/api/rooms/:code/join', async (req, b, p) => {
+  limit(req, 'room-join', 200, 600e3);
+  const r = getRoom(p.code); if (r.state === 'end') fail(409, 'ended'); if (r.players.size >= 40) fail(429, 'full');
+  let name = str(b.name, 24).trim() || 'لاعب'; const taken = new Set([...r.players.values()].map(x => x.name)); let i = 2, base = name; while (taken.has(name)) name = base + ' ' + i++;
+  const pid = rid(10), tok = rid(16); r.players.set(pid, { name, tok, score: 0, ans: {} }); return { pid, tok, name };
+});
+route('POST', '/api/rooms/:code/answer', async (req, b, p) => {
+  const r = getRoom(p.code), pl = r.players.get(str(b.pid, 20)); if (!pl || !same(sha(pl.tok), sha(str(b.tok, 40)))) fail(403, 'bad_key');
+  roomTick(r); if (r.state !== 'q' || int(b.qi) !== r.qi) fail(409, 'late'); if (pl.ans[r.qi]) fail(409, 'done');
+  const k = int(b.k), q = r.qs[r.qi]; if (!(k >= 0 && k < q.o.length)) fail(400, 'bad_body');
+  const ok = k === q.a, pts = ok ? 500 + Math.round(500 * Math.max(0, r.ends - now()) / QDUR) : 0; pl.ans[r.qi] = { k, ok, pts }; pl.score += pts; roomTick(r);
+  return { ok: true };
+});
+route('POST', '/api/rooms/:code/next', async (req, b, p) => {
+  const r = getRoom(p.code); if (!same(sha(r.host), sha(str(b.host, 40)))) fail(403, 'bad_key'); roomTick(r);
+  if (r.state === 'q') r.state = 'r';
+  else if (r.state === 'lobby' || r.state === 'r') { r.qi++; if (r.qi >= r.qs.length) { r.state = 'end'; r.qi = r.qs.length - 1; } else { r.state = 'q'; r.ends = now() + QDUR; } }
+  return { state: r.state, qi: r.qi };
+});
+setInterval(() => { const t = now(); for (const [c, r] of rooms) if (t - r.t > 4 * 3600e3) rooms.delete(c); }, 600e3).unref();
+
 /* ---------- مناسبات شجرتنا: كل يوم الساعة 9 الصبح بتوقيت الرياض ---------- */
 function ymd(cal, d = new Date()) {
   const f = new Intl.DateTimeFormat(cal === 'h' ? 'en-u-ca-islamic-umalqura-nu-latn' : 'en-u-nu-latn', { timeZone: 'Asia/Riyadh', year: 'numeric', month: 'numeric', day: 'numeric' }).formatToParts(d);
@@ -296,12 +340,15 @@ function occasionsToday(body, d = new Date()) {
     if (!it.dead && !it.dy && +it.bmo === t.m && +it.bda === t.d) born.push({ nm, age: +it.by > 0 ? t.y - it.by : 0 });
     if ((it.dead || it.dy) && +it.dmo === t.m && +it.dda === t.d) died.push({ nm, f: it.g === 'f', n: +it.dy > 0 ? t.y - it.dy : 0 });
   }
-  return { born, died };
+  const today = `${T.g.y}-${String(T.g.m).padStart(2, '0')}-${String(T.g.d).padStart(2, '0')}`, caps = [];
+  for (const it of Object.values(items)) if (it && !it.del && it.t === 'cap' && it.open === today) { const to = it.to && items[it.to] && !items[it.to].del ? str(items[it.to].f, 40) : ''; caps.push({ to, from: str(it.from, 40) }); }
+  return { born, died, caps };
 }
 function occasionText(o) {
   const L = [], join = a => a.length <= 3 ? a.join(' و') : a.slice(0, 3).join('، ') + ` و${a.length - 3} غيرهم`;
   if (o.born.length) L.push('🎂 اليوم عيد ميلاد ' + join(o.born.map(x => x.nm + (x.age > 0 && x.age < 130 ? ` (${x.age})` : ''))));
   if (o.died.length) L.push('🤲 اليوم ذكرى وفاة ' + join(o.died.map(x => x.nm)) + '، ' + (o.died.length > 1 ? 'الله يرحمهم' : o.died[0].f ? 'الله يرحمها' : 'الله يرحمه'));
+  for (const c of o.caps || []) L.push('💌 انفتحت اليوم رسالة' + (c.to ? ' لـ' + c.to : ' للعائلة') + (c.from ? ' من ' + c.from : ''));
   return L.join('\n');
 }
 async function occasionTick(force) {
