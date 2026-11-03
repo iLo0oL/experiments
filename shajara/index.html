@@ -205,6 +205,8 @@ nav.tabs svg.i{width:23px;height:23px}
 .rel .big{font-size:20px;font-weight:800}
 .rel .big em{font-style:normal;color:var(--acc)}
 .rel small{display:block;color:var(--muted);margin-top:4px;font-size:13.5px}
+.rel .rmore{margin-top:10px;font-size:15px;font-weight:700;line-height:1.7}.rel .rmore b{display:block;color:var(--muted);font-weight:600;font-size:13px}
+.rel .mh{margin-top:10px;font-weight:800;font-size:14.5px}.rel .mh.y{color:var(--acc)}.rel .mh.n{color:var(--warn)}.rel .mhn{font-size:11.5px}
 .linkbox{display:flex;gap:6px;align-items:center;margin-bottom:8px}
 .linkbox input{direction:ltr;text-align:left;font-size:13px;padding:9px}
 .banner{margin:10px 14px 0;padding:11px 13px;border-radius:14px;background:color-mix(in srgb,var(--danger) 14%,var(--card));border:1px solid color-mix(in srgb,var(--danger) 40%,var(--line));font-size:14px;display:flex;gap:10px;align-items:center}
@@ -533,6 +535,19 @@ function blood(aId, bId, milk) {
   const ma = ancestors(aId, milk), mb = ancestors(bId, milk); let best = null;
   for (const [c, ia] of ma) { const ib = mb.get(c); if (ib && (!best || ia.d + ib.d < best.t)) best = { c, a: ia.d, b: ib.d, t: ia.d + ib.d, mk: ia.mk || ib.mk }; }
   if (!best) return null;
+  return pathRel(ma, mb, best.c);
+}
+/* كل الصلات: من كل سلف مشترك «أقرب» (مثل ولد عمك وولد خالتك بنفس الوقت) */
+function bloodAll(aId, bId, milk) {
+  if (aId === bId) return [];
+  const ma = ancestors(aId, milk), mb = ancestors(bId, milk), common = [...ma.keys()].filter(c => mb.has(c));
+  if (!common.length) return [];
+  if (common.length > 40) return [blood(aId, bId, milk)];
+  const up = new Map(), anc = c => { if (!up.has(c)) up.set(c, ancestors(c, milk)); return up.get(c); };
+  return common.filter(c => !common.some(c2 => c2 !== c && anc(c2).has(c))).map(c => pathRel(ma, mb, c)).sort((x, y) => x.d - y.d);
+}
+function pathRel(ma, mb, c0) {
+  const ia = ma.get(c0), ib = mb.get(c0), best = { c: c0, a: ia.d, b: ib.d, mk: ia.mk || ib.mk };
   const aPath = []; for (let x = best.c; x != null; x = ma.get(x).prev) aPath.push(x); aPath.reverse(); // A ... LCA
   const bPath = []; for (let x = best.c; x != null; x = mb.get(x).prev) bPath.push(x); // LCA ... B
   const g = id => S.P.get(id), a = best.a, b = best.b, words = [];
@@ -570,49 +585,58 @@ function phrase(words, poss) {
   else tail = cons(last) + ' ' + poss.name;
   return (head ? head + ' ' : '') + tail;
 }
-/* يرجع وصف صلة B بالنسبة لـ A */
+/* أسماء صلات النسب بالزواج */
+const INLAW = { 'أب|زوجة': 'حمو', 'أب|زوج': 'حمو', 'أم|زوجة': 'حماة', 'أم|زوج': 'حماة', 'زوج|بنت': 'صهر', 'زوجة|ابن': 'كنّة', 'أخ|زوجة': 'نسيب', 'زوج|أخت': 'نسيب', 'زوج|أخت|زوجة': 'عديل', 'أخ|زوج': 'سلف', 'زوجة|أخ|زوج': 'سلفة', 'زوجة|زوج': 'ضرّة', 'ابن|زوجة': 'ربيب', 'ابن|زوج': 'ربيب', 'بنت|زوجة': 'ربيبة', 'بنت|زوج': 'ربيبة' };
+/* يرجع وصف صلة B بالنسبة لـ A، ومعها كل الصلات الثانية (more) وهل هو محرم */
 function relation(aId, bId, you) {
   const A = S.P.get(aId), B = S.P.get(bId); if (!A || !B) return null;
   const poss = you ? { you: true } : { name: A.f };
   if (aId === bId) return { text: you ? 'هذا أنت 🙂' : 'نفس الشخص', sub: '' };
-  const pron = B.g === 'f' ? 'هي' : 'هو';
-  let r = blood(aId, bId), kind = 'blood';
-  /* صلة الرضاعة: نحسبها لحالها، ونستخدمها إذا ما فيه صلة دم قريبة أو كانت أقرب */
-  let rm = (S.R.length || S.RS.length) ? blood(aId, bId, true) : null; if (rm && (rm.self || !rm.milk || rm.d > 10)) rm = null;
-  const milkTxt = x => phrase(compact(x.words), poss) + ' بالرضاعة';
-  if ((S.sp.get(aId) || []).includes(bId)) {
-    const sw = W.spo(B, aId), main = phrase([sw], poss), more = [];
-    if (r && !r.self && r.d <= 10) more.push(phrase(compact(r.words), poss)); else if (rm) more.push(milkTxt(rm));
-    return { text: `${B.f} ${pron} ${main}`, sub: more.length ? 'وبعد: ' + more.join('، ') : '', main, words: [sw] };
+  const pron = B.g === 'f' ? 'هي' : 'هو', rels = [], seenT = new Set();
+  const add = o => { if (!seenT.has(o.txt)) { seenT.add(o.txt); rels.push(o); } };
+  const isSp = (S.sp.get(aId) || []).includes(bId);
+  if (isSp) { const sw = W.spo(B, aId); add({ kind: 'spouse', d: 0, cw: [sw], txt: phrase([sw], poss) }); }
+  const bl = bloodAll(aId, bId), near = bl.filter(r => r.d <= 10);
+  for (const r of near) { const cw = compact(r.words); add({ kind: 'blood', d: r.d, r, cw, txt: phrase(cw, poss) + (r.half ? ' ' + r.half : '') }); }
+  const bestB = near.length ? near[0].d : Infinity;
+  let bestM = Infinity;
+  if (S.R.length || S.RS.length) for (const r of bloodAll(aId, bId, true)) if (r.milk && r.d <= 10 && r.d < bestB) { const cw = compact(r.words); add({ kind: 'milk', d: r.d, r, cw, txt: phrase(cw, poss) + ' بالرضاعة' }); bestM = Math.min(bestM, r.d); }
+  /* المصاهرة: عن طريق زوجه أو زوجها (نكتبها إذا كانت أقرب من صلة الدم) */
+  const cands = [];
+  for (const sx of S.sp.get(bId) || []) { if (sx === aId) continue; const x = blood(aId, sx); if (x && !x.self) cands.push({ words: [W.spo(B, sx), ...x.words], d: x.d + 1, lca: x.lca }); }
+  for (const sx of S.sp.get(aId) || []) { if (sx === bId) continue; const x = blood(sx, bId); if (x && !x.self) cands.push({ words: [...x.words, W.spo(S.P.get(sx), aId)], d: x.d + 1, lca: x.lca }); }
+  for (const s1 of S.sp.get(aId) || []) for (const s2 of S.sp.get(bId) || []) { if (s1 === bId || s2 === aId) continue; const x = blood(s1, s2); if (x && !x.self) cands.push({ words: [W.spo(B, s2), ...x.words, W.spo(S.P.get(s1), aId)], d: x.d + 2, lca: x.lca }); }
+  cands.sort((x, y) => x.d - y.d);
+  for (const c of cands) if (c.d <= 9 && c.d < Math.min(bestB, bestM)) { const cw = compact(c.words); add({ kind: 'aff', d: c.d, r: c, cw, txt: phrase(cw, poss) }); }
+  const mh = mahramOf(aId, bId);
+  if (!rels.length) {
+    const far = bl[0];
+    if (far) { const L = S.P.get(far.lca); return { text: `${B.f} ${B.g === 'f' ? 'قريبة بعيدة' : 'قريب بعيد'}`, sub: L ? `${you ? 'تجتمعون' : 'يجتمعون'} عند ${fullName(L, 3)}` : '', mahram: mh, A, you }; }
+    return { text: you ? `ما لقيت صلة مسجلة بينك وبين ${B.f}` : `ما لقيت صلة مسجلة بين ${A.f} و${B.f}`, sub: 'ضيف الآباء والأزواج الناقصين عشان أقدر أحسبها', mahram: mh, A, you };
   }
-  if (!r || r.d > 10) {
-    const cands = [];
-    for (const s of S.sp.get(bId) || []) { const x = blood(aId, s); if (x && !x.self) cands.push({ words: [W.spo(B, s), ...x.words], d: x.d + 1, lca: x.lca }); }
-    for (const s of S.sp.get(aId) || []) { const x = blood(s, bId); if (x && !x.self) cands.push({ words: [...x.words, W.spo(S.P.get(s), aId)], d: x.d + 1, lca: x.lca }); }
-    if (!cands.length) for (const s1 of S.sp.get(aId) || []) for (const s2 of S.sp.get(bId) || []) { const x = blood(s1, s2); if (x && !x.self) cands.push({ words: [W.spo(B, s2), ...x.words, W.spo(S.P.get(s1), aId)], d: x.d + 2, lca: x.lca }); }
-    cands.sort((x, y) => x.d - y.d);
-    if (rm && (!cands.length || rm.d <= cands[0].d)) { r = rm; kind = 'milk'; }
-    else if (cands.length && (!r || cands[0].d < r.d)) { r = cands[0]; kind = 'aff'; }
+  const term = o => { const t = INLAW[o.cw.join('|')]; return o.kind === 'aff' && t ? phrase([t], poss) : ''; };
+  const M = rels[0], r = M.r, kind = M.kind, subs = [];
+  if (r && kind !== 'spouse') {
+    const chain = phrase(r.words, poss); if (chain !== phrase(M.cw, poss)) subs.push('يعني: ' + chain + (kind === 'milk' ? ' بالرضاعة' : ''));
+    const own = you ? 'ك' : ' ' + A.f;
+    if (kind === 'blood' && r.a === 0 && r.b === 2) subs.push(you ? (B.g === 'f' ? 'حفيدتك' : 'حفيدك') : (B.g === 'f' ? 'حفيدة ' : 'حفيد ') + A.f);
+    if (kind === 'blood' && r.a === 0 && r.b > 2) subs.push('من أحفاد' + own);
+    if (kind === 'blood' && r.b === 0 && r.a > 2) subs.push('من أجداد' + own);
   }
-  if (!r) return { text: you ? `ما لقيت صلة مسجلة بينك وبين ${B.f}` : `ما لقيت صلة مسجلة بين ${A.f} و${B.f}`, sub: 'ضيف الآباء والأزواج الناقصين عشان أقدر أحسبها' };
-  if (kind === 'blood' && r.d > 10) {
-    const L = S.P.get(r.lca); return { text: `${B.f} ${B.g === 'f' ? 'قريبة بعيدة' : 'قريب بعيد'}`, sub: `${you ? 'تجتمعون' : 'يجتمعون'} عند ${fullName(L, 3)}` };
-  }
-  const cw = compact(r.words); let main = phrase(cw, poss);
-  if (r.half) main += ' ' + r.half;
-  if (kind === 'milk') main += ' بالرضاعة';
-  let label = '';
-  const own = you ? 'ك' : ' ' + A.f;
-  if (kind === 'blood' && r.a === 0 && r.b === 2) label = you ? (B.g === 'f' ? 'حفيدتك' : 'حفيدك') : (B.g === 'f' ? 'حفيدة ' : 'حفيد ') + A.f;
-  if (kind === 'blood' && r.a === 0 && r.b > 2) label = 'من أحفاد' + own;
-  if (kind === 'blood' && r.b === 0 && r.a > 2) label = 'من أجداد' + own;
-  const chain = phrase(r.words, poss);
-  const subs = [];
-  if (chain !== phrase(cw, poss)) subs.push('يعني: ' + chain + (kind === 'milk' ? ' بالرضاعة' : ''));
-  if (label) subs.push(label);
-  if (kind === 'blood' && rm && rm.d < r.d) subs.push('وبعد: ' + milkTxt(rm));
-  if (kind === 'blood' && r.lca && r.lca !== aId && r.lca !== bId) subs.push((you ? 'تجتمعون' : 'يجتمعون') + ' عند: ' + fullName(S.P.get(r.lca), 3));
-  return { text: `${B.f} ${pron} ${main}`, sub: subs.join(' · '), main, words: cw };
+  const t0 = term(M); if (t0) subs.push(`يسمون${B.g === 'f' ? 'ها' : 'ه'}: ${t0}`);
+  if (kind === 'blood' && r.lca && r.lca !== aId && r.lca !== bId && S.P.has(r.lca)) subs.push((you ? 'تجتمعون' : 'يجتمعون') + ' عند: ' + fullName(S.P.get(r.lca), 3));
+  const more = rels.slice(1, 6).map(o => o.txt + (term(o) ? ` (${term(o)})` : ''));
+  return { text: `${B.f} ${pron} ${M.txt}`, sub: subs.join(' · '), main: M.txt, words: M.cw, more, mahram: mh, A, you };
+}
+/* محرم ولا لا: النسب والرضاعة (السلف المشترك قريب من أحدهم) والمصاهرة. حسب المسجّل بالشجرة بس */
+function mahramOf(aId, bId) {
+  const A = S.P.get(aId), B = S.P.get(bId); if (!A || !B || aId === bId || (A.g === 'f') === (B.g === 'f')) return null;
+  if ((S.sp.get(aId) || []).includes(bId) && !divorced(aId, bId)) return null;
+  for (const r of bloodAll(aId, bId, true)) if (Math.min(r.a, r.b) <= 1) return { yes: true, by: r.milk ? 'الرضاعة' : 'النسب' };
+  for (const sx of S.sp.get(aId) || []) { if (sx === bId) continue; if (ancestors(sx, true).has(bId) || descendants(sx).has(bId)) return { yes: true, by: 'الزواج' }; }
+  for (const an of ancestors(aId).keys()) if (an !== aId && (S.sp.get(an) || []).includes(bId)) return { yes: true, by: 'الزواج' };
+  for (const de of descendants(aId)) if ((S.sp.get(de) || []).includes(bId)) return { yes: true, by: 'الزواج' };
+  return { yes: false };
 }
 
 /* ---------- تخطيط الشجرة (tidy tree بالحدود) ---------- */
@@ -1063,10 +1087,11 @@ function fillPerson(sh) {
       ${fa ? '' : `<button class="chip act" data-a="fa">${ICON.plus}ضيف أب</button>`}${mo ? '' : `<button class="chip act" data-a="mo">${ICON.plus}ضيف أم</button>`}
       <button class="chip" data-a="edit">${ICON.edit}عدّل</button><button class="chip" data-a="merge">🔗 دمج مع شخص ثاني</button><button class="chip del" data-a="del">${ICON.trash}احذف</button></div>`;
   }
-  h += `<div class="chips" style="margin-top:8px"><button class="chip" data-a="rel">${ICON.q}وش صلتي في${he}؟</button><button class="chip" data-a="rel2">صلت${he} بشخص ثاني</button><button class="chip" data-a="show">${ICON.target}ورني إيا${he} بالشجرة</button>${S.dev.me === p.id ? '' : `<button class="chip" data-a="me">${ICON.user}هذا أنا</button>`}<button class="chip" data-a="copyname">📋 انسخ النسب</button></div>`;
+  h += `<div class="chips" style="margin-top:8px"><button class="chip" data-a="rel">${ICON.q}وش صلتي في${he}؟</button><button class="chip" data-a="rel2">صلت${he} بشخص ثاني</button><button class="chip" data-a="show">${ICON.target}ورني إيا${he} بالشجرة</button>${S.dev.me === p.id ? '' : `<button class="chip" data-a="me">${ICON.user}هذا أنا</button>`}<button class="chip" data-a="copyname">📋 انسخ النسب</button><button class="chip" data-a="rootHere">🌳 ابدأ الشجرة من${p.g === 'f' ? 'ها' : 'ه'}</button></div>`;
   const dups = ed ? dupsOf(p) : [];
   if (dups.length) h += `<div class="note" style="margin-top:10px">ممكن ${esc(p.f)} مسجّل${p.g === 'f' ? 'ة' : ''} مرتين: ${dups.map(x => esc(fullName(x, 3))).join('، ')}. إذا ${dups.length > 1 ? 'واحد منهم نفس' : 'هو نفس'} الشخص، اضغط «دمج مع شخص ثاني».</div>`;
-  if (sh.data.rel) h += `<div class="rel"><div class="big">${esc(sh.data.rel.text)}</div>${sh.data.rel.sub ? `<small>${esc(sh.data.rel.sub)}</small>` : ''}</div>`;
+  if (sh.data.rel) { const R = sh.data.rel, mh = R.mahram;
+    h += `<div class="rel"><div class="big">${esc(R.text)}</div>${R.sub ? `<small>${esc(R.sub)}</small>` : ''}${R.more && R.more.length ? `<div class="rmore"><b>وبعد:</b>${R.more.map(x => `<div>• ${esc(x)}</div>`).join('')}</div>` : ''}${mh ? `<div class="mh ${mh.yes ? 'y' : 'n'}">${mh.yes ? '✓ محرم' : '✗ مو محرم'} ${R.you ? 'لك' : 'لـ' + esc(R.A.f)}${mh.yes ? ` (من ${mh.by})` : ''}</div><small class="mhn">حسب المسجّل بالشجرة بس، وإذا فيه شك اسأل أهل العلم.</small>` : ''}</div>`; }
   if (fa || mo) h += `<div class="sec">الوالدين</div><div class="chips">${fa ? chip(fa, 'الأب') : ''}${mo ? chip(mo, 'الأم') : ''}</div>`;
   if (sps.length) {
     const live = sps.filter(x => !divorced(p.id, x.id)), dv = sps.filter(x => divorced(p.id, x.id));
@@ -1126,12 +1151,20 @@ async function onPersonClick(e) {
   else if (act === 'sortkids') { const ks = kidsOf(id).slice().sort((x, y) => (+x.by || 1e9) - (+y.by || 1e9) || ord(x) - ord(y)); const base = Date.now(); ks.forEach((k, i) => S.doc.set(k.id, { ...strip(k), o: base + i })); toast('رتّبتهم حسب سنة الميلاد'); }
   else if (act === 'me') { S.dev.me = id; saveDev(); toast('تمام، هذا أنت'); renderAll(); }
   else if (act === 'show') { closeSheet(sh); revealInTree(id); }
+  else if (act === 'rootHere') { S.dev.root = id; S.col.clear(); saveDev(); S.zInit = false; closeSheet(sh); setView('tree'); toast(`الشجرة تبدأ من ${p.f}`); }
   else if (act === 'rel') {
     let me = S.dev.me && S.P.get(S.dev.me);
     if (!me) { const m = await pickMe(); if (!m) return; me = S.P.get(m); }
     sh.data.rel = relation(me.id, id, true); fillPerson(sh);
   } else if (act === 'rel2') {
-    const o = await pickPerson({ title: `صلة ${p.f} بمين؟`, filter: x => x.id !== id }); if (!o) return;
+    /* أول القائمة: أنت وزوجك أو زوجتك وأهلهم، وأبوك وأمك */
+    const me = S.dev.me && S.P.get(S.dev.me), pref = [], notes = new Map(), put = (x, t) => { if (x && x.id !== id && !notes.has(x.id)) { pref.push(x.id); notes.set(x.id, t); } };
+    if (me) {
+      put(me, 'أنت');
+      for (const sx of spousesOf(me.id)) if (!divorced(me.id, sx.id)) { const w = sx.g === 'f'; put(sx, w ? 'زوجتك' : 'زوجك'); put(S.P.get(sx.fa), w ? 'أبو زوجتك' : 'أبو زوجك'); put(S.P.get(sx.mo), w ? 'أم زوجتك' : 'أم زوجك'); }
+      put(S.P.get(me.fa), 'أبوك'); put(S.P.get(me.mo), 'أمك');
+    }
+    const o = await pickPerson({ title: `صلة ${p.f} بمين؟`, filter: x => x.id !== id, prefer: pref, note: x => notes.get(x.id) || '' }); if (!o) return;
     sh.data.rel = relation(o, id, false); fillPerson(sh);
   }
 }
@@ -1774,7 +1807,7 @@ setView(start && start.id && LS.get('shajara.view', null) == null ? 'tree' : S.v
 if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => { });
 
 /* واجهة صغيرة للاختبارات الآلية */
-window.__shajara = { S, relation, getRoot, addChild, addParent, addSibling, dupsOf, mergeInto, Z, NH, fullName: id => fullName(S.P.get(id)), computeLayout, getRoot, canEdit, revealInTree, centerOn, Z, parseGed, trees: () => trees, nodeSub, divorced, openPerson, deletePerson, drawTreeCanvas, exportGed, setZ, stage, setDownload: f => { dlHook = f; } };
+window.__shajara = { S, relation, mahramOf, bloodAll, getRoot, addChild, addParent, addSibling, dupsOf, mergeInto, Z, NH, fullName: id => fullName(S.P.get(id)), computeLayout, getRoot, canEdit, revealInTree, centerOn, Z, parseGed, trees: () => trees, nodeSub, divorced, openPerson, deletePerson, drawTreeCanvas, exportGed, setZ, stage, setDownload: f => { dlHook = f; } };
 })();
 </script>
 </body>
