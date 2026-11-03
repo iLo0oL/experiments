@@ -113,7 +113,7 @@ nav.tabs svg.i{width:23px;height:23px}
 .qbar>*{pointer-events:auto}
 .qc2{flex-shrink:0;height:32px;padding:0 11px;border-radius:16px;background:var(--bg2);border:1px solid var(--line);font-size:12.5px;font-weight:700;color:var(--muted);white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,.18)}
 .qc2.on{color:var(--acc);border-color:color-mix(in srgb,var(--acc) 55%,var(--line));background:var(--hl)}
-.nd.ln>.pb{box-shadow:0 0 0 2.5px var(--gold),0 2px 8px rgba(0,0,0,.18)}
+.nd.ln>.pb{box-shadow:0 0 0 2.5px #2fb877,0 2px 8px rgba(0,0,0,.18)}
 .zbar{position:absolute;left:10px;bottom:14px;display:flex;flex-direction:column;gap:8px;z-index:5}
 .empty{max-width:420px;margin:0 auto;padding:46px 22px;text-align:center}
 .empty .big{width:86px;height:86px;border-radius:26px;margin:0 auto 16px;display:grid;place-items:center;background:var(--hl);color:var(--acc)}
@@ -269,7 +269,7 @@ body.light #toast{background:#14211a}
       <div class="tbar" id="tbar">
         <button class="fbtn rt" id="rootBtn"><svg class="i" viewBox="0 0 24 24"><path d="M12 3v18M5 10l7-7 7 7"/></svg><span id="rootName">من</span></button>
         <button class="fbtn sq" id="findBtn" aria-label="دوّر على شخص"><svg class="i" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg></button>
-        <button class="fbtn" id="focusMe"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/></svg>ركّز علي</button>
+        <button class="fbtn" id="focusMe"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/></svg>ركّز عليّ</button>
       </div>
       <div class="qbar" id="qbar"></div>
       <div class="zbar" id="zbar">
@@ -807,24 +807,27 @@ const wcol = i => i >= 0 ? WC[i % WC.length] : '';
 const spX = (n, i) => n.right - PW - SG - i * (SW + SG) - SW / 2;
 /* خطوط الشجرة: [{d, c}] والأول بلون الخطوط العادي */
 function linkPaths(L) {
-  const out = [{ d: '', c: '' }];
+  /* ln: خط النسب الأخضر (يطلع إذا «⭐ نسبي» شغّال) */
+  const out = [{ d: '', c: '' }], ls = S.lineSet; let ln = '';
+  const onLine = (n, k) => ls && ls.has(n.p.id) && ls.has(k.p.id);
   for (const n of L.list) {
     if (!n.kids.length) continue;
     const px = n.cx, py = n.y + NH;
     if (!n.multi) {
       const my = py + VG / 2; let d = `M${px} ${py}V${my}`, mn = px, mx = px;
-      for (const k of n.kids) { d += `M${k.cx} ${my}V${k.y}`; mn = Math.min(mn, k.cx); mx = Math.max(mx, k.cx); }
+      for (const k of n.kids) { d += `M${k.cx} ${my}V${k.y}`; mn = Math.min(mn, k.cx); mx = Math.max(mx, k.cx); if (onLine(n, k)) ln += `M${px} ${py}V${my}H${k.cx}V${k.y}`; }
       if (mx > mn) d += `M${mn} ${my}H${mx}`; out[0].d += d; continue;
     }
     const groups = []; for (const k of n.kids) { let g = groups.find(x => x.i === k.grp); if (!g) groups.push(g = { i: k.grp, kids: [] }); g.kids.push(k); }
     groups.forEach((g, j) => {
       const sx = g.i >= 0 ? spX(n, g.i) : px, sy = g.i >= 0 ? n.y + 55 : py, by = py + 9 + Math.min(j, 4) * 8;
       let d = `M${sx} ${sy}V${by}`, mn = sx, mx = sx;
-      for (const k of g.kids) { d += `M${k.cx} ${by}V${k.y}`; mn = Math.min(mn, k.cx); mx = Math.max(mx, k.cx); }
+      for (const k of g.kids) { d += `M${k.cx} ${by}V${k.y}`; mn = Math.min(mn, k.cx); mx = Math.max(mx, k.cx); if (onLine(n, k)) ln += `M${sx} ${sy}V${by}H${k.cx}V${k.y}`; }
       if (mx > mn) d += `M${mn} ${by}H${mx}`;
       if (g.i >= 0) out.push({ d, c: wcol(g.i) }); else out[0].d += d;
     });
   }
+  if (ln) out.push({ d: ln, c: '#2fb877', w: 4.5 });
   return out;
 }
 /* النص الصغير تحت الاسم: أمه أو أبوه إذا الأب عنده أكثر من زوجة، وإلا سنين العمر */
@@ -870,7 +873,7 @@ function renderTree(keep) {
   const before = anchor ? { x: Z.x + anchor.cx * Z.s, y: Z.y + anchor.y * Z.s } : null;
   const L = computeLayout(root); if (!L) { world.innerHTML = ''; S.lay = null; return; }
   S.lineSet = S.hlLine ? myLine() : null; renderQbar();
-  const paths = linkPaths(L).map(x => `<path d="${x.d}"${x.c ? ` style="stroke:${x.c}"` : ''}/>`).join('');
+  const paths = linkPaths(L).map(x => `<path d="${x.d}"${x.c ? ` style="stroke:${x.c}${x.w ? ';stroke-width:' + x.w : ''}"` : ''}/>`).join('');
   let h = `<svg width="${L.W}" height="${L.H}" viewBox="0 0 ${L.W} ${L.H}">${paths}</svg>`;
   for (const n of L.list) h += nodeHtml(n);
   world.innerHTML = h; world.style.width = L.W + 'px'; world.style.height = L.H + 'px';
@@ -878,7 +881,7 @@ function renderTree(keep) {
   if (before) { const n = L.pos.get(keep.id); if (n) setZ(before.x - n.cx * Z.s, before.y - n.y * Z.s, Z.s); }
   else if (!S.zInit || S.zRoot !== root.id) initView();
   S.renderMs = performance.now() - t0;
-  if (canEdit() && S.P.size >= 3 && !LS.get('shajara.tipDrag', false)) { LS.set('shajara.tipDrag', true); setTimeout(() => toast('💡 اضغط مطوّل على أي شخص واسحبه: بين إخوانه عشان ترتيبه، أو على أب ثاني عشان تنقله'), 900); }
+  if (canEdit() && S.P.size >= 3 && !LS.get('shajara.tipDrag', false)) { LS.set('shajara.tipDrag', true); setTimeout(() => toast('💡 اضغط مطوّل على أي شخص واسحبه: بين إخوانه عشان تغيّر ترتيبه، أو على أب ثاني عشان تنقله'), 900); }
 }
 function initView() {
   const L = S.lay; if (!L) return; const w = stage.clientWidth || innerWidth, h = stage.clientHeight || innerHeight - 120;
@@ -1392,7 +1395,7 @@ async function addSibling(p, g) {
   const he = p.g === 'f' ? 'ها' : 'ه', title = `${g === 'f' ? 'أخت' : 'أخو'} ${p.f}`;
   let fa = S.P.has(p.fa) ? p.fa : '', mo = S.P.has(p.mo) ? p.mo : '';
   if (!fa && !mo) {
-    const v = await ask(title, `عشان يصيرون إخوان لازم نعرف أبو${he}. ضيف الأب أول، وبعدين ${g === 'f' ? 'الأخت' : 'الأخ'}.`, [{ v: 'new', t: 'اكتب اسم الأب' }, { v: 'pick', t: 'اختار الأب من المسجّلين' }, { v: null, t: 'إلغاء', cls: 'ghost', cancel: true }]);
+    const v = await ask(title, `عشان يصيرون إخوان لازم نعرف أبو${he}. ضيف الأب أول، وبعدين ${g === 'f' ? 'الأخت' : 'الأخ'}.`, [{ v: 'new', t: 'اكتب اسم الأب' }, { v: 'pick', t: 'اختر الأب من المسجّلين' }, { v: null, t: 'إلغاء', cls: 'ghost', cancel: true }]);
     if (!v) return;
     if (v === 'new') {
       const n = await promptText(`اسم أبو ${p.f}`, '', 'مثل: محمد'); if (!n) return;
@@ -1681,7 +1684,7 @@ function renderMore() {
     <div class="rowb">${ed ? '<button class="btn sm" id="qaBtn">⚡ أضف بالنسب</button><button class="btn sm" id="chkBtn">🩺 فحص الشجرة</button>' : ''}<button class="btn sm" id="rhmBtn">🤲 اللهم ارحمهم</button><button class="btn sm" id="occBtn">📅 مناسبات الشهر</button><button class="btn sm" id="cityBtn">🏙️ مدن العائلة</button>${shared ? '<button class="btn sm" id="logBtn">🕘 آخر التعديلات</button>' : ''}</div>
   </div>
   <div class="card"><h3>🙋 أنا</h3>
-    <div class="set"><div class="l">أنا مين بالشجرة؟<small>${me ? esc(fullName(me, 3)) : 'عشان «ركّز علي» و«وش صلتي فيه؟»'}</small></div><button class="btn sm" id="meBtn">${me ? 'غيّر' : 'اختر'}</button></div>
+    <div class="set"><div class="l">أنا مين بالشجرة؟<small>${me ? esc(fullName(me, 3)) : 'عشان «ركّز عليّ» و«وش صلتي فيه؟»'}</small></div><button class="btn sm" id="meBtn">${me ? 'غيّر' : 'اختر'}</button></div>
   </div>
   <div class="card"><h3>⚙️ العرض</h3>
     <div class="set"><div class="l">الاسم الكامل<small>كم اسم يطلع بالنسب: «فلان بن فلان…»</small></div><div class="stepper"><button class="ib" id="gMinus" aria-label="أقل">−</button><b id="gVal">${S.gens}</b><button class="ib" id="gPlus" aria-label="أكثر">+</button></div></div>
@@ -1760,7 +1763,7 @@ async function stopSharing() {
   const body = snapshotBody();
   try { await T.remove(S.cur.id, S.cur.key); } catch (e) { if (e.code !== 'not_found') return toast(T.errorText(e)); }
   T.forget(S.cur.id); delete S.cur.id; delete S.cur.key; delete S.cur.edit; delete S.cur.view; saveTrees();
-  LS.set('shajara.local.' + S.cur.k, body); openTree(S.cur); toast('وقفت المشاركة، الشجرة صارت على جهازك بس');
+  LS.set('shajara.local.' + S.cur.k, body); openTree(S.cur); toast('وقّفت المشاركة، الشجرة صارت على جهازك بس');
 }
 async function forgetTree(rec) {
   const shared = !!rec.id;
@@ -1797,7 +1800,7 @@ function drawTreeCanvas(maxScale) {
   const rr = (X, Y, W, H, r) => { x.beginPath(); x.moveTo(X + r, Y); x.arcTo(X + W, Y, X + W, Y + H, r); x.arcTo(X + W, Y + H, X, Y + H, r); x.arcTo(X, Y + H, X, Y, r); x.arcTo(X, Y, X + W, Y, r); x.closePath(); };
   const fit = (t, mw) => { if (x.measureText(t).width <= mw) return t; while (t.length > 1 && x.measureText(t + '…').width > mw) t = t.slice(0, -1); return t + '…'; };
   x.lineWidth = 2;
-  for (const pth of linkPaths(L)) { if (!pth.d) continue; x.strokeStyle = pth.c || col.lines; x.stroke(new Path2D(pth.d)); }
+  for (const pth of linkPaths(L)) { if (!pth.d) continue; x.strokeStyle = pth.c || col.lines; x.lineWidth = pth.w || 2; x.stroke(new Path2D(pth.d)); } x.lineWidth = 2;
   for (const n of L.list) {
     const p = n.p, bx = n.right - PW, by = n.y;
     x.fillStyle = col.card; x.strokeStyle = col.line; x.lineWidth = 1; rr(bx, by, PW, NH, 12); x.fill(); x.stroke();
@@ -2195,7 +2198,7 @@ async function personCard(id) {
 async function exportPng() {
   const c = drawTreeCanvas(2); if (!c) return toast('الشجرة فاضية');
   const blob = await new Promise(r => c.toBlob(r, 'image/png'));
-  if (!blob) return toast('الصورة كبيرة مرة، سكّر بعض الفروع وجرب');
+  if (!blob) return toast('الصورة كبيرة مرة، سكّر بعض الفروع وجرّب');
   download(fname('png'), blob, 'image/png'); toast('نزّلت صورة الشجرة ✓');
 }
 function printTree() {
