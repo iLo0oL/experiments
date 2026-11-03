@@ -153,13 +153,18 @@
       resolve(id, key, sid, status) { return req('POST', `/api/docs/${enc(id)}/suggest/${enc(sid)}`, { k: key, status }); }
     },
     push: {
-      async subscribe(id, key) {
+      async subscribe(id, key, opts) {
         if (!('serviceWorker' in navigator) || !('PushManager' in window) || !window.Notification) throw err('nopush');
         if (await Notification.requestPermission() !== 'granted') throw err('denied');
         const reg = await Promise.race([navigator.serviceWorker.ready, new Promise(r => setTimeout(() => r(null), 8000))]); if (!reg) throw err('nosw');
         const { key: vk } = await req('GET', '/api/push/key');
         let sub = await reg.pushManager.getSubscription(); if (!sub) sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64u(vk) });
-        await req('POST', `/api/docs/${enc(id)}/push`, { k: key, sub: sub.toJSON() }); return true;
+        await req('POST', `/api/docs/${enc(id)}/push`, opts ? { k: key, sub: sub.toJSON(), opts } : { k: key, sub: sub.toJSON() }); return true;
+      },
+      async unsubscribe(id, key) {
+        const reg = 'serviceWorker' in navigator ? await Promise.race([navigator.serviceWorker.ready, new Promise(r => setTimeout(() => r(null), 5000))]) : null;
+        const sub = reg && reg.pushManager ? await reg.pushManager.getSubscription() : null; if (!sub) return true;
+        await req('DELETE', `/api/docs/${enc(id)}/push`, { k: key, endpoint: sub.endpoint }); return true;
       },
       test(id, key) { return req('POST', `/api/docs/${enc(id)}/push/test`, { k: key }); }
     }

@@ -31,6 +31,9 @@ async function migrate() {
     create table if not exists kv(k text primary key, v jsonb not null);
     create table if not exists suggestions(id text primary key, doc_id text not null references docs(id) on delete cascade, body jsonb not null, by_name text not null default '', status text not null default 'new', created_at bigint not null);
     create index if not exists suggestions_doc on suggestions(doc_id, status, created_at);
+    alter table doc_subs add column if not exists news boolean not null default true;
+    alter table doc_subs add column if not exists occ boolean not null default false;
+    alter table doc_subs add column if not exists role text not null default 'edit';
   `);
 }
 async function kvGet(k) { const r = await q('select v from kv where k=$1', [k]); return r.rows[0] ? r.rows[0].v : null; }
@@ -217,8 +220,10 @@ async function vapid() {
   if (VAPID) return VAPID; let k = await kvGet('vapid'); if (!k) { k = webpush.generateVAPIDKeys(); await kvSet('vapid', k); }
   webpush.setVapidDetails(SITE.startsWith('https://') ? SITE : 'mailto:noreply@example.com', k.publicKey, k.privateKey); return (VAPID = k);
 }
-async function notifyDoc(docId, payload) {
-  await vapid(); const subs = (await q('select endpoint, keys from doc_subs where doc_id=$1', [docId])).rows; let n = 0;
+/* who: news (الإضافات والحجوزات) أو occ (المناسبات) أو edit (أصحاب رابط التعديل بس) */
+async function notifyDoc(docId, payload, who = 'news') {
+  await vapid(); const cond = who === 'occ' ? 'occ' : who === 'edit' ? "news and role='edit'" : 'news';
+  const subs = (await q(`select endpoint, keys from doc_subs where doc_id=$1 and ${cond}`, [docId])).rows; let n = 0;
   for (const s of subs) {
     try { await webpush.sendNotification({ endpoint: s.endpoint, keys: s.keys }, JSON.stringify(payload), { TTL: 6 * 3600 }); n++; }
     catch (e) { if (e.statusCode === 404 || e.statusCode === 410) await q('delete from doc_subs where endpoint=$1', [s.endpoint]); else console.error('push', e.statusCode || e.message); }
@@ -249,7 +254,7 @@ route('POST', '/api/docs/:id/suggest', async (req, b, p) => {
   const pend = await q("select count(*)::int as n from suggestions where doc_id=$1 and status='new'", [doc.id]); if (pend.rows[0].n >= 200) fail(429, 'rate');
   const id = rid(12), by = str(b.by, 60).trim();
   await q('insert into suggestions(id, doc_id, body, by_name, status, created_at) values($1,$2,$3,$4,$5,$6)', [id, doc.id, json, by, 'new', now()]);
-  notifyDoc(doc.id, { title: '✍️ اقتراح جديد للشجرة', body: (by ? by + ' ' : '') + 'اقترح إضافة على الشجرة', url: SITE + 'shajara/', tag: 'sugg-' + id }).catch(() => {});
+  notifyDoc(doc.id, { title: '✍️ اقتراح جديد للشجرة', body: (by ? by + ' ' : '') + 'اقترح إضافة على الشجرة', url: SITE + 'shajara/', tag: 'sugg-' + id }, 'edit').catch(() => {});
   return { id };
 });
 route('GET', '/api/docs/:id/suggest', async (req, b, p, url) => {
@@ -269,11 +274,49 @@ const canSub = (doc, k) => { const r = roleOf(doc, k); return r === 'edit' || (r
 route('POST', '/api/docs/:id/push', async (req, b, p) => {
   const doc = await loadDoc(p.id); if (!canSub(doc, b.k)) fail(403, 'bad_key');
   const s = b.sub || {}; if (!/^https:\/\//.test(s.endpoint || '') || !s.keys || !s.keys.p256dh || !s.keys.auth) fail(400, 'bad_sub');
-  await q('insert into doc_subs(endpoint,doc_id,keys,created_at) values($1,$2,$3,$4) on conflict(endpoint,doc_id) do update set keys=excluded.keys', [str(s.endpoint, 1000), doc.id, JSON.stringify({ p256dh: str(s.keys.p256dh, 200), auth: str(s.keys.auth, 100) }), now()]);
+  const o = isObj(b.opts) ? b.opts : null, news = o && typeof o.news === 'boolean' ? o.news : true, occ = !!(o && o.occ === true && doc.kind === 'shajara');
+  if (o && !news && !occ) { await q('delete from doc_subs where endpoint=$1 and doc_id=$2', [str(s.endpoint, 1000), doc.id]); return { ok: true, off: true }; }
+  await q(`insert into doc_subs(endpoint,doc_id,keys,created_at,news,occ,role) values($1,$2,$3,$4,$5,$6,$7) on conflict(endpoint,doc_id) do update set keys=excluded.keys, role=excluded.role${o ? ', news=excluded.news, occ=excluded.occ' : ''}`,
+    [str(s.endpoint, 1000), doc.id, JSON.stringify({ p256dh: str(s.keys.p256dh, 200), auth: str(s.keys.auth, 100) }), now(), news, occ, roleOf(doc, b.k)]);
   return { ok: true };
 });
 route('DELETE', '/api/docs/:id/push', async (req, b, p) => { const doc = await loadDoc(p.id); if (!canSub(doc, b.k)) fail(403, 'bad_key'); await q('delete from doc_subs where endpoint=$1 and doc_id=$2', [str(b.endpoint, 1000), doc.id]); return { ok: true }; });
 route('POST', '/api/docs/:id/push/test', async (req, b, p) => { const doc = await loadDoc(p.id); if (roleOf(doc, b.k) !== 'edit') fail(403, 'bad_key'); limit(req, 'ptest', 10, 600e3); return { sent: await notifyDoc(doc.id, { title: '🔔 التنبيهات شغّالة', body: 'بيوصلك تنبيه أول ما يجيك حجز جديد.', url: SITE + 'mawid/', tag: 'test' }) }; });
+
+/* ---------- مناسبات شجرتنا: كل يوم الساعة 9 الصبح بتوقيت الرياض ---------- */
+function ymd(cal, d = new Date()) {
+  const f = new Intl.DateTimeFormat(cal === 'h' ? 'en-u-ca-islamic-umalqura-nu-latn' : 'en-u-nu-latn', { timeZone: 'Asia/Riyadh', year: 'numeric', month: 'numeric', day: 'numeric' }).formatToParts(d);
+  const g = t => parseInt((f.find(x => x.type === t) || {}).value, 10); return { y: g('year'), m: g('month'), d: g('day') };
+}
+function occasionsToday(body, d = new Date()) {
+  const items = (body && body.items) || {}, T = { h: ymd('h', d), g: ymd('g', d) }, born = [], died = [];
+  for (const it of Object.values(items)) {
+    if (!it || it.del || it.t !== 'p' || !it.f) continue; const t = T[it.cal === 'g' ? 'g' : 'h'];
+    const fa = it.fa && items[it.fa] && !items[it.fa].del ? items[it.fa] : null, nm = str(it.f, 40) + (fa && fa.f ? (it.g === 'f' ? ' بنت ' : ' بن ') + str(fa.f, 40) : '');
+    if (!it.dead && !it.dy && +it.bmo === t.m && +it.bda === t.d) born.push({ nm, age: +it.by > 0 ? t.y - it.by : 0 });
+    if ((it.dead || it.dy) && +it.dmo === t.m && +it.dda === t.d) died.push({ nm, f: it.g === 'f', n: +it.dy > 0 ? t.y - it.dy : 0 });
+  }
+  return { born, died };
+}
+function occasionText(o) {
+  const L = [], join = a => a.length <= 3 ? a.join(' و') : a.slice(0, 3).join('، ') + ` و${a.length - 3} غيرهم`;
+  if (o.born.length) L.push('🎂 اليوم عيد ميلاد ' + join(o.born.map(x => x.nm + (x.age > 0 && x.age < 130 ? ` (${x.age})` : ''))));
+  if (o.died.length) L.push('🤲 اليوم ذكرى وفاة ' + join(o.died.map(x => x.nm)) + '، ' + (o.died.length > 1 ? 'الله يرحمهم' : o.died[0].f ? 'الله يرحمها' : 'الله يرحمه'));
+  return L.join('\n');
+}
+async function occasionTick(force) {
+  try {
+    const d = new Date(), hr = parseInt(new Intl.DateTimeFormat('en-u-nu-latn', { timeZone: 'Asia/Riyadh', hour: 'numeric', hourCycle: 'h23' }).format(d), 10), g = ymd('g', d), day = `${g.y}-${g.m}-${g.d}`;
+    if (!force) { if (hr < 9) return 0; if ((await kvGet('occ_day')) === day) return 0; await kvSet('occ_day', day); }
+    const docs = (await q("select d.id, d.body from docs d where d.kind='shajara' and exists(select 1 from doc_subs s where s.doc_id=d.id and s.occ)")).rows; let sent = 0;
+    for (const doc of docs) {
+      const txt = occasionText(occasionsToday(doc.body, d)); if (!txt) continue;
+      const tree = str((doc.body.meta && doc.body.meta.name) || 'شجرتنا', 60);
+      sent += await notifyDoc(doc.id, { title: '🌳 ' + tree, body: txt, url: SITE + 'shajara/#occ', tag: 'occ-' + doc.id + '-' + day }, 'occ');
+    }
+    return sent;
+  } catch (e) { console.error('occ', e.message); return 0; }
+}
 
 const server = http.createServer(async (req, res) => {
   const origin = req.headers.origin;
@@ -292,6 +335,7 @@ async function start() {
   await migrate(); await vapid();
   server.listen(PORT, () => console.log('تجارب: السيرفر شغّال على المنفذ ' + PORT));
   setTimeout(cleanupTick, 60e3).unref(); setInterval(cleanupTick, 12 * 3600e3).unref();
+  setTimeout(occasionTick, 90e3).unref(); setInterval(occasionTick, 10 * 60e3).unref();
 }
 if (require.main === module) start().catch(e => { console.error(e); process.exit(1); });
-module.exports = { start, server, pool, checkHours };
+module.exports = { start, server, pool, checkHours, occasionsToday, occasionText, occasionTick };

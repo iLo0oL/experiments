@@ -1,4 +1,4 @@
-const C = 'shajara-exp-v3';
+const C = 'shajara-exp-v4';
 const SHELL = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png', '../shared/sync.js', './vendor/qrcode.js'];
 self.addEventListener('install', e => { e.waitUntil(caches.open(C).then(c => c.addAll(SHELL)).then(() => self.skipWaiting())); });
 self.addEventListener('activate', e => { e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k.startsWith('shajara-') && k !== C).map(k => caches.delete(k)))).then(() => self.clients.claim())); });
@@ -27,7 +27,7 @@ self.addEventListener('push', e => {
 self.addEventListener('notificationclick', e => {
   e.notification.close(); const url = (e.notification.data && e.notification.data.url) || self.registration.scope;
   e.waitUntil(self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(list => {
-    for (const c of list) if (c.url.startsWith(self.registration.scope) && 'focus' in c) return c.focus();
+    for (const c of list) if (c.url.startsWith(self.registration.scope) && 'focus' in c) { const h = url.split('#')[1]; if (h) c.postMessage({ go: h }); return c.focus(); }
     return self.clients.openWindow(url);
   }));
 });
