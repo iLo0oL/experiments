@@ -67,7 +67,13 @@ nav.tabs svg.i{width:23px;height:23px}
 .chips{display:flex;flex-wrap:wrap;gap:8px}
 /* tree */
 #vTree{overflow:hidden;background-color:var(--bg);background-image:radial-gradient(var(--grid) 1.2px,transparent 1.3px);background-size:22px 22px}
-#stage{position:absolute;inset:0;touch-action:none;cursor:grab;overflow:hidden;user-select:none;-webkit-user-select:none}
+#stage{position:absolute;inset:0;touch-action:none;cursor:grab;overflow:hidden;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+.nd.dragging>.pb{opacity:.3}
+.pb.ghost{position:fixed!important;left:0;top:0;z-index:60;pointer-events:none;opacity:.95;box-shadow:var(--shadow);transition:none}
+.ghost .gl{position:absolute;top:66px;right:50%;transform:translateX(50%);white-space:nowrap;background:var(--card2);border:1px solid var(--line);border-radius:10px;padding:4px 9px;font-size:12.5px;font-weight:800;color:var(--text)}
+.ghost .gl.bad{color:var(--danger)}.ghost .gl.ok{color:var(--acc)}
+.dropt{outline:2.5px dashed var(--acc)!important;outline-offset:3px}
+.slot{position:absolute;width:4px;border-radius:2px;background:var(--acc);pointer-events:none;z-index:3}
 #stage.drag{cursor:grabbing}
 #world{position:absolute;left:0;top:0;transform-origin:0 0;will-change:transform}
 #world svg{position:absolute;left:0;top:0;overflow:visible;pointer-events:none}
@@ -157,6 +163,7 @@ nav.tabs svg.i{width:23px;height:23px}
 .sheet h2 .x{margin-right:auto}
 .ov.dlg{align-items:center;padding:20px}
 .ov.dlg .sheet{border-radius:20px;max-width:400px;padding:20px}
+.ov.dlg .sheet p{white-space:pre-line}
 .dlg p{color:var(--muted);margin-bottom:16px;white-space:pre-line}
 .dacts{display:flex;flex-direction:column;gap:8px}
 @media(min-width:700px){.ov{align-items:center}.sheet{border-radius:22px}}
@@ -629,7 +636,7 @@ function computeLayout(root) {
     const gi = k => idx.has(op(k)) ? idx.get(op(k)) : -1;
     if (n.multi) ks = ks.map((k, i) => [k, i]).sort((a, b) => (gi(a[0]) < 0 ? 99 : gi(a[0])) - (gi(b[0]) < 0 ? 99 : gi(b[0])) || a[1] - b[1]).map(x => x[0]);
     if (n.col) n.hidden = hiddenCount(p, isRoot);
-    else for (const k of ks) if (!seen.has(k.id)) { const kn = build(k, depth + 1, false); if (n.multi) { kn.grp = gi(k); kn.op = S.P.get(op(k)); kn.opF = p.g === 'f'; } n.kids.push(kn); }
+    else for (const k of ks) if (!seen.has(k.id)) { const kn = build(k, depth + 1, false); kn.par = n; if (n.multi) { kn.grp = gi(k); kn.op = S.P.get(op(k)); kn.opF = p.g === 'f'; } n.kids.push(kn); }
     return n;
   }
   let R;
@@ -765,6 +772,7 @@ function renderTree(keep) {
   if (before) { const n = L.pos.get(keep.id); if (n) setZ(before.x - n.cx * Z.s, before.y - n.y * Z.s, Z.s); }
   else if (!S.zInit || S.zRoot !== root.id) initView();
   S.renderMs = performance.now() - t0;
+  if (canEdit() && S.P.size >= 3 && !LS.get('shajara.tipDrag', false)) { LS.set('shajara.tipDrag', true); setTimeout(() => toast('💡 اضغط مطوّل على أي شخص واسحبه: بين إخوانه عشان ترتيبه، أو على أب ثاني عشان تنقله'), 900); }
 }
 function initView() {
   const L = S.lay; if (!L) return; const w = stage.clientWidth || innerWidth, h = stage.clientHeight || innerHeight - 120;
@@ -806,13 +814,20 @@ const sp = e => { const r = stage.getBoundingClientRect(); return { x: e.clientX
 stage.addEventListener('pointerdown', e => {
   if (e.button > 0) return; try { stage.setPointerCapture(e.pointerId); } catch (x) { }
   ptrs.set(e.pointerId, sp(e));
-  if (ptrs.size === 1) drag = { ...sp(e), zx: Z.x, zy: Z.y, moved: false, target: e.target };
-  else if (ptrs.size === 2) { const [a, b] = [...ptrs.values()]; pinch = { d: Math.hypot(a.x - b.x, a.y - b.y) || 1, mx: (a.x + b.x) / 2, my: (a.y + b.y) / 2, zx: Z.x, zy: Z.y, s: Z.s }; if (drag) drag.moved = true; }
+  if (ptrs.size === 1) {
+    drag = { ...sp(e), zx: Z.x, zy: Z.y, moved: false, target: e.target };
+    /* ضغط مطوّل على شخص = نسحبه (لترتيبه بين إخوانه أو لنقله لأب ثاني) */
+    const card = e.target.closest && e.target.closest('.pb[data-p]');
+    if (card && canEdit()) { const d0 = drag, cx = e.clientX, cy = e.clientY; d0.lp = setTimeout(() => { if (drag === d0 && !d0.moved && ptrs.size === 1) startNodeDrag(card, cx, cy); }, 420); }
+  }
+  else if (ptrs.size === 2) { if (drag) clearTimeout(drag.lp); if (nd) cancelNodeDrag(); const [a, b] = [...ptrs.values()]; pinch = { d: Math.hypot(a.x - b.x, a.y - b.y) || 1, mx: (a.x + b.x) / 2, my: (a.y + b.y) / 2, zx: Z.x, zy: Z.y, s: Z.s }; if (drag) drag.moved = true; }
 });
 stage.addEventListener('pointermove', e => {
   if (!ptrs.has(e.pointerId)) return; ptrs.set(e.pointerId, sp(e));
+  if (ptrs.size === 1 && nd) { moveNodeDrag(e.clientX, e.clientY); return; }
   if (ptrs.size === 1 && drag) {
     const p = sp(e), dx = p.x - drag.x, dy = p.y - drag.y;
+    if (Math.hypot(dx, dy) > 7) clearTimeout(drag.lp);
     if (!drag.moved && Math.hypot(dx, dy) > 7) { drag.moved = true; stage.classList.add('drag'); }
     if (drag.moved) setZ(drag.zx + dx, drag.zy + dy, Z.s);
   } else if (ptrs.size >= 2 && pinch) {
@@ -823,11 +838,113 @@ stage.addEventListener('pointermove', e => {
 });
 function ptrEnd(e) {
   if (!ptrs.has(e.pointerId)) return; ptrs.delete(e.pointerId);
+  if (drag) clearTimeout(drag.lp);
+  if (nd) { const d = nd; if (e.type === 'pointerup') endNodeDrag(e.clientX, e.clientY); else cancelNodeDrag(); if (ptrs.size === 0) { drag = null; pinch = null; stage.classList.remove('drag'); } if (d) return; }
   if (ptrs.size === 0) { if (drag && !drag.moved && e.type === 'pointerup') treeTap(drag.target); drag = null; pinch = null; stage.classList.remove('drag'); }
   else if (ptrs.size === 1) { const [p] = [...ptrs.values()]; drag = { x: p.x, y: p.y, zx: Z.x, zy: Z.y, moved: true }; pinch = null; }
 }
 stage.addEventListener('pointerup', ptrEnd); stage.addEventListener('click', e => { if (e.detail === 0) treeTap(e.target); }); stage.addEventListener('pointercancel', ptrEnd);
 stage.addEventListener('wheel', e => { e.preventDefault(); const p = sp(e); zoomAt(p.x, p.y, Z.s * Math.exp(-e.deltaY * (e.ctrlKey ? 0.01 : 0.0018))); }, { passive: false });
+/* ---------- سحب شخص بالشجرة ---------- */
+let nd = null;
+function startNodeDrag(card, cx, cy) {
+  const id = card.dataset.p, n = S.lay && S.lay.pos.get(id); if (!n) return;
+  if (navigator.vibrate) try { navigator.vibrate(15); } catch (x) { }
+  const g = card.cloneNode(true); g.classList.add('ghost'); g.insertAdjacentHTML('beforeend', '<span class="gl">اسحبه لمكانه الجديد</span>'); document.body.appendChild(g);
+  const nodeEl = card.closest('.nd'); if (nodeEl) nodeEl.classList.add('dragging');
+  nd = { id, n, g, nodeEl, last: null }; drag.moved = true; moveNodeDrag(cx, cy);
+}
+function clearDropMarks() { $$('#world .dropt').forEach(x => x.classList.remove('dropt')); const sl = $('#world .slot'); if (sl) sl.remove(); }
+function cancelNodeDrag() { if (!nd) return; nd.g.remove(); if (nd.nodeEl) nd.nodeEl.classList.remove('dragging'); clearDropMarks(); nd = null; }
+/* وش بيصير لو أفلته هنا؟ */
+function dropAt(cx, cy) {
+  const X = S.P.get(nd.id), xn = nd.n, par = xn.par;
+  const el = document.elementFromPoint(cx, cy), card = el && el.closest && el.closest('#world [data-p]');
+  const sibs = par ? par.kids : [];
+  if (card) {
+    const tid = card.dataset.p; if (tid === X.id) return { kind: 'none' };
+    const tn = S.lay.pos.get(tid);
+    if (card.classList.contains('pb') && tn && par && tn.par === par) return { kind: 'order', target: tn, el: card, sibs };
+    const T0 = S.P.get(tid); if (!T0) return { kind: 'none' };
+    if (descendants(X.id).has(tid)) return { kind: 'bad', msg: `ما يصير، ${T0.f} من ذرية ${X.f}` };
+    const host = card.classList.contains('sc') ? S.P.get(card.closest('.nd').dataset.n) : null;
+    return { kind: 'parent', T: T0, host, el: card };
+  }
+  /* بين الإخوان: على نفس الصف */
+  if (par && sibs.length > 1) {
+    const r = stage.getBoundingClientRect(), wx = (cx - r.left - Z.x) / Z.s, wy = (cy - r.top - Z.y) / Z.s;
+    if (wy > xn.y - 24 && wy < xn.y + NH + 24) {
+      const others = sibs.filter(k => k !== xn); const right = others.filter(k => k.cx > wx).length;
+      return { kind: 'slot', idx: right, sibs, wx };
+    }
+  }
+  return { kind: 'none' };
+}
+function moveNodeDrag(cx, cy) {
+  if (!nd) return; nd.g.style.transform = `translate(${cx - 62}px,${cy - 74}px)`;
+  /* قرب الطرف نحرّك الشجرة شوي */
+  const r = stage.getBoundingClientRect(), m = 36, vx = cx < r.left + m ? 14 : cx > r.right - m ? -14 : 0, vy = cy < r.top + m ? 14 : cy > r.bottom - m ? -14 : 0;
+  if (vx || vy) setZ(Z.x + vx, Z.y + vy, Z.s);
+  clearDropMarks(); const d = dropAt(cx, cy), X = S.P.get(nd.id), gl = nd.g.querySelector('.gl'); nd.last = d;
+  let t = 'اسحبه لمكانه الجديد', c = '';
+  if (d.kind === 'order' || d.kind === 'slot') {
+    t = '↔ يتغيّر ترتيبه بين إخوانه'; c = 'ok';
+    if (d.el) d.el.classList.add('dropt');
+    else { const others = d.sibs.filter(k => k !== nd.n), a = others[d.idx - 1], b = others[d.idx]; const x = a && b ? (a.cx + b.cx) / 2 : a ? a.cx - PW / 2 - 9 : b ? b.cx + PW / 2 + 9 : nd.n.cx; world.insertAdjacentHTML('beforeend', `<div class="slot" style="left:${x - 2}px;top:${nd.n.y}px;height:${NH}px"></div>`); }
+    if (d.kind === 'order' && d.target.op !== nd.n.op && nd.n.par && nd.n.par.multi) t = `↔ ${X.g === 'f' ? 'تصير' : 'يصير'} من ${d.target.op ? (d.target.opF ? 'أبو ' : 'أم ') + d.target.op.f : 'أم ثانية'}`;
+  } else if (d.kind === 'parent') { t = `👪 ${X.g === 'f' ? 'تصير بنت' : 'يصير ولد'} ${d.T.f}`; c = 'ok'; d.el.classList.add('dropt'); }
+  else if (d.kind === 'bad') { t = d.msg; c = 'bad'; }
+  gl.textContent = t; gl.className = 'gl ' + c;
+}
+async function endNodeDrag(cx, cy) {
+  const d = nd.last || dropAt(cx, cy), id = nd.id, xn = nd.n; cancelNodeDrag();
+  if (d.kind === 'order' || d.kind === 'slot') return dropReorder(id, xn, d);
+  if (d.kind === 'parent') return dropReparent(id, d.T, d.host);
+  if (d.kind === 'bad') return toast(d.msg);
+  toast('أفلته على أبوه الجديد، أو بين إخوانه عشان تغيّر ترتيبه');
+}
+async function dropReorder(id, xn, d) {
+  const X = S.P.get(id); if (!X) return; const par = xn.par, sibs = par.kids.slice(), from = sibs.indexOf(xn);
+  let to;
+  if (d.kind === 'order') { to = sibs.indexOf(d.target); } else { const others = sibs.filter(k => k !== xn); const before = others[d.idx]; to = before ? sibs.indexOf(before) - (sibs.indexOf(before) > from ? 1 : 0) : others.length; }
+  const order = sibs.filter(k => k !== xn); order.splice(to, 0, xn);
+  const newMo = d.kind === 'order' && par.multi && d.target.op !== xn.op ? d.target.op : undefined;
+  if (order.every((k, i) => k === sibs[i]) && newMo === undefined) return;
+  const pos = order.indexOf(xn), nb = order[pos + 1], pb = order[pos - 1];
+  const kidW = X.g === 'f' ? 'بنت' : 'ولد';
+  let msg = nb ? `${X.f} ${X.g === 'f' ? 'بتصير' : 'بيصير'} قبل ${nb.p.f} بالترتيب.` : `${X.f} ${X.g === 'f' ? 'بتصير' : 'بيصير'} بعد ${pb.p.f} بالترتيب (آخر ${par.p.g === 'f' ? 'عيالها' : 'عياله'}).`;
+  if (newMo !== undefined) { const oldO = S.P.get(par.p.g === 'f' ? X.fa : X.mo); msg += `\n${par.p.g === 'f' ? 'الأب' : 'الأم'}: ${oldO ? oldO.f + ' ← ' : ''}${newMo ? newMo.f : 'ما ندري'}`; }
+  if (!await ask('تغيير الترتيب', msg, [{ v: true, t: 'موافق' }, { v: false, t: 'إلغاء', cls: 'ghost', cancel: true }])) return;
+  const snap = order.map(k => [k.p.id, strip(S.P.get(k.p.id))]), base = Date.now();
+  try {
+    order.forEach((k, i) => { const cur = S.P.get(k.p.id); if (!cur) return; const o = strip(cur); o.o = base + i; if (k === xn && newMo !== undefined) { const key = par.p.g === 'f' ? 'fa' : 'mo'; if (newMo) o[key] = newMo.id; else delete o[key]; } S.doc.set(k.p.id, o); });
+  } catch (x) { return toast(T ? T.errorText(x) : 'ما انحفظ'); }
+  toast(`تغيّر ترتيب ${X.f} ✓`, { text: 'تراجع', fn: () => snap.forEach(([i, o]) => S.doc.set(i, o)) });
+}
+async function dropReparent(id, T0, host) {
+  const X = S.P.get(id); if (!X) return; const he = X.g === 'f' ? 'ها' : 'ه';
+  let nfa = X.fa && S.P.has(X.fa) ? X.fa : '', nmo = X.mo && S.P.has(X.mo) ? X.mo : '', ask2 = null;
+  if (T0.g !== 'f') { /* أفلته على رجّال: هو الأب */
+    nfa = T0.id; const ws = spousesOf(T0.id);
+    if (!ws.some(w => w.id === nmo)) { if (ws.length === 1) nmo = ws[0].id; else if (ws.length > 1) { nmo = ''; ask2 = { key: 'mo', opts: ws }; } else nmo = ''; }
+  } else { /* أفلته على حرمة: هي الأم، وأبوه زوجها */
+    nmo = T0.id; const hs = host && host.g !== 'f' ? [host] : spousesOf(T0.id);
+    if (!hs.some(h => h.id === nfa)) { if (hs.length === 1) nfa = hs[0].id; else if (hs.length > 1) { nfa = ''; ask2 = { key: 'fa', opts: hs }; } else nfa = ''; }
+  }
+  if (nfa === (X.fa || '') && nmo === (X.mo || '') && !ask2) return toast(`${T0.f} أصلًا ${T0.g === 'f' ? 'أم' : 'أبو'}${he}`);
+  const name = id => { const q = S.P.get(id); return q ? q.f : 'ما فيه'; };
+  const lines = [`${X.f} ${X.g === 'f' ? 'بتصير بنت' : 'بيصير ولد'} ${T0.f}${host && T0.g === 'f' ? ' و' + host.f : ''}.`];
+  if (nfa !== (X.fa || '') || (ask2 && ask2.key === 'fa')) lines.push(`الأب: ${X.fa && S.P.has(X.fa) ? name(X.fa) + ' ← ' : ''}${ask2 && ask2.key === 'fa' ? 'بنسألك بعدين' : name(nfa)}`);
+  if (nmo !== (X.mo || '') || (ask2 && ask2.key === 'mo')) lines.push(`الأم: ${X.mo && S.P.has(X.mo) ? name(X.mo) + ' ← ' : ''}${ask2 && ask2.key === 'mo' ? 'بنسألك بعدين' : name(nmo)}`);
+  if (!await ask(`تغيير ${X.g === 'f' ? 'أبوها' : 'أبوه'} أو ${X.g === 'f' ? 'أمها' : 'أمه'}`, lines.join('\n'), [{ v: true, t: 'موافق' }, { v: false, t: 'إلغاء', cls: 'ghost', cancel: true }])) return;
+  if (ask2) { const w = await ask(ask2.key === 'mo' ? `مين أم ${X.f}؟` : `مين أبو ${X.f}؟`, '', [...ask2.opts.map(x => ({ v: x.id, t: fullName(x, 2, false) })), { v: '', t: 'ما أعرف', cls: 'ghost', cancel: true }]); if (ask2.key === 'mo') nmo = w || ''; else nfa = w || ''; }
+  const snap = [[id, strip(X)]], o = strip(X);
+  if (nfa) o.fa = nfa; else delete o.fa; if (nmo) o.mo = nmo; else delete o.mo;
+  const fp = S.P.get(o.fa); if (fp && o.fam && o.fam === famOf(fp)) delete o.fam;
+  if (X.fa && X.fa !== o.fa && !o.fam && !fp) { const old = famOf(X); if (old) o.fam = old; }
+  try { S.doc.set(id, o); ensureMarriage(o.fa, o.mo); } catch (x) { return toast(T ? T.errorText(x) : 'ما انحفظ'); }
+  toast(`صار${X.g === 'f' ? 'ت' : ''} ${X.f} ${X.g === 'f' ? 'بنت' : 'ولد'} ${T0.f} ✓`, { text: 'تراجع', fn: () => snap.forEach(([i, x]) => S.doc.set(i, x)) });
+}
 function treeTap(t) {
   if (!t || !t.closest) return; const tg = t.closest('[data-t]'); if (tg) return toggleCol(tg.dataset.t);
   const pb = t.closest('[data-p]'); if (pb) openPerson(pb.dataset.p);
@@ -1652,7 +1769,7 @@ setView(start && start.id && LS.get('shajara.view', null) == null ? 'tree' : S.v
 if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => { });
 
 /* واجهة صغيرة للاختبارات الآلية */
-window.__shajara = { S, relation, getRoot, addChild, addParent, addSibling, dupsOf, mergeInto, fullName: id => fullName(S.P.get(id)), computeLayout, getRoot, canEdit, revealInTree, centerOn, Z, parseGed, trees: () => trees, nodeSub, divorced, openPerson, deletePerson, drawTreeCanvas, exportGed, setZ, stage, setDownload: f => { dlHook = f; } };
+window.__shajara = { S, relation, getRoot, addChild, addParent, addSibling, dupsOf, mergeInto, Z, NH, fullName: id => fullName(S.P.get(id)), computeLayout, getRoot, canEdit, revealInTree, centerOn, Z, parseGed, trees: () => trees, nodeSub, divorced, openPerson, deletePerson, drawTreeCanvas, exportGed, setZ, stage, setDownload: f => { dlHook = f; } };
 })();
 </script>
 </body>
