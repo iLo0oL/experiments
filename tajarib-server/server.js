@@ -88,7 +88,7 @@ route('POST', '/api/docs', async (req, b) => {
   return { id, view, edit, rev: 1 };
 });
 route('GET', '/api/docs/:id', async (req, b, p, url) => {
-  limit(req, 'read', 900, 600e3);
+  limit(req, 'read', 3000, 600e3);
   const doc = await loadDoc(p.id); const role = roleOf(doc, url.searchParams.get('k')); if (!role) fail(403, 'bad_key');
   if (now() - +doc.last_read > 864e5) q('update docs set last_read=$1 where id=$2', [now(), doc.id]).catch(() => {});
   if (int(url.searchParams.get('rev')) === doc.rev) return { same: true, rev: doc.rev, role };
@@ -149,17 +149,17 @@ function checkHours(meta, start, end) {
   return hours.some(r => Array.isArray(r) && hm(r[0]) != null && hm(r[1]) != null && a.min >= hm(r[0]) && z.min + 1 <= hm(r[1]));
 }
 route('GET', '/api/docs/:id/busy', async (req, b, p, url) => {
-  limit(req, 'read', 900, 600e3);
+  limit(req, 'read', 3000, 600e3);
   const doc = await loadDoc(p.id); if (!roleOf(doc, url.searchParams.get('k'))) fail(403, 'bad_key');
   const from = int(url.searchParams.get('from')) || now(), to = Math.min(int(url.searchParams.get('to')) || from + 31 * 864e5, from + 92 * 864e5);
   const r = await q("select starts, ends from bookings where doc_id=$1 and status<>'cancelled' and ends > $2 and starts < $3 order by starts", [doc.id, from, to]);
   return { busy: r.rows.map(x => [+x.starts, +x.ends]) };
 });
 route('POST', '/api/docs/:id/bookings', async (req, b, p) => {
-  limit(req, 'book', 12, 3600e3);
+  limit(req, 'book', 30, 3600e3);
   const name = str(b.name, 60).trim(), phone = str(b.phone, 20).replace(/[^\d+]/g, ''), note = str(b.note, 300).trim(), start = int(b.start);
   if (name.length < 2) fail(400, 'bad_name'); if (!/^\+?\d{7,15}$/.test(phone)) fail(400, 'bad_phone');
-  if (!start || start < now() + 5 * 60e3 || start > now() + 120 * 864e5) fail(400, 'bad_time');
+  if (!start || start < now() + 5 * 60e3 || start > now() + 121 * 864e5) fail(400, 'bad_time');
   const c = await pool.connect();
   try {
     await c.query('begin');
@@ -170,8 +170,12 @@ route('POST', '/api/docs/:id/bookings', async (req, b, p) => {
     if (!svc) fail(400, 'bad_service');
     const dur = int(svc[1].dur); if (!dur || dur < 5 || dur > 600) fail(400, 'bad_service');
     const end = start + dur * 60e3;
+    /* قواعد صاحب المحل: أقل وقت قبل الموعد (مع سماح 10 دقايق لو تأخر الزبون بتعبئة البيانات)، وكم يوم قدام، والاستراحة بين المواعيد */
+    const notice = Math.min(Math.max(int(meta.notice) || 0, 0), 20160), ahead = Math.min(Math.max(int(meta.ahead) || 120, 1), 120), buf = Math.min(Math.max(int(meta.buffer) || 0, 0), 240) * 60e3;
+    if (start < now() + Math.max(notice - 10, 5) * 60e3) fail(400, 'too_soon');
+    if (start > now() + (ahead + 1) * 864e5) fail(400, 'bad_time');
     if (!checkHours(meta, start, end)) fail(400, 'outside');
-    const busy = await c.query("select 1 from bookings where doc_id=$1 and status<>'cancelled' and starts < $3 and ends > $2 limit 1", [doc.id, start, end]);
+    const busy = await c.query("select 1 from bookings where doc_id=$1 and status<>'cancelled' and starts < $3 and ends > $2 limit 1", [doc.id, start - buf, end + buf]);
     if (busy.rows[0]) fail(409, 'taken');
     const id = rid(12), code = String(crypto.randomInt(100000, 1000000));
     await c.query('insert into bookings(id,doc_id,service,starts,ends,name,phone,note,status,code_hash,created_at) values($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)', [id, doc.id, svc[0], start, end, name, phone, note, 'new', sha(code), now()]);

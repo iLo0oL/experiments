@@ -306,6 +306,7 @@ const J = { get(k, d) { try { const v = JSON.parse(LS.get(k)); return v == null 
 const latin = s => String(s == null ? '' : s).replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d)).replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d));
 const num = v => { const s = latin(v).replace('٫', '.').replace(/,/g, '.').replace(/[^\d.]/g, ''); if (!s) return null; const n = parseFloat(s); return isFinite(n) ? Math.round(n * 100) / 100 : null; };
 const fmtN = n => { n = Math.round((+n || 0) * 100) / 100; return String(n); };
+const cnt = (n, one, two, few, many) => n === 1 ? one : n === 2 ? two : n >= 3 && n <= 10 ? `${n} ${few}` : `${n} ${many}`; /* العدد مع المعدود */
 const kb = n => n >= 1e6 ? (n / 1e6).toFixed(2) + ' ميقا' : Math.max(1, Math.round(n / 1000)) + ' كيلوبايت';
 const norm = s => String(s || '').toLowerCase().replace(/[ً-ٰٟـ]/g, '').replace(/[أإآٱ]/g, 'ا').replace(/ة/g, 'ه').replace(/ى/g, 'ي').replace(/ؤ/g, 'و').replace(/ئ/g, 'ي');
 const isImg = s => typeof s === 'string' && /^data:image\/(png|jpeg|webp|gif);base64,/.test(s);
@@ -573,7 +574,7 @@ TAB.menu = () => {
   const m = meta(), cs = cats(), ps = prods(), size = docSize();
   const offN = ps.filter(p => p.off).length;
   let h = `<div class="card"><div class="row"><div class="grow"><h2 style="margin:0">${esc(m.name || 'منيوي')}</h2>
-    <div class="stat"><span>${cs.length} أقسام</span><span>${ps.length} منتج</span>${offN ? `<span style="color:var(--bad)">${offN} خلص اليوم</span>` : ''}</div></div>
+    <div class="stat"><span>${cnt(cs.length, 'قسم واحد', 'قسمين', 'أقسام', 'قسم')}</span><span>${cnt(ps.length, 'منتج واحد', 'منتجين', 'منتجات', 'منتج')}</span>${offN ? `<span style="color:var(--bad)">${offN} خلص اليوم</span>` : ''}</div></div>
     ${isPub() ? `<span class="pill ok">${ico('check')}منشور</span>` : `<span class="pill warn">مسودة</span>`}</div>
     <div class="btns mt"><button class="btn sec sm" data-act="preview">${ico('eye')} شوفه كزبون</button>${(cs.length > 1 || ps.length > 1) ? `<button class="btn sec sm" data-act="sorting">${ico('sort')} ${S.sorting ? 'خلّصت الترتيب' : 'رتّب'}</button>` : ''}</div>
     ${!isPub() ? `<p class="small mt">المنيو محفوظ بجهازك بس. لما تخلص، انشره من تبويب «المشاركة» عشان تاخذ الرابط والكود.</p>` : ''}</div>`;
@@ -593,7 +594,7 @@ function catBlock(c, items, i, n) {
   const ctrl = c.id ? (S.sorting
     ? `<button class="ib sm" data-act="catUp" data-id="${c.id}" ${i === 0 ? 'disabled style="opacity:.35"' : ''} aria-label="فوق">${ico('up')}</button><button class="ib sm" data-act="catDown" data-id="${c.id}" ${i === n - 1 ? 'disabled style="opacity:.35"' : ''} aria-label="تحت">${ico('down')}</button>`
     : `<button class="ib sm" data-act="editCat" data-id="${c.id}" aria-label="عدّل القسم">${ico('edit')}</button>`) : '';
-  return `<section class="cat" data-cat="${esc(c.id)}"><div class="cat-h"><div class="t"><b>${esc(c.name)}</b><small>${items.length} منتج${c.en ? ' · <bdi>' + esc(c.en) + '</bdi>' : ''}</small></div>${ctrl}</div>
+  return `<section class="cat" data-cat="${esc(c.id)}"><div class="cat-h"><div class="t"><b>${esc(c.name)}</b><small>${cnt(items.length, 'منتج واحد', 'منتجين', 'منتجات', 'منتج')}${c.en ? ' · <bdi>' + esc(c.en) + '</bdi>' : ''}</small></div>${ctrl}</div>
     ${items.map((p, k) => itemRow(p, k, items.length)).join('')}
     ${c.id ? `<button class="addit" data-act="addItem" data-cat="${c.id}">${ico('plus')} أضف منتج</button>` : ''}</section>`;
 }
@@ -634,7 +635,7 @@ async function editCat(id) {
 }
 async function delCat(c) {
   const its = prods().filter(p => p.cat === c.id);
-  const ok = await confirmBox('حذف القسم', its.length ? `بينحذف قسم «${c.name}» ومعه ${its.length} منتج. متأكد؟` : `بينحذف قسم «${c.name}». متأكد؟`, 'احذف');
+  const ok = await confirmBox('حذف القسم', its.length ? `بينحذف قسم «${c.name}» ومعه ${cnt(its.length, 'منتج واحد', 'منتجين', 'منتجات', 'منتج')}. متأكد؟` : `بينحذف قسم «${c.name}». متأكد؟`, 'احذف');
   if (!ok) return;
   const backup = [c, ...its, ...its.filter(p => p.ph).map(p => S.store.item('p_' + p.id)).filter(Boolean)];
   for (const p of its) { S.store.del(p.id); if (p.ph) S.store.del('p_' + p.id); }
@@ -744,7 +745,7 @@ TAB.place = () => {
   <div class="card"><h2>${ico('phone')}التواصل</h2>
     ${f('wa', 'رقم الواتساب (تجيك عليه الطلبات)', '05xxxxxxxx', { ltr: 1, im: 'tel', max: 20, hint: 'اكتبه بصيغة 05xxxxxxxx أو مع مفتاح الدولة مثل 9665xxxxxxxx' })}
     ${f('phone', 'رقم الاتصال (اختياري)', '05xxxxxxxx', { ltr: 1, im: 'tel', max: 20 })}
-    ${f('ig', 'انستقرام', '@username', { ltr: 1, max: 100 })}${f('x', 'إكس (تويتر)', '@username', { ltr: 1, max: 100 })}
+    ${f('ig', 'إنستقرام', '@username', { ltr: 1, max: 100 })}${f('x', 'إكس (تويتر)', '@username', { ltr: 1, max: 100 })}
     ${f('tt', 'تيك توك', '@username', { ltr: 1, max: 100 })}${f('sc', 'سناب شات', 'username', { ltr: 1, max: 100 })}
     ${f('loc', 'رابط الموقع (قوقل ماب)', 'https://maps.app.goo.gl/…', { ltr: 1, max: 300 })}
     ${f('hours', 'أوقات الدوام', 'مثلاً: يومياً من 7 الصبح لين 12 الليل', { max: 120 })}
@@ -830,7 +831,7 @@ async function publish() {
     LS.set('tajarib.doc.' + r.id, JSON.stringify({ body, pending: { items: {}, meta: null }, rev: r.rev || 1, role: 'edit', kind: 'menu' }));
     const e = { id: r.id, edit: r.edit, view: r.view, name: m.name }; setMine([...mine().filter(x => x.id !== r.id), e]); LS.set('menu.cur', r.id); LS.del('menu.draft');
     openOwnerDoc(e); S.store.set('_vk', { type: 'vk', v: r.view }); S.tab = 'share'; LS.set('menu.tab', 'share'); render();
-    toast('انتشر المنيو ✓ اطبع الكود وحطه على الطاولات');
+    toast('المنيو صار منشور ✓ اطبع الكود وحطه على الطاولات');
   } catch (e) { toast(Tajarib.errorText(e)); if (btn) { btn.disabled = false; btn.textContent = 'انشر المنيو'; } }
 }
 
@@ -840,7 +841,7 @@ TAB.more = () => {
   const light = document.body.classList.contains('light');
   return `<div class="card"><h2>${ico(light ? 'sun' : 'moon')}المظهر</h2><div class="seg"><button data-act="setTheme" data-v="dark" class="${light ? '' : 'on'}">داكن</button><button data-act="setTheme" data-v="light" class="${light ? 'on' : ''}">فاتح</button></div></div>
   <div class="card"><h2>${ico('img')}حجم المنيو</h2><div class="meter ${size > SIZE_MAX ? 'bad' : size > SIZE_WARN ? 'warn' : ''}"><i style="width:${pct.toFixed(1)}%"></i></div>
-    <p class="small" id="sizeTxt">${kb(size)} من ${kb(SIZE_MAX)} · ${photos} صورة</p><p class="small">كل ما صغر الحجم، فتح المنيو أسرع عند الزبون.</p>
+    <p class="small" id="sizeTxt">${kb(size)} من ${kb(SIZE_MAX)} · ${photos ? cnt(photos, 'صورة وحدة', 'صورتين', 'صور', 'صورة') : 'بدون صور'}</p><p class="small">كل ما صغر الحجم، صار فتح المنيو أسرع عند الزبون.</p>
     ${photos ? `<button class="btn sec block mt" data-act="shrink">صغّر كل الصور أكثر</button>` : ''}</div>
   <div class="card"><h2>${ico('dl')}النسخ الاحتياطي</h2><p>صدّر نسخة من المنيو بالصور، واحفظها عندك. تقدر تستوردها بأي وقت.</p>
     <div class="btns mt"><button class="btn sec" data-act="export">${ico('dl')} صدّر نسخة</button><label class="btn sec filebtn">${ico('ul')} استورد نسخة<input type="file" accept="application/json,.json" data-chg="importFile"></label></div></div>
@@ -858,14 +859,14 @@ function exportBackup() {
 async function importBackup(file) {
   let data; try { data = JSON.parse(await file.text()); } catch (e) { return toast('الملف هذا مو نسخة صحيحة'); }
   if (!data || data.app !== 'menu' || typeof data.items !== 'object') return toast('الملف هذا مو نسخة من «منيو»');
-  if (S.mode === 'welcome') { J.set('menu.draft', { items: data.items, meta: data.meta || { name: 'منيوي' } }); LS.set('menu.cur', ''); openDraft(); return toast('انستوردت النسخة ✓'); }
+  if (S.mode === 'welcome') { J.set('menu.draft', { items: data.items, meta: data.meta || { name: 'منيوي' } }); LS.set('menu.cur', ''); openDraft(); return toast('استوردنا النسخة ✓'); }
   if (!await confirmBox('استيراد نسخة', 'بيتبدّل المنيو الحالي بالنسخة اللي اخترتها. أكمل؟', 'استبدل', false)) return;
   toast('جاري الاستيراد…');
   const keep = new Set(Object.keys(data.items));
   for (const it of S.store.items()) if (it.id !== '_vk' && !keep.has(it.id)) S.store.del(it.id);
   for (const [id, it] of Object.entries(data.items)) { if (id === '_vk' || !it || it.del) continue; S.store.set(id, it); }
   if (data.meta) { const m = { ...data.meta }; delete m.u; S.store.setMeta(m); }
-  toast('انستوردت النسخة ✓');
+  toast('استوردنا النسخة ✓');
 }
 async function shrinkAll() {
   const ps = S.store.items().filter(x => x.type === 'photo' && isImg(x.d)); let saved = 0;
@@ -1120,7 +1121,7 @@ const ACT = {
   export: () => exportBackup(), shrink: () => shrinkAll(),
   switch: el => { const id = el.dataset.id; LS.set('menu.cur', id); S.tab = 'menu'; if (!id) return openDraft(); const m = mine().find(x => x.id === id); if (m) openOwnerDoc(m); },
   newMenu: async () => {
-    if (LS.get('menu.draft') && !isPub()) return toast('أنت فاتح مسودة الحين. انشرها أو احذفها قبل تبدأ منيو جديد');
+    if (LS.get('menu.draft') && !isPub()) return toast('أنت فاتح مسودة الحين. انشرها أو احذفها قبل ما تبدأ منيو جديد');
     if (LS.get('menu.draft')) return toast('عندك مسودة بهالجهاز، افتحها من «المنيوات بهالجهاز»');
     stopStore(); LS.set('menu.cur', ''); S.docId = null; S.mode = 'welcome'; render();
   },

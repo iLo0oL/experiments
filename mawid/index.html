@@ -288,6 +288,7 @@ const J = { get(k, d) { try { const v = JSON.parse(LS.get(k)); return v == null 
 const latin = s => String(s == null ? '' : s).replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d)).replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d));
 const num = v => { const s = latin(v).replace('٫', '.').replace(/,/g, '.').replace(/[^\d.]/g, ''); if (!s) return null; const n = parseFloat(s); return isFinite(n) ? Math.round(n * 100) / 100 : null; };
 const fmtN = n => String(Math.round((+n || 0) * 100) / 100);
+const cnt = (n, one, two, few, many) => n === 1 ? one : n === 2 ? two : n >= 3 && n <= 10 ? `${n} ${few}` : `${n} ${many}`; /* العدد مع المعدود */
 const pad = n => String(n).padStart(2, '0');
 const isImg = s => typeof s === 'string' && /^data:image\/(png|jpeg|webp|gif);base64,/.test(s);
 const safeUrl = u => { u = String(u || '').trim(); if (!u) return ''; if (/^https?:\/\//i.test(u)) return u; if (/^[\w-]+(\.[\w-]+)+(\/|$)/.test(u)) return 'https://' + u; return ''; };
@@ -331,9 +332,9 @@ function fmtDay(date, long) {
 }
 const fmtAt = ms => { const p = parts(ms, TZ()); return { day: fmtDay(p.date), time: fmtMin(p.min), date: p.date, min: p.min }; };
 function fmtDur(m) {
-  m = +m || 0; if (m < 60) return `${m} دقيقة`;
+  m = +m || 0; if (m < 60) return m >= 3 && m <= 10 ? `${m} دقائق` : `${m} دقيقة`;
   const h = Math.floor(m / 60), r = m % 60; const hs = h === 1 ? 'ساعة' : h === 2 ? 'ساعتين' : h <= 10 ? `${h} ساعات` : `${h} ساعة`;
-  return hs + (r === 0 ? '' : r === 30 ? ' ونص' : r === 15 ? ' وربع' : ` و${r} دقيقة`);
+  return hs + (r === 0 ? '' : r === 30 ? ' ونص' : r === 15 ? ' وربع' : (r >= 3 && r <= 10 ? ` و${r} دقائق` : ` و${r} دقيقة`));
 }
 const DURS = [10, 15, 20, 30, 45, 60, 75, 90, 120, 150, 180, 240, 300, 360, 480];
 const TIMES = Array.from({ length: 97 }, (_, i) => i * 15);
@@ -683,7 +684,7 @@ TAB.book = () => {
   for (const b of list) {
     if (S.seg !== 'today' && b.at.date !== lastDay) {
       lastDay = b.at.date; const dl = live(list.filter(x => x.at.date === lastDay)); const inc = dl.filter(x => x.status !== 'noshow').reduce((a, x) => a + (+svc(x.service).price || 0), 0);
-      h += `<div class="dayhead"><b>${esc(b.at.day)}</b><span>${dl.length} حجز${inc ? ' · ' + fmtN(inc) + ' ' + esc(m.cur || 'ر.س') : ''}</span></div>`;
+      h += `<div class="dayhead"><b>${esc(b.at.day)}</b><span>${cnt(dl.length, 'حجز واحد', 'حجزين', 'حجوزات', 'حجز')}${inc ? ' · ' + fmtN(inc) + ' ' + esc(m.cur || 'ر.س') : ''}</span></div>`;
     }
     h += bkCard(b, svc(b.service));
   }
@@ -739,7 +740,7 @@ TAB.svc = () => {
   return `<div class="card"><h2>${ico('scissors')}الخدمات</h2>${list.length ? list.map((s, i) => `<div class="svc" data-act="editSvc" data-id="${s.id}"><div class="ic">${ico('scissors')}</div><div class="grow"><b>${esc(s.name)}</b><div class="muted small">${fmtDur(s.dur)}${s.price != null && s.price !== '' ? ' · ' + money(s.price) : ''}</div></div>
     <button class="ib sm" data-act="svcUp" data-id="${s.id}" ${i === 0 ? 'disabled style="opacity:.3"' : ''} aria-label="فوق">${ico('up')}</button></div>`).join('') : `<div class="empty"><div class="big">✂️</div>ما فيه خدمات. أضف خدمة عشان الزبائن يقدرون يحجزون.</div>`}
     <button class="btn block mt" data-act="editSvc" data-id="">${ico('plus')} أضف خدمة</button></div>
-    <p class="small muted" style="padding:0 6px">تعديل مدة الخدمة ما يأثر على الحجوزات اللي قبل.</p>`;
+    <p class="small muted" style="padding:0 6px">تعديل مدة الخدمة ما يؤثّر على الحجوزات اللي قبل.</p>`;
 };
 async function editSvc(id) {
   const s = id ? S.store.item(id) : null;
@@ -763,7 +764,7 @@ async function editSvc(id) {
 TAB.hours = () => {
   const m = meta(), r = rules(), off = (m.off || []).filter(d => d >= todayStr()).sort();
   const sel = (id, vals, cur, f) => `<select class="inp" data-rule="${id}">${vals.map(v => `<option value="${v}" ${+cur === v ? 'selected' : ''}>${f(v)}</option>`).join('')}</select>`;
-  const nf = v => v === 0 ? 'بدون' : v < 60 ? `قبلها بـ${v} دقيقة` : v === 60 ? 'قبلها بساعة' : v === 120 ? 'قبلها بساعتين' : v === 1440 ? 'قبلها بيوم' : v === 2880 ? 'قبلها بيومين' : `قبلها بـ${v / 60} ساعات`;
+  const nf = v => v === 0 ? 'بدون' : v < 60 ? `قبلها بـ${v} دقيقة` : v === 60 ? 'قبلها بساعة' : v === 120 ? 'قبلها بساعتين' : v === 1440 ? 'قبلها بيوم' : v === 2880 ? 'قبلها بيومين' : `قبلها بـ${v / 60} ${v / 60 <= 10 ? 'ساعات' : 'ساعة'}`;
   return `<div class="card"><div class="swrow"><div class="grow"><b>${ico('pause').replace('<svg', '<svg style="width:18px;height:18px;vertical-align:-3px;color:var(--bad)"')} أوقف الحجز مؤقتاً</b><span class="muted small">الصفحة تبقى، بس ما أحد يقدر يحجز لين ترجعه</span></div><label class="sw red"><input type="checkbox" data-chg="closed" ${m.closed ? 'checked' : ''}><i></i></label></div>
     ${m.closed ? `<label class="field mt"><span>رسالة للزبائن (اختياري)</span><input class="inp" data-m="closedMsg" maxlength="140" value="${esc(m.closedMsg || '')}" placeholder="مثلاً: مسافرين ونرجع 20 نوفمبر"></label>` : ''}</div>
   <div class="card"><h2>${ico('clock')}أوقات الدوام</h2><div id="hoursEd">${hoursEditor(m.hours || {})}</div></div>
@@ -775,7 +776,7 @@ TAB.hours = () => {
     <label class="field"><span>الأوقات تبدأ كل</span>${sel('step', [10, 15, 20, 30, 45, 60], r.step, fmtDur)}</label>
     <label class="field"><span>استراحة بين كل موعد والثاني</span>${sel('buffer', [0, 5, 10, 15, 20, 30], r.buffer, v => v ? fmtDur(v) : 'بدون')}</label>
     <label class="field"><span>أقل وقت قبل الموعد</span>${sel('notice', [0, 15, 30, 60, 120, 180, 360, 720, 1440, 2880], r.notice, nf)}<div class="hint">مثلاً «قبلها بساعة» يعني ما أحد يحجز موعد بعد أقل من ساعة.</div></label>
-    <label class="field"><span>كم يوم قدام يقدر الزبون يحجز</span>${sel('ahead', [7, 14, 21, 30, 45, 60, 90, 120], r.ahead, v => `${v} يوم`)}</label></div>`;
+    <label class="field"><span>كم يوم قدام يقدر الزبون يحجز</span>${sel('ahead', [7, 14, 21, 30, 45, 60, 90, 120], r.ahead, v => v <= 10 ? `${v} أيام` : `${v} يوم`)}</label></div>`;
 };
 TAB.share = () => {
   if (!isPub()) {
@@ -787,7 +788,7 @@ TAB.share = () => {
   const link = viewLink();
   return `<div class="card"><h2>${ico('link')}رابط الحجز لزبائنك</h2><div class="linkbox" id="viewLink">${esc(link)}</div>
     <div class="btns"><button class="btn sm" data-act="copyView">${ico('copy')} انسخ</button><button class="btn wa sm" data-act="waShare">${ico('wa')} شارك بالواتساب</button><button class="btn sec sm" data-act="shareView">${ico('share')} شارك</button><a class="btn sec sm" href="${esc(link)}" target="_blank" rel="noopener">${ico('ext')} افتح</a></div>
-    <p class="small mt">حطه بالبايو في انستقرام وسناب، أو أرسله لزبائنك.</p></div>
+    <p class="small mt">حطه بالبايو في إنستقرام وسناب، أو أرسله لزبائنك.</p></div>
   <div class="card"><h2>${ico('qr')}كود QR</h2><p class="mb">اطبعه وحطه عند الكاشير أو على الباب.</p><div class="cardprev" id="cardPrev"><div class="spin"></div></div>
     <div class="field mt"><span>الطباعة</span><div class="seg" id="perPage"><button data-act="perPage" data-v="1" class="${S.perPage !== 4 ? 'on' : ''}">بطاقة وحدة</button><button data-act="perPage" data-v="4" class="${S.perPage === 4 ? 'on' : ''}">4 بطاقات بالصفحة</button></div></div>
     <div class="btns"><button class="btn" data-act="print">${ico('print')} اطبع البطاقة</button><button class="btn sec" data-act="dlQR">${ico('dl')} حمّل الكود</button></div></div>
@@ -811,7 +812,7 @@ TAB.set = () => {
     ${f('wa', 'رقم الواتساب', '05xxxxxxxx', { ltr: 1, im: 'tel', max: 20, hint: 'يوصلك عليه الزبون، ويطلع زر واتساب بالصفحة' })}
     ${f('phone', 'رقم الاتصال (اختياري)', '05xxxxxxxx', { ltr: 1, im: 'tel', max: 20 })}
     ${f('loc', 'رابط الموقع (اختياري)', 'https://maps.app.goo.gl/…', { ltr: 1, max: 300 })}
-    <label class="field"><span>ملاحظة تطلع للزبون قبل يأكّد (اختياري)</span><textarea class="inp" data-m="note" maxlength="300" placeholder="مثلاً: الرجاء الحضور قبل الموعد بـ5 دقايق">${esc(m.note || '')}</textarea></label>
+    <label class="field"><span>ملاحظة تطلع للزبون قبل ما يؤكّد (اختياري)</span><textarea class="inp" data-m="note" maxlength="300" placeholder="مثلاً: الرجاء الحضور قبل الموعد بـ5 دقايق">${esc(m.note || '')}</textarea></label>
     <div class="two">${f('cur', 'العملة', 'ر.س', { max: 8 })}<div></div></div></div>
   <div class="card"><h2>${ico('eye')}شكل صفحة الحجز</h2>
     <div class="field"><span>اللون</span><div class="chips" id="accs">${ACCENTS.map(a => `<button class="chip ${a === acc ? 'on' : ''}" data-act="accent" data-v="${a}" style="width:36px;height:36px;padding:0;border-radius:50%;background:${a};border:3px solid ${a === acc ? 'var(--text)' : 'transparent'}" aria-label="لون"></button>`).join('')}</div></div>
@@ -852,7 +853,7 @@ async function publish() {
     LS.set('tajarib.doc.' + r.id, JSON.stringify({ body, pending: { items: {}, meta: null }, rev: r.rev || 1, role: 'edit', kind: 'mawid' }));
     const e = { id: r.id, edit: r.edit, view: r.view, name: m.name }; setMine([...mine().filter(x => x.id !== r.id), e]); LS.set('mawid.cur', r.id); LS.del('mawid.draft');
     S.tab = 'share'; LS.set('mawid.tab', 'share'); openOwnerDoc(e); S.store.set('_vk', { type: 'vk', v: r.view });
-    toast('انتشرت صفحة الحجز ✓ شارك الرابط مع زبائنك');
+    toast('صفحة الحجز صارت منشورة ✓ شارك الرابط مع زبائنك');
   } catch (e) { toast(Tajarib.errorText(e)); if (btn) { btn.disabled = false; btn.textContent = 'انشر صفحة الحجز'; } }
 }
 async function exportBackup() {
@@ -864,13 +865,13 @@ async function exportBackup() {
 async function importBackup(file) {
   let data; try { data = JSON.parse(await file.text()); } catch (e) { return toast('الملف هذا مو نسخة صحيحة'); }
   if (!data || data.app !== 'mawid' || typeof data.items !== 'object') return toast('الملف هذا مو نسخة من «موعد»');
-  if (S.mode === 'welcome') { J.set('mawid.draft', { items: data.items, meta: data.meta || { name: 'محلي' } }); LS.set('mawid.cur', ''); S.tab = 'svc'; openDraft(); return toast('انستوردت النسخة ✓'); }
+  if (S.mode === 'welcome') { J.set('mawid.draft', { items: data.items, meta: data.meta || { name: 'محلي' } }); LS.set('mawid.cur', ''); S.tab = 'svc'; openDraft(); return toast('استوردنا النسخة ✓'); }
   if (!await confirmBox('استيراد نسخة', 'بتتبدّل الخدمات والدوام والإعدادات بالنسخة اللي اخترتها (الحجوزات ما تتأثر). أكمل؟', 'استبدل', false)) return;
   const keep = new Set(Object.keys(data.items));
   for (const it of S.store.items()) if (it.id !== '_vk' && !keep.has(it.id)) S.store.del(it.id);
   for (const [id, it] of Object.entries(data.items)) { if (id === '_vk' || !it || it.del) continue; S.store.set(id, it); }
   if (data.meta) { const m = { ...data.meta }; delete m.u; S.store.setMeta(m); }
-  toast('انستوردت النسخة ✓');
+  toast('استوردنا النسخة ✓');
 }
 
 /* ================= صفحة الزبون ================= */
@@ -945,9 +946,9 @@ function stepTime() {
   const sv = S.c.sid && S.store.item(S.c.sid);
   if (!sv || !S.c.date || (isPub() && !S.busyAt && !S.busyErr)) return `<section class="step dim" id="st3"><h2><span class="n">3</span>اختر الوقت</h2><p class="muted small">اختر اليوم أول</p></section>`;
   const sl = daySlots(S.c.date, +sv.dur, S.busy); if (S.c.slot && !sl.some(x => x.s === S.c.slot)) S.c.slot = null;
-  const am = sl.filter(x => x.t < 720), pm = sl.filter(x => x.t >= 720);
+  const am = sl.filter(x => x.t < 720), mid = sl.filter(x => x.t >= 720 && x.t < 1080), pm = sl.filter(x => x.t >= 1080);
   const grp = (list, label, icon) => list.length ? `<div class="slg">${ico(icon)}${label}</div><div class="slots">${list.map(x => `<button class="sl ${S.c.slot === x.s ? 'on' : ''}" data-act="cSlot" data-s="${x.s}">${fmtMin(x.t)}</button>`).join('')}</div>` : '';
-  return `<section class="step" id="st3"><h2><span class="n">3</span>اختر الوقت <span class="muted small" style="font-weight:500">· ${esc(fmtDay(S.c.date))}</span></h2>${sl.length ? grp(am, 'الصبح', 'sun') + grp(pm, 'العصر والمسا', 'moon') : '<p class="muted">ما فيه أوقات فاضية بهاليوم.</p>'}</section>`;
+  return `<section class="step" id="st3"><h2><span class="n">3</span>اختر الوقت <span class="muted small" style="font-weight:500">· ${esc(fmtDay(S.c.date))}</span></h2>${sl.length ? grp(am, 'الصبح', 'sun') + grp(mid, 'الظهر والعصر', 'sun') + grp(pm, 'المسا', 'moon') : '<p class="muted">ما فيه أوقات فاضية بهاليوم.</p>'}</section>`;
 }
 function stepForm() {
   const c = S.c, ready = c.sid && c.date && c.slot, m = meta();
@@ -1018,7 +1019,7 @@ async function cBook() {
     S.c = { name: c.name, phone: ph, done: rec }; S.busy.push([r.start, r.end]); renderCustomer(); refreshBusy();
   } catch (e) {
     fail(Tajarib.errorText(e)); btn.disabled = false; btn.innerHTML = `${ico('check')} أكّد الحجز`;
-    if (e.code === 'taken' || e.code === 'outside' || e.code === 'bad_time') { c.slot = null; await refreshBusy(); const er = $('#cErr'); if (er) { er.textContent = Tajarib.errorText(e); er.classList.remove('hide'); } }
+    if (e.code === 'taken' || e.code === 'outside' || e.code === 'bad_time' || e.code === 'too_soon') { c.slot = null; await refreshBusy(); const er = $('#cErr'); if (er) { er.textContent = Tajarib.errorText(e); er.classList.remove('hide'); } }
   }
 }
 async function cCancel(id) {

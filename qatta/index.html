@@ -1024,7 +1024,7 @@ async function onGroupSettingsClick(e, r, el) {
   else if (act === 'archive') {
     r.archived = !r.archived; saveRefs(); const now = r.archived;
     await closeSheet(); if (now) goHome(); else scheduleRender();
-    toast(now ? 'انأرشفت القطّة' : 'رجعت القطّة للقائمة', { fn: () => { r.archived = !now; saveRefs(); scheduleRender(); } });
+    toast(now ? 'انتقلت القطّة للأرشيف' : 'رجعت القطّة للقائمة', { fn: () => { r.archived = !now; saveRefs(); scheduleRender(); } });
   }
   else if (act === 'removeGroup') { await closeSheet(); removeGroup(r); }
 }
