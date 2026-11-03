@@ -617,8 +617,11 @@ function relation(aId, bId, you) {
 
 /* ---------- تخطيط الشجرة (tidy tree بالحدود) ---------- */
 const PW = 124, SW = 96, SG = 6, NH = 60, VG = 54, HG = 18, PAD = 60;
+/* الأب «له نسب» إذا أبوه مسجّل بالشجرة. عيال البنت اللي أبوهم من برّا العائلة (أو مو مسجّل) يطلعون تحتها */
+const hasLine = id => { const f = S.P.get(id); return !!(f && f.fa && S.P.has(f.fa)); };
+const viaMother = k => { if (!S.P.has(k.mo)) return false; if (!S.P.has(k.fa)) return true; return !S.dtr && !hasLine(k.fa) && hasLine(k.mo); };
 function treeKids(p, isRoot) {
-  if (p.g === 'f') return (S.dtr || isRoot) ? (S.kidsM.get(p.id) || []) : [];
+  if (p.g === 'f') { const ks = S.kidsM.get(p.id) || []; return (S.dtr || isRoot) ? ks : ks.filter(viaMother); }
   return S.kidsF.get(p.id) || [];
 }
 function hiddenCount(p, isRoot) { const seen = new Set([p.id]); let n = 0; const st = [[p, isRoot]]; while (st.length) { const [x, r] = st.pop(); for (const k of treeKids(x, r)) if (!seen.has(k.id)) { seen.add(k.id); n++; st.push([k, false]); } } return n; }
@@ -644,8 +647,10 @@ function computeLayout(root) {
     /* الشجرة كاملة: كل عائلة لحالها جنب الثانية، وأي شخص ما له مكان يطلع لحاله */
     R = { p: null, virtual: true, depth: -1, sps: [], kids: [], le: 0, re: 0, spw: 0 };
     const tops = [...S.P.values()].filter(p => !(p.fa && S.P.has(p.fa)));
-    const men = tops.filter(p => p.g !== 'f').map(p => ({ p, c: hiddenCount(p, false) })).sort((a, b) => b.c - a.c || (+a.p.by || 1e9) - (+b.p.by || 1e9)).map(x => x.p);
-    for (const p of men) if (!seen.has(p.id)) R.kids.push(build(p, 0, true));
+    /* الأنساب أول، وبعدها اللي متزوجين من العائلة وهم من برّا (عشان عيالهم يطلعون تحت أمهم) */
+    const inlaw = p => spousesOf(p.id).some(w => hasLine(w.id));
+    const men = tops.filter(p => p.g !== 'f').map(p => ({ p, c: hiddenCount(p, false), l: inlaw(p) ? 1 : 0 })).sort((a, b) => a.l - b.l || b.c - a.c || (+a.p.by || 1e9) - (+b.p.by || 1e9)).map(x => x.p);
+    for (const p of men) if (!seen.has(p.id) && !(spSeen.has(p.id) && treeKids(p, true).every(k => seen.has(k.id)))) R.kids.push(build(p, 0, true));
     for (const p of tops) if (p.g === 'f' && !seen.has(p.id) && !spSeen.has(p.id)) R.kids.push(build(p, 0, true));
     for (const p of S.P.values()) if (!seen.has(p.id) && !spSeen.has(p.id)) R.kids.push(build(p, 0, true));
     if (!R.kids.length) return null;
@@ -799,7 +804,7 @@ function revealInTree(id) {
   let target = id;
   if (p.g === 'f' && !(p.fa && S.P.has(p.fa))) { const h = spousesOf(id)[0]; if (h) target = h.id; }
   const chain = [], seen = new Set(); let c = S.P.get(target);
-  while (c && !seen.has(c.id)) { seen.add(c.id); chain.push(c.id); let up = S.P.get(c.fa); if (!up && S.dtr && c.mo) up = S.P.get(c.mo); c = up; }
+  while (c && !seen.has(c.id)) { seen.add(c.id); chain.push(c.id); let up = viaMother(c) ? S.P.get(c.mo) : S.P.get(c.fa); if (!up && S.dtr && c.mo) up = S.P.get(c.mo); c = up; }
   const root = getRoot();
   for (const x of chain.slice(1)) S.col.delete(x);
   if (root && root.all) { saveDev(); renderTree(); if (S.lay && S.lay.pos.has(target)) { requestAnimationFrame(() => centerOn(target)); return; } }
@@ -1512,7 +1517,7 @@ function renderMore() {
   </div>
   <div class="card"><h3>⚙️ العرض</h3>
     <div class="set"><div class="l">الاسم الكامل<small>كم اسم يطلع بالنسب: «فلان بن فلان…»</small></div><div class="stepper"><button class="ib" id="gMinus" aria-label="أقل">−</button><b id="gVal">${S.gens}</b><button class="ib" id="gPlus" aria-label="أكثر">+</button></div></div>
-    <div class="set"><div class="l">ذرية البنات بالشجرة<small>الشجرة أصلًا بالنسب للأب، فعّلها لو تبي تشوف عيال البنات</small></div><button class="sw ${S.dtr ? 'on' : ''}" id="dtrSw" aria-label="ذرية البنات"></button></div>
+    <div class="set"><div class="l">ذرية البنات بالشجرة<small>الشجرة أصلًا بالنسب للأب. عيال البنات اللي أبوهم من برّا العائلة يطلعون تحت أمهم على طول، وهذا الخيار يطلّع كل عيال البنات</small></div><button class="sw ${S.dtr ? 'on' : ''}" id="dtrSw" aria-label="ذرية البنات"></button></div>
     <div class="set"><div class="l">الوضع الفاتح</div><button class="sw ${document.body.classList.contains('light') ? 'on' : ''}" id="lightSw" aria-label="الوضع الفاتح"></button></div>
   </div>
   <div class="card"><h3>📤 تصدير</h3><p class="d">صورة للشجرة الظاهرة، أو طباعة وPDF، أو نسخة احتياطية تحفظها عندك.</p>
