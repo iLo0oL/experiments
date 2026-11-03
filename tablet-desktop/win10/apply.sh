@@ -170,6 +170,11 @@ if get "${WINXP_ICONS_SRC:-$XP_ICONS_URL}" "$ICONS/Windows-XP"; then
   grep -q '^Inherits=' "$ICONS/Windows-XP/index.theme" 2>/dev/null \
     || sed -i 's/^\[Icon Theme\]$/[Icon Theme]\nInherits=Adwaita,hicolor/' "$ICONS/Windows-XP/index.theme"
   rtl_arrows "$ICONS/Windows-XP"
+  # the language icon is called "locale" in this pack
+  while IFS= read -r f; do
+    t="$(dirname "$f")/preferences-desktop-locale.${f##*.}"
+    [ -e "$t" ] || ln -s "$(basename "$f")" "$t"
+  done < <(find "$ICONS/Windows-XP" -name 'locale.*')
   command -v gtk-update-icon-cache >/dev/null 2>&1 && gtk-update-icon-cache -q -f "$ICONS/Windows-XP" 2>/dev/null
   ok "Windows XP icons"
 else
@@ -583,18 +588,48 @@ xfconf-query -c xfwm4 -p /general/button_layout -s "$layout" 2>/dev/null \
 xfconf-query -c xfwm4 -p /general/title_alignment -s "$align" 2>/dev/null \
   || xfconf-query -c xfwm4 -p /general/title_alignment -n -t string -s "$align"
 xfconf-query -c xsettings -p /Gtk/CursorThemeSize -n -t int -s $((24 * scale)) 2>/dev/null
-# Arabic Windows: Start button on the right, clock on the left, menu mirrored
-case "${LANG:-}" in
-  ar*) order="9 8 7 6 5 4 3 2 1"; menu_alt=true ;;
-  *)   order="1 2 3 4 5 6 7 8 9"; menu_alt=false ;;
+ids() { xfconf-query -c xfce4-panel -p /panels/panel-1/plugin-ids 2>/dev/null | grep -E '^[0-9]+$' | tr '\n' ' ' | sed 's/ $//'; }
+restart_panel=0
+# Weather next to the clock (plugin 8), added once. Remove it like any other
+# taskbar item (right click > Remove) and it stays removed.
+wmark="$HOME/.config/xfce4/.weather-v1"
+if [ ! -f "$wmark" ] && [ -f /usr/share/xfce4/panel/plugins/weather.desktop ]; then
+  now="$(ids)"
+  if [ -n "$now" ] && [ "$(xfconf-query -c xfce4-panel -p /plugins/plugin-8 2>/dev/null)" = clock ] \
+     && ! xfconf-query -c xfce4-panel -p /plugins/plugin-10 >/dev/null 2>&1; then
+    xfconf-query -c xfce4-panel -p /plugins/plugin-10 -n -t string -s weather
+    args=()
+    for id in $now; do  # before the clock in English, after it in Arabic (mirrored)
+      case "${LANG:-}" in
+        ar*) args+=(-t int -s "$id"); [ "$id" = 8 ] && args+=(-t int -s 10) ;;
+        *)   [ "$id" = 8 ] && args+=(-t int -s 10); args+=(-t int -s "$id") ;;
+      esac
+    done
+    xfconf-query -c xfce4-panel -p /panels/panel-1/plugin-ids "${args[@]}"
+    restart_panel=1
+  fi
+  touch "$wmark"
+fi
+# Arabic Windows: Start button on the right, clock on the left, menu mirrored.
+# Only for the taskbar as set up here (with or without the weather), so a
+# taskbar the user rearranged is left alone.
+now="$(ids)"
+case "$(echo "$now" | tr ' ' '\n' | sort -n | tr '\n' ' ' | sed 's/ $//')" in
+  "1 2 3 4 5 6 7 8 9")    ltr="1 2 3 4 5 6 7 8 9" ;;
+  "1 2 3 4 5 6 7 8 9 10") ltr="1 2 3 4 5 6 7 10 8 9" ;;
+  *)                      ltr="" ;;
 esac
-now="$(xfconf-query -c xfce4-panel -p /panels/panel-1/plugin-ids 2>/dev/null | grep -E '^[0-9]+$' | tr '\n' ' ' | sed 's/ $//')"
-if [ -n "$now" ] && [ "$now" != "$order" ] && [ "$(echo "$now" | wc -w)" = 9 ]; then
+case "${LANG:-}" in
+  ar*) order="$(echo "$ltr" | tr ' ' '\n' | tac | tr '\n' ' ' | sed 's/ $//')"; menu_alt=true ;;
+  *)   order="$ltr"; menu_alt=false ;;
+esac
+if [ -n "$order" ] && [ "$now" != "$order" ]; then
   args=(); for id in $order; do args+=(-t int -s "$id"); done
   xfconf-query -c xfce4-panel -p /panels/panel-1/plugin-ids "${args[@]}"
   xfconf-query -c xfce4-panel -p /plugins/plugin-1/position-categories-alternate -n -t bool -s "$menu_alt"
-  xfce4-panel -r >/dev/null 2>&1 &
+  restart_panel=1
 fi
+[ "$restart_panel" = 1 ] && { xfce4-panel -r >/dev/null 2>&1 & }
 # wallpaper (only the first time, so your own choice is kept later)
 wall="$HOME/.local/share/backgrounds/win10.jpg"
 mark="$HOME/.config/xfce4/.win10-wallpaper-set"
@@ -627,6 +662,8 @@ if xfconf-query -c xfce4-keyboard-shortcuts -p /commands/custom/override >/dev/n
   sc '/commands/custom/Super_L'              xfce4-popup-whiskermenu # Windows key -> Start menu
   sc '/commands/custom/<Super>e'             thunar                  # Win+E -> File Explorer
   sc '/xfwm4/custom/<Super>d'                show_desktop_key        # Win+D -> show desktop
+  sc '/commands/custom/Print'                "$HOME/.local/bin/screenshot-full" # PrtSc -> save the screen
+  sc '/commands/custom/<Shift><Super>s'      'xfce4-screenshooter -r -c' # Win+Shift+S -> cut a part, copy it
 fi
 # Once (a marker remembers it, so icons the user deletes or moves stay that
 # way): desktop icons like Windows, and the web apps and the on-screen
@@ -676,6 +713,8 @@ snd="$HOME/.local/share/sounds/tablet-startup.oga"
 if [ -f "$snd" ] && [ ! -f "$HOME/.config/xfce4/.no-startup-sound" ] && command -v paplay >/dev/null 2>&1; then
   paplay "$snd" >/dev/null 2>&1 &
 fi
+# Backup reminder (does nothing until it is turned on in the Start menu)
+[ -x "$HOME/.local/bin/backup-reminder" ] && { nohup "$HOME/.local/bin/backup-reminder" --watch >/dev/null 2>&1 & }
 # Alt+Shift switches the keyboard between English and Arabic
 command -v setxkbmap >/dev/null 2>&1 && setxkbmap -layout us,ara -option grp:alt_shift_toggle 2>/dev/null
 exit 0
@@ -748,5 +787,77 @@ Categories=Settings;DesktopSettings;
 EOF
 done
 ok "Look switcher (Start menu > Settings, or: desktop-theme xp|7|10)"
+
+# ---------- welcome screen while the desktop starts ----------
+if asset desktop-splash.py "$BIN/desktop-splash"; then chmod +x "$BIN/desktop-splash"; ok "Welcome screen"
+else fail "Welcome screen"; fi
+
+# ---------- PrtSc: save the whole screen to Pictures > Screenshots ----------
+cat > "$BIN/screenshot-full" <<'EOF'
+#!/usr/bin/env bash
+# PrtSc: save the whole screen to Pictures > Screenshots (like Win+PrtSc in Windows)
+pics="$HOME/Pictures"
+[ -f "$HOME/.config/user-dirs.dirs" ] && pics="$(. "$HOME/.config/user-dirs.dirs"; echo "${XDG_PICTURES_DIR:-$HOME/Pictures}")"
+case "${LANG:-}" in
+  ar*) dir="$pics/لقطات الشاشة"; name="لقطة شاشة"; title="تم حفظ لقطة الشاشة"; where="في: الصور ← لقطات الشاشة" ;;
+  *)   dir="$pics/Screenshots";  name="Screenshot";  title="Screenshot saved";      where="In: Pictures > Screenshots" ;;
+esac
+mkdir -p "$dir"
+# a whole file name, so it saves right away instead of asking where
+f="$dir/$name $(date +%Y-%m-%d_%H-%M-%S).png"
+xfce4-screenshooter -f -s "$f" && [ -f "$f" ] && notify-send -i applets-screenshooter "$title" "$where"
+EOF
+chmod +x "$BIN/screenshot-full"
+ok "PrtSc saves a screenshot, Win+Shift+S cuts a part of the screen"
+
+# ---------- language from the Start menu ----------
+cat > "$BIN/desktop-language" <<'EOF'
+#!/usr/bin/env bash
+# Choose the language of the computer:   desktop-language ar | en
+# It is used from the next start (the Computer button restarts the computer).
+case "${1:-}" in ar|en) ;; *) echo "Usage: desktop-language ar|en"; exit 1 ;; esac
+mkdir -p "$HOME/.config/xfce4" && echo "$1" > "$HOME/.config/xfce4/.desktop-lang"
+case "${LANG:-}" in
+  ar*) [ "$1" = ar ] && l="العربية" || l="الإنجليزية"
+       notify-send -i preferences-desktop-locale "اللغة: $l" "تتغيّر بعد إعادة تشغيل الكمبيوتر: اضغط زر Computer في التابلت." ;;
+  *)   [ "$1" = ar ] && l="Arabic" || l="English"
+       notify-send -i preferences-desktop-locale "Language: $l" "It changes after a restart: tap the Computer button on the tablet." ;;
+esac
+EOF
+chmod +x "$BIN/desktop-language"
+for l in ar en; do
+  if [ "$l" = ar ]; then en="Arabic (عربي)"; ar="اللغة العربية"; else en="English"; ar="اللغة الإنجليزية (English)"; fi
+  cat > "$APPS/desktop-language-$l.desktop" <<EOF
+[Desktop Entry]
+Type=Application
+Name=$en
+Name[ar]=$ar
+Comment=Language of the computer
+Comment[ar]=لغة الكمبيوتر
+Exec=$BIN/desktop-language $l
+Icon=preferences-desktop-locale
+Categories=Settings;DesktopSettings;
+EOF
+done
+ok "Language buttons in the Start menu"
+
+# ---------- backup reminder (off until turned on) ----------
+if asset backup-reminder "$BIN/backup-reminder" && asset backup-reminder-settings.py "$BIN/backup-reminder-settings"; then
+  chmod +x "$BIN/backup-reminder" "$BIN/backup-reminder-settings"
+  cat > "$APPS/backup-reminder-settings.desktop" <<EOF
+[Desktop Entry]
+Type=Application
+Name=Backup reminder
+Name[ar]=تذكير النسخة الاحتياطية
+Comment=Choose if and when to be reminded to back up the computer
+Comment[ar]=اختر إذا تبي تذكيرًا بالنسخة الاحتياطية، وكم مرة، وفي أي ساعة
+Exec=$BIN/backup-reminder-settings
+Icon=document-save
+Categories=Settings;DesktopSettings;
+EOF
+  ok "Backup reminder (off until you turn it on in the Start menu)"
+else
+  fail "Backup reminder"
+fi
 
 echo "Done. Restart the desktop to see it: desktop-stop, then desktop"

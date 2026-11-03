@@ -29,6 +29,7 @@ SAVED_SCALE=2; SAVED_LANG=ar; SAVED_GPU=0
 scale="${DESKTOP_SCALE:-$SAVED_SCALE}"
 case "$scale" in 1|2|3|4) ;; *) scale=2 ;; esac
 case "${DESKTOP_LANG:-$SAVED_LANG}" in en*) lang=en_US.UTF-8 ;; *) lang=ar_SA.UTF-8 ;; esac
+lang_set=""; [ -n "${DESKTOP_LANG:-}" ] && lang_set=1
 # Same clock as the tablet: turn the UTC offset (+0300) into a POSIX TZ (<+0300>-3:00)
 z="$(date +%z)"; hh="${z:1:2}"; mm="${z:3:2}"
 [ "${z:0:1}" = "+" ] && s="-" || s="+"
@@ -40,6 +41,20 @@ tz="<${z}>${s}${hh#0}:${mm}"
 # desktop parts are started directly.
 read -r -d '' SESSION <<'EOS'
 mkdir -p -m 700 "$XDG_RUNTIME_DIR"
+# The language picked in the Start menu ("English" / "اللغة العربية") wins,
+# unless DESKTOP_LANG was given for this start
+if [ -z "${DESKTOP_LANG_SET:-}" ]; then
+  case "$(cat "$HOME/.config/xfce4/.desktop-lang" 2>/dev/null)" in
+    en) export LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 LANGUAGE=en ;;
+    ar) export LANG=ar_SA.UTF-8 LC_ALL=ar_SA.UTF-8 LANGUAGE=ar ;;
+  esac
+fi
+# Welcome screen ("مرحبًا") until the desktop and the taskbar are up
+splash=""
+if [ -x "$HOME/.local/bin/desktop-splash" ] && [ ! -f "$HOME/.config/xfce4/.no-splash" ]; then
+  "$HOME/.local/bin/desktop-splash" >/dev/null 2>&1 &
+  splash=$!
+fi
 eval "$(dbus-launch --sh-syntax)"
 # Desktop icons start at the top right in Arabic, top left in English. xfdesktop
 # only uses this when it places icons, so set it before it starts, and once per
@@ -53,6 +68,10 @@ if [ "$(cat "$mark" 2>/dev/null)" != "$side" ]; then
   mkdir -p "$(dirname "$mark")" && echo "$side" > "$mark"
 fi
 running() { local f; for f in /proc/[0-9]*/comm; do [ "$(cat "$f" 2>/dev/null)" = "$1" ] && return 0; done; return 1; }
+if [ -n "$splash" ]; then
+  ( for i in $(seq 1 45); do running xfdesktop && running xfce4-panel && break; sleep 1; done
+    sleep 3; kill "$splash" 2>/dev/null ) &
+fi
 xfce4-session &
 s=$!
 for i in $(seq 1 20); do running xfwm4 && break; sleep 1; done
@@ -88,7 +107,7 @@ sleep 2
 am start --user 0 -n com.termux.x11/com.termux.x11.MainActivity >/dev/null 2>&1
 nohup proot-distro login debian --user user --shared-tmp -- env \
   DISPLAY=:0 PULSE_SERVER=tcp:127.0.0.1 GDK_SCALE="$scale" \
-  LANG="$lang" LC_ALL="$lang" LANGUAGE="${lang%%_*}" TZ="$tz" \
+  LANG="$lang" LC_ALL="$lang" LANGUAGE="${lang%%_*}" DESKTOP_LANG_SET="$lang_set" TZ="$tz" \
   XDG_RUNTIME_DIR=/tmp/runtime-user MOZ_FAKE_NO_SANDBOX=1 \
   GDK_GL=disable LIBGL_ALWAYS_SOFTWARE=1 NO_AT_BRIDGE=1 "${gpu_env[@]}" \
   bash -c "$SESSION" >"$HOME/.desktop.log" 2>&1 &
