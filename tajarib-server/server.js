@@ -34,6 +34,9 @@ async function migrate() {
     alter table doc_subs add column if not exists news boolean not null default true;
     alter table doc_subs add column if not exists occ boolean not null default false;
     alter table doc_subs add column if not exists role text not null default 'edit';
+    alter table doc_subs add column if not exists wq boolean not null default false;
+    create table if not exists branch_keys(id text primary key, doc_id text not null references docs(id) on delete cascade, hash text not null unique, key text not null, root text not null, label text not null default '', created_at bigint not null);
+    create index if not exists branch_keys_doc on branch_keys(doc_id);
   `);
 }
 async function kvGet(k) { const r = await q('select v from kv where k=$1', [k]); return r.rows[0] ? r.rows[0].v : null; }
@@ -82,6 +85,8 @@ route('GET', '/health', async () => { await q('select 1'); return { ok: true }; 
 /* ---------- المستندات ---------- */
 const isObj = x => x && typeof x === 'object' && !Array.isArray(x);
 function cleanBody(b) { const body = isObj(b) ? b : {}; return { items: isObj(body.items) ? body.items : {}, meta: isObj(body.meta) ? body.meta : null }; }
+/* رابط فرع (شجرتنا): مفتاح عرض يشوف ذرية شخص واحد بس */
+async function branchOf(doc, k) { if (!k || doc.kind !== 'shajara') return null; const r = await q('select id, root from branch_keys where hash=$1 and doc_id=$2', [sha(String(k)), doc.id]); return r.rows[0] || null; }
 async function loadDoc(id) { const r = await q('select * from docs where id=$1', [str(id, 40)]); if (!r.rows[0]) fail(404, 'not_found'); return r.rows[0]; }
 
 route('POST', '/api/docs', async (req, b) => {
@@ -94,12 +99,13 @@ route('POST', '/api/docs', async (req, b) => {
 });
 route('GET', '/api/docs/:id', async (req, b, p, url) => {
   limit(req, 'read', 3000, 600e3);
-  const doc = await loadDoc(p.id); const role = roleOf(doc, url.searchParams.get('k')); if (!role) fail(403, 'bad_key');
+  const doc = await loadDoc(p.id); let role = roleOf(doc, url.searchParams.get('k')), br = null;
+  if (!role) { br = await branchOf(doc, url.searchParams.get('k')); if (br) role = 'view'; } if (!role) fail(403, 'bad_key');
   if (now() - +doc.last_read > 864e5) q('update docs set last_read=$1 where id=$2', [now(), doc.id]).catch(() => {});
   /* رابط العرض بشجرتنا: رقم نسخة خاص يتغيّر كمان يوم تنفتح رسالة، عشان توصله بنصها */
   const vb = role === 'view' && doc.kind === 'shajara', rev = vb ? doc.rev * 1000 + openedCaps(doc.body) % 1000 : doc.rev;
   if (int(url.searchParams.get('rev')) === rev) return { same: true, rev, role };
-  return { rev, kind: doc.kind, role, body: vb ? viewBody(doc.body) : doc.body };
+  return { rev, kind: doc.kind, role, body: vb ? viewBody(br ? branchBody(doc.body, br.root) : doc.body) : doc.body };
 });
 /* دمج: لكل عنصر ينحفظ الأحدث حسب u (وقت التعديل بالملي ثانية)، والمحذوف يبقى علامة {del:1} */
 route('PATCH', '/api/docs/:id', async (req, b, p) => {
@@ -224,7 +230,7 @@ async function vapid() {
 }
 /* who: news (الإضافات والحجوزات) أو occ (المناسبات) أو edit (أصحاب رابط التعديل بس) */
 async function notifyDoc(docId, payload, who = 'news') {
-  await vapid(); const cond = who === 'occ' ? 'occ' : who === 'edit' ? "news and role='edit'" : 'news';
+  await vapid(); const cond = who === 'occ' ? 'occ' : who === 'wq' ? 'wq' : who === 'edit' ? "news and role='edit'" : 'news';
   const subs = (await q(`select endpoint, keys from doc_subs where doc_id=$1 and ${cond}`, [docId])).rows; let n = 0;
   for (const s of subs) {
     try { await webpush.sendNotification({ endpoint: s.endpoint, keys: s.keys }, JSON.stringify(payload), { TTL: 6 * 3600 }); n++; }
@@ -250,7 +256,7 @@ route('GET', '/api/push/key', async () => ({ key: (await vapid()).publicKey }));
 /* ---------- اقتراحات (شجرتنا): اللي معه رابط العرض يقترح، وصاحب رابط التعديل يعتمد أو يرفض ---------- */
 route('POST', '/api/docs/:id/suggest', async (req, b, p) => {
   limit(req, 'suggest', 20, 3600e3);
-  const doc = await loadDoc(p.id); if (!roleOf(doc, b.k)) fail(403, 'bad_key'); if (doc.kind !== 'shajara') fail(400, 'bad_kind');
+  const doc = await loadDoc(p.id); if (doc.kind !== 'shajara') fail(400, 'bad_kind'); if (!roleOf(doc, b.k) && !(await branchOf(doc, b.k))) fail(403, 'bad_key');
   const body = isObj(b.body) ? b.body : null; if (!body) fail(400, 'bad_body');
   const json = JSON.stringify(body); if (json.length > 300 * 1024) fail(413, 'too_big');
   const pend = await q("select count(*)::int as n from suggestions where doc_id=$1 and status='new'", [doc.id]); if (pend.rows[0].n >= 200) fail(429, 'rate');
@@ -278,12 +284,12 @@ route('POST', '/api/docs/:id/suggest/:sid', async (req, b, p) => {
 /* التنبيهات: صاحب رابط التعديل، أو أي أحد معه رابط شجرتنا (عشان تنبيه المواليد للعائلة) */
 const canSub = (doc, k) => { const r = roleOf(doc, k); return r === 'edit' || (r === 'view' && doc.kind === 'shajara'); };
 route('POST', '/api/docs/:id/push', async (req, b, p) => {
-  const doc = await loadDoc(p.id); if (!canSub(doc, b.k)) fail(403, 'bad_key');
+  const doc = await loadDoc(p.id); if (!canSub(doc, b.k)) { if (await branchOf(doc, b.k)) fail(403, 'branch_push'); fail(403, 'bad_key'); }
   const s = b.sub || {}; if (!/^https:\/\//.test(s.endpoint || '') || !s.keys || !s.keys.p256dh || !s.keys.auth) fail(400, 'bad_sub');
-  const o = isObj(b.opts) ? b.opts : null, news = o && typeof o.news === 'boolean' ? o.news : true, occ = !!(o && o.occ === true && doc.kind === 'shajara');
-  if (o && !news && !occ) { await q('delete from doc_subs where endpoint=$1 and doc_id=$2', [str(s.endpoint, 1000), doc.id]); return { ok: true, off: true }; }
-  await q(`insert into doc_subs(endpoint,doc_id,keys,created_at,news,occ,role) values($1,$2,$3,$4,$5,$6,$7) on conflict(endpoint,doc_id) do update set keys=excluded.keys, role=excluded.role${o ? ', news=excluded.news, occ=excluded.occ' : ''}`,
-    [str(s.endpoint, 1000), doc.id, JSON.stringify({ p256dh: str(s.keys.p256dh, 200), auth: str(s.keys.auth, 100) }), now(), news, occ, roleOf(doc, b.k)]);
+  const o = isObj(b.opts) ? b.opts : null, news = o && typeof o.news === 'boolean' ? o.news : true, occ = !!(o && o.occ === true && doc.kind === 'shajara'), wq = !!(o && o.wq === true && doc.kind === 'shajara');
+  if (o && !news && !occ && !wq) { await q('delete from doc_subs where endpoint=$1 and doc_id=$2', [str(s.endpoint, 1000), doc.id]); return { ok: true, off: true }; }
+  await q(`insert into doc_subs(endpoint,doc_id,keys,created_at,news,occ,role,wq) values($1,$2,$3,$4,$5,$6,$7,$8) on conflict(endpoint,doc_id) do update set keys=excluded.keys, role=excluded.role${o ? ', news=excluded.news, occ=excluded.occ, wq=excluded.wq' : ''}`,
+    [str(s.endpoint, 1000), doc.id, JSON.stringify({ p256dh: str(s.keys.p256dh, 200), auth: str(s.keys.auth, 100) }), now(), news, occ, roleOf(doc, b.k), wq]);
   return { ok: true };
 });
 route('DELETE', '/api/docs/:id/push', async (req, b, p) => { const doc = await loadDoc(p.id); if (!canSub(doc, b.k)) fail(403, 'bad_key'); await q('delete from doc_subs where endpoint=$1 and doc_id=$2', [str(b.endpoint, 1000), doc.id]); return { ok: true }; });
@@ -309,6 +315,47 @@ function viewBody(body) {
   let meta = body && body.meta; if (meta && 'hdr' in meta) { meta = { ...meta }; delete meta.hdr; }
   return { ...body, meta, items: out };
 }
+
+/* ذرية شخص + أزواجهم، وكل اللي يخصهم بس (الباقي ما يوصل أبد) */
+function branchBody(body, root) {
+  const items = (body && body.items) || {}, P = new Map();
+  for (const [id, it] of Object.entries(items)) if (it && !it.del && it.t === 'p') P.set(id, it);
+  const kids = new Map(); for (const [id, it] of P) for (const par of [it.fa, it.mo]) if (par) { if (!kids.has(par)) kids.set(par, []); kids.get(par).push(id); }
+  const blood = new Set(), st = P.has(root) ? [root] : [];
+  while (st.length) { const x = st.pop(); if (blood.has(x)) continue; blood.add(x); for (const k of kids.get(x) || []) st.push(k); }
+  const inc = new Set(blood);
+  for (const it of Object.values(items)) if (it && !it.del && it.t === 'm') { if (blood.has(it.a) && P.has(it.b)) inc.add(it.b); if (blood.has(it.b) && P.has(it.a)) inc.add(it.a); }
+  const ok = (...ids) => ids.every(x => !x || inc.has(x)), out = {};
+  for (const [id, it] of Object.entries(items)) {
+    if (!it || it.del) continue; const t = it.t;
+    if (t === 'p') { if (inc.has(id)) out[id] = it; }
+    else if (t === 'm' || t === 'rs') { if (inc.has(it.a) && inc.has(it.b)) out[id] = it; }
+    else if (t === 'r') { if (inc.has(it.c) && ok(it.m, it.f)) out[id] = it; }
+    else if (t === 'mem' || t === 'ph' || t === 'au') { if (inc.has(it.p)) out[id] = it; }
+    else if (t === 'cap') { if (it.to && inc.has(it.to)) out[id] = it; }
+    else if (t === 'ev') { const ps = (it.people || []).filter(x => inc.has(x)); if (ps.length) out[id] = { ...it, people: ps }; }
+  }
+  for (const [id, it] of Object.entries(items)) if (it && !it.del && it.t === 'evp' && out[it.ev]) out[id] = it;
+  const rp = P.get(root), meta = { ...(body.meta || {}) }; if (rp) meta.name = `${str(meta.name || 'شجرتنا', 60)} · فرع ${str(rp.f, 30)}`; delete meta.vk;
+  return { meta, items: out };
+}
+route('POST', '/api/docs/:id/branch', async (req, b, p) => {
+  limit(req, 'branch', 60, 3600e3);
+  const doc = await loadDoc(p.id); if (roleOf(doc, b.k) !== 'edit') fail(403, 'bad_key'); if (doc.kind !== 'shajara') fail(400, 'bad_kind');
+  const root = str(b.root, 80), it = doc.body && doc.body.items && doc.body.items[root]; if (!it || it.del || it.t !== 'p') fail(400, 'bad_body');
+  const n = await q('select count(*)::int as n from branch_keys where doc_id=$1', [doc.id]); if (n.rows[0].n >= 60) fail(429, 'rate');
+  const id = rid(10), key = rid(20); await q('insert into branch_keys(id,doc_id,hash,key,root,label,created_at) values($1,$2,$3,$4,$5,$6,$7)', [id, doc.id, sha(key), key, root, str(b.label, 80), now()]);
+  return { id, key };
+});
+route('GET', '/api/docs/:id/branch', async (req, b, p, url) => {
+  const doc = await loadDoc(p.id); if (roleOf(doc, url.searchParams.get('k')) !== 'edit') fail(403, 'bad_key');
+  const r = await q('select id, key, root, label, created_at from branch_keys where doc_id=$1 order by created_at desc', [doc.id]);
+  return { branches: r.rows.map(x => ({ id: x.id, key: x.key, root: x.root, label: x.label, createdAt: +x.created_at })) };
+});
+route('DELETE', '/api/docs/:id/branch/:bid', async (req, b, p) => {
+  const doc = await loadDoc(p.id); if (roleOf(doc, b.k) !== 'edit') fail(403, 'bad_key');
+  await q('delete from branch_keys where id=$1 and doc_id=$2', [str(p.bid, 40), doc.id]); return { ok: true };
+});
 
 /* ---------- غرف «مين هذا؟» الجماعية (بالذاكرة، تنمسح بعد 4 ساعات) ---------- */
 const rooms = new Map(), QDUR = 20000;
@@ -392,6 +439,41 @@ async function occasionTick(force) {
   } catch (e) { console.error('occ', e.message); return 0; }
 }
 
+/* ---------- سؤال الأسبوع: كل جمعة الساعة 4 العصر بتوقيت الرياض ---------- */
+const mulberry = a => () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+function weeklyQuestion(body, seed) {
+  const items = (body && body.items) || {}, P = new Map(); for (const [id, it] of Object.entries(items)) if (it && !it.del && it.t === 'p' && it.f) P.set(id, it);
+  if (P.size < 5) return null;
+  const rnd = mulberry(seed), mix = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+  const nm = id => { const p = P.get(id), fa = p.fa && P.get(p.fa); return str(p.f, 30) + (fa ? (p.g === 'f' ? ' بنت ' : ' بن ') + str(fa.f, 30) : ''); };
+  const sp = new Map(); for (const it of Object.values(items)) if (it && !it.del && it.t === 'm' && !it.x && P.has(it.a) && P.has(it.b)) { for (const [x, y] of [[it.a, it.b], [it.b, it.a]]) { if (!sp.has(x)) sp.set(x, []); sp.get(x).push(y); } }
+  const ids = [...P.keys()], byG = g => ids.filter(x => (P.get(x).g === 'f') === (g === 'f')), c = [];
+  for (const id of ids) {
+    const p = P.get(id), f = p.g === 'f';
+    if (p.mo && P.has(p.mo)) c.push({ q: `مين أم ${nm(id)}؟`, a: p.mo, g: 'f' });
+    const fa = p.fa && P.get(p.fa); if (fa && fa.fa && P.has(fa.fa)) c.push({ q: `مين جد ${nm(id)} (أبو ${f ? 'أبوها' : 'أبوه'})؟`, a: fa.fa, g: 'm' });
+    const s = sp.get(id) || []; if (s.length === 1) c.push({ q: `مين ${f ? 'زوج' : 'زوجة'} ${nm(id)}؟`, a: s[0], g: f ? 'm' : 'f' });
+  }
+  for (const x of mix(c)) {
+    const right = nm(x.a), seen = new Set([right]), wrong = [];
+    for (const y of mix(byG(x.g).slice())) { if (wrong.length >= 3) break; const t = nm(y); if (y === x.a || seen.has(t)) continue; seen.add(t); wrong.push(t); }
+    if (wrong.length < 2) continue; const o = mix([right, ...wrong]); return { q: x.q, o, a: o.indexOf(right) };
+  }
+  return null;
+}
+async function weeklyTick(force) {
+  try {
+    const d = new Date(), wd = new Intl.DateTimeFormat('en-US', { timeZone: 'Asia/Riyadh', weekday: 'short' }).format(d), hr = parseInt(new Intl.DateTimeFormat('en-u-nu-latn', { timeZone: 'Asia/Riyadh', hour: 'numeric', hourCycle: 'h23' }).format(d), 10), wk = todayISO();
+    if (!force) { if (wd !== 'Fri' || hr < 16) return 0; if ((await kvGet('wq_week')) === wk) return 0; await kvSet('wq_week', wk); }
+    const docs = (await q("select d.id, d.body from docs d where d.kind='shajara' and exists(select 1 from doc_subs s where s.doc_id=d.id and s.wq)")).rows; let sent = 0;
+    for (const doc of docs) {
+      const seed = parseInt(sha(doc.id + wk).slice(0, 8), 16), qq = weeklyQuestion(viewBody(doc.body), seed); if (!qq) continue;
+      sent += await notifyDoc(doc.id, { title: '🎯 سؤال الأسبوع', body: qq.q + ' افتح الشجرة وجاوب', url: SITE + 'shajara/#wq=' + encodeURIComponent(JSON.stringify(qq)), tag: 'wq-' + doc.id + '-' + wk }, 'wq');
+    }
+    return sent;
+  } catch (e) { console.error('wq', e.message); return 0; }
+}
+
 const server = http.createServer(async (req, res) => {
   const origin = req.headers.origin;
   if (req.method === 'OPTIONS') { res.writeHead(204, cors(origin)); return res.end(); }
@@ -410,6 +492,7 @@ async function start() {
   server.listen(PORT, () => console.log('تجارب: السيرفر شغّال على المنفذ ' + PORT));
   setTimeout(cleanupTick, 60e3).unref(); setInterval(cleanupTick, 12 * 3600e3).unref();
   setTimeout(occasionTick, 90e3).unref(); setInterval(occasionTick, 10 * 60e3).unref();
+  setTimeout(weeklyTick, 120e3).unref(); setInterval(weeklyTick, 10 * 60e3).unref();
 }
 if (require.main === module) start().catch(e => { console.error(e); process.exit(1); });
-module.exports = { start, server, pool, checkHours, occasionsToday, occasionText, occasionTick };
+module.exports = { start, server, pool, checkHours, occasionsToday, occasionText, occasionTick, branchBody, weeklyQuestion, weeklyTick };

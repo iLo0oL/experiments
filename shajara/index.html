@@ -223,7 +223,7 @@ nav.tabs svg.i{width:23px;height:23px}
 .cap.open{border-color:var(--gold)}.hidnote{margin-top:6px;font-size:13px;color:var(--warn)}
 .trow2{display:flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:8px 10px;margin-bottom:6px}.trow2 .tx{flex:1;min-width:0;text-align:right;background:none;border:0;color:var(--text);font:inherit;padding:0;display:flex;flex-direction:column}.trow2 .tx small{color:var(--muted);font-size:12.5px}.trow2 .tx b,.trow2 .tx small{white-space:normal;overflow:visible;text-overflow:clip}.trow2 a.ib{text-decoration:none;font-size:18px}.trow2.late{border-color:var(--warn)}
 .evg{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px}.evc{background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden;padding:0 0 8px;color:var(--text);font:inherit;display:flex;flex-direction:column;text-align:right}.evc img,.evc .evn{width:100%;aspect-ratio:4/3;object-fit:cover;display:grid;place-items:center;font-size:40px;background:var(--card2)}.evc b{padding:6px 10px 0}.evc small{padding:0 10px;color:var(--muted);font-size:12px}
-a.chip{text-decoration:none}
+a.chip{text-decoration:none}.wq-o{display:grid;gap:8px}.wq-o .btn{width:100%;justify-content:center}
 .fact{display:flex;gap:12px;align-items:flex-start;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px;margin-bottom:8px}.fact .fi{font-size:26px;line-height:1}.fact b{display:block;margin-bottom:4px}
 #snBox{background:var(--card);border-radius:14px;padding:6px}#snBox svg{max-height:70vh}.cap b{display:block;margin-bottom:4px}
 #mapBox{direction:ltr;height:62vh;border-radius:14px;overflow:hidden;background:var(--card)}#mapBox .leaflet-popup-content{margin:10px}.mtip{font-family:inherit;font-weight:700}
@@ -483,7 +483,7 @@ let trees = LS.get('shajara.trees', []);
 const saveTrees = () => LS.set('shajara.trees', trees);
 const S = {
   cur: null, doc: null, P: new Map(), M: [], kidsF: new Map(), kidsM: new Map(), sp: new Map(), meta: {}, dev: {}, col: new Set(),
-  view: LS.get('shajara.view', 'tree'), gens: LS.get('shajara.gens', 5), dkids: LS.get('shajara.dkids', true), momAll: LS.get('shajara.momAll', 'f'), brCol: LS.get('shajara.brCol', false), bw: LS.get('shajara.bw', false), subMom: LS.get('shajara.subMom', false), hlLine: LS.get('shajara.hlLine', false), depthLim: 0, status: 'local', statusMsg: '', lost: null,
+  view: LS.get('shajara.view', 'tree'), gens: LS.get('shajara.gens', 5), dkids: LS.get('shajara.dkids', true), momAll: LS.get('shajara.momAll', 'f'), brCol: LS.get('shajara.brCol', false), bw: LS.get('shajara.bw', false), kunya: LS.get('shajara.kunya', false), subMom: LS.get('shajara.subMom', false), hlLine: LS.get('shajara.hlLine', false), depthLim: 0, status: 'local', statusMsg: '', lost: null,
   filter: 'all', sort: 'name', lay: null, renderMs: 0
 };
 function newLocalTree(name) { const rec = { k: 'L' + newId(''), name: name || 'شجرة العائلة' }; trees.push(rec); saveTrees(); return rec; }
@@ -572,7 +572,14 @@ function fullName(p, gens, withFam = true) {
   if (fam && !norm(s).endsWith(norm(fam))) s += ' ' + fam;
   return s;
 }
-function searchKey(p) { let k = S._nm.get(p.id); if (!k) { k = norm(fullName(p, 4) + ' ' + (p.city || '') + ' ' + (p.fam || '')); S._nm.set(p.id, k); } return k; }
+/* الكنية: اللي مكتوبة، وإلا من أكبر ولد */
+function kunya(p) {
+  if (!p) return ''; if (p.kn) return p.kn === '-' ? '' : p.kn;
+  const ks = kidsOf(p.id).filter(k => k.g !== 'f'); if (!ks.length) return '';
+  const e = ks.slice().sort((a, b) => (+a.by ? toG(a.by, a.cal) : 1e9) - (+b.by ? toG(b.by, b.cal) : 1e9) || (+a.o || 0) - (+b.o || 0))[0];
+  return (p.g === 'f' ? 'أم ' : 'أبو ') + e.f;
+}
+function searchKey(p) { let k = S._nm.get(p.id); if (!k) { k = norm(fullName(p, 4) + ' ' + (p.city || '') + ' ' + (p.fam || '') + ' ' + kunya(p)); S._nm.set(p.id, k); } return k; }
 function curYear(cal) {
   if (cal === 'g') return new Date().getFullYear();
   try { return parseInt(new Intl.DateTimeFormat('en-u-ca-islamic-umalqura-nu-latn', { year: 'numeric' }).format(new Date()), 10); } catch (e) { return Math.round((new Date().getFullYear() - 622) * 33 / 32); }
@@ -932,6 +939,7 @@ function linkPaths(L) {
 function nodeSub(n) {
   if (n.mir) { const fa = S.P.get(n.p.fa); return { t: fa ? (n.p.g === 'f' ? 'أبوها ' : 'أبوه ') + fa.f : '', c: '' }; }
   if (n.op) return { t: (n.opF ? (n.p.g === 'f' ? 'أبوها ' : 'أبوه ') : (n.p.g === 'f' ? 'أمها ' : 'أمه ')) + n.op.f, c: wcol(n.grp) };
+  if (S.kunya) { const k = kunya(n.p); if (k) return { t: k, c: '' }; }
   if (S.subMom) { const mo = S.P.get(n.p.mo); if (mo) return { t: (n.p.g === 'f' ? 'أمها ' : 'أمه ') + mo.f, c: '' }; }
   return { t: yearsText(n.p, true) || (n.depth === 0 ? famOf(n.p) : '') || '', c: '' };
 }
@@ -1023,6 +1031,7 @@ function renderQbar() {
     <button class="qc2 ${S.subMom ? 'on' : ''}" data-q="mom">👩 الأمهات</button>
     <button class="qc2 ${S.hlLine ? 'on' : ''}" data-q="line">⭐ نسبي</button>
     <button class="qc2 ${S.brCol ? 'on' : ''}" data-q="br">🎨 الفروع</button>
+    <button class="qc2 ${S.kunya ? 'on' : ''}" data-q="kn">🏷️ الكنية</button>
     <button class="qc2 ${S.momAll !== 'f' ? 'on' : ''}" data-q="mom2">👩‍👧 عيال الأمهات عند: ${{ f: 'الأب', b: 'الأب والأم', m: 'الأم' }[S.momAll] || 'الأب'}</button>
     <button class="qc2 ${S.depthLim ? 'on' : ''}" data-q="depth">📏 ${lim}</button>
     <button class="qc2" data-q="open">📂 افتح الكل</button>
@@ -1032,6 +1041,7 @@ $('#qbar').addEventListener('click', async e => {
   const b = e.target.closest('[data-q]'); if (!b) return; const k = b.dataset.q;
   if (k === 'dkids') { S.dkids = !S.dkids; LS.set('shajara.dkids', S.dkids); toast(S.dkids ? 'عيال البنات المتزوجات من برّا بيطلعون تحت أمهم' : 'صارت الشجرة بالنسب للأب بس'); }
   else if (k === 'mom2') { S.momAll = { f: 'b', b: 'm', m: 'f' }[S.momAll] || 'b'; LS.set('shajara.momAll', S.momAll); toast({ f: 'رجعوا العيال عند أبوهم بس', b: 'العيال يطلعون عند أبوهم وعند أمهم بعد (المنقّط نسخة)', m: 'العيال صاروا عند أمهم بس، وانشالوا من عند أبوهم' }[S.momAll]); }
+  else if (k === 'kn') { S.kunya = !S.kunya; LS.set('shajara.kunya', S.kunya); toast(S.kunya ? 'تحت كل اسم تطلع كنيته (أبو فلان / أم فلان)' : 'رجعت سنة الميلاد تحت الاسم'); }
   else if (k === 'br') { S.brCol = !S.brCol; LS.set('shajara.brCol', S.brCol); toast(S.brCol ? 'كل فرع من عيال الجد الكبير بلون' : 'رجعت الألوان العادية'); }
   else if (k === 'mom') { S.subMom = !S.subMom; LS.set('shajara.subMom', S.subMom); toast(S.subMom ? 'تحت كل اسم يطلع اسم أمه' : 'تحت كل اسم ترجع سنة الميلاد'); }
   else if (k === 'line') {
@@ -1295,6 +1305,7 @@ function fillPerson(sh) {
   const he = p.g === 'f' ? 'ها' : 'ه';
   const facts = [];
   const yt = yearsText(p); if (yt) facts.push(`<span>${esc(yt)}</span>`);
+  const kn = kunya(p); if (kn) facts.push(`<span>🏷️ ${esc(kn)}</span>`);
   if (p.by && !hid(p) && !p.dead && !p.dy) facts.push(`<span>العمر${p.bmo ? '' : ' تقريبًا'} <b>${ageOf(p)}</b></span>`);
   if (p.dy && p.by && !hid(p)) facts.push(`<span>عاش${p.g === 'f' ? 'ت' : ''} تقريبًا <b>${p.dy - p.by}</b> سنة</span>`);
   if (p.city) facts.push(`<span>📍 <b>${esc(p.city)}</b></span>`);
@@ -1309,7 +1320,7 @@ function fillPerson(sh) {
       ${fa ? '' : `<button class="chip act" data-a="fa">${ICON.plus}ضيف أب</button>`}${mo ? '' : `<button class="chip act" data-a="mo">${ICON.plus}ضيف أم</button>`}
       <button class="chip" data-a="edit">${ICON.edit}عدّل</button><button class="chip" data-a="merge">🔗 دمج مع شخص ثاني</button><button class="chip del" data-a="del">${ICON.trash}احذف</button></div>`;
   }
-  h += `<div class="chips" style="margin-top:8px"><button class="chip" data-a="rel">${ICON.q}وش صلتي في${he}؟</button><button class="chip" data-a="rel2">صلت${he} بشخص ثاني</button><button class="chip" data-a="show">${ICON.target}ورني إيا${he} بالشجرة</button>${S.dev.me === p.id ? '' : `<button class="chip" data-a="me">${ICON.user}هذا أنا</button>`}<button class="chip" data-a="copyname">📋 انسخ النسب</button><button class="chip" data-a="cert">📜 وثيقة نسب</button>${kids.length ? `<button class="chip" data-a="sun">🌞 ذريت${he} بشكل دائري</button>` : ''}<button class="chip" data-a="gen">👥 جيل${he}</button><button class="chip" data-a="say">🔊 اسمع نسب${he}</button>${S.dev.me !== p.id ? `<button class="chip" data-a="rahm">🤝 ${(S.dev.rahm || {})[p.id] ? 'تذكير التواصل' : 'ذكّرني أتواصل مع' + he}</button>` : ''}${ed && p.tel ? `<a class="chip" href="tel:${esc(p.tel)}">📞 اتصل</a><a class="chip" href="https://wa.me/${waNum(p.tel)}" target="_blank" rel="noopener">💬 واتساب</a>` : ''}${canSuggest() ? '<button class="chip" data-a="sgFix">✏️ اقترح تصحيح</button>' : ''}${ed ? '<button class="chip" data-a="capNew">💌 رسالة للمستقبل</button>' : ''}<button class="chip" data-a="ped">🧬 أجداد${he}</button><button class="chip" data-a="kin">👥 أقارب${he}</button><button class="chip" data-a="card">🪪 بطاقة</button><button class="chip" data-a="rootHere">🌳 ابدأ الشجرة من${p.g === 'f' ? 'ها' : 'ه'}</button></div>`;
+  h += `<div class="chips" style="margin-top:8px"><button class="chip" data-a="rel">${ICON.q}وش صلتي في${he}؟</button><button class="chip" data-a="rel2">صلت${he} بشخص ثاني</button><button class="chip" data-a="show">${ICON.target}ورني إيا${he} بالشجرة</button>${S.dev.me === p.id ? '' : `<button class="chip" data-a="me">${ICON.user}هذا أنا</button>`}<button class="chip" data-a="copyname">📋 انسخ النسب</button><button class="chip" data-a="cert">📜 وثيقة نسب</button>${kids.length ? `<button class="chip" data-a="sun">🌞 ذريت${he} بشكل دائري</button>` : ''}<button class="chip" data-a="gen">👥 جيل${he}</button><button class="chip" data-a="say">🔊 اسمع نسب${he}</button><button class="chip" data-a="greet">🎴 بطاقة تهنئة</button>${ed && kids.length && S.cur.id && S.doc && !S.doc.local && S.doc.role === 'edit' && !(S.meta && S.meta.priv) ? `<button class="chip" data-a="brLink">🌿 رابط لفرع${he}</button>` : ''}${S.dev.me !== p.id ? `<button class="chip" data-a="rahm">🤝 ${(S.dev.rahm || {})[p.id] ? 'تذكير التواصل' : 'ذكّرني أتواصل مع' + he}</button>` : ''}${ed && p.tel ? `<a class="chip" href="tel:${esc(p.tel)}">📞 اتصل</a><a class="chip" href="https://wa.me/${waNum(p.tel)}" target="_blank" rel="noopener">💬 واتساب</a>` : ''}${canSuggest() ? '<button class="chip" data-a="sgFix">✏️ اقترح تصحيح</button>' : ''}${ed ? '<button class="chip" data-a="capNew">💌 رسالة للمستقبل</button>' : ''}<button class="chip" data-a="ped">🧬 أجداد${he}</button><button class="chip" data-a="kin">👥 أقارب${he}</button><button class="chip" data-a="card">🪪 بطاقة</button><button class="chip" data-a="rootHere">🌳 ابدأ الشجرة من${p.g === 'f' ? 'ها' : 'ه'}</button></div>`;
   const dups = ed ? dupsOf(p) : [];
   if (dups.length) h += `<div class="note" style="margin-top:10px">ممكن ${esc(p.f)} مسجّل${p.g === 'f' ? 'ة' : ''} مرتين: ${dups.map(x => esc(fullName(x, 3))).join('، ')}. إذا ${dups.length > 1 ? 'واحد منهم نفس' : 'هو نفس'} الشخص، اضغط «دمج مع شخص ثاني».</div>`;
   if (!ed && canSuggest()) h += `<div class="chips" style="margin-top:8px"><button class="chip act" data-a="sugg">✍️ اقترح إضافة ل${p.g === 'f' ? 'ها' : 'ه'}</button></div>`;
@@ -1393,6 +1404,8 @@ async function onPersonClick(e) {
   else if (act === 'sun') openSun(id);
   else if (act === 'gen') openGen(id);
   else if (act === 'say') speak(lineageText(p));
+  else if (act === 'greet') greetCard(id);
+  else if (act === 'brLink') branchCreate(id);
   else if (act === 'rahm') rahmSet(id);
   else if (act === 'capNew') capForm(id);
   else if (act === 'sgPh') suggestPhoto(id);
@@ -1646,12 +1659,13 @@ function personForm(o) {
     <label class="chk"><input type="checkbox" id="fDead"><span id="fDeadL"></span></label>
     <label class="chk"><input type="checkbox" id="fHd"><span id="fHdL"></span></label>
     <label class="fld"><span>المدينة</span><input id="fCity" maxlength="40"></label>
+    <label class="fld"><span>🏷️ الكنية <i>(تطلع لحالها من أكبر ولد، وتقدر تكتب غيرها)</i></span><input id="fKn" maxlength="30"></label>
     <label class="fld"><span>📞 الجوال <i>(يبان لك وللي معهم رابط التعديل بس)</i></span><input id="fTel" inputmode="tel" maxlength="20" dir="ltr" placeholder="05xxxxxxxx"></label>
     <label class="fld"><span>ملاحظات</span><textarea id="fNt" rows="2" maxlength="600"></textarea></label>
     <div class="fld"><span>صورة صغيرة <i>(اختياري)</i></span><div class="phrow"><span id="fPhV"></span><button type="button" class="btn sm" id="fPhB">اختر صورة</button><button type="button" class="btn sm ghost" id="fPhX">شيلها</button></div></div>
     <div class="acts"><button class="btn pri" id="fSave">حفظ</button><button class="btn ghost" data-close>إلغاء</button></div>`);
   const E = s => $(s, sh.el);
-  E('#fF').value = p.f || ''; E('#fFam').value = p.fam || ''; E('#fBy').value = p.by || ''; E('#fDy').value = p.dy || ''; E('#fCity').value = p.city || ''; E('#fNt').value = p.nt || ''; E('#fDead').checked = !!(p.dead || p.dy); E('#fHd').checked = hid(p); E('#fTel').value = p.tel || '';
+  E('#fF').value = p.f || ''; E('#fFam').value = p.fam || ''; E('#fBy').value = p.by || ''; E('#fDy').value = p.dy || ''; E('#fCity').value = p.city || ''; E('#fNt').value = p.nt || ''; E('#fDead').checked = !!(p.dead || p.dy); E('#fHd').checked = hid(p); E('#fTel').value = p.tel || ''; E('#fKn').value = p.kn || ''; E('#fKn').placeholder = p.id ? (kunya({ ...p, kn: '' }) || 'مثل: أبو فهد') : 'مثل: أبو فهد';
   const seg = (sel, key) => { const el = E(sel); const upd = () => $$('button', el).forEach(b => b.classList.toggle('on', b.dataset.v === p[key])); el.onclick = e => { const b = e.target.closest('button'); if (b) { p[key] = b.dataset.v; upd(); refresh(); } }; upd(); };
   const excl = old ? new Set([old.id, ...descendants(old.id)]) : new Set();
   const refresh = () => {
@@ -1690,7 +1704,7 @@ function personForm(o) {
     const by = yr(E('#fBy').value), dy = yr(E('#fDy').value), num = sel => +(E(sel).value || 0) || null;
     if (by && dy && dy < by) { toast('سنة الوفاة قبل الميلاد؟ راجعها'); return; }
     if (by && dy && dy === by && num('#fBm') && num('#fDm') && num('#fDm') < num('#fBm')) { toast('تاريخ الوفاة قبل الميلاد؟ راجعه'); return; }
-    const obj = { t: 'p', f, g: p.g === 'f' ? 'f' : 'm', fam: E('#fFam').value.trim(), fa: p.fa || '', mo: p.mo || '', by, dy, bda: num('#fBd'), bmo: num('#fBm'), dda: num('#fDd'), dmo: num('#fDm'), cal: p.cal === 'g' ? 'g' : 'h', dead: (E('#fDead').checked || !!dy) ? 1 : 0, city: E('#fCity').value.trim(), nt: E('#fNt').value.trim(), ph: p.ph || '', o: p.o != null ? p.o : Date.now(), c: p.c || Date.now(), tel: latin(E('#fTel').value).replace(/[^\d+]/g, '').slice(0, 16) };
+    const obj = { t: 'p', f, g: p.g === 'f' ? 'f' : 'm', fam: E('#fFam').value.trim(), fa: p.fa || '', mo: p.mo || '', by, dy, bda: num('#fBd'), bmo: num('#fBm'), dda: num('#fDd'), dmo: num('#fDm'), cal: p.cal === 'g' ? 'g' : 'h', dead: (E('#fDead').checked || !!dy) ? 1 : 0, city: E('#fCity').value.trim(), nt: E('#fNt').value.trim(), ph: p.ph || '', o: p.o != null ? p.o : Date.now(), c: p.c || Date.now(), tel: latin(E('#fTel').value).replace(/[^\d+]/g, '').slice(0, 16), kn: E('#fKn').value.trim().slice(0, 30) };
     { const m = hdRule(obj, S.meta && S.meta.hdr), c = E('#fHd').checked; obj.hd = c ? (m ? 0 : 1) : (m ? -1 : 0); }
     for (const k of Object.keys(obj)) if (obj[k] === '' || obj[k] == null || obj[k] === 0) delete obj[k];
     obj.t = 'p'; obj.g = obj.g || 'm';
@@ -1812,6 +1826,7 @@ function renderMore() {
     share = `<p class="d">${owner ? 'أرسل رابط التعديل لأهلك اللي بيساعدون، ورابط العرض للباقين.' : role === 'view' ? 'عندك رابط عرض بس. تقدر ترسله لغيرك عشان يشوفون الشجرة.' : 'لحظة، أتأكد من الرابط…'}</p>
       ${owner && c.key ? linkBox('رابط التعديل', T.joinLink(joinBase(), c.id, c.key), 'edit') : ''}
       ${vk ? linkBox('رابط العرض فقط', T.joinLink(joinBase(), c.id, vk), 'view') : ''}
+      ${owner && c.key ? `<div class="rowb" style="margin-top:6px"><button class="btn sm" id="brBtn">🌿 روابط الفروع</button></div><p class="d" style="margin-top:4px">رابط فرع: تعطيه أحد يشوف فرع واحد بس (شخص وذريته)، مثل أهل الزوجة.</p>` : ''}
       ${creator ? `<div class="rowb" style="margin-top:6px"><button class="btn sm" id="rotBtn">غيّر الروابط</button><button class="btn sm danger" id="unshBtn">وقّف المشاركة</button></div>` : ''}`;
   }
   $('#more').innerHTML = `
@@ -1823,7 +1838,7 @@ function renderMore() {
   <div class="card"><h3>🔗 المشاركة مع العائلة</h3>${share}${shared && owner && !priv ? `<p class="d" style="margin-top:10px">اللي معه رابط العرض يقدر يقترح إضافات، وتوصلك هنا عشان توافق عليها أو ترفضها.</p><div class="rowb"><button class="btn sm" id="qrBtn">📱 كود QR</button><button class="btn sm" id="pushBtn">${pushLabel()}</button><button class="btn sm" id="sgRev">📨 الاقتراحات${S.sugg && S.sugg.length ? ` (${S.sugg.length})` : ''}</button></div>` : ''}${canSuggest() ? `<div class="rowb" style="margin-top:10px"><button class="btn sm pri" id="sgNew">✍️ اقترح إضافة على الشجرة</button><button class="btn sm" id="pushBtn">${pushLabel()}</button><button class="btn sm" id="qrBtn">📱 كود QR</button></div>` : ''}</div>
   ${statsHtml()}
   <div class="card"><h3>🧰 أدوات</h3>
-    <div class="rowb">${ed ? '<button class="btn sm" id="qaBtn">⚡ أضف بالنسب</button><button class="btn sm" id="chkBtn">🩺 فحص الشجرة</button>' : ''}<button class="btn sm" id="rhmBtn">🤲 اللهم ارحمهم</button><button class="btn sm" id="occBtn">📅 مناسبات الشهر</button><button class="btn sm" id="cityBtn">🏙️ مدن العائلة</button><button class="btn sm" id="storyBtn">📖 قصة العائلة</button><button class="btn sm" id="bookBtn">📘 كتيّب العائلة</button><button class="btn sm" id="showBtn">📺 عرض العائلة</button><button class="btn sm" id="tlBtn">🕰️ الخط الزمني</button><button class="btn sm" id="quizBtn">🎯 مين هذا؟</button><button class="btn sm" id="capBtn">💌 رسائل للمستقبل</button><button class="btn sm" id="mapBtn">🗺️ خريطة العائلة</button><button class="btn sm" id="factsBtn">🏅 حقائق العائلة</button><button class="btn sm" id="genBtn">👥 جيلي</button><button class="btn sm" id="grpBtn">📣 رسالة للقروب</button><button class="btn sm" id="evBtn">🎉 ألبوم المناسبات</button><button class="btn sm" id="rahmBtn">🤝 صلة الرحم</button>${ed ? '<button class="btn sm" id="telBtn">📒 دفتر الأرقام</button>' : ''}${ed ? '<button class="btn sm" id="mergeBtn">🔀 دمج شجرة ثانية</button>' : ''}${shared ? '<button class="btn sm" id="logBtn">🕘 آخر التعديلات</button>' : ''}</div>
+    <div class="rowb">${ed ? '<button class="btn sm" id="qaBtn">⚡ أضف بالنسب</button><button class="btn sm" id="chkBtn">🩺 فحص الشجرة</button>' : ''}<button class="btn sm" id="rhmBtn">🤲 اللهم ارحمهم</button><button class="btn sm" id="occBtn">📅 مناسبات الشهر</button><button class="btn sm" id="cityBtn">🏙️ مدن العائلة</button><button class="btn sm" id="storyBtn">📖 قصة العائلة</button><button class="btn sm" id="bookBtn">📘 كتيّب العائلة</button><button class="btn sm" id="showBtn">📺 عرض العائلة</button><button class="btn sm" id="tlBtn">🕰️ الخط الزمني</button><button class="btn sm" id="quizBtn">🎯 مين هذا؟</button><button class="btn sm" id="capBtn">💌 رسائل للمستقبل</button><button class="btn sm" id="mapBtn">🗺️ خريطة العائلة</button><button class="btn sm" id="factsBtn">🏅 حقائق العائلة</button><button class="btn sm" id="genBtn">👥 جيلي</button><button class="btn sm" id="grpBtn">📣 رسالة للقروب</button><button class="btn sm" id="evBtn">🎉 ألبوم المناسبات</button><button class="btn sm" id="grtBtn">🎴 بطاقة تهنئة</button><button class="btn sm" id="rahmBtn">🤝 صلة الرحم</button>${ed ? '<button class="btn sm" id="telBtn">📒 دفتر الأرقام</button>' : ''}${ed ? '<button class="btn sm" id="mergeBtn">🔀 دمج شجرة ثانية</button>' : ''}${shared ? '<button class="btn sm" id="logBtn">🕘 آخر التعديلات</button>' : ''}</div>
   </div>
   <div class="card"><h3>🙋 أنا</h3>
     <div class="set"><div class="l">أنا مين بالشجرة؟<small>${me ? esc(fullName(me, 3)) : 'عشان «ركّز عليّ» و«وش صلتي فيه؟»'}</small></div><button class="btn sm" id="meBtn">${me ? 'غيّر' : 'اختر'}</button></div>
@@ -1854,7 +1869,7 @@ function renderMore() {
   on('shBtn', () => createShare(false)); on('bkBtn', () => createShare(true)); on('bkFile', exportJson); on('rotBtn', rotateLinks); on('unshBtn', stopSharing);
   on('unprivBtn', () => { try { S.doc.setMeta({ ...strip(S.doc.meta() || {}), priv: 0 }); } catch (e) { } S.meta.priv = 0; toast('صارت الشجرة مشتركة ✓ أرسل الروابط لأهلك'); renderMore(); });
   on('pushBtn', openPushPrefs);
-  on('hdrBtn', hideRuleUI); on('telBtn', openPhones); on('rahmBtn', openRahm); on('evBtn', openEvents);
+  on('hdrBtn', hideRuleUI); on('grtBtn', () => greetCard(null)); on('brBtn', branchList); on('bkRm', () => { const v = LS.get('shajara.bkRemind', true) === false; LS.set('shajara.bkRemind', v); renderMore(); toast(v ? 'بذكّرك كل شهر تنزّل نسخة' : 'وقّفت التذكير'); }); on('telBtn', openPhones); on('rahmBtn', openRahm); on('evBtn', openEvents);
   on('bwSw', () => { S.bw = !S.bw; LS.set('shajara.bw', S.bw); document.body.classList.toggle('bwp', S.bw); renderMore(); toast(S.bw ? 'الطباعة صارت بالأبيض والأسود' : 'رجعت الطباعة بالألوان'); });
   on('mergeBtn', mergeTreesUI); on('storyBtn', openStory); on('bookBtn', bookletPrint); on('showBtn', () => slideshow()); on('qrBtn', openQR); on('tlBtn', openTimeline); on('quizBtn', quizMenu); on('capBtn', openCaps); on('mapBtn', openMap); on('factsBtn', openFacts); on('genBtn', async () => { let id = S.dev.me && S.P.get(S.dev.me) ? S.dev.me : await pickMe(); if (id) openGen(id); }); on('grpBtn', groupMsg);
   on('meBtn', pickMe); on('sgRev', reviewSugg); on('sgNew', () => suggestComposer()); on('qaBtn', quickAdd); on('chkBtn', openChecks); on('rhmBtn', openDeceased);
@@ -1876,6 +1891,8 @@ function backupCard(c, shared, owner, priv) {
     ${linkBox(priv ? 'رابط الاسترجاع (لك بس)' : 'رابط الاسترجاع (هو نفسه رابط التعديل)', T.joinLink(joinBase(), c.id, c.key), 'self')}
     <p class="d" style="color:var(--warn)">احفظ هالرابط عندك: اضغط «أرسل» وأرسله لنفسك بالواتساب. لو ضاع الجوال تفتحه بأي جهاز وترجع لك الشجرة. وانتبه: اللي معه الرابط يقدر يعدّل، فلا ترسله لأحد ما تثق فيه.</p>`;
   else h = `<p class="d">✅ الشجرة محفوظة على السيرفر عند اللي شاركها معك.</p>`;
+  const lb = LS.get('shajara.lastBk.' + c.k, 0), lbd = lb ? Math.floor((Date.now() - lb) / 864e5) : -1;
+  h += `<div class="set" style="margin-top:6px"><div class="l">📦 ذكّرني كل شهر أنزّل نسخة ملف<small>${lbd < 0 ? 'ما نزّلت نسخة ملف للحين' : lbd === 0 ? 'آخر نسخة: اليوم' : 'آخر نسخة: قبل ' + cnt(lbd, 'يوم', 'يومين', 'أيام', 'يوم')}</small></div><button class="sw ${LS.get('shajara.bkRemind', true) !== false ? 'on' : ''}" id="bkRm" aria-label="ذكّرني كل شهر"></button></div>`;
   return `<div class="card"><h3>🔐 النسخة الاحتياطية</h3>${h}<div class="rowb" style="margin-top:8px"><button class="btn sm" id="bkFile">⬇️ نزّل نسخة ملف على جهازك</button></div></div>`;
 }
 function linkBox(label, url, kind) {
@@ -1953,7 +1970,7 @@ const fname = ext => `${(S.cur.name || 'شجرتنا').replace(/[\\/:*?"<>|]+/g,
 function exportJson() {
   const b = snapshotBody();
   download(fname('json'), JSON.stringify({ app: 'shajara', v: 1, name: S.cur.name, exported: new Date().toISOString(), meta: b.meta, items: b.items }, null, 1), 'application/json');
-  toast('نزّلت النسخة الاحتياطية ✓');
+  LS.set('shajara.lastBk.' + S.cur.k, Date.now()); toast('نزّلت النسخة الاحتياطية ✓'); if (S.view === 'more') renderMore();
 }
 function drawTreeCanvas(maxScale, bw) {
   const root = getRoot(); if (!root) return null;
@@ -2450,6 +2467,109 @@ function evViewer(eid, phid) {
   }
 }
 
+/* ========== روابط الفروع ========== */
+function branchSheet(title, url, note) {
+  const sh = openSheet(`<h2>🌿 ${esc(title)}<button class="ib x" data-close aria-label="سكّر">${ICON.x}</button></h2>
+    <p style="color:var(--muted);font-size:14px;margin:0 0 10px">${esc(note)}</p>
+    <div class="linkbox"><input readonly value="${esc(url)}" onclick="this.select()"><button class="btn sm" id="blCp">انسخ</button><button class="btn sm" id="blWa">أرسل</button></div>`);
+  $('#blCp', sh.el).onclick = async () => toast(await copyText(url) ? 'نسخت الرابط ✓' : 'ما قدرت أنسخ');
+  $('#blWa', sh.el).onclick = () => { const t = `شوف ${title.replace(/^رابط /, '')} من شجرة «${S.cur.name}»:\n${url}`; if (navigator.share) navigator.share({ title: 'شجرتنا', text: t }).catch(() => { }); else window.open('https://wa.me/?text=' + encodeURIComponent(t), '_blank', 'noopener'); };
+  return sh;
+}
+async function branchCreate(pid) {
+  const p = S.P.get(pid); if (!p || !S.cur.id || !S.cur.key) return;
+  try { const r = await T.branch.create(S.cur.id, S.cur.key, pid, fullName(p, 3)); branchSheet('رابط فرع ' + p.f, T.joinLink(joinBase(), S.cur.id, r.key), `اللي يفتحه يشوف ${p.f} و${p.g === 'f' ? 'ذريتها' : 'ذريته'} وأزواجهم بس، وما يقدر يعدّل. ويقدر يقترح إضافات. تقدر توقّفه متى ما تبي من «روابط الفروع».`); }
+  catch (x) { toast(T.errorText(x)); }
+}
+async function branchList() {
+  let list; try { list = await T.branch.list(S.cur.id, S.cur.key); } catch (x) { return toast(T.errorText(x)); }
+  const sh = openSheet(`<h2>🌿 روابط الفروع<button class="ib x" data-close aria-label="سكّر">${ICON.x}</button></h2>
+    <p style="color:var(--muted);font-size:14px;margin:0 0 10px">كل رابط يوري شخص وذريته وأزواجهم بس. تسوي رابط جديد من صفحة الشخص «🌿 رابط لفرعه».</p>
+    ${list.length ? list.map(b => { const q = S.P.get(b.root); return `<div class="trow2"><span class="tx"><b>🌿 ${esc(q ? fullName(q, 3) : b.label || 'شخص انحذف')}</b><small>${new Date(b.createdAt).toLocaleDateString('ar-SA-u-ca-gregory-nu-latn')}</small></span><button class="btn sm" data-bo="${b.id}">افتح</button><button class="btn sm danger" data-bx="${b.id}">وقّفه</button></div>`; }).join('') : '<p style="color:var(--muted)">ما فيه روابط فروع للحين.</p>'}`);
+  sh.el.addEventListener('click', async e => {
+    const o = e.target.closest('[data-bo]'), x = e.target.closest('[data-bx]'); const b = list.find(y => y.id === (o || x || {}).dataset?.[o ? 'bo' : 'bx']); if (!b) return;
+    if (o) { const q = S.P.get(b.root); return branchSheet('رابط فرع ' + (q ? q.f : ''), T.joinLink(joinBase(), S.cur.id, b.key), 'انسخه أو أرسله مرة ثانية.'); }
+    if (!await ask('توقّف الرابط؟', 'اللي معهم هالرابط ما بيقدرون يفتحون الفرع بعدها.')) return;
+    try { await T.branch.remove(S.cur.id, S.cur.key, b.id); toast('وقّفت الرابط'); closeSheet(sh); branchList(); } catch (y) { toast(T.errorText(y)); }
+  });
+}
+
+/* ========== بطاقة تهنئة ========== */
+const GREET = {
+  bday: { e: '🎂', t: 'عيد ميلاد سعيد', c: ['#f7b267', '#f25c54'], m: (p, f) => `كل عام و${f ? 'أنتِ' : 'أنت'} بخير يا ${p.f}` },
+  baby: { e: '👶', t: 'مبروك المولود', c: ['#7fb3ff', '#a78bfa'], m: (p, f) => { const fa = S.P.get(p.fa), mo = S.P.get(p.mo); return `${p.f} ${f ? 'نوّرت' : 'نوّر'} العائلة${fa || mo ? '، ومبروك لـ' + [fa && fa.f, mo && mo.f].filter(Boolean).join(' و') : ''}`; } },
+  wed: { e: '💍', t: 'ألف مبروك', c: ['#e2b866', '#a8791f'], m: () => 'بارك الله لكما وبارك عليكما وجمع بينكما في خير' },
+  grad: { e: '🎓', t: 'مبروك التخرج', c: ['#46c08a', '#2f7fd6'], m: p => `ألف مبروك يا ${p.f}، وعقبال أعلى المراتب` },
+  eid: { e: '🌙', t: 'عيدكم مبارك', c: ['#2f9b6c', '#123528'], m: () => `من عائلة ${S.cur.name || ''}، كل عام وأنتم بخير` },
+  dua: { e: '🤲', t: 'اللهم ارحمهم', c: ['#3a4a55', '#121b20'], m: (p, f) => `اللهم اغفر ل${f ? 'ها' : 'ه'} وارحم${f ? 'ها' : 'ه'}، وأسكن${f ? 'ها' : 'ه'} الفردوس الأعلى` }
+};
+async function drawGreet(kind, p, msg) {
+  const G = GREET[kind], W = 1080, H = 1350, c = document.createElement('canvas'); c.width = W; c.height = H; const x = c.getContext('2d');
+  try { await document.fonts.ready; } catch (e) { }
+  const ff = getComputedStyle(document.body).fontFamily, gr = x.createLinearGradient(0, 0, W, H); gr.addColorStop(0, G.c[0]); gr.addColorStop(1, G.c[1]); x.fillStyle = gr; x.fillRect(0, 0, W, H);
+  x.globalAlpha = .12; x.fillStyle = '#fff'; for (const [cx, cy, r] of [[120, 160, 140], [960, 260, 90], [880, 1180, 180], [160, 1080, 70], [540, 60, 40]]) { x.beginPath(); x.arc(cx, cy, r, 0, Math.PI * 2); x.fill(); } x.globalAlpha = 1;
+  x.textAlign = 'center'; x.textBaseline = 'middle'; x.direction = 'rtl'; x.fillStyle = '#fff';
+  x.font = `${p ? 150 : 220}px ${ff}`; x.fillText(G.e, W / 2, p ? 190 : 420);
+  let y = 330;
+  const img = p && (((S.PHS.get(p.id) || [])[0] || {}).img || p.ph);
+  if (p) {
+    const R = 190, cy = y + R;
+    x.save(); x.beginPath(); x.arc(W / 2, cy, R + 10, 0, Math.PI * 2); x.fillStyle = 'rgba(255,255,255,.9)'; x.fill(); x.beginPath(); x.arc(W / 2, cy, R, 0, Math.PI * 2); x.clip();
+    if (img) { const im = new Image(); im.src = img; try { await im.decode(); const m = Math.min(im.width, im.height); x.drawImage(im, (im.width - m) / 2, (im.height - m) / 2, m, m, W / 2 - R, cy - R, R * 2, R * 2); } catch (e) { } }
+    else { x.fillStyle = p.g === 'f' ? '#e886b6' : '#5aa2ef'; x.fillRect(W / 2 - R, cy - R, R * 2, R * 2); x.fillStyle = '#fff'; x.font = `800 170px ${ff}`; x.fillText(p.f.charAt(0), W / 2, cy + 8); }
+    x.restore(); y = cy + R + 90;
+  } else y = 680;
+  x.fillStyle = '#fff'; x.font = `800 92px ${ff}`; x.fillText(kind === 'dua' && p ? (p.g === 'f' ? 'اللهم ارحمها' : 'اللهم ارحمه') : G.t, W / 2, y); y += 100;
+  if (p) { x.font = `700 58px ${ff}`; const sp = kind === 'wed' ? spousesOf(p.id)[0] : null; x.fillText(sp ? `${p.f} و${sp.f}` : fullName(p, 3), W / 2, y); y += 90; }
+  x.font = `500 44px ${ff}`; const words = String(msg || '').split(/\s+/); let line = '';
+  for (const w of words) { const t = line ? line + ' ' + w : w; if (x.measureText(t).width > W - 180 && line) { x.fillText(line, W / 2, y); y += 66; line = w; } else line = t; } if (line) x.fillText(line, W / 2, y);
+  x.globalAlpha = .8; x.font = `600 34px ${ff}`; x.fillText(`🌳 عائلة ${S.cur.name || ''}`, W / 2, H - 70); x.globalAlpha = 1;
+  return c;
+}
+function greetCard(pid) {
+  let p = pid ? S.P.get(pid) : null, kind = p ? ((p.dead || p.dy) ? 'dua' : 'bday') : 'eid', c = null;
+  const sh = openSheet(`<h2>🎴 بطاقة تهنئة<button class="ib x" data-close aria-label="سكّر">${ICON.x}</button></h2>
+    <div class="chips" id="gcK">${Object.entries(GREET).map(([k, g]) => `<button class="chip" data-k="${k}">${g.e} ${esc(g.t)}</button>`).join('')}</div>
+    <button class="btn sm" id="gcP" style="margin-top:8px"></button>
+    <label class="fld" style="margin-top:8px"><span>الكلام</span><input id="gcM" maxlength="120"></label>
+    <img id="gcI" alt="البطاقة" style="width:100%;border-radius:16px;margin-top:6px">
+    <div class="rowb" style="margin-top:10px">${navigator.canShare ? '<button class="btn sm pri" id="gcS">📤 شاركها</button>' : ''}<button class="btn sm" id="gcD">⬇️ نزّلها</button></div>`);
+  const E = q => $(q, sh.el); let tm;
+  const draw = async () => { $$('#gcK .chip', sh.el).forEach(b => b.classList.toggle('on', b.dataset.k === kind)); E('#gcP').textContent = p ? '👤 ' + fullName(p, 3) : '👤 اختر شخص'; c = await drawGreet(kind, kind === 'eid' ? null : p, E('#gcM').value); E('#gcI').src = c.toDataURL('image/jpeg', .9); };
+  const setMsg = () => { E('#gcM').value = GREET[kind].m(p || { f: '' }, p && p.g === 'f'); };
+  setMsg(); draw();
+  E('#gcK').onclick = e => { const b = e.target.closest('[data-k]'); if (!b) return; kind = b.dataset.k; if (kind !== 'eid' && !p) return E('#gcP').click(); setMsg(); draw(); };
+  E('#gcP').onclick = async () => { const id = await pickPerson({ title: 'البطاقة لمين؟' }); if (!id || id === '__new') return; p = S.P.get(id); if (kind === 'eid') kind = (p.dead || p.dy) ? 'dua' : 'bday'; setMsg(); draw(); };
+  E('#gcM').oninput = () => { clearTimeout(tm); tm = setTimeout(draw, 300); };
+  const blob = () => new Promise(r => c.toBlob(r, 'image/jpeg', .92)), nm = () => `بطاقة ${p ? p.f : 'العيد'}.jpg`;
+  E('#gcD').onclick = async () => download(nm(), await blob(), 'image/jpeg');
+  const sb = E('#gcS'); if (sb) sb.onclick = async () => { const f = new File([await blob()], nm(), { type: 'image/jpeg' }); if (navigator.canShare({ files: [f] })) navigator.share({ files: [f] }).catch(() => { }); else download(nm(), f, 'image/jpeg'); };
+}
+
+/* ========== سؤال الأسبوع ========== */
+function openWeekQ(d) {
+  if (!d || typeof d.q !== 'string' || !Array.isArray(d.o) || !(d.a >= 0 && d.a < d.o.length)) return;
+  const o = d.o.slice(0, 4).map(String);
+  const sh = openSheet(`<h2>🎯 سؤال الأسبوع<button class="ib x" data-close aria-label="سكّر">${ICON.x}</button></h2>
+    <div class="qz-q" style="font-size:21px;font-weight:800;text-align:center;margin:12px 0 14px">${esc(d.q)}</div>
+    <div class="wq-o">${o.map((t, k) => `<button class="btn" data-k="${k}">${esc(t)}</button>`).join('')}</div><div id="wqR" style="text-align:center;margin-top:12px"></div>`);
+  sh.el.addEventListener('click', e => {
+    const b = e.target.closest('[data-k]'); if (!b || sh.el.dataset.done) return; sh.el.dataset.done = '1'; const k = +b.dataset.k;
+    $$('.wq-o [data-k]', sh.el).forEach((x, i) => { if (i === d.a) x.classList.add('pri'); else if (x === b) x.classList.add('danger'); });
+    $('#wqR', sh.el).innerHTML = `<p style="font-size:18px;font-weight:700">${k === d.a ? '✅ صح! ما شاء الله' : '❌ الجواب: ' + esc(o[d.a])}</p><button class="btn sm" id="wqMore">🎯 العب أسئلة أكثر</button>`;
+    $('#wqMore', sh.el).onclick = () => { closeSheet(sh); openQuiz(); };
+  });
+}
+
+/* ========== تذكير النسخة الاحتياطية ========== */
+function bkRemindToast() {
+  if (LS.get('shajara.bkRemind', true) === false || !canEdit() || S.P.size < 5) return;
+  const k = S.cur.k, fs = 'shajara.firstSeen.' + k; if (!LS.get(fs, 0)) LS.set(fs, Date.now());
+  const last = Math.max(LS.get('shajara.lastBk.' + k, 0) || 0, LS.get(fs, 0) || 0), rt = 'shajara.bkRT.' + k;
+  if (Date.now() - last < 30 * 864e5 || Date.now() - (LS.get(rt, 0) || 0) < 7 * 864e5) return; LS.set(rt, Date.now());
+  setTimeout(() => toast('📦 صار لك شهر ما نزّلت نسخة من شجرتك. خلّها عندك احتياط', { text: 'نزّلها', fn: exportJson }), 6000);
+}
+
 /* ========== وثيقة نسب ========== */
 const ORD = ['', '', 'الثاني', 'الثالث', 'الرابع', 'الخامس', 'السادس', 'السابع', 'الثامن', 'التاسع', 'العاشر'];
 function printCert(pid) {
@@ -2733,21 +2853,22 @@ function openQuiz() {
 
 /* ========== التنبيهات ========== */
 const pushKey = () => 'shajara.push.' + (S.cur && S.cur.id);
-const pushLabel = () => { const o = LS.get(pushKey(), null); return o && (o.news || o.occ) ? '🔔 التنبيهات (شغّالة)' : '🔔 التنبيهات'; };
+const pushLabel = () => { const o = LS.get(pushKey(), null); return o && (o.news || o.occ || o.wq) ? '🔔 التنبيهات (شغّالة)' : '🔔 التنبيهات'; };
 function openPushPrefs() {
-  const o = LS.get(pushKey(), null) || { news: true, occ: true }, on = !!LS.get(pushKey(), null);
+  const o = LS.get(pushKey(), null) || { news: true, occ: true, wq: true }, on = !!LS.get(pushKey(), null);
   const sh = openSheet(`<h2>🔔 التنبيهات<button class="ib x" data-close aria-label="سكّر">${ICON.x}</button></h2>
     <p style="color:var(--muted);font-size:14px;margin:0 0 10px">يوصلك تنبيه على جوالك حتى لو التطبيق مسكّر.${/iPhone|iPad/.test(navigator.userAgent) ? ' بالآيفون لازم تضيف شجرتنا للشاشة الرئيسية أول (زر المشاركة ثم «إضافة إلى الشاشة الرئيسية»).' : ''}</p>
     <label class="tgl"><input type="checkbox" id="pnN" ${o.news ? 'checked' : ''}><span>🌳 لما ينضاف أحد للشجرة${canEdit() ? ' أو يجي اقتراح' : ''}</span></label>
     <label class="tgl"><input type="checkbox" id="pnO" ${o.occ ? 'checked' : ''}><span>🎂 أعياد الميلاد وذكرى الوفاة (الصبح الساعة 9)</span></label>
+    <label class="tgl"><input type="checkbox" id="pnW" ${o.wq ? 'checked' : ''}><span>🎯 سؤال الأسبوع (كل جمعة العصر)</span></label>
     <p style="color:var(--muted);font-size:13px">تنبيه المناسبات يطلع للي مسجّل لهم يوم وشهر الميلاد أو الوفاة.</p>
     <div class="acts"><button class="btn pri" id="pnS">حفظ</button>${on ? '<button class="btn danger" id="pnOff">وقّف التنبيهات</button>' : ''}<button class="btn ghost" data-close>إلغاء</button></div>`);
   const E = q => $(q, sh.el);
   E('#pnS').onclick = async () => {
-    const opts = { news: E('#pnN').checked, occ: E('#pnO').checked }, b = E('#pnS'); b.disabled = true; b.textContent = 'لحظة…';
+    const opts = { news: E('#pnN').checked, occ: E('#pnO').checked, wq: E('#pnW').checked }, b = E('#pnS'); b.disabled = true; b.textContent = 'لحظة…';
     try {
-      if (!opts.news && !opts.occ) { await T.push.unsubscribe(S.cur.id, S.cur.key); LS.del(pushKey()); toast('وقّفت التنبيهات'); }
-      else { await T.push.subscribe(S.cur.id, S.cur.key, opts); LS.set(pushKey(), opts); toast(opts.occ && opts.news ? '🔔 تفعّلت تنبيهات الإضافات والمناسبات' : opts.occ ? '🔔 تفعّلت تنبيهات المناسبات' : '🔔 تفعّل تنبيه الإضافات'); }
+      if (!opts.news && !opts.occ && !opts.wq) { await T.push.unsubscribe(S.cur.id, S.cur.key); LS.del(pushKey()); toast('وقّفت التنبيهات'); }
+      else { await T.push.subscribe(S.cur.id, S.cur.key, opts); LS.set(pushKey(), opts); toast('🔔 تفعّلت: ' + [opts.news ? 'الإضافات' : '', opts.occ ? 'المناسبات' : '', opts.wq ? 'سؤال الأسبوع' : ''].filter(Boolean).join(' و')); }
       closeSheet(sh); renderMore();
     } catch (x) { b.disabled = false; b.textContent = 'حفظ'; toast(T.errorText(x)); }
   };
@@ -3418,8 +3539,12 @@ function handleJoin() {
   else { rec = { k: j.id, id: j.id, key: j.key, name: 'شجرة مشتركة' }; trees.push(rec); }
   saveTrees(); toast('فتحت الشجرة المشتركة ✓'); return rec;
 }
-const goHash = h => { if (h === 'occ') { setTimeout(() => openOccasions(0), 400); return true; } return false; };
-window.addEventListener('hashchange', () => { const qm = location.hash.match(/^#quiz=(\d{4})$/); if (qm) { history.replaceState(null, '', location.pathname + location.search); return quizPlayer(qm[1]); } if (location.hash === '#occ') { history.replaceState(null, '', location.pathname + location.search); goHash('occ'); return; } const r = handleJoin(); if (r) { openTree(r); setView('tree'); } });
+const goHash = h => {
+  if (h === 'occ') { setTimeout(() => openOccasions(0), 400); return true; }
+  if (/^wq=/.test(h || '')) { try { const d = JSON.parse(decodeURIComponent(h.slice(3))); setTimeout(() => openWeekQ(d), 400); } catch (e) { } return true; }
+  return false;
+};
+window.addEventListener('hashchange', () => { if (/^#wq=/.test(location.hash)) { const h = location.hash.slice(1); history.replaceState(null, '', location.pathname + location.search); return goHash(h); } const qm = location.hash.match(/^#quiz=(\d{4})$/); if (qm) { history.replaceState(null, '', location.pathname + location.search); return quizPlayer(qm[1]); } if (location.hash === '#occ') { history.replaceState(null, '', location.pathname + location.search); goHash('occ'); return; } const r = handleJoin(); if (r) { openTree(r); setView('tree'); } });
 if ('serviceWorker' in navigator) navigator.serviceWorker.addEventListener('message', e => { if (e.data && e.data.go) goHash(e.data.go); });
 
 /* ---------- البداية ---------- */
@@ -3428,14 +3553,14 @@ let start = handleJoin();
 if (!trees.length) newLocalTree();
 if (!start) start = trees.find(t => t.k === LS.get('shajara.cur', '')) || trees[0];
 document.body.classList.toggle('bwp', !!S.bw);
-openTree(start); birthdayToast(); offerBackup(); capToast(); rahmToast();
+openTree(start); birthdayToast(); offerBackup(); capToast(); rahmToast(); bkRemindToast();
 { const qm = location.hash.match(/^#quiz=(\d{4})$/); if (qm) { history.replaceState(null, '', location.pathname + location.search); setTimeout(() => quizPlayer(qm[1]), 300); } }
-if (location.hash === '#occ') { history.replaceState(null, '', location.pathname + location.search); goHash('occ'); }
+if (location.hash === '#occ' || /^#wq=/.test(location.hash)) { const h = location.hash.slice(1); history.replaceState(null, '', location.pathname + location.search); goHash(h); }
 setView(start && start.id && LS.get('shajara.view', null) == null ? 'tree' : S.view);
 if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => { });
 
 /* واجهة صغيرة للاختبارات الآلية */
-window.__shajara = { S, hid, hideRuleUI, waNum, openPhones, rahmSet, openRahm, rahmToast, rahmSuggest, speak, lineageText, openEvents, evForm, openEvent, familyFacts, openFacts, sunSvg, openSun, genGroups, openGen, groupMsg, rebuild, suggestFix, printCert, openCaps, capForm, capToast, openMap, cityLL, quizMenu, quizHost, quizPlayer, momMode, openTimeline, timelineEvents, openQuiz, quizQuestions, openPushPrefs, suggestMem, suggestPhoto, recordVoice, voiceFile, saveVoice, voiceEdit, unmarry, openQR, memForm, addAlbum, photoViewer, bookletPrint, slideshow, mergePlan, applyMerge, mergeTreesUI, familyStory, openStory, fanSvg, createShare, offerBackup, itemsOfTree, occasionsFor, openOccasions, openCities, openLog, posterPrint, pinSettings, showLock, editorName, birthdayToast, applySuggestion, reviewSugg, suggestComposer, loadSugg, canSuggest, parseLineage, planLineage, quickAdd, treeIssues, kinGroups, openPedigree, openKin, openChecks, openDeceased, personCard, relation, mahramOf, bloodAll, getRoot, addChild, addParent, addSibling, dupsOf, mergeInto, Z, NH, fullName: id => fullName(S.P.get(id)), computeLayout, getRoot, canEdit, revealInTree, centerOn, Z, parseGed, trees: () => trees, nodeSub, divorced, openPerson, deletePerson, drawTreeCanvas, exportGed, setZ, stage, setDownload: f => { dlHook = f; } };
+window.__shajara = { S, kunya, branchCreate, branchList, greetCard, drawGreet, openWeekQ, bkRemindToast, exportJson, hid, hideRuleUI, waNum, openPhones, rahmSet, openRahm, rahmToast, rahmSuggest, speak, lineageText, openEvents, evForm, openEvent, familyFacts, openFacts, sunSvg, openSun, genGroups, openGen, groupMsg, rebuild, suggestFix, printCert, openCaps, capForm, capToast, openMap, cityLL, quizMenu, quizHost, quizPlayer, momMode, openTimeline, timelineEvents, openQuiz, quizQuestions, openPushPrefs, suggestMem, suggestPhoto, recordVoice, voiceFile, saveVoice, voiceEdit, unmarry, openQR, memForm, addAlbum, photoViewer, bookletPrint, slideshow, mergePlan, applyMerge, mergeTreesUI, familyStory, openStory, fanSvg, createShare, offerBackup, itemsOfTree, occasionsFor, openOccasions, openCities, openLog, posterPrint, pinSettings, showLock, editorName, birthdayToast, applySuggestion, reviewSugg, suggestComposer, loadSugg, canSuggest, parseLineage, planLineage, quickAdd, treeIssues, kinGroups, openPedigree, openKin, openChecks, openDeceased, personCard, relation, mahramOf, bloodAll, getRoot, addChild, addParent, addSibling, dupsOf, mergeInto, Z, NH, fullName: id => fullName(S.P.get(id)), computeLayout, getRoot, canEdit, revealInTree, centerOn, Z, parseGed, trees: () => trees, nodeSub, divorced, openPerson, deletePerson, drawTreeCanvas, exportGed, setZ, stage, setDownload: f => { dlHook = f; } };
 })();
 </script>
 </body>
