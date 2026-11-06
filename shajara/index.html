@@ -361,7 +361,7 @@ body.light #toast{background:#14211a}
         </div>
         <div id="plist"></div>
       </div>
-      <button class="fab" id="addFab"><svg class="i" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>ضيف شخص</button>
+      <button class="fab" id="addFab"><svg class="i" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>أضف شخص</button>
     </section>
     <section class="view" id="vMore"><div class="wrap" id="more"></div></section>
   </main>
@@ -781,7 +781,7 @@ function relation(aId, bId, you) {
   if (!rels.length) {
     const far = bl[0];
     if (far) { const L = S.P.get(far.lca); return { text: `${B.f} ${B.g === 'f' ? 'قريبة بعيدة' : 'قريب بعيد'}`, sub: L ? `${you ? 'تجتمعون' : 'يجتمعون'} عند ${fullName(L, 3)}` : '', mahram: mh, A, you }; }
-    return { text: you ? `ما لقيت صلة مسجلة بينك وبين ${B.f}` : `ما لقيت صلة مسجلة بين ${A.f} و${B.f}`, sub: 'ضيف الآباء والأزواج الناقصين عشان أقدر أحسبها', mahram: mh, A, you };
+    return { text: you ? `ما لقيت صلة مسجلة بينك وبين ${B.f}` : `ما لقيت صلة مسجلة بين ${A.f} و${B.f}`, sub: 'أضف الآباء والأزواج الناقصين عشان أقدر أحسبها', mahram: mh, A, you };
   }
   const term = o => { const t = INLAW[o.cw.join('|')]; return o.kind === 'aff' && t ? phrase([t], poss) : ''; };
   const chainOf = o => { if (!o.r || o.kind === 'spouse') return ''; const ch = phrase(o.r.words, poss); return ch !== phrase(o.cw, poss) ? 'يعني: ' + ch + (o.kind === 'milk' ? ' بالرضاعة' : '') : ''; };
@@ -987,8 +987,8 @@ function renderTree(keep) {
   if (!root) {
     world.innerHTML = ''; S.lay = null;
     empty.innerHTML = `<div class="big"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="5" r="2.4"/><circle cx="5" cy="19" r="2.4"/><circle cx="19" cy="19" r="2.4"/><path d="M12 7.4v4.6M12 12H5v4.6M12 12h7v4.6"/></svg></div>
-      <h2>${S.lost ? 'ما قدرت أفتح الشجرة' : 'شجرتك فاضية'}</h2><p>${S.lost ? esc(lostText()) : canEdit() ? 'ابدأ بأكبر جد تعرفه، وبعدين ضيف عياله وأحفاده. أو ابدأ بنفسك وطلّع لفوق.' : (S.doc && !S.doc.local && !S.doc.role ? 'لحظة، أجيب الشجرة…' : 'ما فيه أحد بالشجرة للحين.')}</p>
-      ${canEdit() ? `<button class="btn pri" id="emAdd">${ICON.plus}ضيف أول شخص</button><button class="btn" id="emImp">استورد نسخة</button>` : ''}`;
+      <h2>${S.lost ? 'ما قدرت أفتح الشجرة' : 'شجرتك فاضية'}</h2><p>${S.lost ? esc(lostText()) : canEdit() ? 'ابدأ بأكبر جد تعرفه، وبعدين أضف عياله وأحفاده. أو ابدأ بنفسك وطلّع لفوق.' : (S.doc && !S.doc.local && !S.doc.role ? 'لحظة، أجيب الشجرة…' : 'ما فيه أحد بالشجرة للحين.')}</p>
+      ${canEdit() ? `<button class="btn pri" id="emAdd">${ICON.plus}أضف أول شخص</button><button class="btn" id="emImp">استورد نسخة</button>` : ''}`;
     const a = $('#emAdd'); if (a) a.onclick = () => personForm({ preset: { g: 'm' }, title: 'أول شخص بالشجرة' });
     const b = $('#emImp'); if (b) b.onclick = importAny;
     return;
@@ -1270,7 +1270,7 @@ function renderList() {
   if (S.sort === 'gen') arr.sort((a, b) => genOf(a) - genOf(b) || coll.compare(a.f, b.f)); else arr.sort((a, b) => coll.compare(a.f, b.f) || coll.compare(fullName(a, 3), fullName(b, 3)));
   $('#cnt').textContent = ppl(arr.length);
   $('#addFab').hidden = $('#quickAdd').hidden = !canEdit();
-  if (!S.P.size) { $('#plist').innerHTML = `<div class="empty"><p>ما فيه أحد للحين.${canEdit() ? ' اضغط «ضيف شخص» وابدأ.' : ''}</p></div>`; return; }
+  if (!S.P.size) { $('#plist').innerHTML = `<div class="empty"><p>ما فيه أحد للحين.${canEdit() ? ' اضغط «أضف شخص» وابدأ.' : ''}</p></div>`; return; }
   if (!arr.length) { $('#plist').innerHTML = `<div class="empty"><p>${S.miss && !q ? 'ما فيه أحد ناقص 👌' : 'ما لقيت أحد بهالبحث'}</p></div>`; return; }
   const max = 400;
   $('#plist').innerHTML = arr.slice(0, max).map(p => personRow(p, S.sort === 'gen' ? `<span class="gen">الجيل ${genOf(p)}</span>` : '')).join('') + (arr.length > max ? `<p class="empty">وفيه ${arr.length - max} غيرهم، دقّق البحث</p>` : '');
@@ -1332,10 +1332,10 @@ function fillPerson(sh) {
   <div class="facts">${facts.join('')}</div>${p.nt ? `<div class="note">${esc(p.nt)}</div>` : ''}`;
   if (ed) {
     h += `<div class="chips" style="margin-bottom:6px">
-      <button class="chip act" data-a="son">${ICON.plus}ضيف ابن</button><button class="chip act" data-a="dau">${ICON.plus}ضيف بنت</button>
-      <button class="chip act" data-a="bro">${ICON.plus}ضيف أخ</button><button class="chip act" data-a="sis">${ICON.plus}ضيف أخت</button>
-      <button class="chip act" data-a="spouse">${ICON.plus}${p.g === 'f' ? 'ضيف زوج' : 'ضيف زوجة'}</button><button class="chip act" data-a="milk">🍼 الرضاعة</button>
-      ${fa ? '' : `<button class="chip act" data-a="fa">${ICON.plus}ضيف أب</button>`}${mo ? '' : `<button class="chip act" data-a="mo">${ICON.plus}ضيف أم</button>`}
+      <button class="chip act" data-a="son">${ICON.plus}أضف ابن</button><button class="chip act" data-a="dau">${ICON.plus}أضف بنت</button>
+      <button class="chip act" data-a="bro">${ICON.plus}أضف أخ</button><button class="chip act" data-a="sis">${ICON.plus}أضف أخت</button>
+      <button class="chip act" data-a="spouse">${ICON.plus}${p.g === 'f' ? 'أضف زوج' : 'أضف زوجة'}</button><button class="chip act" data-a="milk">🍼 الرضاعة</button>
+      ${fa ? '' : `<button class="chip act" data-a="fa">${ICON.plus}أضف أب</button>`}${mo ? '' : `<button class="chip act" data-a="mo">${ICON.plus}أضف أم</button>`}
       <button class="chip" data-a="edit">${ICON.edit}عدّل</button><button class="chip" data-a="merge">🔗 دمج مع شخص ثاني</button><button class="chip del" data-a="del">${ICON.trash}احذف</button></div>`;
   }
   h += `<div class="chips" style="margin-top:8px"><button class="chip" data-a="rel">${ICON.q}وش صلتي في${he}؟</button><button class="chip" data-a="rel2">صلت${he} بشخص ثاني</button><button class="chip" data-a="show">${ICON.target}ورني إيا${he} بالشجرة</button>${S.dev.me === p.id ? '' : `<button class="chip" data-a="me">${ICON.user}${p.g === 'f' ? 'هذي أنا' : 'هذا أنا'}</button>`}<button class="chip" data-a="copyname">📋 انسخ النسب</button><button class="chip" data-a="cert">📜 وثيقة نسب</button><button class="chip" data-a="prof">🗂️ ملف كامل (PDF)</button>${kids.length ? `<button class="chip" data-a="sun">🌞 ذريت${he} بشكل دائري</button>` : ''}<button class="chip" data-a="gen">👥 جيل${he}</button><button class="chip" data-a="say">🔊 اسمع نسب${he}</button><button class="chip" data-a="greet">🎴 بطاقة تهنئة</button>${ed && S.cur.id && (S.cur.view || (S.meta && S.meta.vk)) ? `<button class="chip" data-a="ask">🙋 اطلب معلومة عن${he}</button>` : ''}${ed && kids.length && S.cur.id && S.doc && !S.doc.local && S.doc.role === 'edit' && !(S.meta && S.meta.priv) ? `<button class="chip" data-a="brLink">🌿 رابط لفرع${he}</button>` : ''}${S.dev.me !== p.id ? `<button class="chip" data-a="rahm">🤝 ${(S.dev.rahm || {})[p.id] ? 'تذكير التواصل' : 'ذكّرني أتواصل مع' + he}</button>` : ''}${ed && p.tel ? `<a class="chip" href="tel:${esc(p.tel)}">📞 اتصل</a><a class="chip" href="https://wa.me/${waNum(p.tel)}" target="_blank" rel="noopener">💬 واتساب</a>` : ''}${canSuggest() ? '<button class="chip" data-a="sgFix">✏️ اقترح تصحيح</button>' : ''}${ed ? '<button class="chip" data-a="capNew">💌 رسالة للمستقبل</button>' : ''}<button class="chip" data-a="ped">🧬 أجداد${he}</button><button class="chip" data-a="kin">👥 أقارب${he}</button><button class="chip" data-a="card">🪪 بطاقة</button><button class="chip" data-a="rootHere">🌳 ابدأ الشجرة من${p.g === 'f' ? 'ها' : 'ه'}</button></div>`;
@@ -1562,7 +1562,7 @@ async function addSibling(p, g) {
   const he = p.g === 'f' ? 'ها' : 'ه', title = `${g === 'f' ? 'أخت' : 'أخو'} ${p.f}`;
   let fa = S.P.has(p.fa) ? p.fa : '', mo = S.P.has(p.mo) ? p.mo : '';
   if (!fa && !mo) {
-    const v = await ask(title, `عشان يصيرون إخوان لازم نعرف أبو${he}. ضيف الأب أول، وبعدين ${g === 'f' ? 'الأخت' : 'الأخ'}.`, [{ v: 'new', t: 'اكتب اسم الأب' }, { v: 'pick', t: 'اختر الأب من المسجّلين' }, { v: null, t: 'إلغاء', cls: 'ghost', cancel: true }]);
+    const v = await ask(title, `عشان يصيرون إخوان لازم نعرف أبو${he}. أضف الأب أول، وبعدين ${g === 'f' ? 'الأخت' : 'الأخ'}.`, [{ v: 'new', t: 'اكتب اسم الأب' }, { v: 'pick', t: 'اختر الأب من المسجّلين' }, { v: null, t: 'إلغاء', cls: 'ghost', cancel: true }]);
     if (!v) return;
     if (v === 'new') {
       const n = await promptText(`اسم أبو ${p.f}`, '', 'مثل: محمد'); if (!n) return;
@@ -1806,7 +1806,7 @@ function renderAll() {
   else renderMore();
   if (personSheet && sheets.includes(personSheet)) { if (S.P.has(personSheet.data.id)) fillPerson(personSheet); else closeSheet(personSheet); }
   if (!S.introDone && S.P.size >= 2 && S.view !== 'more') { S.introDone = true; setTimeout(introToast, 1800); }
-  if (S.askPid && S.P.has(S.askPid) && S.doc && (S.doc.role || S.doc.local)) { const id = S.askPid, q = S.P.get(id); S.askPid = null; setTimeout(() => { setView('tree'); openPerson(id); if (canSuggest()) toast(`🙋 أهلك يطلبون معلومات عن ${q.f}. صحّح أو ضيف صورة من صفحت${q.g === 'f' ? 'ها' : 'ه'}`, { text: '✏️ صحّح', fn: () => suggestFix(id) }); }, 500); }
+  if (S.askPid && S.P.has(S.askPid) && S.doc && (S.doc.role || S.doc.local)) { const id = S.askPid, q = S.P.get(id); S.askPid = null; setTimeout(() => { setView('tree'); openPerson(id); if (canSuggest()) toast(`🙋 أهلك يطلبون معلومات عن ${q.f}. صحّح أو أضف صورة من صفحت${q.g === 'f' ? 'ها' : 'ه'}`, { text: '✏️ صحّح', fn: () => suggestFix(id) }); }, 500); }
 }
 function setView(v) {
   S.view = v; LS.set('shajara.view', v);
@@ -2435,7 +2435,7 @@ function speak(text) {
   if (!('speechSynthesis' in window)) return toast('جهازك ما يدعم القراءة بالصوت');
   try {
     const ss = speechSynthesis; if (ss.speaking) { ss.cancel(); return; }
-    const go = () => { const u = new SpeechSynthesisUtterance(text), v = ss.getVoices().find(x => /^ar(-|_|$)/i.test(x.lang)); u.lang = v ? v.lang : 'ar-SA'; if (v) u.voice = v; u.rate = .9; ss.speak(u); if (!v && ss.getVoices().length) toast('إذا ما سمعت شي، ضيف صوت عربي من إعدادات جهازك'); };
+    const go = () => { const u = new SpeechSynthesisUtterance(text), v = ss.getVoices().find(x => /^ar(-|_|$)/i.test(x.lang)); u.lang = v ? v.lang : 'ar-SA'; if (v) u.voice = v; u.rate = .9; ss.speak(u); if (!v && ss.getVoices().length) toast('إذا ما سمعت شي، أضف صوت عربي من إعدادات جهازك'); };
     if (ss.getVoices().length) go(); else { let done = false; ss.onvoiceschanged = () => { if (!done) { done = true; go(); } }; setTimeout(() => { if (!done) { done = true; go(); } }, 900); }
   } catch (e) { toast('ما قدرت أقرأها'); }
 }
@@ -2962,7 +2962,7 @@ async function geocode(names) {
 }
 async function openMap() {
   const m = new Map(); for (const p of S.P.values()) { const c = (p.city || '').trim(); if (!c) continue; const k = norm(c); if (!m.has(k)) m.set(k, { name: c, a: [] }); m.get(k).a.push(p); }
-  if (!m.size) return toast('ما فيه مدن مسجّلة. ضيف المدينة من «عدّل» بصفحة كل شخص');
+  if (!m.size) return toast('ما فيه مدن مسجّلة. أضف المدينة من «عدّل» بصفحة كل شخص');
   const sh = openSheet(`<h2>🗺️ خريطة العائلة<button class="ib x" data-close aria-label="سكّر">${ICON.x}</button></h2><div id="mapBox"><p style="color:var(--muted);text-align:center;padding-top:30%">لحظة، أجهّز الخريطة…</p></div><div id="mapMiss"></div>`);
   try { await loadLeaflet(); } catch (e) { $('#mapBox', sh.el).innerHTML = '<p style="color:var(--muted);text-align:center;padding:20px">الخريطة تحتاج نت. جرّب «مدن العائلة» بداله.</p>'; return; }
   const box = $('#mapBox', sh.el); box.innerHTML = '';
@@ -3343,7 +3343,7 @@ function openCities() {
   for (const p of S.P.values()) { const c = (p.city || '').trim(); if (!c) { none++; continue; } const k = norm(c); if (!m.has(k)) m.set(k, { name: c, a: [] }); m.get(k).a.push(p); }
   const list = [...m.values()].sort((a, b) => b.a.length - a.a.length), mx = list.length ? list[0].a.length : 1;
   const sh = openSheet(`<h2>🏙️ مدن العائلة<button class="ib x" data-close aria-label="سكّر">${ICON.x}</button></h2>
-    <p style="color:var(--muted);font-size:13.5px;margin:0 0 8px">${list.length ? `${cnt(list.length, 'مدينة وحدة', 'مدينتين', 'مدن', 'مدينة')}${none ? ' · ' + ppl(none) + ' بدون مدينة' : ''}` : 'ما فيه مدن مسجّلة. ضيف المدينة من «عدّل» بصفحة الشخص.'}</p>
+    <p style="color:var(--muted);font-size:13.5px;margin:0 0 8px">${list.length ? `${cnt(list.length, 'مدينة وحدة', 'مدينتين', 'مدن', 'مدينة')}${none ? ' · ' + ppl(none) + ' بدون مدينة' : ''}` : 'ما فيه مدن مسجّلة. أضف المدينة من «عدّل» بصفحة الشخص.'}</p>
     ${list.map((c, i) => `<button class="city" data-c="${i}"><span class="cb" style="width:${Math.max(6, c.a.length / mx * 100)}%"></span><b>📍 ${esc(c.name)}</b><i>${ppl(c.a.length)}</i></button><div class="chips" id="cty${i}" hidden>${c.a.map(x => `<button class="chip ${x.g === 'f' ? 'f' : 'm'}" data-go="${x.id}">${esc(fullName(x, 2, false))}</button>`).join('')}</div>`).join('')}`);
   if (list.length) $('h2', sh.el).insertAdjacentHTML('afterend', '<button class="btn sm" id="ctMap" style="margin-bottom:8px">🗺️ شوفها على الخريطة</button>');
   sh.el.addEventListener('click', e => { if (e.target.closest('#ctMap')) { closeSheet(sh); return openMap(); } const c = e.target.closest('[data-c]'); if (c) { const el = $('#cty' + c.dataset.c, sh.el); el.hidden = !el.hidden; return; } const b = e.target.closest('[data-go]'); if (b) { closeSheet(sh); openPerson(b.dataset.go); } });
@@ -3412,7 +3412,7 @@ function suggestComposer(anchor) {
     <p style="color:var(--muted);font-size:14px;margin:0 0 10px">اقتراحك يوصل لصاحب الشجرة، وإذا وافق عليه ينضاف للكل.</p>
     <label class="fld"><span>اسمك</span><input id="sgBy" maxlength="60" placeholder="عشان يعرف مين اقترح"></label>
     <div id="sgL"></div>
-    <button class="btn" id="sgAdd" style="width:100%;margin:6px 0 12px">${ICON.plus}ضيف شخص</button>
+    <button class="btn" id="sgAdd" style="width:100%;margin:6px 0 12px">${ICON.plus}أضف شخص</button>
     <label class="fld"><span>ملاحظة <i>(اختياري)</i></span><textarea id="sgNote" rows="2" maxlength="400"></textarea></label>
     <div class="acts"><button class="btn pri" id="sgSend">أرسل الاقتراح</button><button class="btn ghost" data-close>سكّر</button></div>`);
   const E = q => $(q, sh.el);
@@ -3435,7 +3435,7 @@ function suggestComposer(anchor) {
   E('#sgAdd').onclick = () => addOne(null);
   if (anchor && !d.people.length) setTimeout(() => addOne(anchor), 250);
   E('#sgSend').onclick = async () => {
-    if (!d.people.length) return toast('ضيف شخص واحد على الأقل');
+    if (!d.people.length) return toast('أضف شخص واحد على الأقل');
     if (!(d.by || '').trim()) { toast('اكتب اسمك'); return E('#sgBy').focus(); }
     const b = E('#sgSend'); b.disabled = true; b.textContent = 'لحظة…';
     try { await T.suggest.send(S.cur.id, S.cur.key, d.by.trim(), { note: d.note || '', people: d.people }); LS.del(k); closeSheet(sh); toast('وصل اقتراحك لصاحب الشجرة ✓ شكرًا'); }

@@ -259,7 +259,7 @@ function updateBoss(dt) {
   Boss.max = 2500 + 1800 * Math.max(0, Boss.ids.size - 1);
   Boss.hitT -= dt;
   const d = dist(P, w);
-  if (Boss.active && !wasActive && bc.el < 3) { UI.feed('🐋 الحوت الرملي صحى! روحوا له بالصحرا'); if (d < 1500) Snd.boss(); }
+  if (Boss.active && !wasActive && bc.el < 3) { UI.feed('🐋 الحوت الرملي صحى! روحوا له بالصحراء'); if (d < 1500) Snd.boss(); }
   if (!Boss.active && wasActive && !Boss.dead && d < 900) UI.feed('😴 الحوت رجع ينام… المرة الجاية');
   if (Boss.active && d < 720 && P.dead <= 0) {
     const k = Math.floor(bc.el / 2.4);
@@ -665,7 +665,7 @@ function emote(i) {
 function friendBuff(o) {
   if (P.buffs.friend > G.t + 60) return;
   P.buffs.friend = G.t + 180;
-  UI.banner('🤝 شحنة صداقة!', `أنت و${o.name}: +20٪ خبرة و+15٪ ضرب لمدة 3 دقايق`);
+  UI.banner('🤝 شحنة صداقة!', `أنت و${o.name}: +20٪ خبرة و+15٪ ضرب لمدة 3 دقائق`);
   burst(P.x, P.y - 20, 30, '#f9a8d4');
 }
 

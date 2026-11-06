@@ -484,7 +484,7 @@ function updateFlashBtn(){
 $('#flashBtn').onclick=()=>{
   S.flash=FLASH_MODES[(FLASH_MODES.indexOf(S.flash)+1)%3]; save();
   setTorch(S.flash==='torch'); updateFlashBtn();
-  toast({off:'الفلاش مطفي',on:'فلاش عند الالتقاط',torch:'كشاف دائم'}[S.flash]);
+  toast({off:'الفلاش مطفأ',on:'فلاش عند الالتقاط',torch:'كشاف دائم'}[S.flash]);
 };
 
 /* ---------- top buttons ---------- */

@@ -15,7 +15,7 @@ const webpush = require('web-push');
 const PORT = +process.env.PORT || 8080;
 const ORIGINS = (process.env.ALLOW_ORIGINS || 'https://ilo0ol.github.io').split(',').map(s => s.trim()).filter(Boolean);
 const SITE = process.env.SITE_URL || 'https://ilo0ol.github.io/experiments/';
-if (!process.env.DATABASE_URL) { console.error('DATABASE_URL مو موجود. ضيف قاعدة بيانات Postgres واربطها بالسيرفر.'); process.exit(1); }
+if (!process.env.DATABASE_URL) { console.error('DATABASE_URL مو موجود. أضف قاعدة بيانات Postgres واربطها بالسيرفر.'); process.exit(1); }
 const pool = new Pool({ connectionString: process.env.DATABASE_URL, ssl: process.env.PGSSL === '1' ? { rejectUnauthorized: false } : undefined, max: 10 });
 const q = (t, p) => pool.query(t, p);
 const now = () => Date.now();
@@ -185,7 +185,7 @@ route('POST', '/api/docs/:id/bookings', async (req, b, p) => {
     if (!svc) fail(400, 'bad_service');
     const dur = int(svc[1].dur); if (!dur || dur < 5 || dur > 600) fail(400, 'bad_service');
     const end = start + dur * 60e3;
-    /* قواعد صاحب المحل: أقل وقت قبل الموعد (مع سماح 10 دقايق لو تأخر الزبون بتعبئة البيانات)، وكم يوم قدام، والاستراحة بين المواعيد */
+    /* قواعد صاحب المحل: أقل وقت قبل الموعد (مع سماح 10 دقائق لو تأخر الزبون بتعبئة البيانات)، وكم يوم قدام، والاستراحة بين المواعيد */
     const notice = Math.min(Math.max(int(meta.notice) || 0, 0), 20160), ahead = Math.min(Math.max(int(meta.ahead) || 120, 1), 120), buf = Math.min(Math.max(int(meta.buffer) || 0, 0), 240) * 60e3;
     if (start < now() + Math.max(notice - 10, 5) * 60e3) fail(400, 'too_soon');
     if (start > now() + (ahead + 1) * 864e5) fail(400, 'bad_time');

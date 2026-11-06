@@ -581,7 +581,7 @@ TAB.menu = () => {
     ${!isPub() ? `<p class="small mt">المنيو محفوظ بجهازك بس. لما تخلص، انشره من تبويب «المشاركة» عشان تاخذ الرابط والكود.</p>` : ''}</div>`;
   if (size > SIZE_WARN) h += sizeBanner(size);
   if (m.order !== false && !waNum(m.wa)) h += `<div class="banner info">${ico('info')}<div>ما حطيت رقم واتساب، فالزبون يقدر يتصفح المنيو بس ما يقدر يرسل طلب. حطه من تبويب «المطعم».</div></div>`;
-  if (!cs.length && !ps.length) h += `<div class="card empty"><div class="big">🍽️</div><b>المنيو فاضي</b><p class="small mt">ابدأ بإضافة قسم مثل «المشروبات الحارة» أو «الأطباق الرئيسية»، وبعدين ضيف المنتجات فيه.</p></div>`;
+  if (!cs.length && !ps.length) h += `<div class="card empty"><div class="big">🍽️</div><b>المنيو فاضي</b><p class="small mt">ابدأ بإضافة قسم مثل «المشروبات الحارة» أو «الأطباق الرئيسية»، وبعدين أضف المنتجات فيه.</p></div>`;
   cs.forEach((c, i) => { h += catBlock(c, ps.filter(p => p.cat === c.id), i, cs.length); });
   const orphans = ps.filter(p => !cs.some(c => c.id === p.cat));
   if (orphans.length) h += catBlock({ id: '', name: 'بدون قسم' }, orphans, -1, 0);

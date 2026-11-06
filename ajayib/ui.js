@@ -127,7 +127,7 @@ const Wonders = {
     S.cd.fortune = today; P.buffs.luck = G.t + 600;
     let extra = '';
     if (Math.random() < 0.05 && !S.pets.includes('cat')) { addPet('cat'); extra = '<br><br>😺 البسة قررت تمشي معك!'; }
-    UI.say('🐈‍⬛', w.n, `🔮 «${pick(FORTUNES)}»<br><br>🍀 حظك زاد: الوحوش تطيّح أغراض أكثر لمدة 10 دقايق.${extra}`);
+    UI.say('🐈‍⬛', w.n, `🔮 «${pick(FORTUNES)}»<br><br>🍀 حظك زاد: الوحوش تطيّح أغراض أكثر لمدة 10 دقائق.${extra}`);
   },
   slimeking(w) {
     if (G.mobs.some(m => m.type === 'kingSlime')) return UI.say('👑', w.n, 'الملك هنا وزعلان! 😠');
@@ -303,7 +303,7 @@ const UI = {
   offer(qid) {
     const q = QUESTS.find(q => q.id === qid), n = NPCS[q.by] || { e: '👽', n: 'زوزو الفضائي' };
     const r = q.r, rw = [r.xp && `${r.xp} خبرة`, r.g && `${r.g} ⚪`, ...(r.it || []).map(([it, c]) => `${c}× ${ITEMS[it].e} ${ITEMS[it].n}`), r.title && `لقب «${r.title}»`, r.pet && `حيوان أليف ${PETS[r.pet].e}`].filter(Boolean).join(' · ');
-    this.say(n.e, n.n, `<b>📜 ${esc(q.n)}</b><br>${esc(q.d)}<div class="rw">🎁 الجايزة: ${rw}</div>`, [['👍 أبشر!', 'accept', q.id], ['🙅 بعدين', 'close']]);
+    this.say(n.e, n.n, `<b>📜 ${esc(q.n)}</b><br>${esc(q.d)}<div class="rw">🎁 الجائزة: ${rw}</div>`, [['👍 أبشر!', 'accept', q.id], ['🙅 بعدين', 'close']]);
   },
 
   /* ---------- المتجر ---------- */
@@ -443,7 +443,7 @@ const UI = {
   },
   renderChat() {
     const el = $('#chatlog'); if (!el) return;
-    el.innerHTML = this.chatLog.length ? this.chatLog.map(c => `<div class="cl ${c.me ? 'me' : ''}"><b style="color:${c.color}">${esc(c.name)}</b> ${esc(c.msg)}</div>`).join('') : '<p class="muted">لا رسايل بعد. قل هلا 👋</p>';
+    el.innerHTML = this.chatLog.length ? this.chatLog.map(c => `<div class="cl ${c.me ? 'me' : ''}"><b style="color:${c.color}">${esc(c.name)}</b> ${esc(c.msg)}</div>`).join('') : '<p class="muted">لا رسائل بعد. قل هلا 👋</p>';
     el.scrollTop = el.scrollHeight;
   },
   sendChat(v) {
@@ -483,7 +483,7 @@ const UI = {
   /* ---------- اللوحات والقوارير ---------- */
   ago(ts) {
     const s = (Date.now() - ts) / 1000;
-    return s < 120 ? 'الحين' : s < 3600 ? `قبل ${cntTxt(Math.round(s / 60), 'دقيقة', 'دقايق', 'دقيقتين')}` : s < 86400 ? `قبل ${cntTxt(Math.round(s / 3600), 'ساعة', 'ساعات', 'ساعتين')}` : `قبل ${cntTxt(Math.round(s / 86400), 'يوم', 'أيام', 'يومين')}`;
+    return s < 120 ? 'الحين' : s < 3600 ? `قبل ${cntTxt(Math.round(s / 60), 'دقيقة', 'دقائق', 'دقيقتين')}` : s < 86400 ? `قبل ${cntTxt(Math.round(s / 3600), 'ساعة', 'ساعات', 'ساعتين')}` : `قبل ${cntTxt(Math.round(s / 86400), 'يوم', 'أيام', 'يومين')}`;
   },
   signText(r) { return SIGN_TPL[r.a].replace('{}', SIGN_WORDS[r.b]); },
   readSign(s) {
@@ -495,7 +495,7 @@ const UI = {
     const all = [...G.bottleMsgs.values()].filter(r => !r.mine);
     const r = all.length ? pick(all) : { n: 'النوخذة', a: irand(0, SIGN_TPL.length - 1), b: irand(0, SIGN_WORDS.length - 1), ts: Date.now() - 864e5 * 30 };
     this.say('🍾', 'رسالة في قارورة', `<div class="signbox">«${esc(this.signText(r))}»</div><small class="muted">— ${esc(r.n)} · ${this.ago(r.ts)}</small>
-      <p class="muted small">القوارير فيها رسايل من لاعبين حقيقيين رموها بالبحر.</p>`, [['✍️ اكتب رسالة وارميها', 'writebottle'], ['👋 تمام', 'close']]);
+      <p class="muted small">القوارير فيها رسائل من لاعبين حقيقيين رموها بالبحر.</p>`, [['✍️ اكتب رسالة وارميها', 'writebottle'], ['👋 تمام', 'close']]);
   },
   openWrite(kind) {
     this.writeKind = kind;
@@ -701,7 +701,7 @@ const Start = {
     el.hidden = false;
     el.innerHTML = `<div class="st">
       <div class="logo">أرض العجايب</div>
-      <p class="tag">عالم مفتوح أونلاين… فيه حوت بالصحرا، وصبارة تبي حضن، ودجاجة فيلسوفة 🐋🌵🐔</p>
+      <p class="tag">عالم مفتوح أونلاين… فيه حوت بالصحراء، وصبارة تبي حضن، ودجاجة فيلسوفة 🐋🌵🐔</p>
       ${save ? `<button class="btn primary big" id="cont">${avatarHTML(save.color, save.hat, 34)} كمّل يا ${esc(save.name)} (لفل ${save.lvl})</button><button class="btn ghost" id="newc">شخصية جديدة</button>` : ''}
       <div id="create" ${save ? 'hidden' : ''}>
         <div class="avatar-row" id="prev">${avatarHTML(this.color, this.hat, 80)}</div>
