@@ -9,7 +9,7 @@ const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
 const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
 const angDiff = (a, b) => { let d = (a - b) % (Math.PI * 2); if (d > Math.PI) d -= Math.PI * 2; if (d < -Math.PI) d += Math.PI * 2; return Math.abs(d); };
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-const cntTxt = (n, one, many) => `${n} ${n > 2 && n < 11 ? many : one}`;
+const cntTxt = (n, one, many, two) => n === 1 ? one : n === 2 && two ? two : `${n} ${n > 2 && n < 11 ? many : one}`;
 const fmtTime = s => { s = Math.max(0, Math.floor(s)); return `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`; };
 
 const cv = $('#game'), ctx = cv.getContext('2d');
@@ -292,7 +292,7 @@ function bossDead() {
   const w = World.wonderById.whale;
   for (let i = 0; i < 12; i++) setTimeout(() => burst(w.x + rand(-80, 80), w.y - rand(20, 100), 20, 'rainbow', 220), i * 120);
   if (Boss.my > 0) {
-    UI.banner('🐋 الحوت طاح!', `شاركت مع ${cntTxt(Math.max(1, Boss.ids.size), 'لاعب', 'لاعبين')}`);
+    UI.banner('🐋 الحوت طاح!', `شاركت مع ${cntTxt(Math.max(1, Boss.ids.size), 'لاعب', 'لاعبين', 'لاعبين')}`);
     S.stats.boss++;
     addXP(250 + S.lvl * 15);
     for (let i = 0; i < 12; i++) dropItem('pearl', irand(10, 25), w.x + rand(-60, 60), w.y + rand(40, 80));
