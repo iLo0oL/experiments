@@ -500,7 +500,7 @@ BOARDS.memories = {
   valid: (e, base, s) => e.k === 'm' && isDayStr(e.day) ? { ...base, k: 'm', day: e.day, text: s(e.text, 400), by: s(e.by, NAME_LEN), img: s(e.img, 16) } : null,
   count: my => [...my.bstate.values()].filter(e => !e.del && e.k === 'm'),
   html: my => `<section class="card"><h3>✍️ أضف ذكرى</h3><input type="date" id="md" value="${today()}"><textarea id="mt" maxlength="400" placeholder="وش صار؟ (مثلًا: أول كشتة لنا، وضاع الفحم 😂)"></textarea>
-    ${Photos.picker('mimg')}${isFb(my.topic) ? '' : '<p class="hint">الصور تبقى على السيرفر 12 ساعة، وبعدها تبقى بس في الجوالات اللي شافتها. (تبقى دايم لو تفعّلت الجلسات الطويلة)</p>'}
+    ${Photos.picker('mimg')}${isFb(my.topic) ? '' : '<p class="hint">الصور تبقى على السيرفر 12 ساعة، وبعدها تبقى بس في الجوالات اللي شافتها. (تبقى دائمًا لو تفعّلت الجلسات الطويلة)</p>'}
     <button class="btn primary big" id="madd">إضافة الذكرى</button></section><button class="btn big" id="mshow">📽️ اعرضوا الذكريات</button>`,
   bind(my) {
     const pick = Photos.bindPicker('mimg');

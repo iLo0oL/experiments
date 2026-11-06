@@ -4,8 +4,8 @@
   • الخطوط: من النسخة المحفوظة أول.
   • ما يلمس رسائل الجلسات (ntfy أو Firebase) ولا خادم الذكاء الاصطناعي.
 */
-const CACHE = 'saraha-v8';
-const V = '?v=8';
+const CACHE = 'saraha-v9';
+const V = '?v=9';
 const CORE = ['./', 'index.html', 'manifest.webmanifest', 'icons/icon-192.png', 'icons/icon-512.png',
   ...['config.js', 'vendor/qrcode.js', 'polish.js', 'banks.js', 'banks2.js', 'banks3.js', 'modes.js', 'banks4.js', 'games.js', 'games2.js',
     'games3.js', 'offline.js', 'offline2.js', 'offline3.js', 'extras.js', 'app.js'].map(f => f + V)];

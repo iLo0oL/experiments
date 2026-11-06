@@ -401,7 +401,7 @@ const GUESS = [
 const GCOLORS = ['#ffb547', '#ff7f57', '#f2628f', '#a57cff', '#5c8dff', '#2ec4d6', '#3fcf8e', '#a3aab6'];
 const MCOLORS = ['#ffc261', '#7fb0ff', '#5fdba6', '#ff8fae', '#bd9bff', '#5fd6e4', '#ff9a73', '#d9c45a', '#9fd36b', '#e0a3ff'];
 const EMOJIS = ['🏕️', '✈️', '🏠', '🍽️', '🚗', '🏖️', '⛺', '🎮', '⚽', '🎉', '☕', '🛒', '🎂', '🏔️', '🐪', '🌴', '🎬', '🍖', '💼', '🎓', '🚤', '🏟️', '🧳', '🐱'];
-const TEMPLATES = [['🏕️', 'طلعة'], ['✈️', 'سفرة'], ['🏠', 'سكن مشترك'], ['🍽️', 'عشا'], ['🏖️', 'شاليه'], ['⛺', 'كشتة']];
+const TEMPLATES = [['🏕️', 'طلعة'], ['✈️', 'سفرة'], ['🏠', 'سكن مشترك'], ['🍽️', 'عشاء'], ['🏖️', 'شاليه'], ['⛺', 'كشتة']];
 
 /* ================= الحسابات (بالهللات/السنتات كأعداد صحيحة) ================= */
 const Calc = (() => {
@@ -742,7 +742,7 @@ function renderHome() {
   let h = '';
   if (!refs.length) {
     h = `<div class="empty"><div class="big">🐱</div><b>هلا! هنا تقسمون المصاريف بدون وجع راس</b>
-      <p>سوّ قطّة للطلعة أو السفرة أو السكن، ضيف الشلة، وسجّل مين دفع وش. وأنا أحسب لكم مين له ومين عليه، وأقل عدد تحويلات عشان تخلصون.</p>
+      <p>سوّ قطّة للطلعة أو السفرة أو السكن، أضف الشلة، وسجّل مين دفع وش. وأنا أحسب لكم مين له ومين عليه، وأقل عدد تحويلات عشان تخلصون.</p>
       <p style="margin-top:16px"><button class="btn pri" data-act="newGroup">${ic('plus')}سوّ أول قطّة</button></p></div>`;
   } else {
     h += `<h2 class="sec">قطّاتك</h2>`;
@@ -793,7 +793,7 @@ function renderGroup() {
   if (r.dead) b = `<div class="banner"><p><b>${r.dead === 'not_found' ? 'القطّة انحذفت من السيرفر أو وقّفوا مشاركتها.' : 'الرابط ما عاد يشتغل، يمكن صاحب القطّة جدّد الروابط.'}</b> البيانات اللي عندك باقية على جهازك.</p>
     <div class="btns"><button class="btn sm" data-act="keepLocal">خلّها نسخة على جهازي</button><button class="btn sm dghost" data-act="forget">شيلها من جهازي</button></div></div>`;
   else if (r.type === 'shared' && !r.role && !M.members.length) b = `<div class="notice">لحظة، أجيب القطّة من السيرفر…</div>`;
-  else if (!M.members.length && ed) b = `<div class="notice"><span>ضيف الشلة عشان تبدأ تسجّل المصاريف</span><button class="btn sm pri" data-act="gsettings">ضيف</button></div>`;
+  else if (!M.members.length && ed) b = `<div class="notice"><span>أضف الشلة عشان تبدأ تسجّل المصاريف</span><button class="btn sm pri" data-act="gsettings">أضف</button></div>`;
   else if (r.type === 'shared' && r.role === 'view') b = `<div class="notice view-note">👀 <span>عندك رابط <b>عرض بس</b>: تشوف الحساب والملخص بدون ما تعدّل</span></div>`;
   $('#g-banner').innerHTML = b;
   /* البطاقة العلوية */
@@ -823,7 +823,7 @@ function renderExpList(M) {
   $('.search', $('#tab-exp')).hidden = !M.list.length;
   if (!$('#q').previousElementSibling) $('#q').insertAdjacentHTML('beforebegin', ic('search'));
   if (!M.list.length) {
-    $('#exp-list').innerHTML = `<div class="empty"><div class="big">🧾</div><b>ما فيه مصاريف للحين</b><p>${canEdit(r) && M.members.length ? 'اضغط «مصروف» تحت وسجّل أول مصروف' : canEdit(r) ? 'ضيف الشلة أول' : 'أول ما الشلة يسجّلون مصاريف بتطلع هنا'}</p></div>`;
+    $('#exp-list').innerHTML = `<div class="empty"><div class="big">🧾</div><b>ما فيه مصاريف للحين</b><p>${canEdit(r) && M.members.length ? 'اضغط «مصروف» تحت وسجّل أول مصروف' : canEdit(r) ? 'أضف الشلة أول' : 'أول ما الشلة يسجّلون مصاريف بتطلع هنا'}</p></div>`;
     return;
   }
   if (!items.length) { $('#exp-list').innerHTML = `<div class="empty"><b>ما لقيت شي</b><p>جرّب كلمة ثانية</p></div>`; return; }
@@ -921,7 +921,7 @@ function openGroupForm(r) {
       ${r ? '' : `<div class="fld"><span>الشلة</span>
         <label class="fld" style="margin-bottom:10px"><input id="f-me" maxlength="30" placeholder="اسمك" value="${esc(f.me)}" aria-label="اسمك"></label>
         <div class="chips" id="f-others"></div>
-        <div class="addrow"><input id="f-add" maxlength="30" placeholder="اسم واحد من الشلة" aria-label="اسم واحد من الشلة"><button class="btn sm" id="f-addb">${ic('plus')}ضيف</button></div>
+        <div class="addrow"><input id="f-add" maxlength="30" placeholder="اسم واحد من الشلة" aria-label="اسم واحد من الشلة"><button class="btn sm" id="f-addb">${ic('plus')}أضف</button></div>
         <p class="hint">تقدر تضيف وتعدّل الأسماء بعدين، والشلة يقدرون يضيفون أنفسهم لما تشاركهم الرابط.</p></div>`}
       <p class="err" id="f-err"></p>
     </div>
@@ -980,7 +980,7 @@ function drawGroupSettings(r, el) {
       ${ed ? `<button class="icon-btn" data-act="renMember" aria-label="غيّر الاسم" title="غيّر الاسم">${ic('edit')}</button><button class="icon-btn" data-act="delMember" aria-label="احذف" title="احذف">${ic('trash')}</button>` : ''}</span></div>`;
   }
   h += `</div>`;
-  if (ed) h += `<div class="addrow"><input id="gs-add" maxlength="30" placeholder="ضيف واحد للشلة" aria-label="اسم العضو الجديد"><button class="btn sm pri" data-act="addMember">${ic('plus')}ضيف</button></div>`;
+  if (ed) h += `<div class="addrow"><input id="gs-add" maxlength="30" placeholder="أضف واحد للشلة" aria-label="اسم العضو الجديد"><button class="btn sm pri" data-act="addMember">${ic('plus')}أضف</button></div>`;
   h += `<h4 class="sec">المشاركة</h4>`;
   h += `<button class="setrow" data-act="share">${ic('link')}<span class="grow">${r.type === 'shared' ? 'روابط المشاركة' : 'شارك مع الشلة'}<small>${r.type === 'shared' ? (r.role === 'view' ? 'عندك صلاحية عرض بس' : 'الشلة يضيفون مصاريفهم من جوالاتهم') : 'القطّة الحين على جهازك بس'}</small></span></button>`;
   h += `<h4 class="sec">ثاني</h4>`;
@@ -1052,7 +1052,7 @@ function maybeAskWho(r) {
 }
 function openWhoAmI(r) {
   const M = compute(r); const ed = canEdit(r); const guess = prefs.myName ? M.members.find(m => normAr(m.name) === normAr(prefs.myName)) : null;
-  const el = openSheet(`<div class="sh-head"><h3>أنا مين؟<small>اختار اسمك عشان أوريك وش لك ووش عليك</small></h3><button class="icon-btn" data-close aria-label="سكّر">${ic('x')}</button></div>
+  const el = openSheet(`<div class="sh-head"><h3>أنا مين؟<small>اختر اسمك عشان أوريك وش لك ووش عليك</small></h3><button class="icon-btn" data-close aria-label="سكّر">${ic('x')}</button></div>
     <div class="sh-body whoami">${M.members.map(m => `<button class="btn ${guess && guess.id === m.id ? 'pri' : ''}" data-me="${esc(m.id)}">${avatar(M, m.id)}${esc(m.name)}</button>`).join('')}
     ${ed ? `<h4 class="sec">اسمك مو موجود؟</h4><div class="addrow"><input id="wa-name" maxlength="30" placeholder="اكتب اسمك" value="${guess ? '' : esc(prefs.myName || '')}" aria-label="اسمك"><button class="btn sm pri" id="wa-add">ضيفني</button></div>` : ''}</div>
     <div class="sh-foot"><button class="btn ghost wide" data-close>بعدين</button></div>`);
@@ -1069,7 +1069,7 @@ function openWhoAmI(r) {
 /* ================= المصروف: إضافة وتعديل ================= */
 function openExpenseForm(r, eid) {
   const M = compute(r); const dec = M.dec; const d = M.d;
-  if (!M.members.length) { toast('ضيف الشلة أول'); openGroupSettings(r); return; }
+  if (!M.members.length) { toast('أضف الشلة أول'); openGroupSettings(r); return; }
   const old = eid ? d.item(eid) : null; if (eid && !old) { toast('المصروف انحذف'); return; }
   const people = M.members.map(m => ({ id: m.id, name: m.name }));
   if (old) for (const id of new Set([...Object.keys(old.by || {}), ...Object.keys(old.sw || {})])) if (!M.mmap.has(id)) people.push({ id, name: 'عضو محذوف' });
@@ -1094,7 +1094,7 @@ function openExpenseForm(r, eid) {
     <div class="amtbox"><div class="amtline"><input id="x-amt" class="amt-in" inputmode="none" autocomplete="off" placeholder="0" aria-label="المبلغ" value="${esc(f.amt)}"><span class="cur">${esc(M.cur.s)}</span></div>
       <div class="amt-eval" id="x-eval"></div>
       <div class="kp ${old ? 'hide' : ''}" id="kp">${KEYS.map(k => `<button type="button" data-k="${k}" class="${'+−×'.includes(k) ? 'op' : k === '=' ? 'eq' : ''}" aria-label="${k === 'back' ? 'امسح' : k === '=' ? 'تم' : k}">${k === 'back' ? '⌫' : k === '=' ? '✓' : k}</button>`).join('')}</div></div>
-    <label class="fld"><span>وش المصروف؟</span><input id="x-title" maxlength="60" placeholder="مثلاً: عشا، بنزين، تذاكر" value="${esc(f.title)}"></label>
+    <label class="fld"><span>وش المصروف؟</span><input id="x-title" maxlength="60" placeholder="مثلاً: عشاء، بنزين، تذاكر" value="${esc(f.title)}"></label>
     <div class="fld"><span>الفئة</span><div class="chips" id="x-cats"></div></div>
     <div class="fld"><div class="fld-h"><span>مين دفع؟</span><button type="button" class="link" id="x-pm"></button></div><div id="x-pay"></div></div>
     <div class="fld"><span>كيف تتقسم؟</span><div class="seg" id="x-sm"><button type="button" data-sm="eq">بالتساوي</button><button type="button" data-sm="amt">بمبالغ محددة</button><button type="button" data-sm="w">نسب أو حصص</button></div><div id="x-split" style="margin-top:12px"></div></div>
@@ -1131,7 +1131,7 @@ function openExpenseForm(r, eid) {
   };
   const drawImg = () => {
     $('#x-img', el).innerHTML = f.img ? `<div class="receipt"><img src="${f.img}" alt="صورة الفاتورة" data-view><div class="btns" style="flex:1"><button type="button" class="btn sm" data-pick>${ic('cam')}غيّرها</button><button type="button" class="btn sm dghost" data-noimg>${ic('trash')}شيلها</button></div></div>`
-      : `<button type="button" class="btn ghost" data-pick>${ic('cam')}صوّر الفاتورة أو اختار صورة</button>`;
+      : `<button type="button" class="btn ghost" data-pick>${ic('cam')}صوّر الفاتورة أو اختر صورة</button>`;
   };
   const setRem = (node, diff, okText) => { if (!node) return; if (!Number.isFinite(diff)) { node.textContent = ''; node.className = 'rem'; return; } node.className = 'rem ' + (diff === 0 ? 'ok' : 'bad'); node.textContent = diff === 0 ? okText : diff > 0 ? `باقي ${fm(diff)}` : `زايد ${fm(-diff)}`; };
   const sumOf = (o) => { let s = 0; for (const p of people) { const v = Calc.parseAmount(o[p.id] || '', dec); if (Number.isFinite(v)) s += v; } return s; };
@@ -1143,7 +1143,7 @@ function openExpenseForm(r, eid) {
     const prev = $('#x-prev', el);
     if (f.sm === 'eq') {
       const n = f.eq.size; const sp = Number.isFinite(t) && n ? Calc.splitEqual(t, [...f.eq], 'x') : null;
-      if (prev) { prev.className = 'rem muted'; prev.textContent = !n ? 'اختار واحد على الأقل' : sp ? (t % n ? `كل واحد تقريباً ${fm(Math.floor(t / n))}` : `كل واحد ${fm(t / n)}`) : `${pPeople(n)}`; }
+      if (prev) { prev.className = 'rem muted'; prev.textContent = !n ? 'اختر واحد على الأقل' : sp ? (t % n ? `كل واحد تقريباً ${fm(Math.floor(t / n))}` : `كل واحد ${fm(t / n)}`) : `${pPeople(n)}`; }
     } else if (f.sm === 'amt') setRem(prev, Number.isFinite(t) ? t - sumOf(f.amts) : NaN, '✓ المجموع مضبوط');
     else {
       const src = f.sm === 'pct' ? f.pct : f.shr; const w = {}; let ws = 0;
@@ -1214,7 +1214,7 @@ function openExpenseForm(r, eid) {
     const amt = total();
     if (!Number.isFinite(amt) || amt <= 0) return fail(amtIn.value.trim() ? 'المبلغ مو صحيح' : 'اكتب المبلغ', amtIn);
     let by = {};
-    if (f.payMode === 'one') { if (!f.payer) return fail('اختار مين دفع'); by[f.payer] = amt; }
+    if (f.payMode === 'one') { if (!f.payer) return fail('اختر مين دفع'); by[f.payer] = amt; }
     else {
       let s = 0;
       for (const p of people) { const raw = (f.by[p.id] || '').trim(); if (!raw) continue; const v = Calc.parseAmount(raw, dec); if (!Number.isFinite(v) || v < 0) return fail(`المبلغ اللي دفعه ${p.name} مو صحيح`); if (v) { by[p.id] = v; s += v; } }
@@ -1222,7 +1222,7 @@ function openExpenseForm(r, eid) {
       if (s !== amt) return fail(s < amt ? `مجموع اللي دفعوه أقل من المبلغ بـ ${fm(amt - s)}` : `مجموع اللي دفعوه أكثر من المبلغ بـ ${fm(s - amt)}`);
     }
     let sw = {};
-    if (f.sm === 'eq') { if (!f.eq.size) return fail('اختار واحد على الأقل يتقسم عليه'); for (const id of f.eq) if (people.some(p => p.id === id)) sw[id] = 1; }
+    if (f.sm === 'eq') { if (!f.eq.size) return fail('اختر واحد على الأقل يتقسم عليه'); for (const id of f.eq) if (people.some(p => p.id === id)) sw[id] = 1; }
     else if (f.sm === 'amt') {
       let s = 0;
       for (const p of people) { const raw = (f.amts[p.id] || '').trim(); if (!raw) continue; const v = Calc.parseAmount(raw, dec); if (!Number.isFinite(v) || v < 0) return fail(`نصيب ${p.name} مو صحيح`); if (v) { sw[p.id] = v; s += v; } }
@@ -1328,7 +1328,7 @@ function openSettleForm(r, pre) {
   $('#s-save', el).onclick = () => {
     const from = $('#s-from', el).value, to = $('#s-to', el).value, amt = Calc.parseAmount($('#s-amt', el).value, M.dec);
     const err = m => { $('#s-err', el).textContent = m; };
-    if (from === to) return err('اختار شخصين مختلفين');
+    if (from === to) return err('اختر شخصين مختلفين');
     if (!Number.isFinite(amt) || amt <= 0) return err('اكتب المبلغ صح');
     const id = newId('s'); const date = $('#s-date', el).value || today();
     if (safe(() => M.d.set(id, { t: 's', from, to, amt, date, note: $('#s-note', el).value.trim(), ts: Date.now(), cb: r.me || '' }))) {

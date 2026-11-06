@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#14110f">
-<meta name="description" content="قوائم مقاضي البيت المشتركة: ضيف الأغراض، رتّبها حسب أقسام السوبرماركت، وشاركها مع أهلك أول بأول">
+<meta name="description" content="قوائم مقاضي البيت المشتركة: أضف الأغراض، رتّبها حسب أقسام السوبرماركت، وشاركها مع أهلك أول بأول">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="مقاضي">
@@ -197,8 +197,8 @@ pre.wa{white-space:pre-wrap;background:var(--card);border:1px solid var(--line);
       <div class="wrap">
         <div class="addbar" id="addbar">
           <div class="addrow">
-            <input id="addIn" type="text" placeholder="ضيف غرض… مثل: 2 كيلو طماط" autocomplete="off" enterkeyhint="done" maxlength="80" aria-label="ضيف غرض">
-            <button class="go" id="addGo" aria-label="ضيف"><svg class="i" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
+            <input id="addIn" type="text" placeholder="أضف غرض… مثل: 2 كيلو طماط" autocomplete="off" enterkeyhint="done" maxlength="80" aria-label="أضف غرض">
+            <button class="go" id="addGo" aria-label="أضف"><svg class="i" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
             <div class="sugg" id="sugg" hidden></div>
           </div>
           <div class="quick" id="quick"></div>
@@ -759,7 +759,7 @@ function templatesSheet() {
   const all = [...TPL, ...LS.get('maqadi.tpl', []).map(t => ({ ...t, own: 1 }))]; let cur = 0;
   const sh = openSheet(`<h2>وش الناقص؟<button class="ib x" data-close aria-label="سكّر">${ICON.x}</button></h2><p style="color:var(--muted);font-size:13.5px;margin-bottom:10px">اختر قائمة جاهزة وعلّم على الناقص عندك.</p>
     <div class="chips" id="tC"></div><div class="tlist" id="tL"></div>
-    <div class="acts"><button class="btn pri" id="tA">ضيف المحدد</button><button class="btn ghost" id="tX" hidden>احذف هالقائمة</button></div>`);
+    <div class="acts"><button class="btn pri" id="tA">أضف المحدد</button><button class="btn ghost" id="tX" hidden>احذف هالقائمة</button></div>`);
   const have = () => new Set(docOf(S.cur).items().filter(i => !i.done).map(i => norm(i.n)));
   const draw = () => {
     $('#tC', sh.el).innerHTML = all.map((t, i) => `<button class="chip ${i === cur ? 'on' : ''}" data-t="${i}">${esc(t.e)} ${esc(t.n)}</button>`).join('');
@@ -767,7 +767,7 @@ function templatesSheet() {
     $('#tL', sh.el).innerHTML = its.map((n, i) => { const ex = h.has(norm(n)); return `<label class="${ex ? 'has' : ''}"><input type="checkbox" data-i="${i}" ${ex ? 'disabled' : ''}><span>${CAT[guessCat(n)].e} ${esc(n)}</span>${ex ? '<small>موجود</small>' : ''}</label>`; }).join('');
     $('#tX', sh.el).hidden = !t.own; upd();
   };
-  const upd = () => { const n = $$('#tL input:checked', sh.el).length; $('#tA', sh.el).textContent = n ? `ضيف المحدد (${n})` : 'علّم على الناقص'; $('#tA', sh.el).disabled = !n; };
+  const upd = () => { const n = $$('#tL input:checked', sh.el).length; $('#tA', sh.el).textContent = n ? `أضف المحدد (${n})` : 'علّم على الناقص'; $('#tA', sh.el).disabled = !n; };
   $('#tC', sh.el).onclick = e => { const b = e.target.closest('[data-t]'); if (b) { cur = +b.dataset.t; draw(); } };
   $('#tL', sh.el).onchange = upd;
   $('#tA', sh.el).onclick = () => {
@@ -820,7 +820,7 @@ function shareSheet() {
   const sh = openSheet(`<h2>المشاركة<button class="ib x" data-close aria-label="سكّر">${ICON.x}</button></h2>${h}`);
   const go = $('#shGo', sh.el); if (go) go.onclick = async () => { go.disabled = true; go.textContent = 'لحظة…'; if (await createShare(rec)) { closeSheet(sh); shareSheet(); } else { go.disabled = false; go.textContent = '🔗 شارك القائمة'; } };
   $$('[data-copy]', sh.el).forEach(b => b.onclick = async () => toast(await copyText(b.dataset.copy) ? 'نسخت الرابط ✓' : 'ما قدرت أنسخ'));
-  $$('[data-send]', sh.el).forEach(b => b.onclick = () => { const t = b.dataset.kind === 'edit' ? `قائمة «${rec.name}» على مقاضي، ضيف اللي تبيه وعلّم على اللي تشتريه:\n${b.dataset.send}` : `قائمة «${rec.name}» على مقاضي:\n${b.dataset.send}`; if (navigator.share) navigator.share({ text: t }).catch(() => { }); else window.open('https://wa.me/?text=' + encodeURIComponent(t), '_blank', 'noopener'); });
+  $$('[data-send]', sh.el).forEach(b => b.onclick = () => { const t = b.dataset.kind === 'edit' ? `قائمة «${rec.name}» على مقاضي، أضف اللي تبيه وعلّم على اللي تشتريه:\n${b.dataset.send}` : `قائمة «${rec.name}» على مقاضي:\n${b.dataset.send}`; if (navigator.share) navigator.share({ text: t }).catch(() => { }); else window.open('https://wa.me/?text=' + encodeURIComponent(t), '_blank', 'noopener'); });
   const rv = $('#rotV', sh.el); if (rv) rv.onclick = () => rotate(rec, 'view', sh);
   const re = $('#rotE', sh.el); if (re) re.onclick = () => rotate(rec, 'edit', sh);
 }
