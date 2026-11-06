@@ -674,7 +674,7 @@ TAB.book = () => {
   const tl = live(tod), income = tl.filter(b => b.status !== 'noshow').reduce((a, b) => a + (+svc(b.service).price || 0), 0);
   const next = all.find(b => b.end > now && b.status !== 'cancelled' && b.status !== 'noshow' && b.status !== 'done');
   h += `<div class="card today"><div class="row"><h2 class="grow" style="margin:0">${ico('cal')}ملخص اليوم</h2><button class="ib sm" data-act="reload" aria-label="تحديث">${ico('refresh')}</button></div><div class="muted small">${fmtDay(t)}</div>
-    <div class="kpis"><div class="kpi"><b>${tl.length}</b><span>حجز</span></div><div class="kpi"><b>${tl.filter(b => b.status === 'confirmed' || b.status === 'done').length}</b><span>مؤكد أو خلص</span></div><div class="kpi"><b>${fmtN(income)}</b><span>${esc(m.cur || 'ر.س')} متوقع</span></div></div>
+    <div class="kpis"><div class="kpi"><b>${tl.length}</b><span>${tl.length >= 3 && tl.length <= 10 ? 'حجوزات' : 'حجز'}</span></div><div class="kpi"><b>${tl.filter(b => b.status === 'confirmed' || b.status === 'done').length}</b><span>مؤكد أو خلص</span></div><div class="kpi"><b>${fmtN(income)}</b><span>${esc(m.cur || 'ر.س')} متوقع</span></div></div>
     ${next ? `<div class="next">${ico('clock')}<div class="grow">الموعد الجاي: <b>${esc(next.name)}</b> · ${esc(svc(next.service).name)}<div class="muted small">${next.at.date === t ? 'اليوم' : esc(next.at.day)} الساعة ${next.at.time}</div></div></div>` : ''}</div>`;
   const segs = [['today', 'اليوم', live(tod).length], ['up', 'الجاية', live(up).length], ['past', 'السابقة', past.length]];
   h += `<div class="seg mb" id="bkSeg">${segs.map(s => `<button data-act="seg" data-v="${s[0]}" class="${S.seg === s[0] ? 'on' : ''}">${s[1]}<b>${s[2]}</b></button>`).join('')}</div>`;
@@ -892,7 +892,7 @@ async function refreshBusy() {
   try {
     for (let a = from; a < to; a += 90 * 864e5) out = out.concat(await Tajarib.bookings.busy(S.docId, key, a, Math.min(to, a + 90 * 864e5)));
     S.busy = out; S.busyAt = Date.now(); S.busyErr = '';
-    if (S.c.slot && !S.c.done) { const sv = S.store.item(S.c.sid); if (sv && S.busy.some(b => b[0] < S.c.slot + sv.dur * 60000 && b[1] > S.c.slot)) { S.c.slot = null; toast('الوقت اللي اخترته انحجز، اختار وقت ثاني'); } }
+    if (S.c.slot && !S.c.done) { const sv = S.store.item(S.c.sid); if (sv && S.busy.some(b => b[0] < S.c.slot + sv.dur * 60000 && b[1] > S.c.slot)) { S.c.slot = null; toast('الوقت اللي اخترته انحجز، اختر وقت ثاني'); } }
   } catch (e) { S.busyErr = Tajarib.errorText(e); }
   renderCustomer(true);
 }
