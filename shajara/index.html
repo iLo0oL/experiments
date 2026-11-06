@@ -776,7 +776,7 @@ function viaText(aId, nodes, you) {
 /* يرجع وصف صلة B بالنسبة لـ A، ومعها كل الصلات الثانية (more) مع شرح كل وحدة، وهل هو محرم */
 function relation(aId, bId, you) {
   const A = S.P.get(aId), B = S.P.get(bId); if (!A || !B) return null;
-  if (aId === bId) return { text: you ? 'هذا أنت 🙂' : 'نفس الشخص', sub: '' };
+  if (aId === bId) return { text: you ? (A.g === 'f' ? 'هذي أنتِ 🙂' : 'هذا أنت 🙂') : 'نفس الشخص', sub: '' };
   const { poss, rels, bl } = relCore(aId, bId, you), pron = B.g === 'f' ? 'هي' : 'هو', mh = mahramOf(aId, bId);
   if (!rels.length) {
     const far = bl[0];
@@ -1325,7 +1325,7 @@ function fillPerson(sh) {
   const yt = yearsText(p); if (yt) facts.push(`<span>${esc(yt)}</span>`);
   const kn = kunya(p); if (kn) facts.push(`<span>🏷️ ${esc(kn)}</span>`);
   if (p.by && !hid(p) && !p.dead && !p.dy) facts.push(`<span>العمر${p.bmo ? '' : ' تقريبًا'} <b>${ageOf(p)}</b></span>`);
-  if (p.dy && p.by && !hid(p)) facts.push(`<span>عاش${p.g === 'f' ? 'ت' : ''} تقريبًا <b>${p.dy - p.by}</b> سنة</span>`);
+  if (p.dy && p.by && !hid(p)) facts.push(`<span>عاش${p.g === 'f' ? 'ت' : ''} تقريبًا <b>${cnt(p.dy - p.by, 'سنة', 'سنتين', 'سنين', 'سنة')}</b></span>`);
   if (p.city) facts.push(`<span>📍 <b>${esc(p.city)}</b></span>`);
   facts.push(`<span>الجيل <b>${genOf(p)}</b></span>`);
   let h = `<div class="phead">${avatar(p)}<div style="min-width:0;flex:1"><h3>${esc(p.f)}</h3><div class="fn">${esc(fullName(p))}</div></div><button class="ib" data-close aria-label="سكّر">${ICON.x}</button></div>
@@ -1338,7 +1338,7 @@ function fillPerson(sh) {
       ${fa ? '' : `<button class="chip act" data-a="fa">${ICON.plus}ضيف أب</button>`}${mo ? '' : `<button class="chip act" data-a="mo">${ICON.plus}ضيف أم</button>`}
       <button class="chip" data-a="edit">${ICON.edit}عدّل</button><button class="chip" data-a="merge">🔗 دمج مع شخص ثاني</button><button class="chip del" data-a="del">${ICON.trash}احذف</button></div>`;
   }
-  h += `<div class="chips" style="margin-top:8px"><button class="chip" data-a="rel">${ICON.q}وش صلتي في${he}؟</button><button class="chip" data-a="rel2">صلت${he} بشخص ثاني</button><button class="chip" data-a="show">${ICON.target}ورني إيا${he} بالشجرة</button>${S.dev.me === p.id ? '' : `<button class="chip" data-a="me">${ICON.user}هذا أنا</button>`}<button class="chip" data-a="copyname">📋 انسخ النسب</button><button class="chip" data-a="cert">📜 وثيقة نسب</button><button class="chip" data-a="prof">🗂️ ملف كامل (PDF)</button>${kids.length ? `<button class="chip" data-a="sun">🌞 ذريت${he} بشكل دائري</button>` : ''}<button class="chip" data-a="gen">👥 جيل${he}</button><button class="chip" data-a="say">🔊 اسمع نسب${he}</button><button class="chip" data-a="greet">🎴 بطاقة تهنئة</button>${ed && S.cur.id && (S.cur.view || (S.meta && S.meta.vk)) ? `<button class="chip" data-a="ask">🙋 اطلب معلومة عن${he}</button>` : ''}${ed && kids.length && S.cur.id && S.doc && !S.doc.local && S.doc.role === 'edit' && !(S.meta && S.meta.priv) ? `<button class="chip" data-a="brLink">🌿 رابط لفرع${he}</button>` : ''}${S.dev.me !== p.id ? `<button class="chip" data-a="rahm">🤝 ${(S.dev.rahm || {})[p.id] ? 'تذكير التواصل' : 'ذكّرني أتواصل مع' + he}</button>` : ''}${ed && p.tel ? `<a class="chip" href="tel:${esc(p.tel)}">📞 اتصل</a><a class="chip" href="https://wa.me/${waNum(p.tel)}" target="_blank" rel="noopener">💬 واتساب</a>` : ''}${canSuggest() ? '<button class="chip" data-a="sgFix">✏️ اقترح تصحيح</button>' : ''}${ed ? '<button class="chip" data-a="capNew">💌 رسالة للمستقبل</button>' : ''}<button class="chip" data-a="ped">🧬 أجداد${he}</button><button class="chip" data-a="kin">👥 أقارب${he}</button><button class="chip" data-a="card">🪪 بطاقة</button><button class="chip" data-a="rootHere">🌳 ابدأ الشجرة من${p.g === 'f' ? 'ها' : 'ه'}</button></div>`;
+  h += `<div class="chips" style="margin-top:8px"><button class="chip" data-a="rel">${ICON.q}وش صلتي في${he}؟</button><button class="chip" data-a="rel2">صلت${he} بشخص ثاني</button><button class="chip" data-a="show">${ICON.target}ورني إيا${he} بالشجرة</button>${S.dev.me === p.id ? '' : `<button class="chip" data-a="me">${ICON.user}${p.g === 'f' ? 'هذي أنا' : 'هذا أنا'}</button>`}<button class="chip" data-a="copyname">📋 انسخ النسب</button><button class="chip" data-a="cert">📜 وثيقة نسب</button><button class="chip" data-a="prof">🗂️ ملف كامل (PDF)</button>${kids.length ? `<button class="chip" data-a="sun">🌞 ذريت${he} بشكل دائري</button>` : ''}<button class="chip" data-a="gen">👥 جيل${he}</button><button class="chip" data-a="say">🔊 اسمع نسب${he}</button><button class="chip" data-a="greet">🎴 بطاقة تهنئة</button>${ed && S.cur.id && (S.cur.view || (S.meta && S.meta.vk)) ? `<button class="chip" data-a="ask">🙋 اطلب معلومة عن${he}</button>` : ''}${ed && kids.length && S.cur.id && S.doc && !S.doc.local && S.doc.role === 'edit' && !(S.meta && S.meta.priv) ? `<button class="chip" data-a="brLink">🌿 رابط لفرع${he}</button>` : ''}${S.dev.me !== p.id ? `<button class="chip" data-a="rahm">🤝 ${(S.dev.rahm || {})[p.id] ? 'تذكير التواصل' : 'ذكّرني أتواصل مع' + he}</button>` : ''}${ed && p.tel ? `<a class="chip" href="tel:${esc(p.tel)}">📞 اتصل</a><a class="chip" href="https://wa.me/${waNum(p.tel)}" target="_blank" rel="noopener">💬 واتساب</a>` : ''}${canSuggest() ? '<button class="chip" data-a="sgFix">✏️ اقترح تصحيح</button>' : ''}${ed ? '<button class="chip" data-a="capNew">💌 رسالة للمستقبل</button>' : ''}<button class="chip" data-a="ped">🧬 أجداد${he}</button><button class="chip" data-a="kin">👥 أقارب${he}</button><button class="chip" data-a="card">🪪 بطاقة</button><button class="chip" data-a="rootHere">🌳 ابدأ الشجرة من${p.g === 'f' ? 'ها' : 'ه'}</button></div>`;
   const dups = ed ? dupsOf(p) : [];
   if (dups.length) h += `<div class="note" style="margin-top:10px">ممكن ${esc(p.f)} مسجّل${p.g === 'f' ? 'ة' : ''} مرتين: ${dups.map(x => esc(fullName(x, 3))).join('، ')}. إذا ${dups.length > 1 ? 'واحد منهم نفس' : 'هو نفس'} الشخص، اضغط «دمج مع شخص ثاني».</div>`;
   if (!ed && canSuggest()) h += `<div class="chips" style="margin-top:8px"><button class="chip act" data-a="sugg">✍️ اقترح إضافة ل${p.g === 'f' ? 'ها' : 'ه'}</button></div>`;
@@ -1411,7 +1411,7 @@ async function onPersonClick(e) {
   else if (act === 'edit') personForm({ id });
   else if (act === 'del') deletePerson(id);
   else if (act === 'sortkids') { const ks = kidsOf(id).slice().sort((x, y) => (+x.by || 1e9) - (+y.by || 1e9) || ord(x) - ord(y)); const base = Date.now(); ks.forEach((k, i) => S.doc.set(k.id, { ...strip(k), o: base + i })); toast('رتّبتهم حسب سنة الميلاد'); }
-  else if (act === 'me') { S.dev.me = id; saveDev(); toast('تمام، هذا أنت'); renderAll(); }
+  else if (act === 'me') { S.dev.me = id; saveDev(); toast(p.g === 'f' ? 'تمام، هذي أنتِ' : 'تمام، هذا أنت'); renderAll(); }
   else if (act === 'show') { closeSheet(sh); revealInTree(id); }
   else if (act === 'ped') openPedigree(id);
   else if (act === 'sugg') suggestComposer(id);
@@ -1445,7 +1445,7 @@ async function onPersonClick(e) {
     /* أول القائمة: أنت وزوجك أو زوجتك وأهلهم، وأبوك وأمك */
     const me = S.dev.me && S.P.get(S.dev.me), pref = [], notes = new Map(), put = (x, t) => { if (x && x.id !== id && !notes.has(x.id)) { pref.push(x.id); notes.set(x.id, t); } };
     if (me) {
-      put(me, 'أنت');
+      put(me, me.g === 'f' ? 'أنتِ' : 'أنت');
       for (const sx of spousesOf(me.id)) if (!divorced(me.id, sx.id)) { const w = sx.g === 'f'; put(sx, w ? 'زوجتك' : 'زوجك'); put(S.P.get(sx.fa), w ? 'أبو زوجتك' : 'أبو زوجك'); put(S.P.get(sx.mo), w ? 'أم زوجتك' : 'أم زوجك'); }
       put(S.P.get(me.fa), 'أبوك'); put(S.P.get(me.mo), 'أمك');
     }
@@ -1589,7 +1589,7 @@ async function addSibling(p, g) {
   const k = S.P.get(id); if (!k) return; const o = strip(k), kh = k.g === 'f' ? 'ها' : 'ه', conf = [];
   if (nfa && S.P.has(o.fa) && o.fa !== nfa) conf.push(`أبو${kh} ${S.P.get(o.fa).f}`);
   if (nmo && S.P.has(o.mo) && o.mo !== nmo) conf.push(`أم${kh} ${S.P.get(o.mo).f}`);
-  if (conf.length && !await ask('تغيير الوالدين', `${k.f} مسجّل${k.g === 'f' ? 'ة' : ''} إن ${conf.join(' و')}. تبي تغيّر${conf.length > 1 ? 'هم' : 'ه'}؟`, [{ v: true, t: 'إيه، غيّر' }, { v: false, t: 'إلغاء', cls: 'ghost', cancel: true }])) return;
+  if (conf.length && !await ask('تغيير الوالدين', `${k.f} مسجّل${k.g === 'f' ? 'ة' : ''} إن ${conf.join(' و')}. تبي تغيّر${conf.length > 1 ? 'هم' : conf[0].startsWith('أم') ? 'ها' : 'ه'}؟`, [{ v: true, t: 'إيه، غيّر' }, { v: false, t: 'إلغاء', cls: 'ghost', cancel: true }])) return;
   if (nfa) o.fa = nfa; if (nmo) o.mo = nmo;
   /* أخ من الأب بس: نسأل مين أمه من زوجات الأب الثانيات (ومن الأم بس: مين أبوه) */
   if (kind !== 'full') {
@@ -1733,11 +1733,11 @@ function personForm(o) {
     { const m = hdRule(obj, S.meta && S.meta.hdr), c = E('#fHd').checked; obj.hd = c ? (m ? 0 : 1) : (m ? -1 : 0); }
     for (const k of Object.keys(obj)) if (obj[k] === '' || obj[k] == null || obj[k] === 0) delete obj[k];
     obj.t = 'p'; obj.g = obj.g || 'm';
-    if (o.id && (obj.fa === o.id || obj.mo === o.id)) { toast('ما يصير يكون أبو نفسه'); return; }
+    if (o.id && (obj.fa === o.id || obj.mo === o.id)) { toast(obj.g === 'f' ? 'ما يصير تكون أم نفسها' : 'ما يصير يكون أبو نفسه'); return; }
     LS.set('shajara.cal', obj.cal);
     const id = o.id || newId('p');
     try { S.doc.set(id, obj); ensureMarriage(obj.fa, obj.mo); if (o.after) o.after(id); } catch (x) { toast(T ? T.errorText(x) : 'ما انحفظ'); return; }
-    closeSheet(sh); toast(old ? 'انحفظ التعديل ✓' : `انضاف ${f} ✓`);
+    closeSheet(sh); toast(old ? 'انحفظ التعديل ✓' : `${obj.g === 'f' ? 'انضافت' : 'انضاف'} ${f} ✓`);
     if (!old && S.P.size === 0 && S.view !== 'tree') setView('tree');
   };
 }
@@ -1776,7 +1776,7 @@ async function deletePerson(id) {
   } catch (x) { toast(T ? T.errorText(x) : 'ما انحذف'); return; }
   if (S.dev.root && ids.has(S.dev.root)) { delete S.dev.root; saveDev(); }
   if (personSheet && ids.has(personSheet.data.id)) closeSheet(personSheet);
-  toast(ids.size > 1 ? `انحذف ${ppl(ids.size)}` : `انحذف ${p.f}`, { text: 'تراجع', fn: () => { for (const [i, o] of snap) S.doc.set(i, o); toast('رجّعتهم ✓'); } });
+  toast(ids.size > 1 ? `انحذف ${ppl(ids.size)}` : `${p.g === 'f' ? 'انحذفت' : 'انحذف'} ${p.f}`, { text: 'تراجع', fn: () => { for (const [i, o] of snap) S.doc.set(i, o); toast('رجّعتهم ✓'); } });
 }
 
 /* ---------- العرض العام ---------- */
@@ -1832,7 +1832,7 @@ function statsHtml() {
     ${row('عدد الأفراد', ppl(ps.length))}${row('الذكور والإناث', `ذكور ${men} · إناث ${ps.length - men}`)}${row('الأحياء والمتوفين', `أحياء ${ps.length - dead} · متوفين ${dead}`)}
     ${row('عدد الأجيال', cnt(gens, 'جيل واحد', 'جيلين', 'أجيال', 'جيل'))}${row('الزواجات', marr ? cnt(marr, 'زواج واحد', 'زواجين', 'زيجات', 'زواج') : '')}
     ${row('أكثر واحد عنده عيال', top && top.n > 1 ? `${esc(top.p.f)} (${top.n})` : '')}${row('أكبر الأحياء سنًا', old ? `${esc(old.p.f)} (${cnt(old.a, 'سنة', 'سنتين', 'سنين', 'سنة')} تقريبًا)` : '')}
-    ${row('أشهر أسماء الرجال', names('m'))}${row('أشهر أسماء البنات', names('f'))}${row('صلات الرضاعة', milk ? String(milk) : '')}
+    ${row('أشهر أسماء الرجال', names('m'))}${row('أشهر أسماء النساء', names('f'))}${row('صلات الرضاعة', milk ? String(milk) : '')}
   </div>`;
 }
 function renderMore() {
@@ -2142,7 +2142,7 @@ function slideshow(startId) {
   const d = document.createElement('div'); d.id = 'show'; d.innerHTML = `<div class="sw-in" id="swIn"></div><div class="sw-bar"><button id="swPrev" aria-label="السابق">→</button><button id="swPlay">⏸</button><button id="swNext" aria-label="التالي">←</button><span id="swN"></span><button id="swX" aria-label="سكّر">✕</button></div>`;
   document.body.appendChild(d); try { d.requestFullscreen && d.requestFullscreen().catch(() => { }); } catch (e) { }
   const draw = () => {
-    const p = list[i], ph = (S.PHS.get(p.id) || [])[0], img = ph ? ph.img : p.ph, ks = kidsOf(p.id), r = me && me.id !== p.id ? (relCore(me.id, p.id, true).rels[0] || {}).txt : (me && me.id === p.id ? 'أنت' : '');
+    const p = list[i], ph = (S.PHS.get(p.id) || [])[0], img = ph ? ph.img : p.ph, ks = kidsOf(p.id), r = me && me.id !== p.id ? (relCore(me.id, p.id, true).rels[0] || {}).txt : (me && me.id === p.id ? (p.g === 'f' ? 'أنتِ' : 'أنت') : '');
     $('#swIn').innerHTML = `<div class="sw-ph ${p.g === 'f' ? 'f' : 'm'}">${img ? `<img src="${esc(img)}" alt="">` : esc(p.f.charAt(0))}</div><h1>${esc(p.f)}</h1><p class="sw-fn">${esc(fullName(p, 7))}</p><p class="sw-meta">${esc([yearsText(p), p.city, r, ks.length ? (p.g === 'f' ? 'عيالها ' : 'عياله ') + ks.length : ''].filter(Boolean).join(' · '))}</p>`;
     $('#swN').textContent = `${i + 1} من ${list.length}`;
     clearTimeout(tm); if (play) tm = setTimeout(() => { i = (i + 1) % list.length; draw(); }, 6000);
@@ -2233,9 +2233,9 @@ function familyFacts() {
   if (nm1.length) F.push({ ic: '🧔', t: 'أكثر أسماء الرجال', v: nm1.map(([n, k]) => `${n} (${k})`).join('، ') });
   if (nm2.length) F.push({ ic: '🧕', t: 'أكثر أسماء النساء', v: nm2.map(([n, k]) => `${n} (${k})`).join('، ') });
   const life = top(ps.filter(p => !hid(p) && +p.by > 0 && +p.dy > p.by).map(p => ({ p, a: p.dy - p.by })).filter(x => x.a < 130).sort((a, b) => b.a - a.a));
-  if (life.length) F.push({ ic: '🕰️', t: 'أطول الأعمار (الله يرحمهم)', ps: life.map(x => ({ p: x.p, s: x.a + ' سنة' })) });
+  if (life.length) F.push({ ic: '🕰️', t: 'أطول الأعمار (الله يرحمهم)', ps: life.map(x => ({ p: x.p, s: cnt(x.a, 'سنة', 'سنتين', 'سنين', 'سنة') })) });
   const old = top(ps.filter(p => !hid(p) && !p.dead && !p.dy).map(p => ({ p, a: ageOf(p) })).filter(x => x.a > 0 && x.a < 130).sort((a, b) => b.a - a.a));
-  if (old.length) F.push({ ic: '👴', t: 'أكبر الأحياء', ps: old.map(x => ({ p: x.p, s: x.a + ' سنة' })) });
+  if (old.length) F.push({ ic: '👴', t: 'أكبر الأحياء', ps: old.map(x => ({ p: x.p, s: cnt(x.a, 'سنة', 'سنتين', 'سنين', 'سنة') })) });
   const young = ps.filter(p => !hid(p) && !p.dead && !p.dy && +p.by > 0).sort((a, b) => toG(b.by, b.cal) - toG(a.by, a.cal) || (b.bmo || 0) - (a.bmo || 0) || (b.bda || 0) - (a.bda || 0))[0];
   if (young) F.push({ ic: '👶', t: 'آخر العنقود بالعائلة', ps: [{ p: young, s: yearsText(young, true) }] });
   /* الزوج والزوجة لهم نفس العيال: نحسب الأب، والأم بس إذا أبو عيالها مو بالشجرة */
@@ -2327,7 +2327,7 @@ function genGroups(id) {
 }
 function openGen(id) {
   const p = S.P.get(id), G = genGroups(id), you = S.dev.me === id, cous = G.filter(g => g.k !== 'sib').reduce((s, g) => s + g.ps.length, 0);
-  const sum = [['fam', 'عيال العم'], ['faf', 'عيال العمات'], ['mom', 'عيال الخال'], ['mof', 'عيال الخالات']].map(([k, t]) => { const n = G.filter(g => g.k === k).reduce((s, g) => s + g.ps.length, 0); return n ? `${t}: ${n}` : ''; }).filter(Boolean).join(' · ');
+  const sum = [['fam', 'عيال العم'], ['faf', 'عيال العمة'], ['mom', 'عيال الخال'], ['mof', 'عيال الخالة']].map(([k, t]) => { const n = G.filter(g => g.k === k).reduce((s, g) => s + g.ps.length, 0); return n ? `${t}: ${n}` : ''; }).filter(Boolean).join(' · ');
   const sh = openSheet(`<h2>👥 ${you ? 'جيلي' : 'جيل ' + esc(p.f)}<button class="ib x" data-close aria-label="سكّر">${ICON.x}</button></h2>
     <p style="color:var(--muted);font-size:14px;margin:0 0 8px">${G.length ? `${cous ? ppl(cous) + ' من عيال ' + (you ? 'أعمامك وعماتك وأخوالك وخالاتك' : 'الأعمام والعمات والأخوال والخالات') : 'ما فيه عيال عم ولا خال مسجّلين'}${sum ? '<br>' + esc(sum) : ''}` : `ما لقيت أحد من ${you ? 'جيلك' : p.g === 'f' ? 'جيلها' : 'جيله'} بالشجرة. سجّل الأب والأم وإخوانهم أول.`}</p>
     ${G.map(g => `<div class="sec">${esc(g.t)} (${g.ps.length})</div><div class="chips">${g.ps.map(x => `<button class="chip ${x.g === 'f' ? 'f' : 'm'}" data-go="${x.id}">${esc(x.f)}</button>`).join('')}</div>`).join('')}`);
@@ -2344,7 +2344,7 @@ function groupMsg() {
     fresh: { t: '👶 الجدد بالشجرة', s: fresh.length ? `🌳 انضاف لشجرة ${name} آخر أسبوعين:\n${fresh.slice(0, 30).map(p => '• ' + fullName(p, 3)).join('\n')}${link ? '\n\nشوفوها: ' + link : ''}` : '' },
     today: { t: '🎂 مناسبات اليوم', s: td.length ? td.map(o => o.kind === 'b' ? `🎂 اليوم عيد ميلاد ${fullName(o.p, 2)}، كل عام و${o.p.g === 'f' ? 'هي' : 'هو'} بخير` : `🤲 اليوم ذكرى وفاة ${fullName(o.p, 2)}، الله يرحم${o.p.g === 'f' ? 'ها' : 'ه'} ويغفر ل${o.p.g === 'f' ? 'ها' : 'ه'}`).join('\n') : '' },
     month: { t: '📅 مناسبات الشهر', s: mo.length ? `📅 مناسبات هالشهر في ${name}:\n${mo.map(o => `• ${o.kind === 'b' ? '🎂' : '🤲'} ${fullName(o.p, 2)}${o.day ? ' (' + dateTxt(o.day, o.m, '', o.cal) + ')' : ''}`).join('\n')}` : '' },
-    numbers: { t: '📊 أرقام العائلة', s: `📊 ${name} بالأرقام:\n• ${ppl(S.P.size)}\n• ${Math.max(0, ...[...S.P.values()].map(genOf))} أجيال\n${(familyFacts().slice(0, 4).map(f => `• ${f.ic} ${f.t}: ${f.v || f.ps.map(x => x.p.f).join('، ')}`)).join('\n')}` }
+    numbers: { t: '📊 أرقام العائلة', s: `📊 ${name} بالأرقام:\n• ${ppl(S.P.size)}\n• ${cnt(Math.max(0, ...[...S.P.values()].map(genOf)), 'جيل واحد', 'جيلين', 'أجيال', 'جيل')}\n${(familyFacts().slice(0, 4).map(f => `• ${f.ic} ${f.t}: ${f.v || f.ps.map(x => x.p.f).join('، ')}`)).join('\n')}` }
   };
   const keys = Object.keys(T0).filter(k => T0[k].s); let cur = keys[0];
   const sh = openSheet(`<h2>📣 رسالة للقروب<button class="ib x" data-close aria-label="سكّر">${ICON.x}</button></h2>
@@ -2380,7 +2380,7 @@ function openPhones() {
   if (!canEdit()) return; const me = S.dev.me && S.P.get(S.dev.me), coll = new Intl.Collator('ar');
   const all = [...S.P.values()].filter(p => p.tel).sort((a, b) => coll.compare(a.f, b.f)), alive = [...S.P.values()].filter(p => !p.dead && !p.dy).length;
   const sh = openSheet(`<h2>📒 دفتر الأرقام<button class="ib x" data-close aria-label="سكّر">${ICON.x}</button></h2>
-    <p style="color:var(--muted);font-size:13.5px;margin:0 0 8px">${all.length ? `عندك ${cnt(all.length, 'رقم واحد', 'رقمين', 'أرقام', 'رقم')} من ${ppl(alive)} أحياء.` : 'ما فيه أرقام للحين.'} تضيف الرقم من «عدّل» بصفحة كل شخص، وما يبان للي معهم رابط العرض.</p>
+    <p style="color:var(--muted);font-size:13.5px;margin:0 0 8px">${all.length ? `عندك ${cnt(all.length, 'رقم واحد', 'رقمين', 'أرقام', 'رقم')} من ${alive === 1 ? 'شخص واحد حي' : ppl(alive) + ' أحياء'}.` : 'ما فيه أرقام للحين.'} تضيف الرقم من «عدّل» بصفحة كل شخص، وما يبان للي معهم رابط العرض.</p>
     <div class="srch"><svg class="i" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><input type="search" id="tlQ" placeholder="دوّر بالاسم…" autocomplete="off"></div>
     <div id="tlL"></div>${all.length ? '<button class="btn sm" id="tlVcf" style="margin-top:10px">⬇️ نزّلها لجهات الاتصال</button>' : ''}`);
   const draw = () => { const q = norm($('#tlQ', sh.el).value); const L = all.filter(p => !q || searchKey(p).includes(q)); $('#tlL', sh.el).innerHTML = L.map(p => { const r = me && me.id !== p.id ? (relCore(me.id, p.id, true).rels[0] || {}).txt : ''; return `<div class="trow2">${avatar(p)}<button class="tx" data-go="${p.id}"><b>${esc(fullName(p, 3))}</b><small>${esc([r, p.tel].filter(Boolean).join(' · '))}</small></button><a class="ib" href="tel:${esc(p.tel)}" aria-label="اتصل">📞</a><a class="ib" href="https://wa.me/${waNum(p.tel)}" target="_blank" rel="noopener" aria-label="واتساب">💬</a></div>`; }).join('') || (all.length ? '<p class="empty">ما فيه نتائج</p>' : ''); };
@@ -3033,7 +3033,7 @@ async function quizPlayer(code) {
   const draw = () => {
     const s = st, m = s.me || {}; let h = '';
     if (s.state === 'lobby') h = `<div class="qz-end"><div style="font-size:56px">⏳</div><h2>أهلًا ${esc(me.name)}</h2><p>انتظر، اللعب بيبدأ من الشاشة… (${ppl(s.players.length)})</p></div>`;
-    else if (s.state === 'q' && m.ans == null && sent !== s.qi) h = `<div class="qz-q sm">${esc(s.q.q)}</div><div class="qz-pad">${s.q.o.map((o, k) => `<button data-k="${k}" style="background:${QZC[k]}"><i>${QZS[k]}</i>${esc(o)}</button>`).join('')}</div><p class="qz-n">${Math.ceil(s.left / 1000)} ثانية</p>`;
+    else if (s.state === 'q' && m.ans == null && sent !== s.qi) h = `<div class="qz-q sm">${esc(s.q.q)}</div><div class="qz-pad">${s.q.o.map((o, k) => `<button data-k="${k}" style="background:${QZC[k]}"><i>${QZS[k]}</i>${esc(o)}</button>`).join('')}</div><p class="qz-n">${cnt(Math.ceil(s.left / 1000), 'ثانية', 'ثانيتين', 'ثواني', 'ثانية')}</p>`;
     else if (s.state === 'q') h = `<div class="qz-end"><div style="font-size:56px">👍</div><h2>جاوبت</h2><p>انتظر الجواب على الشاشة…</p></div>`;
     else if (s.state === 'r') h = `<div class="qz-end"><div style="font-size:64px">${m.ok ? '✅' : '❌'}</div><h2>${m.ok ? 'صح! +' + m.pts : m.ans == null ? 'ما لحقت تجاوب' : 'غلط'}</h2><p>الجواب: ${esc(s.q.o[s.a])}</p><p>نقاطك ${m.score || 0} · ترتيبك ${m.rank || '-'} من ${s.players.length}</p></div>`;
     else h = `<div class="qz-end"><div style="font-size:64px">${m.rank === 1 ? '🏆' : '🎉'}</div><h2>خلصت اللعبة</h2><p>ترتيبك ${m.rank || '-'} من ${s.players.length} · نقاطك ${m.score || 0}</p><button class="btn" id="qzC">سكّر</button></div>`;
@@ -3100,10 +3100,10 @@ function timelineEvents() {
     const cal = p.cal === 'g' ? 'g' : 'h';
     if (hid(p)) continue;
     if (+p.by > 0) ev.push({ k: 'b', y: +p.by, cal, m: p.bmo || 0, d: p.bda || 0, p, t: `👶 ${she(p) ? 'انولدت' : 'انولد'} ${nm(p)}` });
-    if (+p.dy > 0) ev.push({ k: 'd', y: +p.dy, cal, m: p.dmo || 0, d: p.dda || 0, p, t: `🤲 ${she(p) ? 'توفيت' : 'توفي'} ${nm(p)}${+p.by > 0 ? ` عن ${p.dy - p.by} سنة` : ''}` });
+    if (+p.dy > 0) ev.push({ k: 'd', y: +p.dy, cal, m: p.dmo || 0, d: p.dda || 0, p, t: `🤲 ${she(p) ? 'توفيت' : 'توفي'} ${nm(p)}${+p.by > 0 ? ` عن ${cnt(p.dy - p.by, 'سنة', 'سنتين', 'سنين', 'سنة')}` : ''}` });
   }
   const seen = new Set();
-  for (const m of S.M) { if (!(+m.y > 0)) continue; const a = S.P.get(m.a), b = S.P.get(m.b); if (!a || !b) continue; const k = [m.a, m.b].sort().join('|'); if (seen.has(k)) continue; seen.add(k); const cal = a.cal === 'g' ? 'g' : 'h'; ev.push({ k: 'm', y: +m.y, cal, m: 0, d: 0, p: a, t: `💍 تزوّج ${nm(a)} من ${nm(b)}` }); }
+  for (const m of S.M) { if (!(+m.y > 0)) continue; const a = S.P.get(m.a), b = S.P.get(m.b); if (!a || !b) continue; const k = [m.a, m.b].sort().join('|'); if (seen.has(k)) continue; seen.add(k); const cal = a.cal === 'g' ? 'g' : 'h'; ev.push({ k: 'm', y: +m.y, cal, m: 0, d: 0, p: a, t: `💍 ${she(a) ? 'تزوّجت' : 'تزوّج'} ${nm(a)} من ${nm(b)}` }); }
   return ev.sort((x, y) => toG(x.y, x.cal) - toG(y.y, y.cal) || (x.m || 13) - (y.m || 13) || (x.d || 32) - (y.d || 32));
 }
 function openTimeline() {
@@ -3121,7 +3121,7 @@ function openTimeline() {
 }
 
 /* ========== لعبة «مين هذا؟» ========== */
-const REL_POOL = { m: ['أبوك', 'أخوك', 'عمك', 'خالك', 'جدك', 'ولد عمك', 'ولد خالك', 'ولد عمتك', 'ولد خالتك', 'ولد أخوك', 'ولد أختك', 'ولدك', 'عم أبوك', 'خال أبوك', 'زوج أختك', 'زوج عمتك'], f: ['أمك', 'أختك', 'عمتك', 'خالتك', 'جدتك', 'بنت عمك', 'بنت خالك', 'بنت عمتك', 'بنت خالتك', 'بنت أخوك', 'بنت أختك', 'بنتك', 'عمة أبوك', 'خالة أمك', 'زوجة أخوك', 'زوجة عمك'] };
+const REL_POOL = { m: ['أبوك', 'أخوك', 'عمك', 'خالك', 'جدك', 'ابن عمك', 'ابن خالك', 'ابن عمتك', 'ابن خالتك', 'ابن أخوك', 'ابن أختك', 'ابنك', 'عم أبوك', 'خال أبوك', 'زوج أختك', 'زوج عمتك'], f: ['أمك', 'أختك', 'عمتك', 'خالتك', 'جدتك', 'بنت عمك', 'بنت خالك', 'بنت عمتك', 'بنت خالتك', 'بنت أخوك', 'بنت أختك', 'بنتك', 'عمة أبوك', 'خالة أمك', 'زوجة أخوك', 'زوجة عمك'] };
 function quizQuestions() {
   const ps = [...S.P.values()], me = S.dev.me && S.P.get(S.dev.me), out = [];
   const mix = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
@@ -3222,7 +3222,7 @@ async function mergeTreesUI() {
   if (!P2.size) return toast('الشجرة الثانية فاضية');
   const sample = [...map.entries()].slice(0, 12).map(([a, b]) => fullName(S.P.get(b), 3));
   const sh = openSheet(`<h2>🔀 دمج «${esc(name)}»<button class="ib x" data-close aria-label="سكّر">${ICON.x}</button></h2>
-    <p style="font-size:15px;line-height:1.8">فيها ${ppl(P2.size)}:<br>✓ <b>${ppl(map.size)}</b> موجودين عندك وبينربطون (والمعلومات الناقصة تنكمل)<br>＋ <b>${ppl(nNew)}</b> جدد بينضافون</p>
+    <p style="font-size:15px;line-height:1.8">فيها ${ppl(P2.size)}:<br>✓ <b>${ppl(map.size)}</b> ${map.size === 1 ? 'موجود عندك وبينربط' : 'موجودين عندك وبينربطون'} (والمعلومات الناقصة تنكمل)<br>＋ <b>${ppl(nNew)}</b> ${nNew === 1 ? 'جديد بينضاف' : 'جدد بينضافون'}</p>
     ${sample.length ? `<div class="sec">أمثلة على اللي بينربطون</div><div class="chips">${sample.map(x => `<span class="chip">${esc(x)}</span>`).join('')}</div>` : ''}
     <p style="color:var(--muted);font-size:13px">بعد الدمج شغّل «🩺 فحص الشجرة» عشان تشوف إذا فيه مكررين ما انربطوا.</p>
     <div class="acts"><button class="btn pri" id="mgGo">ادمجها</button><button class="btn ghost" data-close>إلغاء</button></div>`);
@@ -3245,7 +3245,7 @@ function applyMerge(src, P2, map) {
       if (it.t === 'rs' && R(it.a) && R(it.b)) { const rid = 'rs' + [R(it.a), R(it.b)].sort().join('_'); if (!S.doc.item(rid)) { S.doc.set(rid, { t: 'rs', a: R(it.a), b: R(it.b), o: it.o || t }); made.push(rid); } }
     }
   } catch (e) { return toast(T ? T.errorText(e) : 'ما انحفظ'); }
-  toast(`دمجتها ✓ ${ppl(P2.size - map.size)} جدد، و${ppl(map.size)} انربطوا`, { text: 'تراجع', fn: () => { for (const id of made) S.doc.del(id); for (const [id, o] of snap) S.doc.set(id, o); toast('رجّعتها مثل ما كانت'); } });
+  toast(`دمجتها ✓ ${ppl(P2.size - map.size)} ${P2.size - map.size === 1 ? 'جديد' : 'جدد'}، و${ppl(map.size)} ${map.size === 1 ? 'انربط' : 'انربطوا'}`, { text: 'تراجع', fn: () => { for (const id of made) S.doc.del(id); for (const [id, o] of snap) S.doc.set(id, o); toast('رجّعتها مثل ما كانت'); } });
 }
 
 /* ========== قصة العائلة ========== */
@@ -3268,7 +3268,7 @@ function familyStory() {
     const q = [[r, 0]];
     while (q.length && budget > 0) { const [n, d] = q.shift(); const line = say(n, d); if (line) { out.push(line); budget--; } if (d < 3) for (const k of n.kids) if (kidsOf(k.p.id).length) q.push([k, d + 1]); }
   }
-  const dead = ps.filter(p => p.dead || p.dy).length; if (dead) out.push(`ومن العائلة ${ppl(dead)} متوفين، الله يرحمهم.`);
+  const dead = ps.filter(p => p.dead || p.dy).length; if (dead) out.push(dead === 1 ? 'ومن العائلة شخص واحد متوفى، الله يرحمه.' : `ومن العائلة ${ppl(dead)} متوفين، الله يرحمهم.`);
   const old = ps.filter(p => p.by && !p.dead && !p.dy).map(p => ({ p, a: ageOf(p) })).filter(x => x.a > 0 && x.a < 130).sort((a, b) => b.a - a.a)[0];
   if (old) out.push(`وأكبر الأحياء ${fullName(old.p, 2)}، ${old.p.g === 'f' ? 'عمرها' : 'عمره'} تقريبًا ${cnt(old.a, 'سنة', 'سنتين', 'سنين', 'سنة')}.`);
   return out.join('\n\n');
@@ -3296,7 +3296,7 @@ function openLog() {
   const P = id => S.P.get(id), rows = [];
   for (const it of S.doc.items()) {
     if (!it.u) continue; let txt = '';
-    if (it.t === 'p') txt = `${it.c && it.u - it.c < 8000 ? 'انضاف' : 'تعدّل'} ${P(it.id) ? fullName(P(it.id), 3) : it.f}`;
+    if (it.t === 'p') txt = `${it.c && it.u - it.c < 8000 ? 'انضاف' : 'تعدّل'}${it.g === 'f' ? 'ت' : ''} ${P(it.id) ? fullName(P(it.id), 3) : it.f}`;
     else if (it.t === 'm' && P(it.a) && P(it.b)) txt = `${it.x ? 'انفصال' : 'زواج'}: ${P(it.a).f} و${P(it.b).f}`;
     else if (it.t === 'r' && P(it.c)) txt = `رضاعة: ${P(it.c).f}${P(it.m) ? ' من ' + P(it.m).f : ''}`;
     else if (it.t === 'rs' && P(it.a) && P(it.b)) txt = `إخوان بالرضاعة: ${P(it.a).f} و${P(it.b).f}`;
@@ -3454,7 +3454,7 @@ function applySuggestion(sg) {
   for (const x of people) {
     const id = idMap.get(String(x.tid)), to = real(x.to); if (!id || !to) continue; const me = objs.get(id), T0 = get(to); if (!T0) continue;
     if (x.rel === 'kid') { if (T0.g === 'f') { me.mo = to; const hs = spousesOf(to); if (hs.length === 1) me.fa = hs[0].id; } else { me.fa = to; const ws = spousesOf(to); if (ws.length === 1) me.mo = ws[0].id; } }
-    else if (x.rel === 'par') { const key = me.g === 'f' ? 'mo' : 'fa'; if (T0[key] && T0[key] !== id) notes.push(`${T0.f} مسجّل له ${key === 'fa' ? 'أب' : 'أم'} من قبل`); else { T0[key] = id; put(to, T0); } }
+    else if (x.rel === 'par') { const key = me.g === 'f' ? 'mo' : 'fa'; if (T0[key] && T0[key] !== id) notes.push(`${T0.f} ${T0.g === 'f' ? 'عندها' : 'عنده'} ${key === 'fa' ? 'أب مسجّل' : 'أم مسجّلة'} من قبل`); else { T0[key] = id; put(to, T0); } }
     else if (x.rel === 'spouse') marr.push([id, to]);
     else if (x.rel === 'sib') { if (T0.fa) me.fa = T0.fa; if (T0.mo) me.mo = T0.mo; if (!T0.fa && !T0.mo) notes.push(`${me.f} و${T0.f}: ما فيه أب مسجّل يربطهم`); }
   }
@@ -3573,7 +3573,7 @@ function openPedigree(id) {
     const a = pos(g, i), q = x && S.P.get(x);
     if (g > 0 && G[g - 1][i >> 1]) { const c = pos(g - 1, i >> 1), x1 = c.x, y1 = c.y + ch / 2, x2 = a.x + cw, y2 = a.y + ch / 2, mx = (x1 + x2) / 2; svg += `M${x1} ${y1}H${mx}V${y2}H${x2}`; }
     if (q) { if (g) count++; cards += `<button class="pg ${q.g === 'f' ? 'f' : 'm'}" data-go="${q.id}" style="left:${a.x}px;top:${a.y}px;width:${cw}px;height:${ch}px"><b>${esc(q.f)}</b><small>${esc(g === 0 ? (yearsText(q, true) || famOf(q)) : (relCore(id, q.id, false).rels[0] || {}).txt || '')}</small></button>`; }
-    else if (g > 0 && G[g - 1][i >> 1]) cards += `<div class="pg em" style="left:${a.x}px;top:${a.y}px;width:${cw}px;height:${ch}px">${i % 2 ? 'الأم' : 'الأب'} ؟</div>`;
+    else if (g > 0 && G[g - 1][i >> 1]) cards += `<div class="pg em" style="left:${a.x}px;top:${a.y}px;width:${cw}px;height:${ch}px">${i % 2 ? 'الأم' : 'الأب'}؟</div>`;
   }));
   const sh = openSheet(`<h2>🧬 أجداد ${esc(p.f)}<button class="ib x" data-close aria-label="سكّر">${ICON.x}</button></h2>
     <p style="color:var(--muted);font-size:13.5px;margin:0 0 8px">${count ? `${ppl(count)} من جهة الأب والأم، لين ${n - 1 === 1 ? 'جيل واحد' : cnt(n - 1, 'جيل واحد', 'جيلين', 'أجيال', 'جيل')} فوق` : `ما فيه آباء مسجّلين ل${p.g === 'f' ? 'ها' : 'ه'} للحين`}</p>
@@ -3659,8 +3659,8 @@ function treeIssues() {
     if (by && x.dy && toG(x.dy, x.cal) < by) out.push({ id: x.id, msg: `سنة وفات${he} قبل ميلاد${he}` });
     for (const [par, w, mn, mx] of [[fa, 'أبو' + he, 12, 85], [mo, 'أم' + he, 12, 58]]) {
       if (!par || !by) continue; const pb = par.by ? toG(par.by, par.cal) : null, pf = par.g === 'f', ag2 = pf ? 'عمرها' : 'عمره';
-      if (pb != null) { const d = by - pb; if (d < mn) out.push({ id: x.id, msg: `${w} (${par.f}) ${d <= 0 ? (pf ? 'مسجّلة إنها' : 'مسجّل إنه') + ' أصغر من' + he + ' أو بعمر' + he : 'كان ' + ag2 + ' ' + d + ' سنين بس وقت ولادت' + he}` }); else if (d > mx) out.push({ id: x.id, msg: `${w} (${par.f}) كان ${ag2} ${d} سنة وقت ولادت${he}` }); }
-      if (par.dy && by > toG(par.dy, par.cal) + (par === fa ? 1 : 0)) out.push({ id: x.id, msg: `${x.g === 'f' ? 'انولدت' : 'انولد'} بعد وفاة ${w} (${par.f}) بـ ${by - toG(par.dy, par.cal)} سنة` });
+      if (pb != null) { const d = by - pb; if (d < mn) out.push({ id: x.id, msg: `${w} (${par.f}) ${d <= 0 ? (pf ? 'مسجّلة إنها' : 'مسجّل إنه') + ' أصغر من' + he + ' أو بعمر' + he : 'كان ' + ag2 + ' ' + cnt(d, 'سنة', 'سنتين', 'سنين', 'سنة') + ' بس وقت ولادت' + he}` }); else if (d > mx) out.push({ id: x.id, msg: `${w} (${par.f}) كان ${ag2} ${d} سنة وقت ولادت${he}` }); }
+      if (par.dy && by > toG(par.dy, par.cal) + (par === fa ? 1 : 0)) out.push({ id: x.id, msg: `${x.g === 'f' ? 'انولدت' : 'انولد'} بعد وفاة ${w} (${par.f}) بـ ${cnt(by - toG(par.dy, par.cal), 'سنة', 'سنتين', 'سنين', 'سنة')}` });
     }
     if (fa && mo && !(S.sp.get(fa.id) || []).includes(mo.id)) out.push({ id: x.id, msg: `أبو${he} (${fa.f}) وأم${he} (${mo.f}) مو مسجّلين كزوجين`, fix: 'marry', a: fa.id, b: mo.id });
     const ag = ageOf(x); if (ag != null && ag > 110 && !x.dead && !x.dy) out.push({ id: x.id, msg: `عمر${he} ${ag} سنة و${x.g === 'f' ? 'هي مو مسجّلة متوفاة' : 'هو مو مسجّل متوفى'}` });
