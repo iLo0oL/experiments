@@ -310,6 +310,7 @@ function viewBody(body) {
   for (const [id, it] of Object.entries(items)) {
     if (it && it.t === 'p') { const c = { ...it }; if (isHid(it, rule)) for (const k of DATE_KEYS) delete c[k]; else delete c.hd; delete c.tel; out[id] = c; }
     else if (it && it.t === 'cap' && it.open > today) { const c = { ...it }; delete c.txt; out[id] = c; }
+    else if (it && it.t === 'doc' && !it.pub) continue;
     else out[id] = it;
   }
   let meta = body && body.meta; if (meta && 'hdr' in meta) { meta = { ...meta }; delete meta.hdr; }
@@ -331,7 +332,7 @@ function branchBody(body, root) {
     if (t === 'p') { if (inc.has(id)) out[id] = it; }
     else if (t === 'm' || t === 'rs') { if (inc.has(it.a) && inc.has(it.b)) out[id] = it; }
     else if (t === 'r') { if (inc.has(it.c) && ok(it.m, it.f)) out[id] = it; }
-    else if (t === 'mem' || t === 'ph' || t === 'au') { if (inc.has(it.p)) out[id] = it; }
+    else if (t === 'mem' || t === 'ph' || t === 'au' || t === 'doc') { if (inc.has(it.p)) out[id] = it; }
     else if (t === 'cap') { if (it.to && inc.has(it.to)) out[id] = it; }
     else if (t === 'ev') { const ps = (it.people || []).filter(x => inc.has(x)); if (ps.length) out[id] = { ...it, people: ps }; }
   }
