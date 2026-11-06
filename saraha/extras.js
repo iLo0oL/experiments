@@ -211,9 +211,9 @@ const TV = {
   countText(my) {
     const K = my.M.kind;
     if (['quiz', 'abc', 'funny', 'guess', 'auction'].includes(K)) return '';
-    if (K === 'movie') return `<b>${(my.sugg || []).length}</b> اقتراح`;
-    if (K === 'story') return `<b>${(my.lines || []).length}</b> جملة`;
-    return `وصل <b>${my.msgs.length}</b> ${my.M.unit || 'مشاركة'}`;
+    if (K === 'movie') return `الاقتراحات: <b>${(my.sugg || []).length}</b>`;
+    if (K === 'story') return `الجمل: <b>${(my.lines || []).length}</b>`;
+    return `${unitAll(my.M.unit)}: <b>${my.msgs.length}</b>`;
   },
   timer(total, since) {
     clearInterval(quizTimer);
@@ -499,7 +499,7 @@ function viewChamps() {
   const { board, wins } = champData();
   app.innerHTML = `${backLink()}
     <header class="mhead"><div class="big-ic">🏆</div><h2 class="ttl">سجل أبطال الشلة</h2><p class="muted">من نتائج الألعاب اللي لعبتوها على هذا الجوال</p></header>
-    ${board.length ? `${board.length >= 2 ? `<div class="podium">${[1, 0, 2].filter(k => board[k]).map(k => `<div class="pod p${k}"><div class="big-ic">${medal(k)}</div><b>${esc(board[k].name)}</b><small>${board[k].wins} فوز</small></div>`).join('')}</div>` : ''}
+    ${board.length ? `${board.length >= 2 ? `<div class="podium">${[1, 0, 2].filter(k => board[k]).map(k => `<div class="pod p${k}"><div class="big-ic">${medal(k)}</div><b>${esc(board[k].name)}</b><small>${(x => x === 1 ? 'فوز واحد' : x === 2 ? 'فوزين' : x >= 3 && x <= 10 ? `${x} انتصارات` : `${x} فوز`)(board[k].wins)}</small></div>`).join('')}</div>` : ''}
       <section class="card"><h3>📊 الترتيب</h3>${board.map((c, k) => `<div class="brow"><span>${medal(k)} <b>${esc(c.name)}</b></span><small class="muted">🥇 ${c.wins} · 🏅 ${c.pods} · 🎮 ${c.games}</small></div>`).join('')}
         <p class="hint">🥇 فوز · 🏅 من أول ثلاثة · 🎮 لعب</p></section>
       <section class="card"><h3>🕘 آخر الفايزين</h3>${wins.slice(0, 20).map(w => `<div class="brow"><span>🏆 ${esc(w.name)}</span><small class="muted">${(MODES[w.mode] || {}).icon || ''} ${esc(w.title)}${w.at ? ` · ${esc(fmtDay(isoDay(new Date(w.at)), { day: 'numeric', month: 'short' }))}` : ''}</small></div>`).join('') || '<p class="muted">ما فيه فايزين للحين</p>'}</section>
@@ -509,7 +509,7 @@ function viewChamps() {
   const b = $('#chImg');
   if (b) b.onclick = async () => {
     b.disabled = true;
-    try { await shareImage(await cardImage('🏆 أبطال الشلة', 'سجل صراحة', [board.slice(0, 12).map((c, k) => `${medal(k)} ${c.name}: ${c.wins} فوز`).join('\n')]), 'أبطال الشلة.png'); }
+    try { await shareImage(await cardImage('🏆 أبطال الشلة', 'سجل صراحة', [board.slice(0, 12).map((c, k) => `${medal(k)} ${c.name}: ${(x => x === 1 ? 'فوز واحد' : x === 2 ? 'فوزين' : x >= 3 && x <= 10 ? `${x} انتصارات` : `${x} فوز`)(c.wins)}`).join('\n')]), 'أبطال الشلة.png'); }
     catch (e) { console.error(e); toast('ما قدرنا نسوي الصورة', true); }
     finally { b.disabled = false; }
   };

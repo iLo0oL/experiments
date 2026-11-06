@@ -596,7 +596,7 @@ function renderOpen() {
   document.title = `${setup.title} · صراحة`;
   app.innerHTML = `
     ${sessionHead(setup.title)}
-    <div class="live"><span class="dot" id="dot"></span><span id="conn">يتصل…</span><span>·</span><span>وصل <b id="count">0</b> ${M.unit}</span></div>
+    <div class="live"><span class="dot" id="dot"></span><span id="conn">يتصل…</span><span>·</span><span>${unitAll(M.unit)}: <b id="count">0</b></span></div>
     ${isHost ? hostPanel() : ''}
     ${M.kind === 'vote' ? voteCard() : M.kind === 'know' ? knowCard() : M.kind === 'rank' ? rankCard() : writeCard()}
     ${isHost ? `<button class="btn danger big" id="reveal">${M.revealBtn}</button>` : waitCard()}
@@ -861,7 +861,7 @@ function reviewSheet(my, items) {
   const txt = x => M.fields === 'three' ? x.items.map((t, i) => `${i + 1}. ${t}`).join('\n') : x.text;
   let body;
   if (vote) body = `<p class="muted">${M.kind === 'know' ? 'شارك' : 'صوّت'} ${new Set(items.map(b => b.bid || b.by)).size}. متأكد تبي تنهي وتكشف النتائج؟</p>`;
-  else if (items.length) body = `<p class="muted">وصل ${items.length} ${M.unit}. تقدر تخفي أي شي جارح قبل لا يشوفه الكل.</p>
+  else if (items.length) body = `<p class="muted">وصل ${cntUnit(items.length, M.unit)}. تقدر تخفي أي شي جارح قبل لا يشوفه الكل.</p>
     <div class="review">${items.map(x => `<label class="rv"><input type="checkbox" data-id="${esc(x.id)}"><span>${M.target === 'to' ? `<small>${esc(aboutOf(M, x.to))}</small>` : ''}${esc(txt(x))}</span><em>إخفاء</em></label>`).join('')}</div>`;
   else body = `<p class="muted">ما وصل شي للحين. متأكد تبي تنهي الجلسة؟</p>`;
   const { m, close } = openSheet(`<h3>جاهز للكشف؟</h3>${body}
@@ -895,7 +895,7 @@ function renderReveal() {
   document.title = `${R.title} · صراحة`;
   if (M.reveal === 'capsule') return renderCapsule(R);
   const summary = M.kind === 'vote' || M.kind === 'rank' ? `صوّت ${R.voters}` : M.kind === 'know' ? `خمّن ${R.players.length}`
-    : `انكشف ${R.items.length} ${M.unit}${R.hidden ? ` · ${R.hidden} مخفية من المشرف` : ''}`;
+    : `انكشف ${cntUnit(R.items.length, M.unit)}${R.hidden ? ` · ${R.hidden} مخفية من المشرف` : ''}`;
   const prompt = cfg.prompt ? `<div class="prompt">${esc(cfg.prompt)}</div>` : '';
   let body = '', slides = [], after = null;
 
@@ -1253,7 +1253,7 @@ function viewHome() {
     </header>
     ${season ? `<a class="card season" href="${season.href}"><span class="big-ic">${season.icon}</span><span><b>${season.title}</b><small>${season.text}</small></span></a>` : ''}
     ${list.length ? `<h3 class="sec">جلساتك</h3><div class="list">${list.map(sessItem).join('')}</div>` : ''}
-    ${(() => { const c = champData().board; return c.length ? `<a class="card season champs" href="#champs"><span class="big-ic">🏆</span><span><b>سجل أبطال الشلة</b><small>المتصدر: ${esc(c[0].name)} بـ ${c[0].wins} فوز</small></span></a>` : ''; })()}
+    ${(() => { const c = champData().board; return c.length ? `<a class="card season champs" href="#champs"><span class="big-ic">🏆</span><span><b>سجل أبطال الشلة</b><small>المتصدر: ${esc(c[0].name)} بـ ${(x => x === 1 ? 'فوز واحد' : x === 2 ? 'فوزين' : x >= 3 && x <= 10 ? `${x} انتصارات` : `${x} فوز`)(c[0].wins)}</small></span></a>` : ''; })()}
     <div class="search"><input id="q" type="search" placeholder="🔎 دوّر على لعبة… (تصويت، رمضان، رسم)" autocomplete="off"></div>
     ${favs.length ? `<section class="mgroup" data-g="fav"><h3 class="sec">⭐ المفضلة</h3><div class="modes">${favs.map(id => card(id, MODES[id])).join('')}</div></section>` : ''}
     <div class="chips gfilter" id="gf"><button class="chip on" data-g="">الكل (${Object.keys(MODES).length})</button>${GROUPS.map(g => `<button class="chip" data-g="${g.id}">${g.title.replace(/\s*\(.*\)$/, '')}</button>`).join('')}</div>
