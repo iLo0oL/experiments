@@ -332,7 +332,7 @@ function branchBody(body, root) {
     if (t === 'p') { if (inc.has(id)) out[id] = it; }
     else if (t === 'm' || t === 'rs') { if (inc.has(it.a) && inc.has(it.b)) out[id] = it; }
     else if (t === 'r') { if (inc.has(it.c) && ok(it.m, it.f)) out[id] = it; }
-    else if (t === 'mem' || t === 'ph' || t === 'au' || t === 'doc') { if (inc.has(it.p)) out[id] = it; }
+    else if (t === 'mem' || t === 'ph' || t === 'au' || t === 'doc' || t === 'lk') { if (inc.has(it.p)) out[id] = it; }
     else if (t === 'cap') { if (it.to && inc.has(it.to)) out[id] = it; }
     else if (t === 'ev') { const ps = (it.people || []).filter(x => inc.has(x)); if (ps.length) out[id] = { ...it, people: ps }; }
   }
