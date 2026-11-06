@@ -37,6 +37,8 @@ async function migrate() {
     alter table doc_subs add column if not exists wq boolean not null default false;
     create table if not exists branch_keys(id text primary key, doc_id text not null references docs(id) on delete cascade, hash text not null unique, key text not null, root text not null, label text not null default '', created_at bigint not null);
     create index if not exists branch_keys_doc on branch_keys(doc_id);
+    alter table branch_keys add column if not exists can_edit boolean not null default false;
+    create table if not exists doc_snaps(doc_id text not null references docs(id) on delete cascade, tag text not null, rev int not null, people int not null default 0, body jsonb not null, created_at bigint not null, primary key(doc_id, tag));
   `);
 }
 async function kvGet(k) { const r = await q('select v from kv where k=$1', [k]); return r.rows[0] ? r.rows[0].v : null; }
@@ -86,7 +88,7 @@ route('GET', '/health', async () => { await q('select 1'); return { ok: true }; 
 const isObj = x => x && typeof x === 'object' && !Array.isArray(x);
 function cleanBody(b) { const body = isObj(b) ? b : {}; return { items: isObj(body.items) ? body.items : {}, meta: isObj(body.meta) ? body.meta : null }; }
 /* رابط فرع (شجرتنا): مفتاح عرض يشوف ذرية شخص واحد بس */
-async function branchOf(doc, k) { if (!k || doc.kind !== 'shajara') return null; const r = await q('select id, root from branch_keys where hash=$1 and doc_id=$2', [sha(String(k)), doc.id]); return r.rows[0] || null; }
+async function branchOf(doc, k, db) { if (!k || doc.kind !== 'shajara') return null; const r = await (db || pool).query('select id, root, can_edit from branch_keys where hash=$1 and doc_id=$2', [sha(String(k)), doc.id]); return r.rows[0] || null; }
 async function loadDoc(id) { const r = await q('select * from docs where id=$1', [str(id, 40)]); if (!r.rows[0]) fail(404, 'not_found'); return r.rows[0]; }
 
 route('POST', '/api/docs', async (req, b) => {
@@ -100,12 +102,13 @@ route('POST', '/api/docs', async (req, b) => {
 route('GET', '/api/docs/:id', async (req, b, p, url) => {
   limit(req, 'read', 3000, 600e3);
   const doc = await loadDoc(p.id); let role = roleOf(doc, url.searchParams.get('k')), br = null;
-  if (!role) { br = await branchOf(doc, url.searchParams.get('k')); if (br) role = 'view'; } if (!role) fail(403, 'bad_key');
+  if (!role) { br = await branchOf(doc, url.searchParams.get('k')); if (br) role = br.can_edit ? 'edit' : 'view'; } if (!role) fail(403, 'bad_key');
   if (now() - +doc.last_read > 864e5) q('update docs set last_read=$1 where id=$2', [now(), doc.id]).catch(() => {});
   /* رابط العرض بشجرتنا: رقم نسخة خاص يتغيّر كمان يوم تنفتح رسالة، عشان توصله بنصها */
   const vb = role === 'view' && doc.kind === 'shajara', rev = vb ? doc.rev * 1000 + openedCaps(doc.body) % 1000 : doc.rev;
-  if (int(url.searchParams.get('rev')) === rev) return { same: true, rev, role };
-  return { rev, kind: doc.kind, role, body: vb ? viewBody(br ? branchBody(doc.body, br.root) : doc.body) : doc.body };
+  const bx = br && br.can_edit ? { branch: true } : {};
+  if (int(url.searchParams.get('rev')) === rev) return { same: true, rev, role, ...bx };
+  return { rev, kind: doc.kind, role, ...bx, body: vb ? viewBody(br ? branchBody(doc.body, br.root) : doc.body) : br ? branchBody(doc.body, br.root) : doc.body };
 });
 /* دمج: لكل عنصر ينحفظ الأحدث حسب u (وقت التعديل بالملي ثانية)، والمحذوف يبقى علامة {del:1} */
 route('PATCH', '/api/docs/:id', async (req, b, p) => {
@@ -116,15 +119,26 @@ route('PATCH', '/api/docs/:id', async (req, b, p) => {
   try {
     await c.query('begin');
     const r = await c.query('select * from docs where id=$1 for update', [str(p.id, 40)]);
-    const doc = r.rows[0]; if (!doc) fail(404, 'not_found'); if (roleOf(doc, b.k) !== 'edit') fail(403, 'bad_key');
-    const body = cleanBody(doc.body); let changed = 0; const born = [];
+    const doc = r.rows[0]; if (!doc) fail(404, 'not_found');
+    let br = null; if (roleOf(doc, b.k) !== 'edit') { br = await branchOf(doc, b.k, c); if (!br || !br.can_edit) fail(403, 'bad_key'); }
+    const body = cleanBody(doc.body); let changed = 0, rejected = 0, dels = 0; const born = [];
+    const allow = br ? branchAllow(body, br.root, items) : null;
+    /* نسخة يومية (شجرتنا): أول تعديل باليوم يحفظ الشجرة مثل ما كانت قبله */
+    if (doc.kind === 'shajara' && Object.keys(items).length) await snapIfNeeded(c, doc, 'd:' + todayISO());
+    /* حماية من الحذف الكبير: 10 أشخاص أو أكثر خلال 10 دقائق → نسخة قبل الحذف وتنبيه لأصحاب التعديل */
+    let bigDel = 0;
+    if (doc.kind === 'shajara') {
+      for (const [id, it] of Object.entries(items)) { const cur = body.items[id]; if (isObj(it) && it.del && cur && cur.t === 'p' && !cur.del && +it.u >= +(cur.u || 0) && (!allow || allow.has(id))) dels++; }
+      if (dels) { bigDel = trackDeletes(doc.id, dels); if (bigDel) await snapIfNeeded(c, doc, 'x:' + now(), true); }
+    }
     for (const [id, it] of Object.entries(items)) {
       if (id.length > 80 || !isObj(it) || !Number.isFinite(+it.u)) continue;
+      if (allow && !allow.has(id)) { rejected++; continue; }
       const cur = body.items[id];
       if (!cur && doc.kind === 'shajara' && it.t === 'p' && !it.del && it.f) born.push(it);
       if (!cur || +it.u >= +(cur.u || 0)) { body.items[id] = it; changed++; }
     }
-    if (meta && Number.isFinite(+meta.u) && (!body.meta || +meta.u >= +(body.meta.u || 0))) { body.meta = meta; changed++; }
+    if (!br && meta && Number.isFinite(+meta.u) && (!body.meta || +meta.u >= +(body.meta.u || 0))) { body.meta = meta; changed++; }
     const cut = now() - 60 * 864e5;
     for (const [id, it] of Object.entries(body.items)) if (it && it.del && +it.u < cut) delete body.items[id];
     if (Object.keys(body.items).length > 20000) fail(413, 'too_big');
@@ -133,7 +147,8 @@ route('PATCH', '/api/docs/:id', async (req, b, p) => {
     if (changed) { rev = doc.rev + 1; await c.query('update docs set body=$1, rev=$2, updated_at=$3 where id=$4', [json, rev, now(), doc.id]); }
     await c.query('commit');
     if (born.length) birthNews(doc.id, body, born);
-    return { rev, applied: changed };
+    if (bigDel) notifyDoc(doc.id, { title: '⚠️ انحذف ناس كثير من الشجرة', body: `انحذف ${bigDel} شخص من «${str((body.meta && body.meta.name) || 'شجرتنا', 60)}» خلال دقائق. إذا كان بالغلط، رجّعها من «المزيد» ← «النسخ اليومية بالسيرفر».`, url: SITE + 'shajara/', tag: 'del-' + doc.id }, 'edit').catch(() => {});
+    return { rev, applied: changed, ...(rejected ? { rejected } : {}) };
   } catch (e) { await c.query('rollback').catch(() => {}); throw e; }
   finally { c.release(); }
 });
@@ -317,6 +332,80 @@ function viewBody(body) {
   return { ...body, meta, items: out };
 }
 
+/* ---------- النسخ اليومية والحماية من الحذف ---------- */
+async function snapIfNeeded(c, doc, tag, force) {
+  if (!force) { const e = await c.query('select 1 from doc_snaps where doc_id=$1 and tag=$2', [doc.id, tag]); if (e.rows[0]) return; }
+  const people = Object.values((doc.body && doc.body.items) || {}).filter(x => x && x.t === 'p' && !x.del).length;
+  await c.query('insert into doc_snaps(doc_id,tag,rev,people,body,created_at) values($1,$2,$3,$4,$5,$6) on conflict(doc_id,tag) do nothing', [doc.id, tag, doc.rev, people, JSON.stringify(doc.body), now()]);
+  await c.query(`delete from doc_snaps where doc_id=$1 and (created_at < $2 or tag in (select tag from doc_snaps where doc_id=$1 order by created_at desc offset 45))`, [doc.id, now() - 31 * 864e5]);
+}
+const delLog = new Map();
+function trackDeletes(docId, n) {
+  const t = now(), o = delLog.get(docId) || { l: [], at: 0 }; o.l = o.l.filter(x => t - x.t < 600e3); o.l.push({ t, n }); delLog.set(docId, o);
+  const sum = o.l.reduce((s2, x) => s2 + x.n, 0); if (sum < 10 || t - o.at < 600e3) return 0; o.at = t; return sum;
+}
+route('GET', '/api/docs/:id/snaps', async (req, b, p, url) => {
+  const doc = await loadDoc(p.id); if (roleOf(doc, url.searchParams.get('k')) !== 'edit') fail(403, 'bad_key');
+  const r = await q('select tag, rev, people, created_at, length(body::text) as size from doc_snaps where doc_id=$1 order by created_at desc limit 45', [doc.id]);
+  return { snaps: r.rows.map(x => ({ tag: x.tag, rev: x.rev, people: x.people, size: +x.size, createdAt: +x.created_at })) };
+});
+route('POST', '/api/docs/:id/restore', async (req, b, p) => {
+  limit(req, 'restore', 20, 3600e3);
+  const c = await pool.connect();
+  try {
+    await c.query('begin');
+    const doc = (await c.query('select * from docs where id=$1 for update', [str(p.id, 40)])).rows[0]; if (!doc) fail(404, 'not_found'); if (roleOf(doc, b.k) !== 'edit') fail(403, 'bad_key');
+    const sn = (await c.query('select body from doc_snaps where doc_id=$1 and tag=$2', [doc.id, str(b.tag, 40)])).rows[0]; if (!sn) fail(404, 'not_found');
+    await snapIfNeeded(c, doc, 'r:' + now(), true);
+    /* نرجّعها بوقت جديد لكل عنصر عشان تغلب أي نسخة أقدم عند الأجهزة، والعناصر الجديدة تنحذف بعلامة */
+    const t = now(), old = cleanBody(sn.body), cur = cleanBody(doc.body), items = {};
+    for (const [id, it] of Object.entries(old.items)) if (it) items[id] = { ...it, u: t };
+    for (const [id, it] of Object.entries(cur.items)) if (it && !it.del && !(id in old.items)) items[id] = { del: 1, u: t };
+    const body = { items, meta: old.meta ? { ...old.meta, u: t } : cur.meta }, rev = doc.rev + 1;
+    await c.query('update docs set body=$1, rev=$2, updated_at=$3 where id=$4', [JSON.stringify(body), rev, t, doc.id]);
+    await c.query('commit'); return { rev };
+  } catch (e) { await c.query('rollback').catch(() => {}); throw e; } finally { c.release(); }
+});
+
+/* رابط تعديل لفرع: يقدر يعدّل الشخص وذريته وأزواجهم وكل اللي يخصهم بس */
+function branchAllow(body, root, incoming) {
+  const items = body.items, P = new Map(); for (const [id, it] of Object.entries(items)) if (it && !it.del && it.t === 'p') P.set(id, it);
+  const kids = new Map(); for (const [id, it] of P) for (const par of [it.fa, it.mo]) if (par) { if (!kids.has(par)) kids.set(par, []); kids.get(par).push(id); }
+  const blood = new Set(), st = P.has(root) ? [root] : [];
+  while (st.length) { const x = st.pop(); if (blood.has(x)) continue; blood.add(x); for (const k of kids.get(x) || []) st.push(k); }
+  const inc = new Set(blood); for (const it of Object.values(items)) if (it && !it.del && it.t === 'm') { if (blood.has(it.a)) inc.add(it.b); if (blood.has(it.b)) inc.add(it.a); }
+  const N = Object.entries(incoming).filter(([, it]) => isObj(it)), newP = new Map(N.filter(([id, it]) => it.t === 'p' && !it.del && !P.has(id)));
+  /* أشخاص جدد: عيال (أبوهم أو أمهم من الدم) أو أزواج (زواج جديد مع واحد من الدم) */
+  let grew = true; while (grew) { grew = false; for (const [id, it] of newP) if (!blood.has(id) && (blood.has(it.fa) || blood.has(it.mo))) { blood.add(id); inc.add(id); grew = true; } }
+  for (const [, it] of N) if (it.t === 'm' && !it.del) { if (blood.has(it.a) && newP.has(it.b)) inc.add(it.b); if (blood.has(it.b) && newP.has(it.a)) inc.add(it.a); }
+  const inS = x => !x || inc.has(x), evOk = new Set();
+  for (const [id, it] of [...Object.entries(items), ...N]) if (it && it.t === 'ev' && Array.isArray(it.people) && it.people.length && it.people.every(x => inc.has(x))) evOk.add(id);
+  const scope = it => {
+    if (!it) return false; switch (it.t) {
+      case 'm': return blood.has(it.a) || blood.has(it.b);
+      case 'rs': return inc.has(it.a) && inc.has(it.b);
+      case 'r': return inc.has(it.c) && inS(it.m) && inS(it.f);
+      case 'mem': case 'ph': case 'au': case 'doc': case 'lk': return inc.has(it.p);
+      case 'cap': return !!it.to && inc.has(it.to);
+      case 'ev': return Array.isArray(it.people) && it.people.length > 0 && it.people.every(x => inc.has(x));
+      case 'evp': return evOk.has(it.ev);
+      default: return false;
+    }
+  };
+  const ok = new Set();
+  for (const [id, it] of N) {
+    const cur = items[id] && !items[id].del ? items[id] : null;
+    if (it.del) { if (cur && id !== root && (cur.t === 'p' ? inc.has(id) : scope(cur))) ok.add(id); continue; }
+    if (it.t === 'p') {
+      if (cur) { if (!inc.has(id)) continue; const same = k => (it[k] || '') === (cur[k] || ''); if (id === root || !blood.has(id)) { if (!same('fa') || !same('mo')) continue; } else if (!(same('fa') || inS(it.fa)) || !(same('mo') || inS(it.mo))) continue; ok.add(id); }
+      else if (inc.has(id)) ok.add(id);
+      continue;
+    }
+    if (scope(it) && (!cur || scope(cur))) ok.add(id);
+  }
+  return ok;
+}
+
 /* ذرية شخص + أزواجهم، وكل اللي يخصهم بس (الباقي ما يوصل أبد) */
 function branchBody(body, root) {
   const items = (body && body.items) || {}, P = new Map();
@@ -345,13 +434,13 @@ route('POST', '/api/docs/:id/branch', async (req, b, p) => {
   const doc = await loadDoc(p.id); if (roleOf(doc, b.k) !== 'edit') fail(403, 'bad_key'); if (doc.kind !== 'shajara') fail(400, 'bad_kind');
   const root = str(b.root, 80), it = doc.body && doc.body.items && doc.body.items[root]; if (!it || it.del || it.t !== 'p') fail(400, 'bad_body');
   const n = await q('select count(*)::int as n from branch_keys where doc_id=$1', [doc.id]); if (n.rows[0].n >= 60) fail(429, 'rate');
-  const id = rid(10), key = rid(20); await q('insert into branch_keys(id,doc_id,hash,key,root,label,created_at) values($1,$2,$3,$4,$5,$6,$7)', [id, doc.id, sha(key), key, root, str(b.label, 80), now()]);
+  const id = rid(10), key = rid(20); await q('insert into branch_keys(id,doc_id,hash,key,root,label,created_at,can_edit) values($1,$2,$3,$4,$5,$6,$7,$8)', [id, doc.id, sha(key), key, root, str(b.label, 80), now(), b.edit === true]);
   return { id, key };
 });
 route('GET', '/api/docs/:id/branch', async (req, b, p, url) => {
   const doc = await loadDoc(p.id); if (roleOf(doc, url.searchParams.get('k')) !== 'edit') fail(403, 'bad_key');
-  const r = await q('select id, key, root, label, created_at from branch_keys where doc_id=$1 order by created_at desc', [doc.id]);
-  return { branches: r.rows.map(x => ({ id: x.id, key: x.key, root: x.root, label: x.label, createdAt: +x.created_at })) };
+  const r = await q('select id, key, root, label, created_at, can_edit from branch_keys where doc_id=$1 order by created_at desc', [doc.id]);
+  return { branches: r.rows.map(x => ({ id: x.id, key: x.key, root: x.root, label: x.label, edit: x.can_edit, createdAt: +x.created_at })) };
 });
 route('DELETE', '/api/docs/:id/branch/:bid', async (req, b, p) => {
   const doc = await loadDoc(p.id); if (roleOf(doc, b.k) !== 'edit') fail(403, 'bad_key');
@@ -496,4 +585,4 @@ async function start() {
   setTimeout(weeklyTick, 120e3).unref(); setInterval(weeklyTick, 10 * 60e3).unref();
 }
 if (require.main === module) start().catch(e => { console.error(e); process.exit(1); });
-module.exports = { start, server, pool, checkHours, occasionsToday, occasionText, occasionTick, branchBody, weeklyQuestion, weeklyTick };
+module.exports = { start, server, pool, checkHours, occasionsToday, occasionText, occasionTick, branchBody, branchAllow, weeklyQuestion, weeklyTick };

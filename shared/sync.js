@@ -37,7 +37,7 @@
 
   class Doc {
     constructor(o) {
-      this.id = o.id; this.key = o.key; this.onChange = o.onChange || (() => { }); this.onStatus = o.onStatus || (() => { });
+      this.id = o.id; this.key = o.key; this.onChange = o.onChange || (() => { }); this.onStatus = o.onStatus || (() => { }); this.onReject = o.onReject || null;
       this.interval = o.poll || 4000; this.ck = 'tajarib.doc.' + o.id;
       const c = parse(ls(this.ck)) || {}; const cb = c.body || {}, cp = c.pending || {};
       this.body = { items: isObj(cb.items) ? cb.items : {}, meta: isObj(cb.meta) ? cb.meta : null };
@@ -87,7 +87,7 @@
         if (this._stopped) { this._pulling = false; return; }
         /* إذا انرسل تعديل وهذا الطلب شغّال، ممكن يكون الرد أقدم من اللي عندنا، فنعيد الطلب بدل ما نرجع لبيانات قديمة */
         if (ep !== this._ep) { this._pulling = false; this._pullAgain = false; this.pull(); return; }
-        this.role = r.role;
+        this.role = r.role; this.branch = !!r.branch;
         if (!r.same) { const b = r.body || {}; this.body = { items: isObj(b.items) ? b.items : {}, meta: isObj(b.meta) ? b.meta : null }; this.rev = r.rev; this.kind = r.kind || this.kind; this._prune(); this._save(); this._changed({ remote: true }); }
         this._status(this.hasPending() ? 'saving' : 'ok');
       } catch (e) {
@@ -109,6 +109,7 @@
         for (const [id, it] of Object.entries(items)) { const s = this.body.items[id]; if (!s || +it.u >= +(s.u || 0)) this.body.items[id] = it; if (this.pending.items[id] && this.pending.items[id].u === it.u) delete this.pending.items[id]; }
         if (meta) { if (!this.body.meta || +meta.u >= +(this.body.meta.u || 0)) this.body.meta = meta; if (this.pending.meta && this.pending.meta.u === meta.u) this.pending.meta = null; }
         if (r.rev === base + (r.applied ? 1 : 0)) this.rev = r.rev; else this._needPull = true;
+        if (r.rejected) { this._needPull = true; if (this.onReject) try { this.onReject(r.rejected); } catch (x) { } }
         this._save(); this._status(this.hasPending() ? 'saving' : 'ok');
       } catch (e) {
         this._pushing = false; if (this._stopped) return; this._status(e.code === 'net' ? 'offline' : 'error', e);
@@ -153,9 +154,13 @@
       resolve(id, key, sid, status) { return req('POST', `/api/docs/${enc(id)}/suggest/${enc(sid)}`, { k: key, status }); }
     },
     branch: {
-      create(id, key, root, label) { return req('POST', `/api/docs/${enc(id)}/branch`, { k: key, root, label }); },
+      create(id, key, root, label, edit) { return req('POST', `/api/docs/${enc(id)}/branch`, { k: key, root, label, edit: !!edit }); },
       list(id, key) { return req('GET', `/api/docs/${enc(id)}/branch?k=${enc(key)}`).then(r => r.branches); },
       remove(id, key, bid) { return req('DELETE', `/api/docs/${enc(id)}/branch/${enc(bid)}`, { k: key }); }
+    },
+    snaps: {
+      list(id, key) { return req('GET', `/api/docs/${enc(id)}/snaps?k=${enc(key)}`).then(r => r.snaps); },
+      restore(id, key, tag) { return req('POST', `/api/docs/${enc(id)}/restore`, { k: key, tag }); }
     },
     rooms: {
       create(qs) { return req('POST', '/api/rooms', { qs }); },
