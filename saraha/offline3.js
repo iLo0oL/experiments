@@ -47,7 +47,7 @@ Object.assign(OFFLINE, {
       const draw = () => {
         clearInterval(offTimer);
         if (alive.length === 1) {
-          stage.innerHTML = `<div class="card pick center"><small>الفايز</small><div class="gname">🏆 ${esc(alive[0])}</div><p class="muted">${log.length} كلمة</p></div><button class="btn primary big" id="again">🔄 جولة جديدة</button>`;
+          stage.innerHTML = `<div class="card pick center"><small>الفايز</small><div class="gname">🏆 ${esc(alive[0])}</div><p class="muted">${(x => x === 1 ? 'كلمة وحدة' : x === 2 ? 'كلمتين' : x >= 3 && x <= 10 ? `${x} كلمات` : `${x} كلمة`)(log.length)}</p></div><button class="btn primary big" id="again">🔄 جولة جديدة</button>`;
           return ($('#again').onclick = start);
         }
         const who = alive[turn % alive.length];
@@ -156,7 +156,7 @@ Object.assign(OFFLINE, {
     let n = +store.kv('dice.n') || 2;
     const hist = [];
     app.innerHTML = `${offHead('dice')}
-      <div class="card center"><div class="chips" id="dn" style="justify-content:center">${[1, 2, 3, 4, 5, 6].map(k => `<button class="chip" data-n="${k}">${k} ${k === 1 ? 'نرد' : 'نرود'}</button>`).join('')}</div>
+      <div class="card center"><div class="chips" id="dn" style="justify-content:center">${[1, 2, 3, 4, 5, 6].map(k => `<button class="chip" data-n="${k}">${k === 1 ? 'نرد واحد' : k === 2 ? 'نردين' : k + ' نرود'}</button>`).join('')}</div>
         <div class="dice" id="dv"></div><p id="dsum" class="muted"></p><button class="btn primary big" id="roll">🎲 ارمِ</button></div>
       <div class="card center"><div class="coin" id="cv">🪙</div><button class="btn big" id="flip">🪙 اقلب العملة</button></div>
       <section class="card"><h3>📜 آخر الرميات</h3><div id="dh"><p class="muted">ما رميت للحين</p></div></section>`;

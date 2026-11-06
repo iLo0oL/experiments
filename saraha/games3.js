@@ -82,7 +82,7 @@ const Guess = {
       const go = $('#go'); if (go) go.onclick = e => gameSend(e.currentTarget, () => postRoom(my, 'q', { s: 'ask', i: next }));
       const fin = $('#fin'); if (fin) fin.onclick = e => gameSend(e.currentTarget, () => postRoom(my, 'q', { s: 'end', board: st.board }));
     } else if (st.s === 'ask') {
-      A.innerHTML = Guess.qCard(my, st.i, `<p class="muted center">الجواب (لك بس): <b>${fmtNum(my.gkey[st.i])}</b></p><p class="muted center">خمّن <b id="acount">0</b> لاعب</p>`) + `<button class="btn primary big" id="show">👀 اكشف الجواب</button>`;
+      A.innerHTML = Guess.qCard(my, st.i, `<p class="muted center">الجواب (لك بس): <b>${fmtNum(my.gkey[st.i])}</b></p><p class="muted center">خمّنوا: <b id="acount">0</b></p>`) + `<button class="btn primary big" id="show">👀 اكشف الجواب</button>`;
       Guess.update();
       $('#show').onclick = e => {
         const rows = Guess.rows(my, st.i), prev = [...my.qev].reverse().find(x => x.s === 'show');
@@ -173,7 +173,7 @@ const Auction = {
       const go = $('#go'); if (go) go.onclick = e => gameSend(e.currentTarget, () => postRoom(my, 'q', { s: 'ask', i: next }));
       const fin = $('#fin'); if (fin) fin.onclick = e => gameSend(e.currentTarget, () => postRoom(my, 'q', { s: 'end' }));
     } else if (st.s === 'ask') {
-      A.innerHTML = Auction.itemCard(my, st.i, `<p class="muted">زايد <b id="acount">0</b> لاعب</p>`) + `<button class="btn primary big" id="sell">🔨 بيع!</button>`;
+      A.innerHTML = Auction.itemCard(my, st.i, `<p class="muted">زايدوا: <b id="acount">0</b></p>`) + `<button class="btn primary big" id="sell">🔨 بيع!</button>`;
       Auction.update();
       $('#sell').onclick = e => {
         // المزايدة اللي أكبر من الرصيد ما تُحسب
@@ -248,7 +248,7 @@ const Movie = {
   open() {
     const my = S;
     document.title = `${my.setup.title} · صراحة`;
-    app.innerHTML = `${sessionHead(my.setup.title)}${liveBar('<b id="count">0</b> اقتراح')}${my.isHost ? `<details class="card"${my.state ? '' : ' open'}><summary>📨 رابط الدعوة ورابط المشرف</summary>${hostPanel().replace('<section class="card share">', '<section class="share">')}</details>` : ''}<div id="qarea"></div>${howCard(my.M)}${privacyNote(my.M)}`;
+    app.innerHTML = `${sessionHead(my.setup.title)}${liveBar('الاقتراحات: <b id="count">0</b>')}${my.isHost ? `<details class="card"${my.state ? '' : ' open'}><summary>📨 رابط الدعوة ورابط المشرف</summary>${hostPanel().replace('<section class="card share">', '<section class="share">')}</details>` : ''}<div id="qarea"></div>${howCard(my.M)}${privacyNote(my.M)}`;
     if (my.isHost) bindHost();
     my.qdrawn = null; Movie.update();
   },
@@ -324,7 +324,7 @@ const onKey = (sel, fn) => { const el = $(sel); if (el) el.onkeydown = e => { if
 
 // بطولة الشلة: جدول خروج المغلوب
 BOARDS.tourney = {
-  live: 'خلصت <b id="count">0</b> مباراة', named: false, shareHint: 'أي أحد معه الرابط يقدر يسجّل النتائج.',
+  live: 'المباريات اللي خلصت: <b id="count">0</b>', named: false, shareHint: 'أي أحد معه الرابط يقدر يسجّل النتائج.',
   valid: (e, base, s) => e.k === 'm' ? { ...base, k: 'm', w: s(e.w, NAME_LEN), sc: s(e.sc, 12) } : null,
   count: my => [...my.bstate.values()].filter(e => !e.del && e.k === 'm' && e.w),
   rounds(names, res) {
@@ -399,7 +399,7 @@ BOARDS.jamia = {
 
 // دور الحساب
 BOARDS.turn = {
-  live: 'سجّلتوا <b id="count">0</b> مرة', named: false,
+  live: 'عدد المرات: <b id="count">0</b>', named: false,
   valid: (e, base, s) => e.k === 't' ? { ...base, k: 't', who: s(e.who, NAME_LEN), note: s(e.note, 40), skip: !!e.skip } : null,
   count: my => [...my.bstate.values()].filter(e => !e.del && e.k === 't'),
   due(names, ev) { if (!ev.length) return names[0]; const i = names.indexOf(ev[ev.length - 1].who); return names[(i + 1) % names.length]; },
@@ -420,14 +420,14 @@ BOARDS.turn = {
         <input id="tnote" maxlength="40" placeholder="على وش؟ (مثلًا: عشاء الخميس)" style="margin-top:8px">
         <div class="row"><button class="btn primary grow" data-act="pay" data-who="${esc(due)}">✅ ${esc(due)} دفع</button><button class="btn ghost" data-act="skip" data-who="${esc(due)}">⏭️ تخطي</button></div>
         <div class="addrow" style="margin-top:10px"><select id="tother" class="sel">${names.map(n => `<option value="${esc(n)}">${esc(n)}</option>`).join('')}</select><button class="btn" data-act="other">دفع شخص ثاني</button></div></div>
-      <section class="card"><h3>👥 الترتيب</h3>${names.map(n => `<div class="brow${n === due ? ' me' : ''}"><span>${n === due ? '👉 ' : ''}${esc(n)}</span><small class="muted">دفع ${times(n)} مرة</small></div>`).join('')}</section>
+      <section class="card"><h3>👥 الترتيب</h3>${names.map(n => `<div class="brow${n === due ? ' me' : ''}"><span>${n === due ? '👉 ' : ''}${esc(n)}</span><small class="muted">دفع ${(x => x === 1 ? 'مرة وحدة' : x === 2 ? 'مرتين' : x >= 3 && x <= 10 ? `${x} مرات` : `${x} مرة`)(times(n))}</small></div>`).join('')}</section>
       <section class="card"><h3>📜 السجل</h3>${ev.length ? [...ev].reverse().slice(0, 40).map(e => `<div class="brow"><span>${e.skip ? '⏭️' : '✅'} ${esc(e.who)}${e.note ? ` <small class="muted">— ${esc(e.note)}</small>` : ''}</span><small class="muted">${esc(fmtDay(isoDay(new Date(e.c)), { day: 'numeric', month: 'short' }))}</small><button class="x" data-act="del" data-id="${e.id}">✕</button></div>`).join('') : '<p class="muted">ما فيه تسجيلات للحين</p>'}</section>`;
   }
 };
 
 // قائمة أمنياتي: الحجز مخفي عن صاحب الأمنية
 BOARDS.wish = {
-  live: '<b id="count">0</b> أمنية', namePh: 'اسمك (عشان تضيف أمنياتك وتحجز)', shareHint: 'كل واحد يضيف أمنياته، والباقي يحجزون الهدايا بالسر عن صاحبها.',
+  live: 'الأمنيات: <b id="count">0</b>', namePh: 'اسمك (عشان تضيف أمنياتك وتحجز)', shareHint: 'كل واحد يضيف أمنياته، والباقي يحجزون الهدايا بالسر عن صاحبها.',
   valid: (e, base, s) => e.k === 'w' ? { ...base, k: 'w', owner: s(e.owner, NAME_LEN), name: s(e.name, 60) } : e.k === 'c' ? { ...base, k: 'c', w: s(e.w, 20), by: s(e.by, NAME_LEN) } : null,
   count: my => [...my.bstate.values()].filter(e => !e.del && e.k === 'w'),
   html: () => `<section class="card"><h3>🎁 أضف أمنية لك</h3><div class="addrow"><input id="wi" maxlength="60" placeholder="وش تتمنى؟ (مثلًا: عطر، ساعة…)"><button class="btn" id="wadd">إضافة</button></div></section>`,
@@ -456,7 +456,7 @@ BOARDS.wish = {
 // صندوق الاقتراحات: بدون أسماء
 const voterId = () => { let v = store.kv('voter'); if (!v) { v = b64u(crypto.getRandomValues(new Uint8Array(8))); store.kv('voter', v); } return v; };
 BOARDS.box = {
-  live: '<b id="count">0</b> اقتراح', named: false, shareHint: 'أي أحد معه الرابط يقدر يضيف اقتراح بدون اسمه.',
+  live: 'الاقتراحات: <b id="count">0</b>', named: false, shareHint: 'أي أحد معه الرابط يقدر يضيف اقتراح بدون اسمه.',
   valid: (e, base, s) => e.k === 's' ? { ...base, k: 's', text: s(e.text, 400), done: !!e.done, img: s(e.img, 16) } : e.k === 'v' ? { ...base, k: 'v', s: s(e.s, 20), v: e.v ? 1 : 0 } : null,
   count: my => [...my.bstate.values()].filter(e => !e.del && e.k === 's'),
   html: my => `<section class="card"><h3>💡 اقتراح جديد</h3><textarea id="bx" maxlength="400" placeholder="اكتب اقتراحك أو ملاحظتك… بدون اسمك"></textarea>
@@ -496,7 +496,7 @@ BOARDS.box = {
 
 // ذكريات الشلة
 BOARDS.memories = {
-  live: '<b id="count">0</b> ذكرى', namePh: 'اسمك (اختياري)',
+  live: 'الذكريات: <b id="count">0</b>', namePh: 'اسمك (اختياري)',
   valid: (e, base, s) => e.k === 'm' && isDayStr(e.day) ? { ...base, k: 'm', day: e.day, text: s(e.text, 400), by: s(e.by, NAME_LEN), img: s(e.img, 16) } : null,
   count: my => [...my.bstate.values()].filter(e => !e.del && e.k === 'm'),
   html: my => `<section class="card"><h3>✍️ أضف ذكرى</h3><input type="date" id="md" value="${today()}"><textarea id="mt" maxlength="400" placeholder="وش صار؟ (مثلًا: أول كشتة لنا، وضاع الفحم 😂)"></textarea>

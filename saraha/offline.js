@@ -196,7 +196,7 @@ const OFFLINE = {
       setTimeout(() => { if (word) dw.textContent = 'حفظتها؟ ابدأ الوقت وارسم ✏️'; }, 2500);
     };
     $('#go').onclick = () => {
-      if (!word) return toast('اختار كلمة أول', true);
+      if (!word) return toast('اختر كلمة أول', true);
       stop(); left = 60; $('#tm').textContent = left;
       offTimer = setInterval(() => {
         left--; $('#tm').textContent = left;

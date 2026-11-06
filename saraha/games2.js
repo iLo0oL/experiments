@@ -172,7 +172,7 @@ const Abc = {
       const fin = $('#fin');
       if (fin) fin.onclick = e => { e.currentTarget.disabled = true; postRoom(my, 'q', { s: 'end', board: st.board }).catch(() => { toast('ما وصل', true); e.currentTarget.disabled = false; }); };
     } else if (st.s === 'ask') {
-      A.innerHTML = `<div class="card center">${Abc.bigLetter(st.r, st.l)}<p class="muted">خلّص <b id="acount">${(my.ans && my.ans.get(st.r) || new Map()).size}</b> لاعب</p></div>
+      A.innerHTML = `<div class="card center">${Abc.bigLetter(st.r, st.l)}<p class="muted">خلّصوا: <b id="acount">${(my.ans && my.ans.get(st.r) || new Map()).size}</b></p></div>
         <button class="btn danger big" id="stop">⏹️ وقّف الجولة</button>`;
       $('#stop').onclick = e => { e.currentTarget.disabled = true; postRoom(my, 'q', { s: 'stop', r: st.r }).catch(() => { e.currentTarget.disabled = false; }); };
     } else if (st.s === 'stop') {
@@ -281,7 +281,7 @@ const Funny = {
   qCard(my, i, inner) { return `<div class="card"><div class="qhead">الجملة ${i + 1} من ${my.cfg.questions.length}</div><h3 class="qq">${Funny.promptHtml(my.cfg.questions[i].q)}</h3>${inner}</div>`; },
   showHtml(my, st, me) {
     const top = Math.max(0, ...st.res.map(r => r.v));
-    return Funny.qCard(my, st.i, st.res.map(r => `<div class="msg">${top && r.v === top ? '👑 ' : ''}${esc(r.text)}<div class="by">— ${esc(r.by)} · ${r.v} صوت</div></div>`).join('') || '<p class="muted">محد جاوب.</p>')
+    return Funny.qCard(my, st.i, st.res.map(r => `<div class="msg">${top && r.v === top ? '👑 ' : ''}${esc(r.text)}<div class="by">— ${esc(r.by)} · ${(x => x === 1 ? 'صوت واحد' : x === 2 ? 'صوتين' : x >= 3 && x <= 10 ? `${x} أصوات` : `${x} صوت`)(r.v)}</div></div>`).join('') || '<p class="muted">محد جاوب.</p>')
       + `<section class="card"><h3>🏆 الترتيب</h3>${boardHtml(st.board, me)}</section>`;
   },
   open() { hostGameShell(S, S.isHost ? 'وصل <b id="count">0</b>' : '<span id="qpos">قبل البداية</span>'); Funny.update(); },
@@ -310,7 +310,7 @@ const Funny = {
       const go = $('#go'); if (go) go.onclick = e => Funny.send(my, e.currentTarget, () => postRoom(my, 'q', { s: 'ask', i: next }));
       const fin = $('#fin'); if (fin) fin.onclick = e => Funny.send(my, e.currentTarget, () => postRoom(my, 'q', { s: 'end', board: st.board }));
     } else if (st.s === 'ask') {
-      A.innerHTML = Funny.qCard(my, st.i, `<p class="muted center">جاوب <b id="acount">${((my.fa && my.fa.get(st.i)) || new Map()).size}</b> لاعب</p>`) + `<button class="btn primary big" id="vote">🗳️ ابدأ التصويت</button>`;
+      A.innerHTML = Funny.qCard(my, st.i, `<p class="muted center">جاوبوا: <b id="acount">${((my.fa && my.fa.get(st.i)) || new Map()).size}</b></p>`) + `<button class="btn primary big" id="vote">🗳️ ابدأ التصويت</button>`;
       $('#vote').onclick = e => {
         const answers = [...((my.fa && my.fa.get(st.i)) || new Map()).entries()];
         if (answers.length < 2) return toast('يحتاج جوابين على الأقل', true);
@@ -319,7 +319,7 @@ const Funny = {
         Funny.send(my, e.currentTarget, () => postChunked(my, 'q', { s: 'vote', i: st.i }, 'opts', mixed.map(({ k, text }) => ({ k, text }))));
       };
     } else if (st.s === 'vote') {
-      A.innerHTML = Funny.qCard(my, st.i, st.opts.map(o => `<div class="msg">${esc(o.text)}</div>`).join('') + `<p class="muted center">صوّت <b id="acount">0</b> لاعب</p>`) + `<button class="btn primary big" id="show">🏆 اكشف الأضحك</button>`;
+      A.innerHTML = Funny.qCard(my, st.i, st.opts.map(o => `<div class="msg">${esc(o.text)}</div>`).join('') + `<p class="muted center">صوّتوا: <b id="acount">0</b></p>`) + `<button class="btn primary big" id="show">🏆 اكشف الأضحك</button>`;
       Funny.update();
       $('#show').onclick = e => {
         let map = [];
@@ -418,7 +418,7 @@ function rankTally(cfg, ballots) {
 }
 function rankReveal(R, M, cfg) {
   const list = qi => R.tally[qi].length
-    ? R.tally[qi].map(([ni, sc], k) => `<div class="brow${k === 0 ? ' me' : ''}"><span>${medal(k)} ${esc(cfg.names[ni])}</span><small class="muted">${sc} نقطة</small></div>`).join('')
+    ? R.tally[qi].map(([ni, sc], k) => `<div class="brow${k === 0 ? ' me' : ''}"><span>${medal(k)} ${esc(cfg.names[ni])}</span><small class="muted">${(x => x === 1 ? 'نقطة وحدة' : x === 2 ? 'نقطتين' : x >= 3 && x <= 10 ? `${x} نقاط` : `${x} نقطة`)(sc)}</small></div>`).join('')
     : '<p class="muted">محد رتّب هالسؤال</p>';
   return {
     body: R.voters ? `<button class="btn primary big" id="present">📽️ اكشف الترتيب سؤال سؤال</button>
@@ -525,7 +525,7 @@ const Board = {
     if (BOARDS[my.M.board]) return Board.openWith(my, BOARDS[my.M.board]);
     const trip = my.M.board === 'trip';
     app.innerHTML = `${sessionHead(my.setup.title)}
-      ${liveBar(trip ? '<b id="count">0</b> غرض · <span id="tleft"></span>' : '<b id="count">0</b> مكان')}
+      ${liveBar(trip ? 'الأغراض: <b id="count">0</b> · <span id="tleft"></span>' : 'الأماكن: <b id="count">0</b>')}
       ${my.cfg.note ? `<div class="card note">📝 ${esc(my.cfg.note)}</div>` : ''}
       <section class="card share"><h3>📨 شارك الرابط مع الشلة</h3><p class="muted small">أي أحد معه الرابط يقدر يضيف ويعدّل.</p>
         <div class="row multi"><button class="btn" id="cp">نسخ الرابط</button><a class="btn wa" target="_blank" rel="noopener" href="https://wa.me/?text=${encodeURIComponent(shareText(inviteLink()))}">واتساب</a><button class="btn" id="qrb">📱 QR</button></div></section>
@@ -614,8 +614,8 @@ const Board = {
       const icon = t => (PLACE_TYPES.find(x => x[0] === t) || PLACE_TYPES[3])[1].split(' ')[0];
       L.innerHTML = info.length ? info.map(({ p, rs, avg, mine }, k) => `<section class="card place">
           <div class="gh"><h3>${k === 0 && avg ? '🏆 ' : ''}${icon(p.type)} ${esc(p.name)}</h3><button class="x" data-del="${p.id}" aria-label="حذف">✕</button></div>
-          <div class="avg">${avg ? `<b>★ ${avg.toFixed(1)}</b> <small class="muted">(${rs.length} تقييم)</small>` : '<small class="muted">ما أحد قيّمه للحين</small>'}</div>
-          <div class="stars">${[1, 2, 3, 4, 5].map(s => `<button data-star="${s}" data-p="${p.id}" class="${mine && mine.s >= s ? 'on' : ''}" aria-label="${s} نجوم">★</button>`).join('')}<small class="muted">تقييمك</small></div>
+          <div class="avg">${avg ? `<b>★ ${avg.toFixed(1)}</b> <small class="muted">(${(x => x === 1 ? 'تقييم واحد' : x === 2 ? 'تقييمين' : x >= 3 && x <= 10 ? `${x} تقييمات` : `${x} تقييم`)(rs.length)})</small>` : '<small class="muted">ما أحد قيّمه للحين</small>'}</div>
+          <div class="stars">${[1, 2, 3, 4, 5].map(s => `<button data-star="${s}" data-p="${p.id}" class="${mine && mine.s >= s ? 'on' : ''}" aria-label="${s === 1 ? 'نجمة وحدة' : s === 2 ? 'نجمتين' : `${s} نجوم`}">★</button>`).join('')}<small class="muted">تقييمك</small></div>
           <input class="rnote" data-p="${p.id}" maxlength="80" placeholder="ملاحظتك (اختياري)" value="${esc(mine ? mine.note : '')}">
           ${rs.length ? `<details><summary>تقييمات الشلة</summary>${rs.map(r => `<div class="brow"><span>${esc(r.by)}${r.note ? ` <small class="muted">— ${esc(r.note)}</small>` : ''}</span><b>${'★'.repeat(r.s)}</b></div>`).join('')}</details>` : ''}
         </section>`).join('') : emptyCard('ما فيه أماكن للحين. أضف أول مكان رحتوه 👆');

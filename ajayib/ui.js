@@ -83,7 +83,7 @@ const Wonders = {
   hole(w) { UI.say('🕳️', w.n, `${w.d}<br><small>عندك ${S.gold} ⚪</small>`, [['⚪ ارمي 10 لؤلؤ', 'wish10'], ['⚪ ارمي 50 لؤلؤ', 'wish50'], ['👋 لا', 'close']]); },
   dino(w) {
     if (S.cd.dino > Date.now()) UI.say('🦖', w.n, '«شكرًا يا بطل! صار لي 65 مليون سنة بالثلج 🥶» (يرقص 💃)');
-    else UI.say('🦖', w.n, `${w.d}<br><br>💡 اضرب الثلج بسلاحك عشان يتكسر (${cntTxt(Math.max(0, 12 - (S.cd.dinoHits || 0)), 'ضربة باقية', 'ضربات باقية')})`);
+    else UI.say('🦖', w.n, `${w.d}<br><br>💡 اضرب الثلج بسلاحك عشان يتكسر (${cntTxt(Math.max(0, 12 - (S.cd.dinoHits || 0)), 'ضربة باقية', 'ضربات باقية', 'باقي ضربتين')})`);
   },
   dinoFree() {
     S.cd.dino = Date.now() + 20 * 60e3; S.cd.dinoHits = 0;
@@ -410,14 +410,14 @@ const UI = {
       <p class="muted small">${Net.online ? `🟢 متصل بعالم «${esc(Net.world)}»` : '⚪ مو متصل — تلعب لحالك الحين'}</p>
       <div class="plist"><div class="pl me"><i style="background:${S.color}"></i><b>${esc(S.name)}</b> · ${S.lvl} <small>${S.title !== 'مبتدئ' ? '«' + esc(S.title) + '»' : ''} (أنت)</small></div>
       ${list.map(o => `<div class="pl"><i style="background:${o.color}"></i><b>${esc(o.name)}</b> · ${o.lvl} <small>${o.title ? '«' + esc(o.title) + '»' : ''} ✨${o.won}</small>
-        <span class="grow"></span><small>${dirName(o)} ${cntTxt(Math.round(dist(o, P) / T), 'خطوة', 'خطوات')}</small>
+        <span class="grow"></span><small>${dirName(o)} ${cntTxt(Math.round(dist(o, P) / T), 'خطوة', 'خطوات', 'خطوتين')}</small>
         <button class="mini-btn" data-act="goto" data-v="${o.id}">📍</button><button class="mini-btn" data-act="mute" data-v="${o.id}">${G.muted.has(o.id) ? '🔊' : '🔇'}</button></div>`).join('')}</div>
       ${list.length ? '' : `<p class="muted">ما فيه أحد غيرك الحين… ادعُ ربعك! أرسل لهم رابط اللعبة 👇</p>`}
       <button class="btn wide" data-act="share">🔗 ادعُ ربعك لنفس العالم</button>`);
   },
   playerCard(o) {
     this.cardFor = o.id;
-    this.say('👤', o.name, `لفل <b>${o.lvl}</b> ${o.title ? `· «${esc(o.title)}»` : ''}<br>✨ اكتشف ${cntTxt(o.won, 'عجيبة', 'عجايب')}`, [
+    this.say('👤', o.name, `لفل <b>${o.lvl}</b> ${o.title ? `· «${esc(o.title)}»` : ''}<br>✨ اكتشف ${cntTxt(o.won, 'عجيبة', 'عجايب', 'عجيبتين')}`, [
       ['👋 سلّم عليه', 'emote', '0'], ['🤝 صافحه (لو صافحك بنفس الوقت تاخذون شحنة صداقة)', 'emote', '5'],
       ['🎁 أهديه شي', 'giftmenu', o.id], [G.muted.has(o.id) ? '🔊 رجّع صوته' : '🔇 اكتمه', 'mute', o.id], ['👋 خلاص', 'close']]);
   },
@@ -483,7 +483,7 @@ const UI = {
   /* ---------- اللوحات والقوارير ---------- */
   ago(ts) {
     const s = (Date.now() - ts) / 1000;
-    return s < 120 ? 'الحين' : s < 3600 ? `قبل ${cntTxt(Math.round(s / 60), 'دقيقة', 'دقايق')}` : s < 86400 ? `قبل ${cntTxt(Math.round(s / 3600), 'ساعة', 'ساعات')}` : `قبل ${cntTxt(Math.round(s / 86400), 'يوم', 'أيام')}`;
+    return s < 120 ? 'الحين' : s < 3600 ? `قبل ${cntTxt(Math.round(s / 60), 'دقيقة', 'دقايق', 'دقيقتين')}` : s < 86400 ? `قبل ${cntTxt(Math.round(s / 3600), 'ساعة', 'ساعات', 'ساعتين')}` : `قبل ${cntTxt(Math.round(s / 86400), 'يوم', 'أيام', 'يومين')}`;
   },
   signText(r) { return SIGN_TPL[r.a].replace('{}', SIGN_WORDS[r.b]); },
   readSign(s) {
@@ -530,7 +530,7 @@ const UI = {
       <p class="muted small">الجوال: العصا يسار الشاشة للمشي، والأزرار يمين: ⚔️ ضرب (اضغط مطوّل يضرب على طول) · 💨 اندفاع · 🌀 دوامة · 🤚 تفاعل.<br>
       الكيبورد: WASD أو الأسهم · مسافة/كلك = ضرب · Shift = اندفاع · Q = دوامة · E = تفاعل · F = أكل/جرعة · R = الجمل · M خريطة · I شنطة · O مهمات · P لاعبين · Enter دردشة · 1-8 حركات</p>
       <h4>📊 إحصائياتك</h4>
-      <p class="muted small">قتلت ${cntTxt(S.stats.kills, 'وحش', 'وحوش')} · طحت ${cntTxt(S.stats.deaths, 'مرة', 'مرات')} · الحوت ${S.stats.boss} · صناديق ${S.stats.chests} · مهمات ${S.qd.length} · عجايب ${Object.keys(S.won).length}</p>
+      <p class="muted small">قتلت ${cntTxt(S.stats.kills, 'وحش', 'وحوش', 'وحشين')} · طحت ${cntTxt(S.stats.deaths, 'مرة', 'مرات', 'مرتين')} · الحوت ${S.stats.boss} · صناديق ${S.stats.chests} · مهمات ${S.qd.length} · عجايب ${Object.keys(S.won).length}</p>
       <button class="btn danger wide" data-act="reset">🗑️ احذف الشخصية وابدأ من جديد</button>`);
   }
 };
@@ -601,7 +601,7 @@ const ACT = {
     const w = left.sort((a, b) => dist(a, P) - dist(b, P))[0];
     const a = Math.atan2(w.y - P.y, w.x - P.x), dirs = ['الشرق', 'الجنوب الشرقي', 'الجنوب', 'الجنوب الغربي', 'الغرب', 'الشمال الغربي', 'الشمال', 'الشمال الشرقي'];
     const d = dirs[Math.round(((a + Math.PI * 2) % (Math.PI * 2)) / (Math.PI / 4)) % 8];
-    UI.say('👦', 'سعود الصغير', `«سمعت إن فيه شي غريب جهة <b>${d}</b>، تقريبًا ${cntTxt(Math.round(dist(w, P) / T), 'خطوة', 'خطوات')} من هنا… يقولون إنه ${esc(w.d.split('.')[0])}!»`, [['📍 حط علامة بالخريطة', 'wpw', w.id], ['👋 شكرًا', 'close']]);
+    UI.say('👦', 'سعود الصغير', `«سمعت إن فيه شي غريب جهة <b>${d}</b>، تقريبًا ${cntTxt(Math.round(dist(w, P) / T), 'خطوة', 'خطوات', 'خطوتين')} من هنا… يقولون إنه ${esc(w.d.split('.')[0])}!»`, [['📍 حط علامة بالخريطة', 'wpw', w.id], ['👋 شكرًا', 'close']]);
   },
   wpw: v => { const w = World.wonderById[v]; S.wp = { x: w.x + rand(-300, 300), y: w.y + rand(-300, 300) }; UI.toast('📍 حطيت علامة تقريبية'); UI.close(); },
   gossip: () => UI.say(NPCS[UI.dlg].e, NPCS[UI.dlg].n, `«${esc(pick(NPC_RANDOM))}»`, [[UI.dlg === 'grandma' ? '💬 زيديني' : '💬 زيدني', 'gossip'], ['👋 مع السلامة', 'close']]),

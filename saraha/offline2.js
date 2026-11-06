@@ -113,7 +113,7 @@ Object.assign(OFFLINE, {
     app.innerHTML = `${offHead('twenty')}<div id="stage"></div>`;
     const stage = $('#stage');
     const pickPhase = () => {
-      stage.innerHTML = `<div class="card center"><h3>🤔 اللي بيفكر ياخذ الجوال</h3><p class="muted">اختار شي في بالك، أو خلّ الصفحة تقترح عليك (بالسر).</p></div>
+      stage.innerHTML = `<div class="card center"><h3>🤔 اللي بيفكر ياخذ الجوال</h3><p class="muted">اختر شي في بالك، أو خلّ الصفحة تقترح عليك (بالسر).</p></div>
         <button class="btn primary big" id="sug">🎲 اقترح عليّ</button><button class="btn big" id="own">💭 بفكر بنفسي</button>`;
       $('#sug').onclick = () => {
         const [cat, list] = randOf(TWENTY_THINGS), thing = randOf(list);
@@ -135,7 +135,7 @@ Object.assign(OFFLINE, {
         $$('[data-a]', stage).forEach(b => { b.onclick = () => { log.push(b.dataset.a); draw(); }; });
         $('#undo').onclick = () => { log.pop(); draw(); };
         const fin = won => {
-          stage.innerHTML = `<div class="card center pass"><h3>${won ? `🎉 عرفوها بعد ${log.length} سؤال!` : '😅 ما عرفوها'}</h3>${secret ? `<p class="muted">كان:</p><div class="gname">${esc(secret)}</div>` : '<p>قول لهم وش كان في بالك 😄</p>'}</div>
+          stage.innerHTML = `<div class="card center pass"><h3>${won ? `🎉 عرفوها بعد ${(x => x === 1 ? 'سؤال واحد' : x === 2 ? 'سؤالين' : x >= 3 && x <= 10 ? `${x} أسئلة` : `${x} سؤال`)(log.length)}!` : '😅 ما عرفوها'}</h3>${secret ? `<p class="muted">كان:</p><div class="gname">${esc(secret)}</div>` : '<p>قول لهم وش كان في بالك 😄</p>'}</div>
             <button class="btn primary big" id="again">🔄 جولة جديدة</button>`;
           $('#again').onclick = pickPhase;
         };

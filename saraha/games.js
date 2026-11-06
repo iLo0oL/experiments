@@ -1,3 +1,8 @@
+/* جمع الوحدات بالعربي: «رسالة وحدة، رسالتين، 3 رسائل، 11 رسالة» و«الرسائل» للعدّادات الحيّة */
+const UNIT_PL = { 'لاعب': 'لاعبين', 'تصويت': 'تصويتات', 'مشاركة': 'مشاركات', 'رسالة': 'رسائل', 'اقتراح': 'اقتراحات', 'مكان': 'أماكن', 'مشارك': 'مشاركين', 'مرة': 'مرات', 'مباراة': 'مباريات', 'غرض': 'أغراض', 'عضو': 'أعضاء', 'صراحة': 'صراحات', 'شخص': 'أشخاص', 'سؤال': 'أسئلة', 'ذكرى': 'ذكريات', 'جواب': 'أجوبة', 'جملة': 'جمل', 'توقع': 'توقعات', 'اعتراف': 'اعترافات', 'أمنية': 'أمنيات' };
+const unitDual = u => /ة$/.test(u) ? u.replace(/ة$/, 'تين') : /ى$/.test(u) ? u.replace(/ى$/, 'يين') : u + 'ين';
+function cntUnit(n, u) { u = u || 'مشاركة'; const fem = /[ةى]$/.test(u); if (n === 1) return `${u} ${fem ? 'وحدة' : 'واحد'}`; if (n === 2) return unitDual(u); return `${n} ${n % 100 >= 3 && n % 100 <= 10 ? (UNIT_PL[u] || u) : u}`; }
+const unitAll = u => 'ال' + (UNIT_PL[u || 'مشاركة'] || u || 'مشاركات');
 'use strict';
 /* ألعاب الجلسات الخاصة: كمّل القصة، متى نجتمع؟، سباق الأسئلة، كم تعرفني؟، كبسولة الزمن */
 
@@ -52,12 +57,12 @@ const Story = {
     if (!ll || !my.lines) return;
     const last = my.lines[my.lines.length - 1];
     ll.textContent = last ? last.text : my.cfg.prompt;
-    hint.textContent = last ? `هذي آخر جملة كُتبت (القصة فيها ${my.lines.length} جملة). كمّل عليها 👇` : 'هذي بداية القصة. كمّل عليها 👇';
+    hint.textContent = last ? `هذي آخر جملة كُتبت (القصة فيها ${(x => x === 1 ? 'جملة وحدة' : x === 2 ? 'جملتين' : x >= 3 && x <= 10 ? `${x} جمل` : `${x} جملة`)(my.lines.length)}). كمّل عليها 👇` : 'هذي بداية القصة. كمّل عليها 👇';
   },
   reveal() {
     const R = S.results, M = S.M, all = [R.cfg.prompt, ...R.lines];
     document.title = `${R.title} · صراحة`;
-    app.innerHTML = `${revealHead(R, M, '📜', `القصة كاملة: ${R.lines.length} جملة${R.hidden ? ` · ${R.hidden} مخفية من المشرف` : ''}`)}
+    app.innerHTML = `${revealHead(R, M, '📜', `القصة كاملة: ${(x => x === 1 ? 'جملة وحدة' : x === 2 ? 'جملتين' : x >= 3 && x <= 10 ? `${x} جمل` : `${x} جملة`)(R.lines.length)}${R.hidden ? ` · ${R.hidden} مخفية من المشرف` : ''}`)}
       <section class="card story">${all.map((t, i) => `<p class="${i ? '' : 'first'}">${esc(t)}</p>`).join('')}</section>
       <div class="row"><button class="btn grow" id="present">📽️ اقرؤوها جملة جملة</button><button class="btn grow" id="cpStory">📋 نسخ القصة</button></div>
       ${againBtn()}`;
@@ -107,7 +112,7 @@ const When = {
     document.title = `${title} · صراحة`;
     app.innerHTML = `
       ${final ? revealHead(my.results, my.M, '📅', 'تثبّت الموعد 🎉') : sessionHead(title)}
-      ${final ? `<div class="card pick center"><small>الموعد</small><div class="gname">${esc(fmtDay(cfg.days[my.results.pick]))}</div></div>` : liveBar('حدد <b id="count">0</b> شخص')}
+      ${final ? `<div class="card pick center"><small>الموعد</small><div class="gname">${esc(fmtDay(cfg.days[my.results.pick]))}</div></div>` : liveBar('اللي حددوا: <b id="count">0</b>')}
       ${cfg.note ? `<div class="card note">📝 ${esc(cfg.note)}</div>` : ''}
       ${!final && my.isHost ? hostPanel() : ''}
       ${final ? '' : `<section class="card">
@@ -287,7 +292,7 @@ const Quiz = {
         left = st.i > 0 && got && got >= all ? 0 : QTIME + 1500 - el;
       } else left = AUTO_SHOW - el;
       const t = $('#qautoT'), sec = Math.ceil(left / 1000);
-      if (t) t.textContent = left > 0 ? `(بعد ${sec} ${sec > 10 ? 'ثانية' : 'ثواني'})` : '';
+      if (t) t.textContent = left > 0 ? `(بعد ${sec === 1 ? 'ثانية' : sec === 2 ? 'ثانيتين' : `${sec} ${sec > 10 ? 'ثانية' : 'ثواني'}`})` : '';
       if (left <= 0) {
         clearInterval(autoTimer);
         const b = $(st.s === 'ask' ? '#qshow' : '#qnext');
@@ -317,7 +322,7 @@ const Quiz = {
     } else if (st.s === 'ask') {
       const q = Quiz.qs(my)[st.i];
       A.innerHTML = Quiz.qCard(my, st.i, q.opts.map((o, k) => `<div class="qopt ${k === my.qkey[st.i] ? 'ok' : ''}" style="--c:${QCOL[k]}"><span>${QSYM[k]}</span>${esc(o)}${k === my.qkey[st.i] ? ' ✅' : ''}</div>`).join('')
-        + `<p class="muted center" style="margin-top:10px">جاوب <b id="acount">${(my.answers.get(st.i) || new Map()).size}</b> لاعب</p>`)
+        + `<p class="muted center" style="margin-top:10px">جاوبوا: <b id="acount">${(my.answers.get(st.i) || new Map()).size}</b></p>`)
         + `<button class="btn primary big" id="qshow">👀 اعرض الجواب والترتيب</button>`;
       $('#qshow').onclick = e => {
         const ans = [...(my.answers.get(st.i) || new Map()).values()];
@@ -378,7 +383,7 @@ const Quiz = {
     const my = S, f = my.facts || new Map();
     A.innerHTML = `<div class="card center"><div class="big-ic">🧠</div><h3>المرحلة الأولى: المعلومات</h3>
       <p class="muted">كل واحد يكتب معلومات عن نفسه من جواله. لما يخلصون، سوّ المسابقة.</p>
-      <p>كتب <b id="fcount">${f.size}</b> شخص: <span class="muted" id="fnames">${[...f.keys()].map(esc).join('، ')}</span></p></div>
+      <p>كتبوا (<b id="fcount">${f.size}</b>): <span class="muted" id="fnames">${[...f.keys()].map(esc).join('، ')}</span></p></div>
       <button class="btn primary big" id="build">🎲 سوّ المسابقة</button>`;
     $('#build').onclick = e => Quiz.build(my, e.currentTarget);
   },
@@ -539,13 +544,13 @@ async function openCapsuleLink(data) {
 function renderCapsule(R, link) {
   const M = MODES.capsule, cfg = R.cfg, locked = capLocked(cfg.open);
   document.title = `${R.title} · صراحة`;
-  app.innerHTML = `${revealHead(R, M, locked ? '🔒' : '⏳', `${R.items.length} رسالة · تنفتح ${esc(fmtDay(cfg.open, { day: 'numeric', month: 'long', year: 'numeric' }))}`)}
+  app.innerHTML = `${revealHead(R, M, locked ? '🔒' : '⏳', `${(x => x === 1 ? 'رسالة وحدة' : x === 2 ? 'رسالتين' : x >= 3 && x <= 10 ? `${x} رسائل` : `${x} رسالة`)(R.items.length)} · تنفتح ${esc(fmtDay(cfg.open, { day: 'numeric', month: 'long', year: 'numeric' }))}`)}
     ${locked
       ? `<div class="card center capsule"><div class="cd" id="cd"></div><p class="muted">الكبسولة مقفلة لين يجي الموعد 🔒</p></div>`
       : `${cfg.prompt ? `<div class="prompt">${esc(cfg.prompt)}</div>` : ''}<button class="btn primary big" id="present" style="margin-top:14px">📽️ افتحوها رسالة رسالة</button>
         ${R.items.map(x => `<div class="msg">${esc(x.text)}${x.by ? `<div class="by">— ${esc(x.by)}</div>` : ''}</div>`).join('')}`}
     <section class="card"><h3>🔗 رابط الكبسولة</h3>
-      <p class="muted small">الرسايل محفوظة داخل الرابط نفسه، وما يحتاج سيرفر. أرسله للشلة عشان يفتحونها في موعدها من أي جهاز. (القفل في الصفحة: ما تعرض الرسايل قبل الموعد.)</p>
+      <p class="muted small">الرسائل محفوظة داخل الرابط نفسه، وما يحتاج سيرفر. أرسله للشلة عشان يفتحونها في موعدها من أي جهاز. (القفل في الصفحة: ما تعرض الرسائل قبل الموعد.)</p>
       <div class="row multi"><button class="btn" id="cpCap">نسخ الرابط</button><a class="btn wa" id="waCap" target="_blank" rel="noopener" href="#">واتساب</a></div>
     </section>
     ${againBtn()}`;
