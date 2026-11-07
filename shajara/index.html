@@ -70,6 +70,8 @@ nav.tabs svg.i{width:23px;height:23px}
 #stage{position:absolute;inset:0;touch-action:none;cursor:grab;overflow:hidden;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
 .nd.dragging>.pb{opacity:.3}
 .nd.mir>.pb{border-style:dashed;opacity:.92}
+.nd.unk>.pb,.sc.unk{border-style:dashed;opacity:.8}.nd.unk>.pb .av,.sc.unk .av{background:var(--card2);color:var(--muted)}
+.unkn{background:var(--card);border:1px dashed var(--line);border-radius:12px;padding:10px 12px;margin:10px 0;color:var(--muted);font-size:14px;line-height:1.7}
 .pb.ghost{position:fixed!important;left:0;top:0;z-index:60;pointer-events:none;opacity:.95;box-shadow:var(--shadow);transition:none}
 .ghost .gl{position:absolute;top:66px;right:50%;transform:translateX(50%);white-space:nowrap;background:var(--card2);border:1px solid var(--line);border-radius:10px;padding:4px 9px;font-size:12.5px;font-weight:800;color:var(--text)}
 .ghost .gl.bad{color:var(--danger)}.ghost .gl.ok{color:var(--acc)}
@@ -555,6 +557,7 @@ function rebuild() {
   for (const r of RS) { if (!P.has(r.a) || !P.has(r.b) || r.a === r.b) continue; push(mSib, r.a, { id: r.id, o: r.b }); push(mSib, r.b, { id: r.id, o: r.a }); }
   for (const a of MEM.values()) a.sort((x, y) => (+x.o || 0) - (+y.o || 0)); for (const a of PHS.values()) a.sort((x, y) => (+x.o || 0) - (+y.o || 0)); for (const a of AUD.values()) a.sort((x, y) => (+x.o || 0) - (+y.o || 0));
   CAP.sort((a, b) => a.open < b.open ? -1 : a.open > b.open ? 1 : 0); EV.sort((a, b) => (+b.o || 0) - (+a.o || 0)); for (const e of EV) e.people = Array.isArray(e.people) ? e.people.filter(x => P.has(x)) : []; for (const a of EVP.values()) a.sort((x, y) => (+x.o || 0) - (+y.o || 0));
+  S.N = [...P.values()].filter(x => !x.unk).length;
   Object.assign(S, { P, M, R, RS, kidsF, kidsM, sp, mx, mPar, mKids, mSib, MEM, PHS, AUD, CAP, EV, EVP, DOCS, LK });
   S.meta = S.doc.meta() || {};
   if (S.meta.name && S.meta.name !== S.cur.name) { S.cur.name = S.meta.name; saveTrees(); }
@@ -585,14 +588,14 @@ function genOf(p) {
 }
 function fullName(p, gens, withFam = true) {
   gens = gens || S.gens; const parts = [p.f]; let c = p; const seen = new Set([p.id]);
-  for (let i = 1; i < gens; i++) { const fa = S.P.get(c.fa); if (!fa || seen.has(fa.id)) break; seen.add(fa.id); parts.push(i === 1 && p.g === 'f' ? 'بنت' : 'بن', fa.f); c = fa; }
+  for (let i = 1; i < gens; i++) { const fa = S.P.get(c.fa); if (!fa || fa.unk || seen.has(fa.id)) break; seen.add(fa.id); parts.push(i === 1 && p.g === 'f' ? 'بنت' : 'بن', fa.f); c = fa; }
   const fam = withFam ? famOf(p) : ''; let s = parts.join(' ');
   if (fam && !norm(s).endsWith(norm(fam))) s += ' ' + fam;
   return s;
 }
 /* الكنية: اللي مكتوبة، وإلا من أكبر ولد */
 function kunya(p) {
-  if (!p) return ''; if (p.kn) return p.kn === '-' ? '' : p.kn;
+  if (!p || p.unk) return ''; if (p.kn) return p.kn === '-' ? '' : p.kn;
   const ks = kidsOf(p.id).filter(k => k.g !== 'f'); if (!ks.length) return '';
   const e = ks.slice().sort((a, b) => (+a.by ? toG(a.by, a.cal) : 1e9) - (+b.by ? toG(b.by, b.cal) : 1e9) || (+a.o || 0) - (+b.o || 0))[0];
   return (p.g === 'f' ? 'أم ' : 'أبو ') + e.f;
@@ -638,7 +641,7 @@ function yearsText(p, short) {
 function avatar(p, cls = '') {
   const dd = (p.dead || p.dy) ? ' dd' : '';
   if (p.ph) return `<span class="av ${p.g === 'f' ? 'f' : ''}${dd} ${cls}"><img src="${esc(p.ph)}" alt=""></span>`;
-  return `<span class="av ${p.g === 'f' ? 'f' : ''}${dd} ${cls}">${esc((p.f || '؟').trim().charAt(0))}</span>`;
+  return `<span class="av ${p.g === 'f' ? 'f' : ''}${dd} ${cls}">${p.unk ? '؟' : esc((p.f || '؟').trim().charAt(0))}</span>`;
 }
 
 /* ---------- صلة القرابة ---------- */
@@ -769,7 +772,7 @@ function relCore(aId, bId, you) {
 /* «عن طريق»: الناس اللي بين A و B، كل واحد بصلته بـ A */
 function viaText(aId, nodes, you) {
   const ns = nodes.filter(x => S.P.has(x)); if (!ns.length) return '';
-  const lab = x => { const c = relCore(aId, x, you).rels[0], p = S.P.get(x); return (c ? c.txt + ' ' : '') + p.f; };
+  const lab = x => { const c = relCore(aId, x, you).rels[0], p = S.P.get(x); return p.unk ? (c ? c.txt : p.f) : (c ? c.txt + ' ' : '') + p.f; };
   const parts = ns.length > 6 ? [...ns.slice(0, 3).map(lab), '…', ...ns.slice(-2).map(lab)] : ns.map(lab);
   return 'عن طريق: ' + parts.join(' ← ');
 }
@@ -794,7 +797,7 @@ function relation(aId, bId, you) {
     if (r.b === 0 && r.a > 2) subs.push('من أجداد' + own);
   }
   const t0 = term(M); if (t0) subs.push(`يسمون${B.g === 'f' ? 'ها' : 'ه'}: ${t0}`);
-  if (kind === 'blood' && r.lca && r.lca !== aId && r.lca !== bId && S.P.has(r.lca)) subs.push((you ? 'تجتمعون' : 'يجتمعون') + ' عند: ' + fullName(S.P.get(r.lca), 3));
+  if (kind === 'blood' && r.lca && r.lca !== aId && r.lca !== bId && S.P.has(r.lca)) { const L0 = S.P.get(r.lca); subs.push((you ? 'تجتمعون' : 'يجتمعون') + (L0.unk ? ' عند ' + (L0.g === 'f' ? 'أم ما نعرف اسمها' : 'أب ما نعرف اسمه') : ' عند: ' + fullName(L0, 3))); }
   const others = rels.slice(1, 6);
   return {
     text: `${B.f} ${pron} ${M.txt}`, sub: subs.join(' · '), via: viaText(aId, M.nodes || [], you), main: M.txt, words: M.cw,
@@ -955,13 +958,15 @@ function linkPaths(L) {
 }
 /* النص الصغير تحت الاسم: أمه أو أبوه إذا الأب عنده أكثر من زوجة، وإلا سنين العمر */
 function nodeSub(n) {
+  if (n.p.unk) return { t: n.p.g === 'f' ? 'غير معروفة' : 'غير معروف', c: '' };
   if (n.mir) { const fa = S.P.get(n.p.fa); return { t: fa ? (n.p.g === 'f' ? 'أبوها ' : 'أبوه ') + fa.f : '', c: '' }; }
-  if (n.op) return { t: (n.opF ? (n.p.g === 'f' ? 'أبوها ' : 'أبوه ') : (n.p.g === 'f' ? 'أمها ' : 'أمه ')) + n.op.f, c: wcol(n.grp) };
+  if (n.op) return { t: (n.opF ? (n.p.g === 'f' ? 'أبوها ' : 'أبوه ') : (n.p.g === 'f' ? 'أمها ' : 'أمه ')) + (n.op.unk ? (n.opF ? 'غير معروف' : 'غير معروفة') : n.op.f), c: wcol(n.grp) };
   if (S.kunya) { const k = kunya(n.p); if (k) return { t: k, c: '' }; }
   if (S.subMom) { const mo = S.P.get(n.p.mo); if (mo) return { t: (n.p.g === 'f' ? 'أمها ' : 'أمه ') + mo.f, c: '' }; }
   return { t: yearsText(n.p, true) || (n.depth === 0 ? famOf(n.p) : '') || '', c: '' };
 }
 function spouseSub(p, s) {
+  if (s.unk) return s.g === 'f' ? 'غير معروفة' : 'غير معروف';
   if (divorced(p.id, s.id)) return s.g === 'f' ? 'طليقته' : 'طليقها';
   const sf = S.P.get(s.fa); return sf ? (s.g === 'f' ? 'بنت ' : 'بن ') + sf.f : famOf(s);
 }
@@ -974,10 +979,10 @@ function myLine() {
 const BRC = ['#e2b866', '#5aa2ef', '#46c08a', '#e886b6', '#b48cf2', '#f08a5d', '#4fc3d9', '#c9d65a'];
 function nodeHtml(n) {
   const p = n.p, me = (S.dev.me === p.id ? ' me' : '') + (S.lineSet && S.lineSet.has(p.id) ? ' ln' : ''), br = S.brCol && n.br != null ? BRC[n.br % BRC.length] : '';
-  let h = `<div class="nd ${p.g === 'f' ? 'f' : 'm'}${me}${br ? ' brc' : ''}${n.mir ? ' mir' : ''}" ${n.mir ? 'data-mir' : 'data-n'}="${p.id}" style="left:${n.left}px;top:${n.y}px;width:${n.right - n.left}px${br ? ';--br:' + br : ''}">`;
+  let h = `<div class="nd ${p.g === 'f' ? 'f' : 'm'}${p.unk ? ' unk' : ''}${me}${br ? ' brc' : ''}${n.mir ? ' mir' : ''}" ${n.mir ? 'data-mir' : 'data-n'}="${p.id}" style="left:${n.left}px;top:${n.y}px;width:${n.right - n.left}px${br ? ';--br:' + br : ''}">`;
   const sub = nodeSub(n);
-  h += `<div class="pb" data-p="${p.id}">${avatar(p)}<div class="tx"><b>${esc(p.f)}${S.LK.has(p.id) ? '<i class="lkb">🔗</i>' : ''}</b><small>${sub.c ? `<i class="wd" style="background:${sub.c}"></i>` : ''}${esc(sub.t)}</small></div></div>`;
-  n.sps.forEach((s, i) => { const dv = divorced(p.id, s.id); h += `<div class="sc${dv ? ' dv' : ''}" data-p="${s.id}" title="${esc((dv ? (s.g === 'f' ? 'طليقة ' : 'طليق ') : (s.g === 'f' ? 'زوجة ' : 'زوج ')) + p.f)}"><span class="ring" aria-hidden="true">💍</span>${avatar(s)}<div class="tx"><b>${n.multi ? `<i class="wd" style="background:${wcol(i)}"></i>` : ''}${esc(s.f)}${S.LK.has(s.id) ? '<i class="lkb">🔗</i>' : ''}</b><small>${esc(spouseSub(p, s))}</small></div></div>`; });
+  h += `<div class="pb" data-p="${p.id}">${avatar(p)}<div class="tx"><b>${esc(dispName(p))}${S.LK.has(p.id) ? '<i class="lkb">🔗</i>' : ''}</b><small>${sub.c ? `<i class="wd" style="background:${sub.c}"></i>` : ''}${esc(sub.t)}</small></div></div>`;
+  n.sps.forEach((s, i) => { const dv = divorced(p.id, s.id); h += `<div class="sc${dv ? ' dv' : ''}${s.unk ? ' unk' : ''}" data-p="${s.id}" title="${esc((dv ? (s.g === 'f' ? 'طليقة ' : 'طليق ') : (s.g === 'f' ? 'زوجة ' : 'زوج ')) + p.f)}"><span class="ring" aria-hidden="true">💍</span>${avatar(s)}<div class="tx"><b>${n.multi ? `<i class="wd" style="background:${wcol(i)}"></i>` : ''}${esc(dispName(s))}${S.LK.has(s.id) ? '<i class="lkb">🔗</i>' : ''}</b><small>${esc(spouseSub(p, s))}</small></div></div>`; });
   if (n.has) h += `<button class="tg${n.col ? ' c' : ''}" data-t="${p.id}" aria-label="${n.col ? 'افتح الفرع' : 'سكّر الفرع'}">${n.col ? '+' + n.hidden : '−'}</button>`;
   return h + '</div>';
 }
@@ -1245,6 +1250,10 @@ window.addEventListener('resize', () => { if (S.view === 'tree' && S.lay && !S.z
 /* ---------- القائمة ---------- */
 $('#q').addEventListener('input', () => renderList());
 $('#miss').addEventListener('change', e => { S.miss = e.target.value; e.target.classList.toggle('on', !!S.miss); renderList(); });
+/* «أب غير معروف» أو «أم غير معروفة»: يجمع إخوان ما نعرف أبوهم أو أمهم */
+const dispName = p => p.unk ? (p.g === 'f' ? 'الأم' : 'الأب') : p.f;
+const REAL = () => [...S.P.values()].filter(p => !p.unk);
+const unkObj = (g, t) => ({ t: 'p', f: g === 'f' ? 'أم غير معروفة' : 'أب غير معروف', g: g === 'f' ? 'f' : 'm', unk: 1, o: t, c: t });
 const sibsOf = p => [...new Set([...(p.fa && S.P.has(p.fa) ? S.kidsF.get(p.fa) || [] : []), ...(p.mo && S.P.has(p.mo) ? S.kidsM.get(p.mo) || [] : [])])].filter(x => x.id !== p.id);
 const MISS = {
   nofa: p => !(p.fa && S.P.has(p.fa)), nomo: p => !(p.mo && S.P.has(p.mo)), nopar: p => !(p.fa && S.P.has(p.fa)) && !(p.mo && S.P.has(p.mo)),
@@ -1262,7 +1271,7 @@ function personRow(p, extra) {
   return `<button class="prow" data-p="${p.id}">${avatar(p)}<span class="tx"><b>${esc(fullName(p, 3))}</b><small>${esc([yearsText(p), p.city].filter(Boolean).join(' · ') || ' ')}</small></span>${extra || ''}</button>`;
 }
 function renderList() {
-  const q = norm($('#q').value); let arr = [...S.P.values()];
+  const q = norm($('#q').value); let arr = REAL();
   if (S.filter === 'm') arr = arr.filter(p => p.g !== 'f'); else if (S.filter === 'f') arr = arr.filter(p => p.g === 'f'); else if (S.filter === 'alive') arr = arr.filter(p => !p.dead && !p.dy);
   if (S.miss && MISS[S.miss]) arr = arr.filter(MISS[S.miss]);
   if (q) { const qs = q.split(' '); arr = arr.filter(p => { const k = searchKey(p); return qs.every(w => k.includes(w)); }); }
@@ -1288,7 +1297,7 @@ function pickPerson(o = {}) {
       <div class="plist" id="pl"></div>`, { onClose: () => res(val) });
     const inp = $('#pq', sh.el), pl = $('#pl', sh.el), coll = new Intl.Collator('ar');
     const draw = () => {
-      const q = norm(inp.value); let arr = [...S.P.values()].filter(p => !o.filter || o.filter(p));
+      const q = norm(inp.value); let arr = [...S.P.values()].filter(p => (o.withUnk || !p.unk) && (!o.filter || o.filter(p)));
       if (q) { const qs = q.split(' '); arr = arr.filter(p => qs.every(w => searchKey(p).includes(w))); }
       const pref = o.prefer || [];
       arr.sort((a, b) => { const ia = pref.indexOf(a.id), ib = pref.indexOf(b.id); if (ia !== ib) return (ia < 0 ? 1e9 : ia) - (ib < 0 ? 1e9 : ib); return coll.compare(a.f, b.f); });
@@ -1336,7 +1345,7 @@ function fillPerson(sh) {
       <button class="chip act" data-a="bro">${ICON.plus}أضف أخ</button><button class="chip act" data-a="sis">${ICON.plus}أضف أخت</button>
       <button class="chip act" data-a="spouse">${ICON.plus}${p.g === 'f' ? 'أضف زوج' : 'أضف زوجة'}</button><button class="chip act" data-a="milk">🍼 الرضاعة</button>
       ${fa ? '' : `<button class="chip act" data-a="fa">${ICON.plus}أضف أب</button>`}${mo ? '' : `<button class="chip act" data-a="mo">${ICON.plus}أضف أم</button>`}
-      <button class="chip" data-a="edit">${ICON.edit}عدّل</button><button class="chip" data-a="merge">🔗 دمج مع شخص ثاني</button><button class="chip del" data-a="del">${ICON.trash}احذف</button></div>`;
+      <button class="chip act" data-a="sibs">👥 حطهم إخوان</button><button class="chip" data-a="edit">${ICON.edit}عدّل</button><button class="chip" data-a="merge">🔗 دمج مع شخص ثاني</button><button class="chip del" data-a="del">${ICON.trash}احذف</button></div>`;
   }
   h += `<div class="chips" style="margin-top:8px"><button class="chip" data-a="rel">${ICON.q}وش صلتي في${he}؟</button><button class="chip" data-a="rel2">صلت${he} بشخص ثاني</button><button class="chip" data-a="show">${ICON.target}ورني إيا${he} بالشجرة</button>${S.dev.me === p.id ? '' : `<button class="chip" data-a="me">${ICON.user}${p.g === 'f' ? 'هذي أنا' : 'هذا أنا'}</button>`}<button class="chip" data-a="copyname">📋 انسخ النسب</button><button class="chip" data-a="cert">📜 وثيقة نسب</button><button class="chip" data-a="prof">🗂️ ملف كامل (PDF)</button>${kids.length ? `<button class="chip" data-a="sun">🌞 ذريت${he} بشكل دائري</button>` : ''}<button class="chip" data-a="gen">👥 جيل${he}</button><button class="chip" data-a="say">🔊 اسمع نسب${he}</button><button class="chip" data-a="greet">🎴 بطاقة تهنئة</button>${sps.length ? '<button class="chip" data-a="baby">👶 أسماء لمولودهم</button>' : ''}${ed && S.cur.id && (S.cur.view || (S.meta && S.meta.vk)) ? `<button class="chip" data-a="ask">🙋 اطلب معلومة عن${he}</button>` : ''}${ed && kids.length && S.cur.id && S.doc && !S.doc.local && S.doc.role === 'edit' && !S.doc.branch && !(S.meta && S.meta.priv) ? `<button class="chip" data-a="brLink">🌿 رابط لفرع${he}</button>` : ''}${S.dev.me !== p.id ? `<button class="chip" data-a="rahm">🤝 ${(S.dev.rahm || {})[p.id] ? 'تذكير التواصل' : 'ذكّرني أتواصل مع' + he}</button>` : ''}${ed && p.tel ? `<a class="chip" href="tel:${esc(p.tel)}">📞 اتصل</a><a class="chip" href="https://wa.me/${waNum(p.tel)}" target="_blank" rel="noopener">💬 واتساب</a>` : ''}${canSuggest() ? '<button class="chip" data-a="sgFix">✏️ اقترح تصحيح</button>' : ''}${ed ? '<button class="chip" data-a="capNew">💌 رسالة للمستقبل</button>' : ''}<button class="chip" data-a="ped">🧬 أجداد${he}</button><button class="chip" data-a="kin">👥 أقارب${he}</button><button class="chip" data-a="card">🪪 بطاقة</button><button class="chip" data-a="rootHere">🌳 ابدأ الشجرة من${p.g === 'f' ? 'ها' : 'ه'}</button></div>`;
   const dups = ed ? dupsOf(p) : [];
@@ -1367,7 +1376,9 @@ function fillPerson(sh) {
   }
   if (sibs.length) h += `<div class="sec">الإخوان والأخوات (${sibs.length})</div><div class="chips">${sibs.map(x => chip(x, (p.fa && p.mo && x.fa && x.mo && (x.fa !== p.fa || x.mo !== p.mo)) ? (x.fa === p.fa ? 'من الأب' : 'من الأم') : '')).join('')}</div>`;
   if (p.g === 'f' && hasLine(p.id) && kids.some(momSide)) { const ov = S.dev.momMode && S.dev.momMode[p.id], gl = { f: 'عند أبوهم', b: 'عندها وعند أبوهم', m: 'عندها بس' }; h += `<div class="sec">عيالها بالشجرة يطلعون:</div><div class="chips">${[['', 'مثل الكل (' + gl[S.momAll || 'f'] + ')'], ['f', gl.f], ['b', gl.b], ['m', gl.m]].map(([v, t]) => `<button class="chip ${(ov || '') === v ? 'on' : ''}" data-mm="${v}">${esc(t)}</button>`).join('')}</div>`; }
-  h += lkHtml(p, ed) + milkHtml(p, chip, ed) + memHtml(p, ed) + albumHtml(p, ed) + audHtml(p, ed) + docsHtml(p, ed) + capsHtml(S.CAP.filter(c => c.to === p.id), ed, 'رسائل لـ' + p.f) + (S.EV.some(e => e.people.includes(p.id)) ? `<div class="sec">🎉 مناسبات</div><div class="chips">${S.EV.filter(e => e.people.includes(p.id)).map(e => `<button class="chip" data-ev="${e.id}">${esc(e.title)}${e.d ? ` <small style="color:var(--muted)">${esc(e.d)}</small>` : ''}</button>`).join('')}</div>` : '');
+  if (p.unk) { const hh = p.g === 'f' ? 'ها' : 'ه'; h += `<div class="unkn">❔ ما نعرف اسم${hh}، ${p.g === 'f' ? 'وحطيناها' : 'وحطيناه'} عشان يجمع ${kids.length > 1 ? 'عيال' + hh + ' كإخوان' : 'الإخوان'} من ${p.g === 'f' ? 'الأم' : 'الأب'}.${ed ? ` إذا عرفت اسم${hh} اضغط «عدّل» واكتبه، وإذا ${p.g === 'f' ? 'هي مسجّلة' : 'هو مسجّل'} بالشجرة اضغط «دمج مع شخص ثاني».` : ''}</div>`; }
+  if (p.unk) { const keep = new Set(['son', 'dau', 'spouse', 'edit', 'merge', 'del', 'rel', 'show']); h = h.replace(/<(button|a) class="chip[^"]*"[^>]*data-a="([a-zA-Z0-9]+)"[^>]*>[\s\S]*?<\/\1>/g, (m, t, a) => keep.has(a) ? m : ''); }
+  if (!p.unk) h += lkHtml(p, ed) + milkHtml(p, chip, ed) + memHtml(p, ed) + albumHtml(p, ed) + audHtml(p, ed) + docsHtml(p, ed) + capsHtml(S.CAP.filter(c => c.to === p.id), ed, 'رسائل لـ' + p.f) + (S.EV.some(e => e.people.includes(p.id)) ? `<div class="sec">🎉 مناسبات</div><div class="chips">${S.EV.filter(e => e.people.includes(p.id)).map(e => `<button class="chip" data-ev="${e.id}">${esc(e.title)}${e.d ? ` <small style="color:var(--muted)">${esc(e.d)}</small>` : ''}</button>`).join('')}</div>` : '');
   $('#pv', sh.el).innerHTML = h;
 }
 /* قسم الرضاعة بصفحة الشخص */
@@ -1428,6 +1439,7 @@ async function onPersonClick(e) {
   else if (act === 'greet') greetCard(id);
   else if (act === 'baby') babyNames(id);
   else if (act === 'ask') askInfo(id);
+  else if (act === 'sibs') siblingsUI(id);
   else if (act === 'prof') printProfile(id);
   else if (act === 'lkAdd') linkTreeUI(id);
   else if (act === 'addDoc') addDoc(id);
@@ -1563,8 +1575,9 @@ async function addSibling(p, g) {
   const he = p.g === 'f' ? 'ها' : 'ه', title = `${g === 'f' ? 'أخت' : 'أخو'} ${p.f}`;
   let fa = S.P.has(p.fa) ? p.fa : '', mo = S.P.has(p.mo) ? p.mo : '';
   if (!fa && !mo) {
-    const v = await ask(title, `عشان يصيرون إخوان لازم نعرف أبو${he}. أضف الأب أول، وبعدين ${g === 'f' ? 'الأخت' : 'الأخ'}.`, [{ v: 'new', t: 'اكتب اسم الأب' }, { v: 'pick', t: 'اختر الأب من المسجّلين' }, { v: null, t: 'إلغاء', cls: 'ghost', cancel: true }]);
+    const v = await ask(title, `ما فيه أب ولا أم مسجّلين لـ${p.f}. وش تبي تسوي؟`, [{ v: 'unk', t: '👥 إخوان بدون ما أعرف الأب أو الأم' }, { v: 'new', t: 'اكتب اسم الأب' }, { v: 'pick', t: 'اختر الأب من المسجّلين' }, { v: null, t: 'إلغاء', cls: 'ghost', cancel: true }]);
     if (!v) return;
+    if (v === 'unk') { siblingsUI(p.id, g); return; }
     if (v === 'new') {
       const n = await promptText(`اسم أبو ${p.f}`, '', 'مثل: محمد'); if (!n) return;
       const fid = newId('p'), fo = { t: 'p', f: n.replace(/\s+/g, ' ').trim(), g: 'm', o: Date.now(), c: Date.now() }, fam = famOf(p); if (fam) fo.fam = fam;
@@ -1576,15 +1589,23 @@ async function addSibling(p, g) {
       setParent(p.id, 'm', id); fa = id; await sleep(80);
     }
   }
-  let kind = fa && mo ? 'full' : fa ? 'fa' : 'mo';
-  if (fa && mo) { kind = await ask(title, 'وش نوع الأخوّة؟', [{ v: 'full', t: `${g === 'f' ? 'شقيقة' : 'شقيق'}: نفس الأب والأم` }, { v: 'fa', t: 'من الأب بس' }, { v: 'mo', t: 'من الأم بس' }, { v: null, t: 'إلغاء', cls: 'ghost', cancel: true }]); if (!kind) return; }
+  /* نوع الأخوّة: إذا الأب أو الأم مو معروف ينضاف «غير معروف» يجمعهم */
+  let kind = await ask(title, 'وش نوع الأخوّة؟', [{ v: 'full', t: `${g === 'f' ? 'شقيقة' : 'شقيق'}: نفس الأب والأم${fa && mo ? '' : ' (حتى لو ما نعرف اسمهم)'}` }, { v: 'fa', t: `من الأب بس${fa ? '' : ' (ما نعرف اسمه)'}` }, { v: 'mo', t: `من الأم بس${mo ? '' : ' (ما نعرف اسمها)'}` }, { v: null, t: 'إلغاء', cls: 'ghost', cancel: true }]); if (!kind) return;
+  if ((kind !== 'mo' && !fa) || (kind !== 'fa' && !mo)) {
+    const t = Date.now(), o = strip(S.P.get(p.id) || p);
+    if (kind !== 'mo' && !fa) { fa = newId('p'); S.doc.set(fa, unkObj('m', t)); o.fa = fa; }
+    if (kind !== 'fa' && !mo) { mo = newId('p'); S.doc.set(mo, unkObj('f', t + 1)); o.mo = mo; }
+    try { S.doc.set(p.id, o); if (kind === 'full') ensureMarriage(fa, mo); } catch (x) { return toast(T ? T.errorText(x) : 'ما انحفظ'); }
+    await sleep(80);
+  }
+  if (kind !== 'full') { const key = kind === 'fa' ? 'mo' : 'fa', cur0 = S.P.get(p.id) || p; if (!S.P.has(cur0[key])) { const u = newId('p'), o = strip(cur0); S.doc.set(u, unkObj(key === 'mo' ? 'f' : 'm', Date.now())); o[key] = u; S.doc.set(p.id, o); ensureMarriage(kind === 'fa' ? fa : mo, u); if (key === 'mo') mo = u; else fa = u; await sleep(80); } }
   const nfa = kind === 'mo' ? '' : fa, nmo = kind === 'fa' ? '' : mo;
   const cur = S.P.get(p.id) || p, sib = new Set(sibsOf(cur).map(x => x.id)), anc = ancestors(p.id), desc = descendants(p.id);
   const id = await pickPerson({ title, newText: g === 'f' ? 'أخت جديدة مو بالشجرة' : 'أخ جديد مو بالشجرة', filter: x => x.g === g && !anc.has(x.id) && !desc.has(x.id) && !sib.has(x.id) && x.id !== nfa && x.id !== nmo, prefer: [...S.P.values()].filter(x => !(x.fa && S.P.has(x.fa))).map(x => x.id) });
   if (!id) return;
   if (id === '__new') {
     const preset = { g, fa: nfa, mo: nmo };
-    if (kind !== 'full') { const key = kind === 'fa' ? 'mo' : 'fa', par = kind === 'fa' ? nfa : nmo, mine = kind === 'fa' ? mo : fa; const opts = spousesOf(par).filter(x => x.id !== mine); if (opts.length === 1) preset[key] = opts[0].id; }
+    if (kind !== 'full') { const key = kind === 'fa' ? 'mo' : 'fa', par = kind === 'fa' ? nfa : nmo, mine = kind === 'fa' ? mo : fa; const opts = spousesOf(par).filter(x => x.id !== mine && !x.unk); if (opts.length === 1) preset[key] = opts[0].id; else { const u = newId('p'); S.doc.set(u, unkObj(key === 'mo' ? 'f' : 'm', Date.now())); preset[key] = u; setTimeout(() => ensureMarriage(par, u), 120); } }
     return personForm({ preset, title });
   }
   const k = S.P.get(id); if (!k) return; const o = strip(k), kh = k.g === 'f' ? 'ها' : 'ه', conf = [];
@@ -1595,7 +1616,8 @@ async function addSibling(p, g) {
   /* أخ من الأب بس: نسأل مين أمه من زوجات الأب الثانيات (ومن الأم بس: مين أبوه) */
   if (kind !== 'full') {
     const key = kind === 'fa' ? 'mo' : 'fa', par = kind === 'fa' ? nfa : nmo, mine = kind === 'fa' ? mo : fa;
-    if (!S.P.has(o[key])) { const opts = spousesOf(par).filter(x => x.id !== mine); if (opts.length) { const w = await ask(key === 'mo' ? `مين أم ${k.f}؟` : `مين أبو ${k.f}؟`, '', [...opts.map(x => ({ v: x.id, t: fullName(x, 2, false) })), { v: '', t: 'ما أعرف', cls: 'ghost', cancel: true }]); if (w) o[key] = w; } }
+    if (!S.P.has(o[key])) { const opts = spousesOf(par).filter(x => x.id !== mine && !x.unk); if (opts.length) { const w = await ask(key === 'mo' ? `مين أم ${k.f}؟` : `مين أبو ${k.f}؟`, '', [...opts.map(x => ({ v: x.id, t: fullName(x, 2, false) })), { v: '', t: 'ما أعرف', cls: 'ghost', cancel: true }]); if (w) o[key] = w; } }
+    if (!S.P.has(o[key])) { const u = newId('p'); S.doc.set(u, unkObj(key === 'mo' ? 'f' : 'm', Date.now())); o[key] = u; }
   }
   const fp = S.P.get(o.fa); if (fp && o.fam && o.fam === famOf(fp)) delete o.fam;
   try { S.doc.set(id, o); ensureMarriage(o.fa, o.mo); } catch (x) { return toast(T ? T.errorText(x) : 'ما انحفظ'); }
@@ -1603,7 +1625,7 @@ async function addSibling(p, g) {
 }
 /* ممكن مكررين: نفس الاسم والجنس، وما فيه تعارض بالأب أو الأم */
 function dupsOf(p) {
-  if (!S._dn) { S._dn = new Map(); for (const x of S.P.values()) push(S._dn, (x.g === 'f' ? 'f' : 'm') + '|' + norm(x.f), x); }
+  if (!S._dn) { S._dn = new Map(); for (const x of S.P.values()) if (!x.unk) push(S._dn, (x.g === 'f' ? 'f' : 'm') + '|' + norm(x.f), x); }
   const out = [];
   for (const x of S._dn.get((p.g === 'f' ? 'f' : 'm') + '|' + norm(p.f)) || []) {
     if (x.id === p.id) continue;
@@ -1691,7 +1713,7 @@ function personForm(o) {
     <div class="fld"><span>صورة صغيرة <i>(اختياري)</i></span><div class="phrow"><span id="fPhV"></span><button type="button" class="btn sm" id="fPhB">اختر صورة</button><button type="button" class="btn sm ghost" id="fPhX">شيلها</button></div></div>
     <div class="acts"><button class="btn pri" id="fSave">حفظ</button><button class="btn ghost" data-close>إلغاء</button></div>`);
   const E = s => $(s, sh.el);
-  E('#fF').value = p.f || ''; E('#fFam').value = p.fam || ''; E('#fBy').value = p.by || ''; E('#fDy').value = p.dy || ''; E('#fCity').value = p.city || ''; E('#fNt').value = p.nt || ''; E('#fDead').checked = !!(p.dead || p.dy); E('#fHd').checked = hid(p); E('#fTel').value = p.tel || ''; E('#fKn').value = p.kn || ''; E('#fKn').placeholder = p.id ? (kunya({ ...p, kn: '' }) || 'مثل: أبو فهد') : 'مثل: أبو فهد';
+  E('#fF').value = p.unk ? '' : p.f || ''; if (p.unk) E('#fF').placeholder = 'اكتب اسم' + (p.g === 'f' ? 'ها' : 'ه') + ' إذا عرفته'; E('#fFam').value = p.fam || ''; E('#fBy').value = p.by || ''; E('#fDy').value = p.dy || ''; E('#fCity').value = p.city || ''; E('#fNt').value = p.nt || ''; E('#fDead').checked = !!(p.dead || p.dy); E('#fHd').checked = hid(p); E('#fTel').value = p.tel || ''; E('#fKn').value = p.kn || ''; E('#fKn').placeholder = p.id ? (kunya({ ...p, kn: '' }) || 'مثل: أبو فهد') : 'مثل: أبو فهد';
   const seg = (sel, key) => { const el = E(sel); const upd = () => $$('button', el).forEach(b => b.classList.toggle('on', b.dataset.v === p[key])); el.onclick = e => { const b = e.target.closest('button'); if (b) { p[key] = b.dataset.v; upd(); refresh(); } }; upd(); };
   const excl = old ? new Set([old.id, ...descendants(old.id)]) : new Set();
   const refresh = () => {
@@ -1725,13 +1747,14 @@ function personForm(o) {
   E('#fF').onkeydown = e => { if (e.key === 'Enter') E('#fSave').click(); };
   if (!old && !matchMedia('(pointer:coarse)').matches) setTimeout(() => E('#fF').focus(), 80);
   E('#fSave').onclick = () => {
-    const f = E('#fF').value.trim().replace(/\s+/g, ' '); if (!f) { toast('اكتب الاسم'); E('#fF').focus(); return; }
+    let f = E('#fF').value.trim().replace(/\s+/g, ' '); const keepUnk = !f && p.unk; if (keepUnk) f = p.f; if (!f) { toast('اكتب الاسم'); E('#fF').focus(); return; }
     const yr = v => { v = latin(v).replace(/\D/g, ''); return v ? clamp(parseInt(v, 10), 1, 2200) : null; };
     const by = yr(E('#fBy').value), dy = yr(E('#fDy').value), num = sel => +(E(sel).value || 0) || null;
     if (by && dy && dy < by) { toast('سنة الوفاة قبل الميلاد؟ راجعها'); return; }
     if (by && dy && dy === by && num('#fBm') && num('#fDm') && num('#fDm') < num('#fBm')) { toast('تاريخ الوفاة قبل الميلاد؟ راجعه'); return; }
     const obj = { t: 'p', f, g: p.g === 'f' ? 'f' : 'm', fam: E('#fFam').value.trim(), fa: p.fa || '', mo: p.mo || '', by, dy, bda: num('#fBd'), bmo: num('#fBm'), dda: num('#fDd'), dmo: num('#fDm'), cal: p.cal === 'g' ? 'g' : 'h', dead: (E('#fDead').checked || !!dy) ? 1 : 0, city: E('#fCity').value.trim(), nt: E('#fNt').value.trim(), ph: p.ph || '', o: p.o != null ? p.o : Date.now(), c: p.c || Date.now(), tel: latin(E('#fTel').value).replace(/[^\d+]/g, '').slice(0, 16), kn: E('#fKn').value.trim().slice(0, 30) };
     { const m = hdRule(obj, S.meta && S.meta.hdr), c = E('#fHd').checked; obj.hd = c ? (m ? 0 : 1) : (m ? -1 : 0); }
+    if (keepUnk) obj.unk = 1;
     for (const k of Object.keys(obj)) if (obj[k] === '' || obj[k] == null || obj[k] === 0) delete obj[k];
     obj.t = 'p'; obj.g = obj.g || 'm';
     if (o.id && (obj.fa === o.id || obj.mo === o.id)) { toast(obj.g === 'f' ? 'ما يصير تكون أم نفسها' : 'ما يصير يكون أبو نفسه'); return; }
@@ -1788,7 +1811,7 @@ function lostText() {
 }
 function renderStatus() {
   const pill = $('#pill'), sp = $('span', pill);
-  $('#treeName').textContent = S.cur ? S.cur.name + (S.P.size ? ` · ${ppl(S.P.size)}` : '') : '';
+  $('#treeName').textContent = S.cur ? S.cur.name + (S.N ? ` · ${ppl(S.N)}` : '') : '';
   if (!S.cur || !S.cur.id) { pill.hidden = true; return; }
   pill.hidden = false;
   const ro = S.doc && S.doc.role === 'view';
@@ -1807,6 +1830,7 @@ function renderAll() {
   else if (S.view === 'list') renderList();
   else renderMore();
   if (personSheet && sheets.includes(personSheet)) { if (S.P.has(personSheet.data.id)) fillPerson(personSheet); else closeSheet(personSheet); }
+  clearTimeout(S.unkT); S.unkT = setTimeout(cleanUnk, 1500);
   if (!S.introDone && S.P.size >= 2 && S.view !== 'more') { S.introDone = true; setTimeout(introToast, 1800); }
   if (S.askPid && S.P.has(S.askPid) && S.doc && (S.doc.role || S.doc.local)) { const id = S.askPid, q = S.P.get(id); S.askPid = null; setTimeout(() => { setView('tree'); openPerson(id); if (canSuggest()) toast(`🙋 أهلك يطلبون معلومات عن ${q.f}. صحّح أو أضف صورة من صفحت${q.g === 'f' ? 'ها' : 'ه'}`, { text: '✏️ صحّح', fn: () => suggestFix(id) }); }, 500); }
 }
@@ -1823,7 +1847,7 @@ $('#brand').onclick = () => setView('more');
 function joinBase() { return location.origin + location.pathname.replace(/index\.html$/, ''); }
 /* إحصائيات الشجرة */
 function statsHtml() {
-  const ps = [...S.P.values()]; if (!ps.length) return '';
+  const ps = REAL(); if (!ps.length) return '';
   const men = ps.filter(p => p.g !== 'f').length, dead = ps.filter(p => p.dead || p.dy).length;
   const gens = Math.max(...ps.map(genOf)), marr = S.M.filter(m => S.P.has(m.a) && S.P.has(m.b)).length;
   const top = ps.map(p => ({ p, n: kidsOf(p.id).length })).sort((a, b) => b.n - a.n)[0];
@@ -1901,6 +1925,7 @@ function renderMore() {
   { const tq = $('#toolQ'); if (tq) tq.oninput = () => { const q = norm(tq.value); $$('#toolG .tgrp').forEach(g => { let n = 0; $$('button', g).forEach(b => { const v = !q || norm(b.textContent).includes(q); b.hidden = !v; if (v) n++; }); g.hidden = !n; }); }; }
   on('filmBtn', () => familyFilm()); on('tourBtn', startTour); on('newsBtn', openNews);
   on('snapBtn', openSnaps); on('bnBtn', () => babyNames()); on('vidBtn', filmVideo);
+  on('sibBtn', () => siblingsUI());
   on('heroBtn', openHeroes); on('icsBtn', exportIcs); on('kidsBtn', () => kidsMode()); on('gapBtn', openGaps);
   on('hdrBtn', hideRuleUI); on('grtBtn', () => greetCard(null)); on('brBtn', branchList); on('bkRm', () => { const v = LS.get('shajara.bkRemind', true) === false; LS.set('shajara.bkRemind', v); renderMore(); toast(v ? 'بذكّرك كل شهر تنزّل نسخة' : 'وقّفت التذكير'); }); on('telBtn', openPhones); on('rahmBtn', openRahm); on('evBtn', openEvents);
   on('bwSw', () => { S.bw = !S.bw; LS.set('shajara.bw', S.bw); document.body.classList.toggle('bwp', S.bw); renderMore(); toast(S.bw ? 'الطباعة صارت بالأبيض والأسود' : 'رجعت الطباعة بالألوان'); });
@@ -2030,14 +2055,14 @@ function drawTreeCanvas(maxScale, bw) {
     const p = n.p, bx = n.right - PW, by = n.y;
     x.fillStyle = col.card; x.strokeStyle = col.line; x.lineWidth = 1; rr(bx, by, PW, NH, 12); x.fill(); x.stroke();
     x.save(); rr(bx, by, PW, NH, 12); x.clip(); x.fillStyle = !bw && S.brCol && n.br != null ? BRC[n.br % BRC.length] : (p.g === 'f' ? col.f : col.m); x.fillRect(bx, by, PW, !bw && S.brCol && n.br != null ? 6 : 4); x.restore();
-    x.fillStyle = col.text; x.font = `800 15px ${ff}`; x.fillText(fit(p.f, PW - 14), bx + PW / 2, by + 25);
+    x.fillStyle = col.text; x.font = `800 15px ${ff}`; x.fillText(fit(dispName(p), PW - 14), bx + PW / 2, by + 25);
     const ns = nodeSub(n); if (ns.t) { x.fillStyle = ns.c && !bw ? ns.c : col.muted; x.font = `${ns.c ? 700 : 500} 11px ${ff}`; x.fillText(fit(ns.t, PW - 12), bx + PW / 2, by + 44); }
     if (n.col) { x.fillStyle = '#c99a3a'; rr(bx + PW / 2 - 16, by + NH - 6, 32, 16, 8); x.fill(); x.fillStyle = '#fff'; x.font = `800 11px ${ff}`; x.fillText('+' + n.hidden, bx + PW / 2, by + NH + 2); }
     n.sps.forEach((s2, i) => {
       const sx = bx - (i + 1) * (SW + SG), sy = by + 5;
       x.fillStyle = col.sp; x.strokeStyle = n.multi && !bw ? wcol(i) : col.line; x.lineWidth = n.multi ? 2 : 1; rr(sx, sy, SW, 50, 10); x.fill(); x.stroke(); x.lineWidth = 1;
       const sub = spouseSub(p, s2);
-      x.fillStyle = s2.g === 'f' ? col.f : col.m; x.font = `700 13px ${ff}`; x.fillText(fit(s2.f, SW - 12), sx + SW / 2, sy + (sub ? 20 : 26));
+      x.fillStyle = s2.g === 'f' ? col.f : col.m; x.font = `700 13px ${ff}`; x.fillText(fit(dispName(s2), SW - 12), sx + SW / 2, sy + (sub ? 20 : 26));
       if (sub) { x.fillStyle = col.muted; x.font = `500 10.5px ${ff}`; x.fillText(fit(sub, SW - 10), sx + SW / 2, sy + 37); }
     });
   }
@@ -2124,7 +2149,7 @@ function photoViewer(pid, phid) {
 
 /* ========== كتيّب العائلة (طباعة PDF) ========== */
 function bookletPrint() {
-  const ps = [...S.P.values()]; if (!ps.length) return toast('الشجرة فاضية');
+  const ps = REAL(); if (!ps.length) return toast('الشجرة فاضية');
   const c = drawTreeCanvas(1.6, S.bw), story = familyStory(), col0 = S.col; S.col = new Set(); const L = computeLayout(ALL); S.col = col0;
   const roots = L ? (L.root.virtual ? L.root.kids : [L.root]) : [], coll = new Intl.Collator('ar');
   const flat = n => [n, ...n.kids.flatMap(flat)];
@@ -2143,7 +2168,7 @@ function bookletPrint() {
 
 /* ========== عرض العائلة على الشاشة (للمناسبات) ========== */
 function slideshow(startId) {
-  const me = S.dev.me && S.P.get(S.dev.me), list = [...S.P.values()].sort((a, b) => genOf(a) - genOf(b) || (+a.by || 9999) - (+b.by || 9999) || (+a.o || 0) - (+b.o || 0));
+  const me = S.dev.me && S.P.get(S.dev.me), list = REAL().sort((a, b) => genOf(a) - genOf(b) || (+a.by || 9999) - (+b.by || 9999) || (+a.o || 0) - (+b.o || 0));
   if (!list.length) return toast('الشجرة فاضية'); let i = Math.max(0, list.findIndex(x => x.id === startId)), play = true, tm;
   const d = document.createElement('div'); d.id = 'show'; d.innerHTML = `<div class="sw-in" id="swIn"></div><div class="sw-bar"><button id="swPrev" aria-label="السابق">→</button><button id="swPlay">⏸</button><button id="swNext" aria-label="التالي">←</button><span id="swN"></span><button id="swX" aria-label="سكّر">✕</button></div>`;
   document.body.appendChild(d); try { d.requestFullscreen && d.requestFullscreen().catch(() => { }); } catch (e) { }
@@ -2232,7 +2257,7 @@ function suggestFix(pid) {
 
 /* ========== حقائق العائلة ========== */
 function familyFacts() {
-  const ps = [...S.P.values()], F = [], nm = x => fullName(x, 2, false);
+  const ps = REAL(), F = [], nm = x => fullName(x, 2, false);
   const top = (arr, n = 3) => arr.slice(0, n);
   const names = g => { const c = new Map(); for (const p of ps) if ((p.g === 'f') === (g === 'f')) { const k = p.f.trim(); c.set(k, (c.get(k) || 0) + 1); } return [...c].filter(x => x[1] > 1).sort((a, b) => b[1] - a[1]).slice(0, 5); };
   const nm1 = names('m'), nm2 = names('f');
@@ -2343,14 +2368,14 @@ function openGen(id) {
 /* ========== رسالة جاهزة لقروب العائلة ========== */
 function groupMsg() {
   const name = S.cur.name || 'العائلة', vk = S.cur.view || (S.meta && S.meta.vk), link = S.cur.id && vk ? T.joinLink(joinBase(), S.cur.id, vk) : '';
-  const since = Date.now() - 14 * 864e5, fresh = [...S.P.values()].filter(p => +p.c > since).sort((a, b) => a.c - b.c);
+  const since = Date.now() - 14 * 864e5, fresh = REAL().filter(p => +p.c > since).sort((a, b) => a.c - b.c);
   const td = occasionsFor(0).filter(o => o.day && o.day === today(o.cal).d), mo = occasionsFor(0);
   const T0 = {
     invite: { t: '🌳 دعوة للشجرة', s: `السلام عليكم يا أهل ${name} 🌳\nسوّينا شجرة العائلة، فيها ${ppl(S.P.size)} لين الحين.${link ? `\nتقدرون تشوفونها من هنا، واللي عنده إضافة أو تصحيح يقترحه من نفس الرابط:\n${link}` : ''}` },
     fresh: { t: '👶 الجدد بالشجرة', s: fresh.length ? `🌳 انضاف لشجرة ${name} آخر أسبوعين:\n${fresh.slice(0, 30).map(p => '• ' + fullName(p, 3)).join('\n')}${link ? '\n\nشوفوها: ' + link : ''}` : '' },
     today: { t: '🎂 مناسبات اليوم', s: td.length ? td.map(o => o.kind === 'b' ? `🎂 اليوم عيد ميلاد ${fullName(o.p, 2)}، كل عام و${o.p.g === 'f' ? 'هي' : 'هو'} بخير` : `🤲 اليوم ذكرى وفاة ${fullName(o.p, 2)}، الله يرحم${o.p.g === 'f' ? 'ها' : 'ه'} ويغفر ل${o.p.g === 'f' ? 'ها' : 'ه'}`).join('\n') : '' },
     month: { t: '📅 مناسبات الشهر', s: mo.length ? `📅 مناسبات هالشهر في ${name}:\n${mo.map(o => `• ${o.kind === 'b' ? '🎂' : '🤲'} ${fullName(o.p, 2)}${o.day ? ' (' + dateTxt(o.day, o.m, '', o.cal) + ')' : ''}`).join('\n')}` : '' },
-    numbers: { t: '📊 أرقام العائلة', s: `📊 ${name} بالأرقام:\n• ${ppl(S.P.size)}\n• ${cnt(Math.max(0, ...[...S.P.values()].map(genOf)), 'جيل واحد', 'جيلين', 'أجيال', 'جيل')}\n${(familyFacts().slice(0, 4).map(f => `• ${f.ic} ${f.t}: ${f.v || f.ps.map(x => x.p.f).join('، ')}`)).join('\n')}` }
+    numbers: { t: '📊 أرقام العائلة', s: `📊 ${name} بالأرقام:\n• ${ppl(S.N)}\n• ${cnt(Math.max(0, ...[...S.P.values()].map(genOf)), 'جيل واحد', 'جيلين', 'أجيال', 'جيل')}\n${(familyFacts().slice(0, 4).map(f => `• ${f.ic} ${f.t}: ${f.v || f.ps.map(x => x.p.f).join('، ')}`)).join('\n')}` }
   };
   const keys = Object.keys(T0).filter(k => T0[k].s); let cur = keys[0];
   const sh = openSheet(`<h2>📣 رسالة للقروب<button class="ib x" data-close aria-label="سكّر">${ICON.x}</button></h2>
@@ -2608,6 +2633,7 @@ function bkRemindToast() {
 
 /* ========== اطلب معلومة من العائلة ========== */
 function missingOf(p) {
+  if (p.unk) return [];
   const he = p.g === 'f' ? 'ها' : 'ه', m = [];
   if (!p.by && !hid(p)) m.push('سنة ميلاد' + he); if ((p.dead || p.dy) && !p.dy && !hid(p)) m.push('سنة وفات' + he);
   if (!S.P.has(p.mo)) m.push('اسم أم' + he); if (!p.ph && !(S.PHS.get(p.id) || []).length) m.push('صورت' + he); if (!p.city) m.push('مدينت' + he);
@@ -2630,7 +2656,7 @@ function askInfo(pid) {
 }
 function openGaps() {
   const shared = !!(S.cur.id && (S.cur.view || (S.meta && S.meta.vk)));
-  const L = [...S.P.values()].map(p => ({ p, m: missingOf(p) })).filter(x => x.m.length).sort((a, b) => b.m.length - a.m.length || genOf(a.p) - genOf(b.p)).slice(0, 150);
+  const L = REAL().map(p => ({ p, m: missingOf(p) })).filter(x => x.m.length).sort((a, b) => b.m.length - a.m.length || genOf(a.p) - genOf(b.p)).slice(0, 150);
   const sh = openSheet(`<h2>🙋 النواقص<button class="ib x" data-close aria-label="سكّر">${ICON.x}</button></h2>
     <p style="color:var(--muted);font-size:13.5px;margin:0 0 8px">${L.length ? `${ppl(L.length)} ناقصهم معلومات.${shared ? ' اضغط «اطلب» وأرسل لأهلك رابط يكمّلونها منه.' : ' شارك الشجرة عشان تقدر تطلبها من أهلك.'}` : 'ما شاء الله، كل المعلومات كاملة 👏'}</p>
     ${L.map(x => `<div class="trow2">${avatar(x.p)}<button class="tx" data-go="${x.p.id}"><b>${esc(fullName(x.p, 3))}</b><small>ناقص: ${esc(x.m.join('، '))}</small></button>${shared ? `<button class="btn sm" data-ask="${x.p.id}">اطلب</button>` : ''}</div>`).join('')}`);
@@ -2743,7 +2769,7 @@ function kidsMode(startId) {
 function toolsHtml(ed, shared) {
   const b = (id, t, show = true) => show ? `<button class="btn sm" id="${id}">${t}</button>` : '';
   const G = [
-    ['🌳 الشجرة', b('qaBtn', '⚡ أضف بالنسب', ed) + b('chkBtn', '🩺 فحص الشجرة', ed) + b('gapBtn', '🙋 النواقص', ed) + b('tlBtn', '🕰️ الخط الزمني') + b('genBtn', '👥 جيلي') + b('cityBtn', '🏙️ مدن العائلة') + b('mapBtn', '🗺️ خريطة العائلة') + b('mergeBtn', '🔀 دمج شجرة ثانية', ed && !(S.doc && S.doc.branch)) + b('logBtn', '🕘 آخر التعديلات', shared)],
+    ['🌳 الشجرة', b('qaBtn', '⚡ أضف بالنسب', ed) + b('sibBtn', '👥 حط ناس إخوان', ed) + b('chkBtn', '🩺 فحص الشجرة', ed) + b('gapBtn', '🙋 النواقص', ed) + b('tlBtn', '🕰️ الخط الزمني') + b('genBtn', '👥 جيلي') + b('cityBtn', '🏙️ مدن العائلة') + b('mapBtn', '🗺️ خريطة العائلة') + b('mergeBtn', '🔀 دمج شجرة ثانية', ed && !(S.doc && S.doc.branch)) + b('logBtn', '🕘 آخر التعديلات', shared)],
     ['📖 القصص والذكريات', b('storyBtn', '📖 قصة العائلة') + b('filmBtn', '🎬 القصة المصوّرة') + b('vidBtn', '🎥 فيديو القصة') + b('bookBtn', '📘 كتيّب العائلة') + b('evBtn', '🎉 ألبوم المناسبات') + b('capBtn', '💌 رسائل للمستقبل') + b('factsBtn', '🏅 حقائق العائلة') + b('heroBtn', '🏆 أبطال الشجرة')],
     ['🎉 للجمعات والعيال', b('showBtn', '📺 عرض العائلة') + b('quizBtn', '🎯 مين هذا؟') + b('kidsBtn', '🧒 وضع الأطفال') + b('bnBtn', '👶 أسماء للمواليد') + b('grtBtn', '🎴 بطاقة تهنئة') + b('grpBtn', '📣 رسالة للقروب')],
     ['📅 المناسبات والتواصل', b('occBtn', '📅 مناسبات الشهر') + b('icsBtn', '📅 تقويم العائلة بجوالك') + b('rahmBtn', '🤝 صلة الرحم') + b('telBtn', '📒 دفتر الأرقام', ed) + b('rhmBtn', '🤲 اللهم ارحمهم')],
@@ -2819,7 +2845,7 @@ function printProfile(pid) {
 
 /* ========== القصة المصوّرة (جيل بعد جيل) ========== */
 function filmSlides() {
-  const ps = [...S.P.values()], byG = new Map(); for (const p of ps) { const g = genOf(p); if (!byG.has(g)) byG.set(g, []); byG.get(g).push(p); }
+  const ps = REAL(), byG = new Map(); for (const p of ps) { const g = genOf(p); if (!byG.has(g)) byG.set(g, []); byG.get(g).push(p); }
   const coll = new Intl.Collator('ar'), out = [{ k: 'title', t: `قصة عائلة ${S.cur.name || ''}`, s: `${ppl(ps.length)} · ${cnt(byG.size, 'جيل واحد', 'جيلين', 'أجيال', 'جيل')}` }];
   for (const g of [...byG.keys()].sort((a, b) => a - b)) {
     const L = byG.get(g).sort((a, b) => (+a.by || 9999) - (+b.by || 9999) || coll.compare(a.f, b.f));
@@ -2962,9 +2988,9 @@ function babyNameList(faId, moId, g) {
     for (const sb of [...new Set([...(par.fa ? kidsOf(par.fa) : []), ...(par.mo ? kidsOf(par.mo) : [])])]) if (sb.id !== par.id) add(sb, `${sb.g === 'f' ? 'أخت' : 'أخو'} ${par.f}`, 70);
   }
   const gen = Math.max(fa ? genOf(fa) : 0, mo ? genOf(mo) : 0), used = new Set();
-  for (const p of S.P.values()) if (genOf(p) > gen) used.add((p.f || '').trim());
+  for (const p of REAL()) if (genOf(p) > gen) used.add((p.f || '').trim());
   for (const par of [fa, mo]) if (par) used.add(par.f.trim());
-  const freq = new Map(); for (const p of S.P.values()) { const n = (p.f || '').trim(); freq.set(n, (freq.get(n) || 0) + 1); }
+  const freq = new Map(); for (const p of REAL()) { const n = (p.f || '').trim(); freq.set(n, (freq.get(n) || 0) + 1); }
   return [...cand.values()].filter(o => !used.has(o.n)).map(o => ({ ...o, freq: freq.get(o.n) || 0 })).sort((a, b) => b.score - a.score || b.freq - a.freq);
 }
 function babyNames(pid) {
@@ -2990,6 +3016,53 @@ function babyNames(pid) {
     if (e.target.closest('#bnM')) { const id = await pickPerson({ title: 'الأم', filter: x => x.g === 'f' }); if (id && id !== '__new') { mo = S.P.get(id); draw(); } return; }
     if (e.target.closest('#bnC')) { const t = `👶 أسماء مقترحة (${g === 'f' ? 'بنات' : 'أولاد'}) من عائلة ${S.cur.name || ''}:\n` + L.slice(0, 20).map(o => `• ${o.n} (اسم ${o.why[0]})`).join('\n'); toast(await copyText(t) ? 'نسخت القائمة ✓' : 'ما قدرت أنسخ'); }
   });
+}
+
+/* ========== حطهم إخوان (حتى لو ما نعرف الأب أو الأم) ========== */
+function siblingsUI(startId, g0) {
+  if (!guardEdit()) return; const sel = startId ? [startId] : [], news = []; let kind = 'full';
+  const sh = openSheet(`<h2>👥 حطهم إخوان<button class="ib x" data-close aria-label="سكّر">${ICON.x}</button></h2>
+    <p style="color:var(--muted);font-size:14px;margin:0 0 10px">اختر شخصين أو أكثر، وقل وش نوع الأخوّة. إذا ما تعرف الأب أو الأم ينضاف «أب غير معروف» أو «أم غير معروفة» يجمعهم، وتكتب الاسم بعدين إذا عرفته.</p>
+    <div class="chips" id="sbL"></div>
+    <div class="rowb" style="margin-top:8px"><button class="btn sm" id="sbAdd">${ICON.plus}من المسجّلين</button><button class="btn sm" id="sbNew">${ICON.plus}شخص جديد</button></div>
+    <div class="sec">نوع الأخوّة</div>
+    <label class="tgl"><input type="radio" name="sbK" value="full" checked><span>أشقاء: نفس الأب والأم</span></label>
+    <label class="tgl"><input type="radio" name="sbK" value="fa"><span>من الأب بس</span></label>
+    <label class="tgl"><input type="radio" name="sbK" value="mo"><span>من الأم بس</span></label>
+    <div class="acts"><button class="btn pri" id="sbS">حفظ</button><button class="btn ghost" data-close>إلغاء</button></div>`);
+  const E = q => $(q, sh.el);
+  const draw = () => { E('#sbL').innerHTML = [...sel.map(id => { const x = S.P.get(id); return `<button class="chip del ${x.g === 'f' ? 'f' : 'm'}" data-rm="${id}">${ICON.x}${esc(fullName(x, 2, false))}</button>`; }), ...news.map((n, i) => `<button class="chip del ${n.g === 'f' ? 'f' : 'm'}" data-rn="${i}">${ICON.x}${esc(n.f)} <small>(جديد)</small></button>`)].join('') || '<small style="color:var(--muted)">ما اخترت أحد للحين</small>'; };
+  draw();
+  E('#sbL').onclick = e => { const a = e.target.closest('[data-rm]'), b = e.target.closest('[data-rn]'); if (a) sel.splice(sel.indexOf(a.dataset.rm), 1); else if (b) news.splice(+b.dataset.rn, 1); else return; draw(); };
+  E('#sbAdd').onclick = async () => { const id = await pickPerson({ title: 'اختر أخ أو أخت', filter: x => !sel.includes(x.id) }); if (id && id !== '__new') { sel.push(id); draw(); } };
+  E('#sbNew').onclick = async () => { const n = await promptText('الاسم', '', 'مثل: سارة'); if (!n || !n.trim()) return; const g = g0 && !news.length && sel.length <= 1 ? g0 : await ask('ولد ولا بنت؟', '', [{ v: 'm', t: 'ولد' }, { v: 'f', t: 'بنت' }, { v: null, t: 'إلغاء', cls: 'ghost', cancel: true }]); if (!g) return; news.push({ f: n.replace(/\s+/g, ' ').trim().slice(0, 40), g }); draw(); };
+  E('#sbS').onclick = () => {
+    kind = ($('input[name=sbK]:checked', sh.el) || {}).value || 'full';
+    if (sel.length + news.length < 2) return toast('اختر شخصين على الأقل');
+    const ps = sel.map(id => S.P.get(id)).filter(Boolean), needF = kind !== 'mo', needM = kind !== 'fa', t = Date.now();
+    const known = key => [...new Set(ps.map(x => x[key]).filter(x => x && S.P.has(x)))];
+    let F = null, M = null, made = [];
+    if (needF) { const f = known('fa'); if (f.length > 1) return toast('مسجّل لهم آباء مختلفين، فما يصيرون إخوان من الأب. صحّح الأب أول'); F = f[0] || null; }
+    if (needM) { const m = known('mo'); if (m.length > 1) return toast('مسجّل لهم أمهات مختلفات، فما يصيرون إخوان من الأم. صحّح الأم أول'); M = m[0] || null; }
+    const anc = new Set(ps.flatMap(x => [...ancestors(x.id)])), desc = new Set(ps.flatMap(x => [...descendants(x.id)]));
+    if (ps.some(x => anc.has(x.id) || desc.has(x.id))) return toast('واحد منهم جد أو أب لواحد ثاني، فما يصيرون إخوان');
+    try {
+      if (needF && !F) { F = newId('p'); S.doc.set(F, unkObj('m', t)); made.push('m'); }
+      if (needM && !M) { M = newId('p'); S.doc.set(M, unkObj('f', t + 1)); made.push('f'); }
+      /* «من الأب بس»: اللي ما له أم مسجّلة نحط له أم غير معروفة لحاله (والعكس)، عشان تبان إنهم من أمهات مختلفة */
+      const other = (o, i) => { if (kind === 'full') return; const key = kind === 'fa' ? 'mo' : 'fa'; if (o[key] && S.P.has(o[key])) return; const u = newId('p'); S.doc.set(u, unkObj(key === 'mo' ? 'f' : 'm', t + 2 + i)); o[key] = u; const par = kind === 'fa' ? F : M; setTimeout(() => ensureMarriage(par, u), 120); };
+      ps.forEach((x, i) => { const o = strip(x); if (needF) o.fa = F; if (needM) o.mo = M; other(o, i); S.doc.set(x.id, o); });
+      news.forEach((n, i) => { const o = { t: 'p', f: n.f, g: n.g, o: t + 10 + i, c: t + 10 + i }; if (needF) o.fa = F; if (needM) o.mo = M; other(o, 50 + i); const fam = ps.map(famOf).find(Boolean); if (fam && !(F && S.P.get(F) && !S.P.get(F).unk)) o.fam = fam; S.doc.set(newId('p'), o); });
+      if (needF && needM) setTimeout(() => ensureMarriage(F, M), 120);
+    } catch (x) { return toast(T ? T.errorText(x) : 'ما انحفظ'); }
+    closeSheet(sh);
+    toast(`صاروا إخوان${kind === 'fa' ? ' من الأب' : kind === 'mo' ? ' من الأم' : ''} ✓${made.length ? ` وانضاف ${made.length > 1 ? '«أب وأم غير معروفين»' : made[0] === 'f' ? '«أم غير معروفة»' : '«أب غير معروف»'} يجمعهم` : ''}`);
+  };
+}
+/* «غير معروف» بدون عيال ينشال لحاله (بعد دقيقة من إضافته عشان ما ينحذف وهو يُستخدم) */
+function cleanUnk() {
+  if (!canEdit() || !S.doc) return;
+  for (const p of S.P.values()) if (p.unk && !kidsOf(p.id).length && Date.now() - (+p.c || 0) > 60000) { for (const m of S.M) if (m.a === p.id || m.b === p.id) S.doc.del(m.id); S.doc.del(p.id); }
 }
 
 /* ========== وثيقة نسب ========== */
@@ -3238,15 +3311,15 @@ function openTimeline() {
 /* ========== لعبة «مين هذا؟» ========== */
 const REL_POOL = { m: ['أبوك', 'أخوك', 'عمك', 'خالك', 'جدك', 'ابن عمك', 'ابن خالك', 'ابن عمتك', 'ابن خالتك', 'ابن أخوك', 'ابن أختك', 'ابنك', 'عم أبوك', 'خال أبوك', 'زوج أختك', 'زوج عمتك'], f: ['أمك', 'أختك', 'عمتك', 'خالتك', 'جدتك', 'بنت عمك', 'بنت خالك', 'بنت عمتك', 'بنت خالتك', 'بنت أخوك', 'بنت أختك', 'بنتك', 'عمة أبوك', 'خالة أمك', 'زوجة أخوك', 'زوجة عمك'] };
 function quizQuestions() {
-  const ps = [...S.P.values()], me = S.dev.me && S.P.get(S.dev.me), out = [];
+  const ps = REAL(), me = S.dev.me && S.P.get(S.dev.me), out = [];
   const mix = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
   const nm = x => fullName(x, 2, false), photo = x => ((S.PHS.get(x.id) || [])[0] || {}).img || x.ph;
   const opts = (ans, pool) => { const seen = new Set([nm(ans)]), o = []; for (const x of mix(pool.slice())) { if (o.length >= 3) break; if (x.id === ans.id || seen.has(nm(x))) continue; seen.add(nm(x)); o.push(x); } return o.length < 2 ? null : mix([ans, ...o]).map(x => ({ t: nm(x), ok: x.id === ans.id })); };
   const add = (type, q, o, img, go) => { if (o) out.push({ type, q, o, img, go }); };
   for (const p of ps) { const im = photo(p); if (im) add('ph', p.g === 'f' ? 'مين هذي؟' : 'مين هذا؟', opts(p, ps.filter(x => x.g === p.g)), im, p.id); }
-  for (const p of ps) { const mo = p.mo && S.P.get(p.mo); if (mo) add('mo', `مين أم ${nm(p)}؟`, opts(mo, ps.filter(x => x.g === 'f')), null, p.id); }
-  for (const p of ps) { const sp = spousesOf(p.id); if (sp.length === 1) add('sp', `مين ${p.g === 'f' ? 'زوج' : 'زوجة'} ${nm(p)}؟`, opts(sp[0], ps.filter(x => x.g === sp[0].g)), null, p.id); }
-  for (const p of ps) { const fa = p.fa && S.P.get(p.fa), gd = fa && fa.fa && S.P.get(fa.fa); if (gd) add('gd', `مين جد ${nm(p)} (أبو أبوه${p.g === 'f' ? 'ا' : ''})؟`, opts(gd, ps.filter(x => x.g === 'm')), null, p.id); }
+  for (const p of ps) { const mo = p.mo && S.P.get(p.mo); if (mo && !mo.unk) add('mo', `مين أم ${nm(p)}؟`, opts(mo, ps.filter(x => x.g === 'f')), null, p.id); }
+  for (const p of ps) { const sp = spousesOf(p.id).filter(x => !x.unk); if (sp.length === 1) add('sp', `مين ${p.g === 'f' ? 'زوج' : 'زوجة'} ${nm(p)}؟`, opts(sp[0], ps.filter(x => x.g === sp[0].g)), null, p.id); }
+  for (const p of ps) { const fa = p.fa && S.P.get(p.fa), gd = fa && !fa.unk && fa.fa && S.P.get(fa.fa); if (gd && !gd.unk) add('gd', `مين جد ${nm(p)} (أبو أبوه${p.g === 'f' ? 'ا' : ''})؟`, opts(gd, ps.filter(x => x.g === 'm')), null, p.id); }
   for (const p of ps) { const n = kidsOf(p.id).length; if (n >= 1) { const c = mix([...new Set([n, n + 1, Math.max(0, n - 1), n + 2, n + 3])].filter(x => x !== n)).slice(0, 3); add('kc', `كم عدد عيال ${nm(p)} بالشجرة؟`, mix([n, ...c]).map(x => ({ t: String(x), ok: x === n })), null, p.id); } }
   if (me) for (const p of ps) { if (p.id === me.id) continue; const r = (relCore(me.id, p.id, true).rels[0] || {}).txt; if (!r || r.length > 22) continue; const d = mix(REL_POOL[p.g === 'f' ? 'f' : 'm'].filter(x => x !== r)).slice(0, 3); add('rl', `${nm(p)} وش ${p.g === 'f' ? 'تقرب' : 'يقرب'} لك؟`, mix([r, ...d]).map(x => ({ t: x, ok: x === r })), photo(p), p.id); }
   const byT = new Map(); for (const q of mix(out)) { const a = byT.get(q.type) || []; a.push(q); byT.set(q.type, a); }
@@ -3315,7 +3388,7 @@ function mergePlan(src) {
     const fa = map.get(x.fa), mo = map.get(x.mo);
     if (fa) m = pick(kidsOf(fa).filter(y => (y.g === 'f' ? 'f' : 'm') === g && norm(y.f) === n1));
     else if (mo) m = pick(kidsOf(mo).filter(y => (y.g === 'f' ? 'f' : 'm') === g && norm(y.f) === n1));
-    else { const key = nm2(x, 3), cand = [...S.P.values()].filter(y => (y.g === 'f' ? 'f' : 'm') === g && nmD(y, 3) === key && (!x.by || !y.by || Math.abs(x.by - y.by) <= 2)); if (cand.length === 1 && (key.includes(' ') || x.by)) m = pick(cand); }
+    else { const key = nm2(x, 3), cand = REAL().filter(y => (y.g === 'f' ? 'f' : 'm') === g && nmD(y, 3) === key && (!x.by || !y.by || Math.abs(x.by - y.by) <= 2)); if (cand.length === 1 && (key.includes(' ') || x.by)) m = pick(cand); }
     if (m) { map.set(x.id, m.id); used.add(m.id); }
   }
   /* الزوجات اللي ما لهن أهل: نربطهن عن طريق أزواجهن */
@@ -3365,7 +3438,7 @@ function applyMerge(src, P2, map) {
 
 /* ========== قصة العائلة ========== */
 function familyStory() {
-  const ps = [...S.P.values()]; if (!ps.length) return 'الشجرة فاضية للحين.';
+  const ps = REAL(); if (!ps.length) return 'الشجرة فاضية للحين.';
   const col0 = S.col; S.col = new Set(); const L = computeLayout(ALL); S.col = col0; const roots = L ? (L.root.virtual ? L.root.kids : [L.root]) : [];
   const gens = Math.max(...ps.map(genOf)), alive = ps.filter(p => !p.dead && !p.dy).length, out = [];
   out.push(`شجرة «${S.cur.name || 'العائلة'}» فيها ${ppl(ps.length)} من ${cnt(gens, 'جيل واحد', 'جيلين', 'أجيال', 'جيل')}، والأحياء منهم ${alive}.`);
@@ -3635,7 +3708,7 @@ function planLineage(pc, virt) {
   const kidsByName = (pid, nm, g) => { const n = norm(nm); const real = pid && S.P.has(pid) ? (S.kidsF.get(pid) || []).find(x => norm(x.f) === n && (x.g === 'f') === (g === 'f')) : null; return real ? real.id : virt.kids.get(pid + '|' + n + '|' + g) || null; };
   const depth = (pid, i) => { if (i < 0) return 0; const c = kidsByName(pid, names[i], i === 0 ? g0 : 'm'); return c ? 1 + depth(c, i - 1) : 0; };
   const gTop = k === 0 ? g0 : 'm', nTop = norm(names[k]);
-  let cands = [...S.P.values()].filter(x => (x.g === 'f') === (gTop === 'f') && norm(x.f) === nTop).map(x => ({ id: x.id, d: depth(x.id, k - 1), fm: fam && famOf(x) ? (norm(famOf(x)) === norm(fam) ? 1 : -1) : 0, top: !(x.fa && S.P.has(x.fa)) }));
+  let cands = REAL().filter(x => (x.g === 'f') === (gTop === 'f') && norm(x.f) === nTop).map(x => ({ id: x.id, d: depth(x.id, k - 1), fm: fam && famOf(x) ? (norm(famOf(x)) === norm(fam) ? 1 : -1) : 0, top: !(x.fa && S.P.has(x.fa)) }));
   cands = cands.filter(c => c.fm >= 0);
   const vt = virt.tops.get(nTop + '|' + gTop); if (vt) cands.push({ id: vt, d: depth(vt, k - 1), fm: 1, top: true, v: true });
   cands.sort((a, b) => b.d - a.d || b.fm - a.fm || (b.top ? 1 : 0) - (a.top ? 1 : 0));
@@ -3768,7 +3841,7 @@ function openKin(id) {
 const toG = (y, cal) => cal === 'g' ? y : Math.round(y * 0.970229 + 621.5643);
 function treeIssues() {
   const out = [], P = id => S.P.get(id), nm = x => fullName(x, 3);
-  for (const x of S.P.values()) {
+  for (const x of REAL()) {
     const fa = P(x.fa), mo = P(x.mo), he = x.g === 'f' ? 'ها' : 'ه';
     const by = x.by ? toG(x.by, x.cal) : null;
     if (by && x.dy && toG(x.dy, x.cal) < by) out.push({ id: x.id, msg: `سنة وفات${he} قبل ميلاد${he}` });
@@ -3783,7 +3856,7 @@ function treeIssues() {
     let c = x, n = 0; const seen = new Set(); while (c && n++ < 200) { if (seen.has(c.id)) { out.push({ id: x.id, msg: 'فيه دورة بالنسب (شخص صار جد نفسه)' }); break; } seen.add(c.id); c = P(c.fa); }
   }
   for (const m of S.M) { const a = P(m.a), b = P(m.b); if (a && b && (a.g === 'f') === (b.g === 'f')) out.push({ id: a.id, msg: `زواج مسجّل بين ${a.f} و${b.f} وهم من نفس الجنس` }); }
-  const dups = [...S.P.values()].filter(x => dupsOf(x).length).length; if (dups) out.push({ dup: dups, msg: `فيه ${ppl(dups)} ممكن مكررين` });
+  const dups = REAL().filter(x => dupsOf(x).length).length; if (dups) out.push({ dup: dups, msg: `فيه ${ppl(dups)} ممكن مكررين` });
   return out;
 }
 function openChecks() {
@@ -3847,7 +3920,7 @@ async function exportPng() {
 }
 function printTree() {
   const c = drawTreeCanvas(1.5, S.bw); if (!c) return toast('الشجرة فاضية');
-  const coll = new Intl.Collator('ar'); const people = [...S.P.values()].sort((a, b) => genOf(a) - genOf(b) || coll.compare(a.f, b.f));
+  const coll = new Intl.Collator('ar'); const people = REAL().sort((a, b) => genOf(a) - genOf(b) || coll.compare(a.f, b.f));
   $('#printArea').innerHTML = `<h1>${esc(S.cur.name)}</h1><div class="sub">شجرتنا · ${ppl(S.P.size)} · ${stamp()}</div><img src="${c.toDataURL('image/png')}" alt="الشجرة">
     <table><thead><tr><th>الاسم</th><th>الميلاد والوفاة</th><th>المدينة</th></tr></thead><tbody>${people.map(p => `<tr><td>${esc(fullName(p))}</td><td>${esc(yearsText(p))}</td><td>${esc(p.city || '')}</td></tr>`).join('')}</tbody></table>`;
   setTimeout(() => window.print(), 60);
@@ -3983,7 +4056,7 @@ setView(start && start.id && LS.get('shajara.view', null) == null ? 'tree' : S.v
 if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => { });
 
 /* واجهة صغيرة للاختبارات الآلية */
-window.__shajara = { S, openSnaps, snapLabel, filmVideo, babyNameList, babyNames, branchCreate, toolsHtml, introToast, openNews, startTour, printProfile, filmSlides, familyFilm, linkTreeUI, openLinked, missingOf, askInfo, openGaps, heroes, openHeroes, icsText, exportIcs, addDoc, docViewer, kidsMode, kunya, branchCreate, branchList, greetCard, drawGreet, openWeekQ, bkRemindToast, exportJson, hid, hideRuleUI, waNum, openPhones, rahmSet, openRahm, rahmToast, rahmSuggest, speak, lineageText, openEvents, evForm, openEvent, familyFacts, openFacts, sunSvg, openSun, genGroups, openGen, groupMsg, rebuild, suggestFix, printCert, openCaps, capForm, capToast, openMap, cityLL, quizMenu, quizHost, quizPlayer, momMode, openTimeline, timelineEvents, openQuiz, quizQuestions, openPushPrefs, suggestMem, suggestPhoto, recordVoice, voiceFile, saveVoice, voiceEdit, unmarry, openQR, memForm, addAlbum, photoViewer, bookletPrint, slideshow, mergePlan, applyMerge, mergeTreesUI, familyStory, openStory, fanSvg, createShare, offerBackup, itemsOfTree, occasionsFor, openOccasions, openCities, openLog, posterPrint, pinSettings, showLock, editorName, birthdayToast, applySuggestion, reviewSugg, suggestComposer, loadSugg, canSuggest, parseLineage, planLineage, quickAdd, treeIssues, kinGroups, openPedigree, openKin, openChecks, openDeceased, personCard, relation, mahramOf, bloodAll, getRoot, addChild, addParent, addSibling, dupsOf, mergeInto, Z, NH, fullName: id => fullName(S.P.get(id)), computeLayout, getRoot, canEdit, revealInTree, centerOn, Z, parseGed, trees: () => trees, nodeSub, divorced, openPerson, deletePerson, drawTreeCanvas, exportGed, setZ, stage, setDownload: f => { dlHook = f; } };
+window.__shajara = { S, siblingsUI, cleanUnk, REAL, addSibling, openSnaps, snapLabel, filmVideo, babyNameList, babyNames, branchCreate, toolsHtml, introToast, openNews, startTour, printProfile, filmSlides, familyFilm, linkTreeUI, openLinked, missingOf, askInfo, openGaps, heroes, openHeroes, icsText, exportIcs, addDoc, docViewer, kidsMode, kunya, branchCreate, branchList, greetCard, drawGreet, openWeekQ, bkRemindToast, exportJson, hid, hideRuleUI, waNum, openPhones, rahmSet, openRahm, rahmToast, rahmSuggest, speak, lineageText, openEvents, evForm, openEvent, familyFacts, openFacts, sunSvg, openSun, genGroups, openGen, groupMsg, rebuild, suggestFix, printCert, openCaps, capForm, capToast, openMap, cityLL, quizMenu, quizHost, quizPlayer, momMode, openTimeline, timelineEvents, openQuiz, quizQuestions, openPushPrefs, suggestMem, suggestPhoto, recordVoice, voiceFile, saveVoice, voiceEdit, unmarry, openQR, memForm, addAlbum, photoViewer, bookletPrint, slideshow, mergePlan, applyMerge, mergeTreesUI, familyStory, openStory, fanSvg, createShare, offerBackup, itemsOfTree, occasionsFor, openOccasions, openCities, openLog, posterPrint, pinSettings, showLock, editorName, birthdayToast, applySuggestion, reviewSugg, suggestComposer, loadSugg, canSuggest, parseLineage, planLineage, quickAdd, treeIssues, kinGroups, openPedigree, openKin, openChecks, openDeceased, personCard, relation, mahramOf, bloodAll, getRoot, addChild, addParent, addSibling, dupsOf, mergeInto, Z, NH, fullName: id => fullName(S.P.get(id)), computeLayout, getRoot, canEdit, revealInTree, centerOn, Z, parseGed, trees: () => trees, nodeSub, divorced, openPerson, deletePerson, drawTreeCanvas, exportGed, setZ, stage, setDownload: f => { dlHook = f; } };
 })();
 </script>
 </body>
