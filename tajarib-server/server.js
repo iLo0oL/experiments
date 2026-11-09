@@ -135,7 +135,7 @@ route('PATCH', '/api/docs/:id', async (req, b, p) => {
       if (id.length > 80 || !isObj(it) || !Number.isFinite(+it.u)) continue;
       if (allow && !allow.has(id)) { rejected++; continue; }
       const cur = body.items[id];
-      if (!cur && doc.kind === 'shajara' && it.t === 'p' && !it.del && it.f) born.push(it);
+      if (!cur && doc.kind === 'shajara' && it.t === 'p' && !it.del && it.f && !it.unk) born.push(it);
       if (!cur || +it.u >= +(cur.u || 0)) { body.items[id] = it; changed++; }
     }
     if (!br && meta && Number.isFinite(+meta.u) && (!body.meta || +meta.u >= +(body.meta.u || 0))) { body.meta = meta; changed++; }
@@ -257,7 +257,7 @@ async function notifyDoc(docId, payload, who = 'news') {
 const bornQ = new Map();
 function birthNews(docId, body, born) {
   const q0 = bornQ.get(docId) || { names: [], body }; q0.body = body;
-  for (const it of born) { const fa = it.fa && body.items[it.fa]; q0.names.push(str(it.f, 40) + (fa && fa.f ? (it.g === 'f' ? ' بنت ' : ' بن ') + str(fa.f, 40) : '')); }
+  for (const it of born) { const fa0 = it.fa && body.items[it.fa], fa = fa0 && !fa0.unk ? fa0 : null; q0.names.push(str(it.f, 40) + (fa && fa.f ? (it.g === 'f' ? ' بنت ' : ' بن ') + str(fa.f, 40) : '')); }
   if (q0.t) { bornQ.set(docId, q0); return; }
   q0.t = setTimeout(() => {
     bornQ.delete(docId); const n = q0.names.length, tree = str((q0.body.meta && q0.body.meta.name) || 'شجرتنا', 60);
@@ -532,7 +532,7 @@ async function occasionTick(force) {
 /* ---------- سؤال الأسبوع: كل جمعة الساعة 4 العصر بتوقيت الرياض ---------- */
 const mulberry = a => () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
 function weeklyQuestion(body, seed) {
-  const items = (body && body.items) || {}, P = new Map(); for (const [id, it] of Object.entries(items)) if (it && !it.del && it.t === 'p' && it.f) P.set(id, it);
+  const items = (body && body.items) || {}, P = new Map(); for (const [id, it] of Object.entries(items)) if (it && !it.del && it.t === 'p' && it.f && !it.unk) P.set(id, it);
   if (P.size < 5) return null;
   const rnd = mulberry(seed), mix = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
   const nm = id => { const p = P.get(id), fa = p.fa && P.get(p.fa); return str(p.f, 30) + (fa ? (p.g === 'f' ? ' بنت ' : ' بن ') + str(fa.f, 30) : ''); };
