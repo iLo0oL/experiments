@@ -1,0 +1,20 @@
+{
+  "name": "kashif",
+  "version": "0.1.0",
+  "private": true,
+  "description": "كاشف: اعرف معلومات رقم الجوال بطرق نظامية فقط",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node --disable-warning=ExperimentalWarning src/server.js",
+    "dev": "node --disable-warning=ExperimentalWarning --watch src/server.js",
+    "test": "node --disable-warning=ExperimentalWarning --test"
+  },
+  "engines": {
+    "node": ">=22.13"
+  },
+  "dependencies": {
+    "express": "^5.1.0",
+    "helmet": "^8.1.0",
+    "libphonenumber-js": "^1.12.0"
+  }
+}

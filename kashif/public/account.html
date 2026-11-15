@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0e0e10">
+  <title>حسابي: كاشف</title>
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="icon" href="/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/icon-192.png">
+  <link rel="stylesheet" href="/css/style.css">
+  <script src="/js/common.js" defer></script>
+  <script src="/js/account.js" defer></script>
+</head>
+<body>
+  <header class="top">
+    <a class="brand" href="/"><img src="/icon.svg" alt="">كاشف</a>
+    <a class="btn btn-ghost" href="/">بحث</a>
+  </header>
+
+  <main class="wrap">
+    <p class="muted" id="loading">جاري التحميل…</p>
+
+    <!-- Login: step 1 (number) and step 2 (code) -->
+    <section id="loginView" hidden>
+      <div class="hero">
+        <h1>ادخل برقمك</h1>
+        <p>نرسل لك رمز تحقق برسالة نصية. ما فيه كلمة مرور، وما نطلب جهات اتصالك.</p>
+      </div>
+
+      <form id="requestForm" class="card" novalidate>
+        <label for="loginPhone">رقم جوالك</label>
+        <div class="phone-field">
+          <select id="loginCountry" aria-label="رمز الدولة"></select>
+          <input id="loginPhone" type="tel" inputmode="tel" autocomplete="tel" placeholder="05X XXX XXXX" maxlength="25" required>
+        </div>
+        <label class="check">
+          <input type="checkbox" id="acceptTerms" required>
+          <span>قرأت وأوافق على <a href="/terms" target="_blank">شروط الاستخدام</a> و<a href="/privacy" target="_blank">سياسة الخصوصية</a>.</span>
+        </label>
+        <button class="btn-primary" type="submit" id="requestBtn">أرسل الرمز</button>
+        <p class="error" id="requestError" hidden></p>
+      </form>
+
+      <form id="verifyForm" class="card" novalidate hidden>
+        <p>أرسلنا رمز من 6 أرقام إلى <b class="ltr" id="sentTo"></b></p>
+        <label for="code">رمز التحقق</label>
+        <input id="code" class="code-input" type="text" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]*" maxlength="6" placeholder="••••••" required>
+        <button class="btn-primary" type="submit" id="verifyBtn">تحقق وادخل</button>
+        <p class="error" id="verifyError" hidden></p>
+        <div class="row">
+          <button type="button" class="btn-link" id="changeNumber">غيّر الرقم</button>
+          <button type="button" class="btn-link" id="resend" disabled>أعد الإرسال</button>
+        </div>
+        <p class="dev-note" id="devNote" hidden></p>
+      </form>
+    </section>
+
+    <!-- Logged in -->
+    <section id="profileView" hidden>
+      <div class="card">
+        <h1>حسابي</h1>
+        <p>رقمك: <b class="ltr" id="myPhone"></b> <span class="badge ok">✓ متحقق منه</span></p>
+        <p class="hint" id="memberSince"></p>
+      </div>
+
+      <form class="card" id="nameForm" novalidate>
+        <h2>اسمك اللي يظهر للي يبحث عن رقمك</h2>
+        <p class="muted" id="nameState"></p>
+        <label for="displayName">الاسم</label>
+        <input id="displayName" type="text" autocomplete="name" maxlength="40" placeholder="مثلاً: محمد العتيبي">
+        <label class="check">
+          <input type="checkbox" id="nameConsent">
+          <span>أوافق صراحةً إن هذا الاسم يظهر لأي مستخدم متحقق من رقمه يبحث عن رقمي في كاشف. وأقدر أعدّله أو أحذفه أو أسحب موافقتي بأي وقت.</span>
+        </label>
+        <button class="btn-primary" type="submit" id="saveName">احفظ الاسم</button>
+        <p class="error" id="nameError" hidden></p>
+        <div class="row" id="deleteNameRow" hidden>
+          <button type="button" class="btn-danger" id="deleteName">احذف اسمي واسحب موافقتي</button>
+        </div>
+      </form>
+
+      <div class="card">
+        <h2>الظهور في البحث</h2>
+        <label class="switch">
+          <span>أخفِ اسمي من نتائج البحث</span>
+          <input type="checkbox" id="hidden" role="switch">
+        </label>
+        <p class="hint">إذا فعّلتها، ما يظهر اسمك لأي أحد حتى لو كان محفوظ. بلاغات المستخدمين الآخرين عن الرقم تبقى تظهر كأعداد، عشان نحمي الناس من الاحتيال.</p>
+      </div>
+
+      <div class="card">
+        <h2>بلاغاتي</h2>
+        <p class="muted" id="reportsEmpty">ما بلّغت عن أي رقم.</p>
+        <ul class="list" id="reportsList"></ul>
+      </div>
+
+      <div class="card">
+        <h2>بياناتك</h2>
+        <p class="muted">لك حق تعرف وش نحفظ عنك، وتاخذ نسخة منه، وتحذفه.</p>
+        <div class="row">
+          <a class="btn btn-soft" href="/api/me/export" download>نزّل نسخة من بياناتي</a>
+          <button type="button" class="btn-soft" id="logout">سجّل خروج</button>
+        </div>
+        <div class="row">
+          <button type="button" class="btn-danger" id="deleteAccount">احذف حسابي وكل بياناتي نهائياً</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <a href="/privacy">سياسة الخصوصية</a> · <a href="/terms">شروط الاستخدام</a> · <a href="/">بحث</a>
+  </footer>
+</body>
+</html>

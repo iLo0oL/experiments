@@ -25,3 +25,9 @@
 | 🧾 فاتورتي | https://ilo0ol.github.io/experiments/fatoorati/ |
 | 🍽️ منيو 🔗 | https://ilo0ol.github.io/experiments/menu/ |
 | 📅 موعد 🔗 | https://ilo0ol.github.io/experiments/mawid/ |
+
+## تحت التجربة (تحتاج سيرفر)
+
+| المشروع | التفاصيل |
+|---|---|
+| 🔍 كاشف | اعرف معلومات رقم الجوال بطرق نظامية: [kashif/README.md](kashif/README.md) |

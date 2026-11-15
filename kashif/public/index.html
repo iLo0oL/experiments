@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="description" content="كاشف: اكتب رقم الجوال واعرف المعلومات المتاحة عنه بطرق نظامية فقط">
+  <meta name="theme-color" content="#0e0e10">
+  <title>كاشف: اعرف معلومات الرقم</title>
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="icon" href="/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/icon-192.png">
+  <link rel="stylesheet" href="/css/style.css">
+  <script src="/js/common.js" defer></script>
+  <script src="/js/search.js" defer></script>
+</head>
+<body>
+  <header class="top">
+    <a class="brand" href="/"><img src="/icon.svg" alt="">كاشف</a>
+    <a class="btn btn-ghost" id="accountLink" href="/account">دخول</a>
+  </header>
+
+  <main class="wrap">
+    <section class="hero">
+      <h1>اعرف مين صاحب الرقم</h1>
+      <p>اكتب الرقم ونعرض لك المعلومات المتاحة عنه بطرق نظامية فقط.</p>
+    </section>
+
+    <form id="searchForm" class="card" autocomplete="off" novalidate>
+      <label for="phone">رقم الجوال</label>
+      <div class="phone-field">
+        <select id="country" aria-label="رمز الدولة"></select>
+        <input id="phone" name="phone" type="tel" inputmode="tel" placeholder="05X XXX XXXX" maxlength="25" required>
+      </div>
+      <button class="btn-primary" type="submit" id="searchBtn">بحث</button>
+      <p class="error" id="searchError" hidden></p>
+      <p class="hint" id="quota"></p>
+    </form>
+
+    <div id="result" aria-live="polite"></div>
+
+    <section class="card how">
+      <h2>وش نعرض ومن وين؟</h2>
+      <ul>
+        <li><b>تحليل الرقم:</b> الصيغة الدولية والدولة ونوع الرقم، باستخدام مكتبة libphonenumber. هذي المعلومات تُستخرج من الرقم نفسه.</li>
+        <li><b>الاسم:</b> يظهر فقط إذا صاحب الرقم سجّل بنفسه، وتحقق من رقمه برمز، ووافق صراحةً إن اسمه يظهر.</li>
+        <li><b>البلاغات:</b> عدد المستخدمين اللي بلّغوا عن الرقم إنه مزعج أو احتيال، بدون أسمائهم.</li>
+        <li><b>جهات اتصالك ما نرفعها أبداً،</b> وما نسحب أي بيانات من تطبيقات أو مواقع ثانية.</li>
+      </ul>
+      <a href="/account">سجّل رقمك وأضف اسمك ←</a>
+    </section>
+  </main>
+
+  <footer>
+    <a href="/privacy">سياسة الخصوصية</a> · <a href="/terms">شروط الاستخدام</a> · <a href="/account">حسابي</a>
+  </footer>
+</body>
+</html>
