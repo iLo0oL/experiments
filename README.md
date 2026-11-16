@@ -17,7 +17,7 @@
 | المشروع | الرابط |
 |---|---|
 | 💸 القطّة 🔗 | https://ilo0ol.github.io/experiments/qatta/ |
-| 🤝 ديوني | https://ilo0ol.github.io/experiments/dyooni/ |
+| 🤝 ديوني 🔗 | https://ilo0ol.github.io/experiments/dyooni/ |
 | 🛒 مقاضي 🔗 | https://ilo0ol.github.io/experiments/maqadi/ |
 | 🌳 شجرتنا 🔗 | https://ilo0ol.github.io/experiments/shajara/ |
 | 🧠 ذاكر | https://ilo0ol.github.io/experiments/thaker/ |

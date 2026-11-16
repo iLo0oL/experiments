@@ -287,6 +287,26 @@ body.locked #app,body.locked #fab{display:none}
 .pad button:active{background:var(--card3)}
 .pad button.ghost{background:none;border:0}
 .lock-in .link{margin-top:18px;display:inline-block;color:var(--muted);font-weight:600}
+/* الإيصال وعارض الصور */
+.receipt{display:flex;gap:12px;align-items:center}
+.receipt img{width:76px;height:76px;object-fit:cover;border-radius:12px;border:1px solid var(--line);cursor:zoom-in;flex:none;background:var(--card2)}
+.receipt .btns{display:flex;flex-wrap:wrap;gap:8px;flex:1}
+.viewer{position:fixed;inset:0;z-index:95;background:rgba(0,0,0,.93);display:flex;align-items:center;justify-content:center;padding:60px 10px 20px}
+.viewer img{max-width:100%;max-height:100%;object-fit:contain;border-radius:8px}
+.viewer .vb{position:fixed;top:max(12px,env(safe-area-inset-top));left:12px;right:12px;display:flex;justify-content:space-between}
+.viewer .vb button{width:44px;height:44px;border-radius:14px;background:rgba(255,255,255,.12);color:#fff;display:grid;place-items:center}
+/* الرابط */
+.linkbox{display:flex;gap:8px;align-items:center;background:var(--card2);border-radius:14px;padding:6px 6px 6px 12px;margin:10px 0 12px}
+.linkbox input{background:transparent;border:0;min-height:38px;padding:4px 8px;font-size:14px;direction:ltr;text-align:left;color:var(--muted)}
+.ulist{list-style:none;display:grid;gap:8px;margin-bottom:14px}
+.ulist li{display:flex;gap:10px;align-items:flex-start;font-size:14px;line-height:1.55}
+.ulist li span:first-child{font-size:18px;line-height:1.3;flex:none}
+.stat{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:700;padding:10px 12px;border-radius:12px;background:var(--card2)}
+.stat i{width:9px;height:9px;border-radius:50%;background:var(--faint);flex:none}
+.stat.ok i{background:var(--pos)}.stat.saving i{background:var(--warn);animation:pulse 1s infinite}.stat.offline i{background:var(--faint)}.stat.error i{background:var(--neg)}
+@keyframes pulse{50%{opacity:.35}}
+.vnote{text-align:center;color:var(--faint);font-size:13px;margin:22px 0 4px}
+.vnote a{color:var(--acc);font-weight:700;text-decoration:none}
 /* احتفال */
 .confetti{position:fixed;inset:0;pointer-events:none;z-index:85;overflow:hidden}
 .confetti i{position:absolute;top:-20px;width:9px;height:14px;border-radius:2px;animation:fall linear forwards}
@@ -311,7 +331,9 @@ body.locked #app,body.locked #fab{display:none}
 <div id="sheets"></div>
 <div id="toast" role="status" aria-live="polite"></div>
 <input type="file" id="file-in" accept=".json,application/json" hidden>
+<input type="file" id="img-in" accept="image/*" hidden>
 
+<script src="../shared/sync.js"></script>
 <script>
 'use strict';
 /* ================= أدوات عامة ================= */
@@ -320,6 +342,7 @@ const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
 const sum = (arr, f) => arr.reduce((s, x) => s + f(x), 0);
+const str = (x, n = 300) => typeof x === 'string' ? x.slice(0, n) : '';
 
 const P = {
   plus: '<path d="M12 5v14M5 12h14"/>',
@@ -351,6 +374,9 @@ const P = {
   moon: '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>',
   coins: '<circle cx="8" cy="8" r="6"/><path d="M18.09 10.37A6 6 0 1 1 10.34 18M7 6h1v4M16.71 13.88l.7.71-2.82 2.82"/>',
   info: '<circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/>',
+  link: '<path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>',
+  refresh: '<path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>',
+  cam: '<path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/>',
   wallet: '<path d="M20 12V8H6a2 2 0 0 1-2-2c0-1.1.9-2 2-2h12v4"/><path d="M4 6v12c0 1.1.9 2 2 2h14v-4"/><path d="M18 12a2 2 0 0 0 0 4h4v-4z"/>'
 };
 const ic = (n, cls = '') => `<svg class="i ${cls}" viewBox="0 0 24 24" aria-hidden="true">${P[n] || ''}</svg>`;
@@ -374,10 +400,14 @@ function fixDebt(d) {
 }
 let D = load();
 let persistAsked = false;
-function save() {
-  try { localStorage.setItem(KEY, JSON.stringify(D)); }
+function saveQuiet() {
+  try { localStorage.setItem(KEY, JSON.stringify(D)); return true; }
   catch (e) { toast('مساحة التخزين بالجهاز امتلأت'); return false; }
+}
+function save() {
+  if (!saveQuiet()) return false;
   if (!persistAsked && navigator.storage && navigator.storage.persist) { persistAsked = true; navigator.storage.persist().catch(() => { }); }
+  if (D.debts.some(d => d.share)) scheduleSync();
   return true;
 }
 window.addEventListener('storage', e => { if (e.key === KEY) { D = load(); render(); } });
@@ -387,7 +417,8 @@ const snap = () => JSON.stringify(D);
 function restore(s) { D = JSON.parse(s); D.debts.forEach(fixDebt); save(); render(); }
 
 /* ================= المبالغ ================= */
-const cur = () => CURS.find(c => c[0] === D.s.cur) || CURS[0];
+let CUR_OV = null; /* عملة صاحب الحساب لما تفتح رابط كشف */
+const cur = () => CUR_OV || CURS.find(c => c[0] === D.s.cur) || CURS[0];
 const DEC = () => cur()[3];
 function fmtN(v) {
   const dec = DEC(), m = 10 ** dec; const neg = v < 0; v = Math.abs(Math.round(v));
@@ -478,6 +509,13 @@ const pYears = n => plural(n, '0 سنة', 'سنة', 'سنتين', 'سنوات', 
 const pInst = n => plural(n, 'ولا قسط', 'قسط واحد', 'قسطين', 'أقساط', 'قسط');
 const pPays = n => plural(n, 'ولا دفعة', 'دفعة وحدة', 'دفعتين', 'دفعات', 'دفعة');
 const pDebts = n => plural(n, 'ولا دين', 'دين واحد', 'دينين', 'ديون', 'دين');
+const pMins = n => plural(n, '0 دقيقة', 'دقيقة', 'دقيقتين', 'دقائق', 'دقيقة');
+const pHours = n => plural(n, '0 ساعة', 'ساعة', 'ساعتين', 'ساعات', 'ساعة');
+function agoText(ms) {
+  const m = Math.floor((Date.now() - ms) / 60000);
+  if (m < 1) return 'الحين'; if (m < 60) return `قبل ${pMins(m)}`; if (m < 24 * 60) return `قبل ${pHours(Math.floor(m / 60))}`;
+  const d = new Date(ms); return `${dayLabel(isoOf(d))}، ${fTime(pad(d.getHours()) + ':' + pad(d.getMinutes()))}`;
+}
 function relDays(iso) {
   const n = daysBetween(today(), iso);
   if (n === 0) return 'اليوم'; if (n === 1) return 'بكرة'; if (n === -1) return 'أمس';
@@ -546,6 +584,60 @@ const colorOf = s => { let h = 0; for (const ch of String(s)) h = (h * 31 + ch.c
 const initial = n => esc(Array.from(String(n || '؟').trim().replace(/^(ال|أبو |ابو |أم |ام )(?=\S{2,})/, ''))[0] || '؟');
 const avatar = d => `<span class="av" style="--c:${colorOf(d.name)}">${initial(d.name)}</span>`;
 
+/* ================= صور الإيصالات =================
+   تنحفظ بـ IndexedDB مو بـ localStorage، عشان ما تزاحم بيانات التطبيقات الثانية بنفس الموقع */
+const IDB = (() => {
+  let p = null;
+  const open = () => p || (p = new Promise((res, rej) => { const r = indexedDB.open('dyooni', 1); r.onupgradeneeded = () => r.result.createObjectStore('img'); r.onsuccess = () => res(r.result); r.onerror = () => { p = null; rej(r.error); }; }));
+  const tx = async (mode, fn) => { const db = await open(); return new Promise((res, rej) => { const t = db.transaction('img', mode); const rq = fn(t.objectStore('img')); t.oncomplete = () => res(rq ? rq.result : undefined); t.onerror = () => rej(t.error); t.onabort = () => rej(t.error); }); };
+  return { get: k => tx('readonly', s => s.get(k)), put: (k, v) => tx('readwrite', s => s.put(v, k)), del: k => tx('readwrite', s => s.delete(k)), keys: () => tx('readonly', s => s.getAllKeys()), clear: () => tx('readwrite', s => s.clear()) };
+})();
+const imgCache = new Map();
+async function getImg(id) { if (!id) return null; if (imgCache.has(id)) return imgCache.get(id); try { const v = await IDB.get(id); if (v) imgCache.set(id, v); return v || null; } catch (e) { return null; } }
+async function compressImage(file) {
+  const url = URL.createObjectURL(file);
+  try {
+    const img = await new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = url; });
+    let max = 1300, q = 0.66, out = '';
+    for (let k = 0; k < 8; k++) {
+      const sc = Math.min(1, max / Math.max(img.naturalWidth, img.naturalHeight));
+      const w = Math.max(1, Math.round(img.naturalWidth * sc)), h = Math.max(1, Math.round(img.naturalHeight * sc));
+      const c = document.createElement('canvas'); c.width = w; c.height = h; const x = c.getContext('2d');
+      x.fillStyle = '#fff'; x.fillRect(0, 0, w, h); x.drawImage(img, 0, 0, w, h);
+      out = c.toDataURL('image/jpeg', q);
+      if (out.length <= 80000) break;
+      max = Math.round(max * 0.82); q = Math.max(0.4, q - 0.05);
+    }
+    return out;
+  } finally { URL.revokeObjectURL(url); }
+}
+function pickImage() {
+  return new Promise(res => {
+    const inp = $('#img-in'); inp.value = '';
+    inp.onchange = async () => { const f = inp.files[0]; if (!f) return res(null); try { res(await compressImage(f)); } catch (e) { toast('ما قدرت أفتح الصورة'); res(null); } };
+    inp.click();
+  });
+}
+function viewImage(src, name) {
+  const v = document.createElement('div'); v.className = 'viewer';
+  const canShare = navigator.canShare && navigator.share;
+  v.innerHTML = `<img src="${esc(src)}" alt="صورة الإيصال"><div class="vb"><button data-x aria-label="سكّر">${ic('x')}</button>${canShare ? `<button data-s aria-label="مشاركة">${ic('share')}</button>` : ''}</div>`;
+  const close = () => { v.remove(); document.removeEventListener('keydown', k, true); };
+  const k = e => { if (e.key === 'Escape') { e.stopPropagation(); close(); } };
+  v.addEventListener('click', async e => {
+    if (e.target.closest('[data-s]')) {
+      try { const b = await (await fetch(src)).blob(); const f = new File([b], (name || 'receipt') + '.jpg', { type: 'image/jpeg' }); if (navigator.canShare({ files: [f] })) await navigator.share({ files: [f] }); else toast('جهازك ما يدعم مشاركة الصور من هنا'); } catch (x) { }
+      return;
+    }
+    if (e.target.tagName !== 'IMG') close();
+  });
+  document.addEventListener('keydown', k, true); document.body.appendChild(v);
+}
+/* يمسح الصور اللي ما عاد لها دفعة (بعد الحذف أو التغيير) */
+async function gcImages() {
+  try { const used = new Set(); D.debts.forEach(d => d.entries.forEach(e => e.img && used.add(e.img))); for (const k of await IDB.keys()) if (!used.has(k)) await IDB.del(k); } catch (e) { }
+}
+
 /* ================= رسائل وحوارات ================= */
 let toastT = 0;
 function toast(msg, action) {
@@ -608,8 +700,16 @@ function bindChips(box, onPick) { box.addEventListener('click', e => { const b =
 const markOn = (box, v) => $$('[data-v]', box).forEach(b => b.classList.toggle('on', b.dataset.v === String(v)));
 
 /* ================= التنقل ================= */
-const V = { dir: 'out', debt: null, q: '', showDone: false };
-function route(st) { st = st || {}; V.debt = st.d && getDebt(st.d) ? st.d : null; render(); window.scrollTo(0, 0); }
+const V = { dir: 'out', debt: null, q: '', showDone: false, vw: null };
+function route(st) {
+  st = st || {};
+  if (st.vw) {
+    if (V.vw && V.vw.id === st.vw) { render(); return; }
+    const s = (D.views || []).find(x => x.id === st.vw); if (s) { openView(s, false); return; }
+  }
+  if (V.vw) closeView();
+  V.debt = st.d && getDebt(st.d) ? st.d : null; render(); window.scrollTo(0, 0);
+}
 function openDebt(id) { history.pushState({ d: id }, ''); navDepth++; V.debt = id; render(); window.scrollTo(0, 0); }
 function goHome() { if (history.state && history.state.d && navDepth > 0) history.back(); else { history.replaceState({}, ''); V.debt = null; render(); } }
 
@@ -617,6 +717,7 @@ let fabObs = null;
 function render() {
   if (V.debt && !getDebt(V.debt)) V.debt = null;
   const fab = $('#fab'); if (fabObs) { fabObs.disconnect(); fabObs = null; }
+  if (V.vw) { $('#view').innerHTML = viewerHTML(); fab.hidden = true; document.title = 'كشف حساب · ديوني'; return; }
   if (V.debt) {
     const d = getDebt(V.debt); const c = calc(d);
     $('#view').innerHTML = detailHTML(d, c);
@@ -645,7 +746,7 @@ function homeHTML() {
     <button class="ibtn" data-act="settings" aria-label="الإعدادات">${ic('set')}</button></header>`;
   h += `<div class="seg" style="margin-bottom:12px"><button data-act="tab" data-v="out" class="${V.dir === 'out' ? 'on' : ''}">علي للناس${counts.out ? ` <small>(${counts.out})</small>` : ''}</button><button data-act="tab" data-v="in" class="${V.dir === 'in' ? 'on' : ''}">لي عند الناس${counts.in ? ` <small>(${counts.in})</small>` : ''}</button></div>`;
   h += backupBanner();
-  if (!mine.length) return h + emptyHTML();
+  if (!mine.length) return h + emptyHTML() + viewsHTML();
   const totRem = sum(active, x => Math.max(0, x.c.rem)), totLent = sum(active, x => x.c.lent), totPaid = sum(active, x => x.c.paid);
   const pct = totLent ? Math.round(totPaid / totLent * 100) : 0;
   h += `<div class="card sum"><div class="sum-l">${t.total}</div><div class="sum-v">${money(totRem)}</div>
@@ -669,7 +770,15 @@ function homeHTML() {
     h += `<div class="sec"><span>خلصت 🎉 (${done.length})</span><button class="link" data-act="toggleDone">${V.showDone || q ? 'أخفها' : 'أظهرها'}</button></div>`;
     if (V.showDone || q) h += dn.map(debtCard).join('');
   }
-  return h;
+  return h + viewsHTML();
+}
+/* الكشوفات اللي وصلتك برابط من غيرك */
+function viewsHTML() {
+  const vs = D.views || []; if (!vs.length) return '';
+  return `<div class="sec"><span>كشوفات وصلتك برابط</span></div>` + vs.map(v => {
+    const x = remoteDebt(v.cache || {}); const c = calc(x.d); CUR_OV = x.cur; const amt = money(Math.max(0, c.rem)); CUR_OV = null;
+    return `<button class="dcard" data-act="openview" data-id="${esc(v.id)}">${avatar(x.d)}<span class="dmain"><b>حسابك مع ${esc(x.d.name)}</b><span class="chips"><span class="chip blue">${ic('link')}يتحدّث تلقائياً</span></span></span><span class="dval">${c.done ? '<span class="amt pos">خلص 🎉</span>' : amt}<small>${c.done ? '' : TX(x.d.dir).rem}</small></span></button>`;
+  }).join('');
 }
 function emptyHTML() {
   return V.dir === 'out' ? `<div class="empty"><div class="big">🤝</div><b>سجّل الفلوس اللي أخذتها من الناس</b>
@@ -700,46 +809,54 @@ function backupBanner() {
 }
 
 /* ================= صفحة الدين ================= */
-function detailHTML(d, c) {
-  const t = TX(d.dir); const pi = c.rem > 0 ? planInfo(d, c) : null;
-  let h = `<header class="top"><button class="ibtn" data-act="back" aria-label="رجوع">${ic('back')}</button><div class="ttl">${esc(d.name)}</div>
-    <button class="ibtn" data-act="hide" aria-label="${D.s.hide ? 'أظهر المبالغ' : 'أخف المبالغ'}">${ic(D.s.hide ? 'eyeoff' : 'eye')}</button>
-    <button class="ibtn" data-act="more" aria-label="خيارات">${ic('more')}</button></header>`;
+/* o.ro: صفحة الكشف للي وصله الرابط (عرض بس) */
+function detailHTML(d, c, o = {}) {
+  const ro = !!o.ro; const t = TX(d.dir); const pi = c.rem > 0 ? planInfo(d, c) : null;
+  const eye = `<button class="ibtn" data-act="hide" aria-label="${D.s.hide ? 'أظهر المبالغ' : 'أخف المبالغ'}">${ic(D.s.hide ? 'eyeoff' : 'eye')}</button>`;
+  let h = ro ? `<header class="top"><button class="ibtn" data-act="vback" aria-label="رجوع">${ic('back')}</button><div class="ttl">كشف حساب</div>${eye}<button class="ibtn" data-act="vrefresh" aria-label="تحديث">${ic('refresh')}</button></header>`
+    : `<header class="top"><button class="ibtn" data-act="back" aria-label="رجوع">${ic('back')}</button><div class="ttl">${esc(d.name)}</div>${eye}<button class="ibtn" data-act="more" aria-label="خيارات">${ic('more')}</button></header>`;
   const chips = [];
   if (d.due && c.rem > 0) { const n = daysBetween(today(), d.due); chips.push(`<span class="chip ${n < 0 ? 'bad' : n <= 14 ? 'warn' : ''}">${ic('clock')}الموعد ${fDate(d.due)} (${relDays(d.due)})</span>`); }
   chips.push(`<span class="chip">${pPays(c.pays.length)}</span>`);
   if (c.lastPay) chips.push(`<span class="chip">آخر دفعة ${relDays(c.lastPay.at.slice(0, 10))}</span>`);
-  if (c.rem < 0) chips.push(`<span class="chip warn">${d.dir === 'out' ? 'سددت' : 'رجع لك'} زيادة ${money(-c.rem)}</span>`);
+  if (c.rem < 0) chips.push(`<span class="chip warn">${t.paid} زيادة ${money(-c.rem)}</span>`);
+  if (!ro && d.share) chips.push(`<span class="chip ${shareBad(d) ? 'warn' : 'blue'}">${ic('link')}${shareBad(d) ? 'الرابط ما تحدّث' : 'مشترك برابط'}</span>`);
   h += `<div class="card hero" style="--c:${colorOf(d.name)}"><div class="hero-top">${avatar(d)}<div class="grow"><b>${esc(d.name)}</b><small>${d.dir === 'out' ? 'أخذت منه' : 'أعطيته'} ${fDate(c.firstAt.slice(0, 10), { y: true })}</small></div></div>
     ${c.done ? `<div class="hero-l">خلص الحمد لله 🎉</div><div class="hero-v pos">${money(c.lent)}</div>` : `<div class="hero-l">${t.rem}</div><div class="hero-v">${money(Math.max(0, c.rem))}</div>`}
     <div class="prog"><i style="width:${c.pct}%"></i></div>
     <div class="hero-s"><span>${t.paid} ${money(c.paid)} (${c.pct}%)</span><span>من ${money(c.lent)}</span></div>
     <div class="chips">${chips.join('')}</div></div>`;
-  if (d.note) h += `<div class="note-box">${esc(d.note)}</div>`;
-  h += `<div class="acts"><button class="btn pri" data-act="pay" ${c.rem <= 0 ? 'disabled' : ''}>${ic('down')}${t.payBtn}</button><button class="btn" data-act="loan">${ic('up')}${t.loanBtn}</button></div>`;
-  h += `<div class="tools"><button data-act="planner">${ic('calc')}<span>خطة السداد</span></button><button data-act="statement">${ic('msg')}<span>كشف حساب</span></button>`
-    + (pi ? `<button data-act="ics">${ic('cal')}<span>للتقويم</span></button>` : `<button data-act="edit">${ic('edit')}<span>تعديل</span></button>`)
-    + (d.phone ? `<button data-act="call">${ic('phone')}<span>اتصال</span></button>` : `<button data-act="more">${ic('more')}<span>المزيد</span></button>`) + `</div>`;
-  if (pi) h += planCard(d, c, pi);
-  else if (c.rem > 0) h += `<button class="cta" data-act="planner">${ic('calc')}<span class="grow"><b>${d.dir === 'out' ? 'كم تقدر تسدد كل شهر؟' : 'اتفقتوا على أقساط؟'}</b><small>${d.dir === 'out' ? 'سوّ خطة وأعرف متى تخلص، أو كم تسدد عشان تخلص بوقت معيّن' : 'سجّلها وتعرف القسط الجاي ولو تأخر'}</small></span>${ic('back')}</button>`;
-  h += `<div class="sec"><span>السجل</span><span class="faint" style="flex:none;font-weight:600">اضغط على أي سطر عشان تعدّله</span></div>`;
+  if (ro) {
+    h += `<div class="alert info" style="margin-bottom:12px">${ic('info')}<span class="grow">للعرض بس، ويتحدّث تلقائياً كل ما ${esc(d.name)} سجّل شي${o.upd ? `. آخر تعديل ${agoText(o.upd)}` : ''}</span></div>`;
+    if (o.err) h += `<div class="alert warn" style="margin-bottom:12px">${ic('alert')}<span class="grow">${esc(viewErr(o.err))}، وهذا آخر شي وصلني</span></div>`;
+  } else {
+    if (d.note) h += `<div class="note-box">${esc(d.note)}</div>`;
+    h += `<div class="acts"><button class="btn pri" data-act="pay" ${c.rem <= 0 ? 'disabled' : ''}>${ic('down')}${t.payBtn}</button><button class="btn" data-act="loan">${ic('up')}${t.loanBtn}</button></div>`;
+    h += `<div class="tools"><button data-act="planner">${ic('calc')}<span>خطة السداد</span></button><button data-act="statement">${ic('msg')}<span>كشف حساب</span></button><button data-act="share">${ic('link')}<span>رابط له</span></button><button data-act="more">${ic('more')}<span>المزيد</span></button></div>`;
+  }
+  if (pi) h += planCard(d, c, pi, ro);
+  else if (!ro && c.rem > 0) h += `<button class="cta" data-act="planner">${ic('calc')}<span class="grow"><b>${d.dir === 'out' ? 'كم تقدر تسدد كل شهر؟' : 'اتفقتوا على أقساط؟'}</b><small>${d.dir === 'out' ? 'سوّ خطة وأعرف متى تخلص، أو كم تسدد عشان تخلص بوقت معيّن' : 'سجّلها وتعرف القسط الجاي ولو تأخر'}</small></span>${ic('back')}</button>`;
+  h += `<div class="sec"><span>السجل</span>${ro ? '' : '<span class="faint" style="flex:none;font-weight:600">اضغط على أي سطر عشان تعدّله</span>'}</div>`;
   let lastM = '', rows = '';
   const mf = dtf('my', { month: 'long', year: 'numeric' });
   for (const e of c.es.slice().reverse()) {
     const m = mf.format(toDate(e.at));
     if (m !== lastM) { if (rows) rows += '</div>'; rows += `<div class="mhead">${m}</div><div class="list">`; lastM = m; }
-    const pay = e.k === 'pay';
-    rows += `<button class="ent" data-act="entry" data-id="${e.id}"><span class="ent-ic ${pay ? 'pay' : 'loan'}">${ic(pay ? 'down' : 'up')}</span>
-      <span class="ent-b"><b>${pay ? t.payT : t.loanT}${e.m ? ` <span class="chip">${esc(e.m)}</span>` : ''}</b><small>${fDT(e.at)}</small>${e.n ? `<small class="ent-n">${esc(e.n)}</small>` : ''}</span>
-      <span class="ent-a">${money(e.a, pay ? 'pos' : '')}<small>باقي ${fmtN(Math.max(0, c.after[e.id]))}</small></span></button>`;
+    const pay = e.k === 'pay'; const hasImg = ro ? !!(o.imgs && o.imgs[e.id]) : !!e.img;
+    const tag = ro ? (hasImg ? `button class="ent" data-act="vimg" data-id="${esc(e.id)}"` : 'div class="ent"') : `button class="ent" data-act="entry" data-id="${e.id}"`;
+    rows += `<${tag}><span class="ent-ic ${pay ? 'pay' : 'loan'}">${ic(pay ? 'down' : 'up')}</span>
+      <span class="ent-b"><b>${pay ? t.payT : t.loanT}${e.m ? ` <span class="chip">${esc(e.m)}</span>` : ''}${hasImg ? ' <span class="chip">📎 إيصال</span>' : ''}</b><small>${fDT(e.at)}</small>${e.n ? `<small class="ent-n">${esc(e.n)}</small>` : ''}</span>
+      <span class="ent-a">${money(e.a, pay ? 'pos' : '')}<small>باقي ${fmtN(Math.max(0, c.after[e.id]))}</small></span></${tag.split(' ')[0]}>`;
   }
   if (rows) rows += '</div>';
-  return h + rows;
+  h += rows;
+  if (ro) h += `${(D.views || []).some(x => x.id === (V.vw && V.vw.id)) ? `<p class="vnote"><button class="link" data-act="rmview">شيل هالكشف من قائمتي</button></p>` : ''}<p class="vnote">هذي الصفحة من <a href="./">ديوني</a>: سجّل ديونك وأقساطك بجوالك</p>`;
+  return h;
 }
-function planCard(d, c, pi) {
+function planCard(d, c, pi, ro) {
   const t = TX(d.dir); const p = d.plan;
-  let h = `<div class="card plan"><div class="plan-h">${ic('target')}<b>الخطة: ${money(p.a)} ${FREQ[p.f]}</b><button class="link" data-act="planner">تعديل</button></div>`;
-  if (pi.late > 0) h += `<div class="alert bad">${ic('alert')}<span class="grow">${t.late} <b>${money(pi.late)}</b>${pi.lateN > 1 ? ` (${pInst(pi.lateN)})` : ''} من ${fDate(pi.lateSince)}</span><button class="btn sm danger" data-act="payamt" data-a="${pi.late}">${d.dir === 'out' ? 'سددته' : 'استلمته'}</button></div>`;
+  let h = `<div class="card plan"><div class="plan-h">${ic('target')}<b>الخطة: ${money(p.a)} ${FREQ[p.f]}</b>${ro ? '' : '<button class="link" data-act="planner">تعديل</button>'}</div>`;
+  if (pi.late > 0) h += `<div class="alert bad">${ic('alert')}<span class="grow">${t.late} <b>${money(pi.late)}</b>${pi.lateN > 1 ? ` (${pInst(pi.lateN)})` : ''} من ${fDate(pi.lateSince)}</span>${ro ? '' : `<button class="btn sm danger" data-act="payamt" data-a="${pi.late}">${d.dir === 'out' ? 'سددته' : 'استلمته'}</button>`}</div>`;
   if (pi.ahead) h += `<div class="alert good">${ic('check')}<span class="grow">مسدد مقدماً لين قسط ${fDate(pi.ahead)}</span></div>`;
   if (pi.next) {
     const nd = toDate(pi.next.date);
@@ -749,8 +866,8 @@ function planCard(d, c, pi) {
   const dots = pi.n <= 60 ? `<div class="dots" aria-hidden="true">${pi.sch.map(s => `<i class="${s.cum <= pi.Pd ? 'on' : s.date < today() ? 'late' : ''}"></i>`).join('')}</div>` : '';
   h += dots + `<div class="plan-f"><span>${pi.instPaid} من ${pInst(pi.n)}</span><span>${t.will} ${fDate(pi.end, { y: true })} (${relDays(pi.end)})</span></div>`;
   if (d.due && pi.end > d.due) h += `<div class="alert warn" style="margin-top:10px">${ic('clock')}<span class="grow">الخطة تخلص بعد الموعد المتفق عليه (${fDate(d.due, { y: true })})</span></div>`;
-  h += `<div class="plan-b">${pi.next && !pi.late ? `<button class="btn sm pri" data-act="payamt" data-a="${pi.next.a}">${ic('check', 's')}${d.dir === 'out' ? 'سددت القسط' : 'استلمت القسط'}</button>` : ''}<button class="btn sm" data-act="ics">${ic('cal', 's')}أضف للتقويم</button></div></div>`;
-  return h;
+  if (!ro) h += `<div class="plan-b">${pi.next && !pi.late ? `<button class="btn sm pri" data-act="payamt" data-a="${pi.next.a}">${ic('check', 's')}${d.dir === 'out' ? 'سددت القسط' : 'استلمت القسط'}</button>` : ''}<button class="btn sm" data-act="ics">${ic('cal', 's')}أضف للتقويم</button></div>`;
+  return h + `</div>`;
 }
 
 /* ================= إضافة دين ================= */
@@ -834,6 +951,7 @@ function openEntry(debtId, kind, entryId, preset) {
       <label class="fld"><span>التاريخ والوقت</span><input id="e-at" type="datetime-local" value="${e ? e.at : nowLocal()}"></label>
       <div class="chips" id="e-dq" style="margin:-6px 0 14px"><button class="qc" data-v="now">الحين</button><button class="qc" data-v="y">أمس</button>${pi && pi.next ? `<button class="qc" data-v="${pi.next.date}">يوم القسط</button>` : ''}</div>
       ${pay ? `<div class="fld"><span>الطريقة <small>(اختياري)</small></span><div class="chips" id="e-m">${methods.map(m => `<button class="qc ${e && e.m === m ? 'on' : ''}" data-v="${m}">${m}</button>`).join('')}</div></div>` : ''}
+      <div class="fld"><span>${pay ? 'صورة الإيصال' : 'صورة التحويل'} <small>(اختياري)</small></span><div id="e-img"></div></div>
       <label class="fld"><span>ملاحظة <small>(اختياري)</small></span><input id="e-note" maxlength="120" placeholder="${pay ? 'مثلاً: من الراتب' : 'مثلاً: عشان الإيجار'}" value="${esc(e ? e.n || '' : '')}"></label>
       <div class="hint bad" id="e-err"></div>
     </div>
@@ -857,6 +975,17 @@ function openEntry(debtId, kind, entryId, preset) {
   });
   if ($('#e-m', el)) bindChips($('#e-m', el), (v, b) => { method = method === v ? '' : v; markOn($('#e-m', el), method); });
   if (!e && !preset) setTimeout(() => amtIn.focus(), 260);
+  let img = null, imgChanged = false;
+  const drawImg = () => {
+    $('#e-img', el).innerHTML = img ? `<div class="receipt"><img src="${esc(img)}" alt="صورة الإيصال" data-view><div class="btns"><button type="button" class="btn sm" data-pick>${ic('cam', 's')}غيّرها</button><button type="button" class="btn sm dghost" data-noimg>${ic('trash', 's')}شيلها</button></div></div>`
+      : `<button type="button" class="btn ghost block" data-pick>${ic('cam')}صوّر الإيصال أو اختر صورة</button>`;
+  };
+  drawImg(); if (e && e.img) getImg(e.img).then(v => { if (v && !imgChanged) { img = v; drawImg(); } });
+  $('#e-img', el).addEventListener('click', async ev => {
+    if (ev.target.closest('[data-pick]')) { const v = await pickImage(); if (v) { img = v; imgChanged = true; drawImg(); } }
+    else if (ev.target.closest('[data-noimg]')) { img = null; imgChanged = true; drawImg(); }
+    else if (ev.target.closest('[data-view]')) viewImage(img, d.name);
+  });
   $('#e-save', el).onclick = async () => {
     const err = m => { $('#e-err', el).textContent = m; };
     const a = parseAmount(amtIn.value); if (!(a > 0)) return err('اكتب المبلغ');
@@ -865,9 +994,14 @@ function openEntry(debtId, kind, entryId, preset) {
     const r = pay ? remNoThis - a : remNoThis + a;
     if (pay && r < 0 && !e) { if (!(await ask(`المبلغ أكثر من الباقي بـ ${moneyT(-r)}`, { sub: 'تبي تسجله كذا؟', ok: 'سجّله', cancel: 'أعدّله' }))) return; }
     const note = $('#e-note', el).value.trim();
+    let imgId = e ? e.img : undefined, isz = e ? e.isz : undefined;
+    if (imgChanged) {
+      if (img) { const id = uid(); try { await IDB.put(id, img); } catch (x) { return err('ما قدرت أحفظ الصورة، جرّب مرة ثانية'); } imgCache.set(id, img); imgId = id; isz = img.length; }
+      else { imgId = undefined; isz = undefined; }
+    }
     const wasOpen = c.rem > 0;
-    if (e) Object.assign(e, { a, at, n: note, m: pay ? method : undefined, u: e.u || Date.now() });
-    else d.entries.push({ id: uid(), k: kind, a, at, n: note, m: pay && method ? method : undefined, u: Date.now() });
+    if (e) Object.assign(e, { a, at, n: note, m: pay ? method : undefined, img: imgId, isz, u: e.u || Date.now() });
+    else d.entries.push({ id: uid(), k: kind, a, at, n: note, m: pay && method ? method : undefined, img: imgId, isz, u: Date.now() });
     save(); await closeSheet(); render();
     const nc = calc(d);
     if (wasOpen && nc.rem <= 0) { celebrate(); toast(d.dir === 'out' ? `مبروك! خلصت دين ${d.name} 🎉` : `رجع لك المبلغ كامل من ${d.name} 🎉`); }
@@ -1087,6 +1221,7 @@ function statementText(d, full) {
     L.push(''); L.push('التفاصيل:');
     for (const e of c.es) L.push(`• ${fDate(e.at.slice(0, 10), { y: true })} ${fTime(e.at.slice(11, 16))}: ${e.k === 'pay' ? (out ? 'سداد' : 'استلام') : (out ? 'أخذت' : 'أعطيتك')} ${moneyT(e.a)}${e.n ? ` (${e.n})` : ''}`);
   }
+  if (d.share && !d.share.dead && T) { L.push(''); L.push('تقدر تشوف الحساب أول بأول هنا:'); L.push(shareLink(d.share)); }
   L.push(''); L.push(`تاريخ الكشف: ${fDate(today(), { y: true })}`);
   return L.join('\n');
 }
@@ -1151,6 +1286,7 @@ function openMore(id) {
     <button data-m="statement">${ic('msg')}<span class="grow">كشف حساب</span></button>
     ${d.phone ? `<button data-m="call">${ic('phone')}<span class="grow">اتصال<small style="direction:ltr;text-align:right">${esc(d.phone)}</small></span></button>` : ''}
     <button data-m="planner">${ic('calc')}<span class="grow">${d.plan ? 'تعديل الخطة' : 'خطة السداد'}</span></button>
+    <button data-m="share">${ic('link')}<span class="grow">رابط يشوف فيه الحساب أول بأول</span></button>
     <button data-m="del" class="danger">${ic('trash')}<span class="grow">حذف ${d.dir === 'out' ? 'الدين' : 'المبلغ'} كله</span></button>
   </div></div>`);
   el.addEventListener('click', async e => {
@@ -1160,10 +1296,12 @@ function openMore(id) {
     else if (m === 'statement') openStatement(id);
     else if (m === 'call') location.href = 'tel:' + d.phone.replace(/[^\d+]/g, '');
     else if (m === 'planner') openPlanner(id);
+    else if (m === 'share') openShare(id);
     else if (m === 'del') {
       if (!(await ask(`تحذف «${d.name}» بكل سجله؟`, { sub: 'كل الدفعات بتنحذف معه', ok: 'احذف', danger: true }))) return;
-      const s = snap(); D.debts = D.debts.filter(x => x.id !== id); save(); goHome();
+      const s = snap(), sh = d.share; D.debts = D.debts.filter(x => x.id !== id); save(); goHome();
       toast('انحذف', { label: 'تراجع', fn: () => restore(s) });
+      if (sh) setTimeout(() => dropShare(sh), 8000);
     }
   });
 }
@@ -1207,7 +1345,8 @@ function openSettings() {
     $('#st-wipe', el).onclick = async () => {
       if (!D.debts.length) { toast('ما فيه بيانات'); return; }
       if (!(await ask('تمسح كل البيانات؟', { sub: `${pDebts(D.debts.length)} بكل دفعاتها. ما تقدر ترجعها إلا من نسخة احتياطية.`, ok: 'امسح', danger: true }))) return;
-      const s = snap(); D.debts = []; save(); await closeAll(); goHome(); toast('انمسحت البيانات', { label: 'تراجع', fn: () => restore(s) });
+      const s = snap(), shs = D.debts.filter(d => d.share).map(d => d.share); D.debts = []; save(); await closeAll(); goHome(); toast('انمسحت البيانات', { label: 'تراجع', fn: () => restore(s) });
+      if (shs.length) setTimeout(() => shs.forEach(dropShare), 8000);
     };
   };
   draw();
@@ -1217,9 +1356,10 @@ function applyTheme() {
   $('meta[name=theme-color]').content = D.s.theme === 'light' ? '#f2f6f5' : '#0d1416';
 }
 function toggleHide() { D.s.hide = !D.s.hide; document.body.classList.toggle('hide', D.s.hide); save(); render(); }
-function exportBackup() {
+async function exportBackup() {
   const data = JSON.parse(JSON.stringify(D)); data.s.pin = null;
-  const blob = new Blob([JSON.stringify({ app: 'dyooni', v: 1, at: new Date().toISOString(), data }, null, 1)], { type: 'application/json' });
+  const imgs = {}; for (const d of D.debts) for (const e of d.entries) if (e.img && !imgs[e.img]) { const v = await getImg(e.img); if (v) imgs[e.img] = v; }
+  const blob = new Blob([JSON.stringify({ app: 'dyooni', v: 1, at: new Date().toISOString(), data, imgs })], { type: 'application/json' });
   const name = `dyooni-${today()}.json`;
   const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click();
   setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1500);
@@ -1233,11 +1373,232 @@ $('#file-in').addEventListener('change', async ev => {
     if (!data || !Array.isArray(data.debts)) throw new Error('bad');
     if (!(await ask('ترجع البيانات من هالنسخة؟', { sub: `فيها ${pDebts(data.debts.length)}. البيانات اللي بالجهاز الحين بتنستبدل.`, ok: 'رجّعها' }))) return;
     const s = snap(); const pin = D.s.pin;
-    D = { v: 1, debts: data.debts.map(fixDebt), s: Object.assign(blank().s, data.s || {}, { pin, backup: Date.now() }) };
+    if (j && j.imgs && typeof j.imgs === 'object') for (const [k, v] of Object.entries(j.imgs)) if (typeof v === 'string' && v.startsWith('data:image/')) { try { await IDB.put(k, v); imgCache.set(k, v); } catch (x) { } }
+    D = { v: 1, debts: data.debts.map(fixDebt), views: Array.isArray(data.views) ? data.views : [], s: Object.assign(blank().s, data.s || {}, { pin, backup: Date.now() }) };
     save(); applyTheme(); document.body.classList.toggle('hide', !!D.s.hide); await closeAll(); goHome();
     toast('رجعت البيانات', { label: 'تراجع', fn: () => restore(s) });
   } catch (e) { toast('الملف مو نسخة من ديوني'); }
 });
+
+/* ================= رابط لصاحب الدين (السيرفر المشترك) =================
+   الدين ينرفع كمستند «ديوني» على سيرفر تجارب: صاحب الجوال معه مفتاح التعديل، وصاحب الدين معه رابط العرض بس.
+   ما نستخدم نسخة المستند المحفوظة بالجهاز من sync.js، عشان صور الإيصالات ما تملا مساحة التطبيقات الثانية بنفس الموقع.
+   بدالها نحفظ بصمة لكل سطر انرسل، ونرسل بس اللي تغيّر. */
+const T = window.Tajarib || null;
+function hashS(x) { let h = 2166136261; for (let i = 0; i < x.length; i++) { h ^= x.charCodeAt(i); h = Math.imul(h, 16777619) >>> 0; } return h.toString(36) + x.length.toString(36); }
+const apiErr = code => Object.assign(new Error(code), { code });
+async function apiReq(method, path, body) {
+  if (!T || !T.server()) throw apiErr('nosync');
+  let r; try { r = await fetch(T.server() + path, { method, headers: body ? { 'Content-Type': 'application/json' } : {}, body: body ? JSON.stringify(body) : undefined, cache: 'no-store' }); } catch (e) { throw apiErr('net'); }
+  let j = null; try { j = await r.json(); } catch (e) { }
+  if (!r.ok) throw apiErr((j && j.error) || 'server'); return j;
+}
+function errText(e) {
+  const c = e && (e.code || e);
+  if (c === 'bad_kind') return 'السيرفر يحتاج تحديث عشان يدعم روابط ديوني';
+  if (c === 'nosync') return 'ما قدرت أحمّل المزامنة، تأكد من النت وافتح التطبيق مرة ثانية';
+  return T ? T.errorText(e) : 'صار خطأ، جرّب مرة ثانية';
+}
+const appBase = () => location.href.split('#')[0].split('?')[0];
+const shareLink = sh => T ? T.joinLink(appBase(), sh.id, sh.view) : '';
+const PHOTO_BUDGET = 2200000; /* حد المستند بالسيرفر 3 ميغا، فالصور الأحدث تنرسل لين 2.2 ميغا تقريباً */
+function photoSet(d) {
+  const out = new Set(); if (!d.share || !d.share.photos) return out; let n = 0;
+  for (const e of d.entries.filter(x => x.img).sort((a, b) => byAt(b, a))) { const z = e.isz || 80000; if (n + z > PHOTO_BUDGET) continue; n += z; out.add(e.id); }
+  return out;
+}
+/* اللي يطلع لصاحب الدين: المبالغ والتواريخ وملاحظات الدفعات والخطة. اسم الدين عندك وملاحظتك ورقم جواله ما ينرسلون */
+function shareMeta(d) {
+  const c = CURS.find(x => x[0] === D.s.cur) || CURS[0];
+  return { dir: d.dir, who: D.s.myName || '', cur: [c[0], c[1], c[2], c[3]], due: d.due || '', plan: d.plan ? { a: d.plan.a, f: d.plan.f, start: d.plan.start, pre: d.plan.pre || [] } : null };
+}
+function shareItems(d, photos) { const items = {}; for (const e of d.entries) items['e' + e.id] = { k: e.k, a: e.a, at: e.at, n: e.n || '', m: e.m || '', r: photos.has(e.id) ? 1 : 0 }; return items; }
+const shareSt = {}; let shareRender = null, syncT = 0, syncRetryT = 0;
+const syncing = new Set(), syncAgain = new Set();
+const shareBad = d => !!(d.share && (d.share.dead || (shareSt[d.id] && (shareSt[d.id].s === 'offline' || shareSt[d.id].s === 'error'))));
+function setShareStatus(id, st, e) {
+  const d = getDebt(id), was = d ? shareBad(d) : false;
+  shareSt[id] = { s: st, msg: e ? errText(e) : '' };
+  if (shareRender && shareRender.id === id) shareRender.fn();
+  if (d && V.debt === id && !V.vw && was !== shareBad(d)) render();
+}
+function scheduleSync(ms = 700) { clearTimeout(syncT); syncT = setTimeout(syncAll, ms); }
+async function syncAll() { if (!T) return; retryTrash(); for (const d of D.debts.slice()) if (d.share && !d.share.dead) await syncShare(d); }
+async function syncShare(d) {
+  if (syncing.has(d.id)) { syncAgain.add(d.id); return; }
+  syncing.add(d.id); const sh = d.share;
+  try {
+    sh.sent = sh.sent || {};
+    const photos = photoSet(d), want = shareItems(d, photos), ops = [];
+    for (const [id, it] of Object.entries(want)) { const h = hashS(JSON.stringify(it)); if (sh.sent[id] !== h) ops.push({ id, it, h }); }
+    for (const e of d.entries) if (photos.has(e.id) && sh.sent['r' + e.id] !== e.img) ops.push({ id: 'r' + e.id, img: e.img, h: e.img });
+    for (const id of Object.keys(sh.sent)) if (!(id in want) && !(id[0] === 'r' && photos.has(id.slice(1)))) ops.push({ id, del: true, h: null });
+    const meta = shareMeta(d), mh = hashS(JSON.stringify(meta)); let metaDirty = sh.mh !== mh;
+    if (!ops.length && !metaDirty) { setShareStatus(d.id, 'ok'); return; }
+    setShareStatus(d.id, 'saving');
+    let i = 0;
+    while (i < ops.length || metaDirty) {
+      const items = {}, done = [], u = Date.now(); let size = 0;
+      while (i < ops.length) {
+        const op = ops[i]; let it;
+        if (op.del) it = { del: 1, u };
+        else if (op.img) { const data = await getImg(op.img); if (!data) { i++; continue; } it = { img: data, u }; }
+        else it = { ...op.it, u };
+        const z = op.id.length + JSON.stringify(it).length + 8;
+        if (done.length && (size + z > 900000 || done.length >= 400)) break;
+        items[op.id] = it; size += z; done.push(op); i++;
+      }
+      const body = { k: sh.edit, items }; if (metaDirty) body.meta = { ...meta, u };
+      await apiReq('PATCH', `/api/docs/${encodeURIComponent(sh.id)}`, body);
+      if (d.share !== sh) return; /* انوقف الرابط وهو يرفع */
+      for (const op of done) { if (op.h === null) delete sh.sent[op.id]; else sh.sent[op.id] = op.h; }
+      if (metaDirty) { sh.mh = mh; metaDirty = false; }
+      saveQuiet();
+    }
+    setShareStatus(d.id, 'ok');
+  } catch (e) {
+    if ((e.code === 'not_found' || e.code === 'bad_key') && d.share === sh) { sh.dead = e.code; saveQuiet(); }
+    setShareStatus(d.id, e.code === 'net' ? 'offline' : 'error', e);
+    if (['net', 'server', 'rate'].includes(e.code)) { clearTimeout(syncRetryT); syncRetryT = setTimeout(() => scheduleSync(0), e.code === 'rate' ? 60000 : 20000); }
+  } finally {
+    syncing.delete(d.id);
+    if (syncAgain.delete(d.id)) scheduleSync(200);
+  }
+}
+async function createShare(d, photos) {
+  if (!T) throw apiErr('nosync');
+  const meta = shareMeta(d); const r = await T.create('dyooni', { meta: { ...meta, u: Date.now() } }); T.forget(r.id);
+  d.share = { id: r.id, edit: r.edit, view: r.view, photos: photos !== false, sent: {}, mh: hashS(JSON.stringify(meta)), ts: Date.now() };
+  saveQuiet(); await syncShare(d);
+}
+/* حذف المستند من السيرفر. إذا ما فيه نت، نحاول مرة ثانية بعدين */
+async function dropShare(sh) {
+  if (D.debts.some(x => x.share && x.share.id === sh.id)) return;
+  try { if (!T) throw apiErr('nosync'); await T.remove(sh.id, sh.edit); }
+  catch (e) { if (e.code !== 'not_found' && e.code !== 'bad_key') { D.s.trash = (D.s.trash || []).filter(x => x.id !== sh.id).concat([{ id: sh.id, edit: sh.edit }]); saveQuiet(); } }
+}
+async function retryTrash() {
+  for (const x of (D.s.trash || []).slice()) {
+    try { await T.remove(x.id, x.edit); } catch (e) { if (e.code !== 'not_found' && e.code !== 'bad_key') continue; }
+    D.s.trash = (D.s.trash || []).filter(y => y.id !== x.id); saveQuiet();
+  }
+}
+function shareMsg(d) {
+  return d.dir === 'out' ? `السلام عليكم ${d.name}،\nهذا رابط تشوف فيه حسابنا أول بأول: كم سددت لك وكم باقي، ويتحدّث كل ما سددت:\n${shareLink(d.share)}`
+    : `السلام عليكم ${d.name}،\nهذا رابط تشوف فيه حسابنا أول بأول: كم سددت وكم باقي عليك:\n${shareLink(d.share)}`;
+}
+function openShare(id) {
+  const d = getDebt(id); if (!d) return;
+  let busy = false, photosPref = true;
+  const el = openSheet(`${sheetHead(`رابط لـ${esc(d.name)}`, 'يشوف فيه الحساب أول بأول')}<div class="sh-body" id="sh-b"></div><div class="sh-foot" id="sh-f"></div>`, { onClose: () => { shareRender = null; } });
+  const draw = () => {
+    const sh = d.share, out = d.dir === 'out', hasImg = d.entries.some(e => e.img);
+    const me = $('#sh-me', el), keep = me && document.activeElement === me ? { v: me.value, p: me.selectionStart } : null;
+    const nameF = `<label class="fld"><span>اسمك <small>(يطلع له عشان يعرف الحساب مع مين)</small></span><input id="sh-me" maxlength="40" placeholder="مثلاً: محمد" autocomplete="off" value="${esc(keep ? keep.v : D.s.myName || '')}"></label>`;
+    const photoT = hasImg ? `<button class="set-r" style="width:100%;margin-bottom:10px" data-sh="photos"><span class="grow"><b>صور الإيصالات</b><small>تطلع له مع الدفعات اللي لها صورة</small></span><span class="sw ${(sh ? sh.photos : photosPref) ? 'on' : ''}"></span></button>` : '';
+    let b, f;
+    if (!T) { b = `<div class="alert bad">${ic('alert')}<span class="grow">${errText('nosync')}</span></div>`; f = ''; }
+    else if (!sh || sh.dead) {
+      b = (sh && sh.dead ? `<div class="alert warn" style="margin-bottom:12px">${ic('alert')}<span class="grow">الرابط القديم انتهى أو انحذف من السيرفر. سوّ رابط جديد وأرسله له.</span></div>` : '')
+        + `<ul class="ulist"><li><span>👀</span><span>يشوف ${out ? 'المبلغ اللي أخذته منه' : 'المبلغ اللي عنده'}، وكل دفعة بتاريخها ووقتها، والباقي، والقسط الجاي</span></li>
+          <li><span>⚡</span><span>كل ما سجّلت أو عدّلت دفعة تتحدّث عنده على طول</span></li>
+          <li><span>🔒</span><span>للعرض بس، ما يقدر يعدّل شي، وتقدر توقف الرابط متى ما تبي</span></li>
+          <li><span>🙈</span><span>الاسم اللي مسجّله فيه عندك، وملاحظتك على الدين، ورقم جواله ما يطلعون له</span></li></ul>`
+        + nameF + photoT + `<p class="hint">معلومات هالدين بس تنحفظ على سيرفر تجارب، وباقي ديونك تبقى بجوالك.</p>`;
+      f = `<button class="btn pri" data-sh="create" ${busy ? 'disabled' : ''}>${ic('link')}${busy ? 'لحظة…' : 'سوّ الرابط'}</button>`;
+    } else {
+      const st = shareSt[d.id] || { s: 'ok' };
+      const tx = st.s === 'saving' ? 'يرفع آخر التعديلات…' : st.s === 'offline' ? 'ينتظر النت، وأول ما يرجع يرفع التعديلات' : st.s === 'error' ? st.msg : 'محدّث، يشوف نفس اللي عندك';
+      b = `<div class="stat ${st.s}"><i></i><span class="grow">${esc(tx)}</span>${st.s === 'offline' || st.s === 'error' ? '<button class="link" data-sh="retry">جرّب الحين</button>' : ''}</div>
+        <div class="linkbox"><input readonly value="${esc(shareLink(sh))}" aria-label="الرابط"><button class="btn sm" data-sh="copy">${ic('copy', 's')}نسخ</button></div>
+        ${nameF}${photoT}
+        <div class="menu-list"><button data-sh="rotate">${ic('refresh')}<span class="grow">غيّر الرابط<small>الرابط القديم يوقف، وترسل له الجديد</small></span></button>
+        <button data-sh="stop" class="danger">${ic('trash')}<span class="grow">وقّف الرابط<small>ينحذف من السيرفر وما عاد يقدر يفتحه</small></span></button></div>`;
+      f = `<button class="btn pri" data-sh="wa" ${busy ? 'disabled' : ''}>${ic('msg')}أرسله بالواتساب</button>${navigator.share ? `<button class="btn" data-sh="share" aria-label="مشاركة">${ic('share')}</button>` : ''}`;
+    }
+    $('#sh-b', el).innerHTML = b; $('#sh-f', el).innerHTML = f; $('#sh-f', el).hidden = !f;
+    const n = $('#sh-me', el);
+    if (n) { n.onchange = () => { D.s.myName = n.value.trim().slice(0, 40); save(); }; if (keep) { n.focus(); n.setSelectionRange(keep.p, keep.p); } }
+  };
+  shareRender = { id, fn: draw };
+  el.addEventListener('click', async ev => {
+    const btn = ev.target.closest('[data-sh]'); if (!btn || btn.disabled) return; const a = btn.dataset.sh; const sh = d.share;
+    if (a === 'create') {
+      const n = $('#sh-me', el); if (n) { D.s.myName = n.value.trim().slice(0, 40); saveQuiet(); }
+      busy = true; draw();
+      try { await createShare(d, sh ? sh.photos : photosPref); toast('الرابط جاهز، أرسله له'); } catch (x) { toast(errText(x)); }
+      busy = false; draw(); render();
+    } else if (a === 'photos') {
+      if (sh) { sh.photos = !sh.photos; save(); } else photosPref = !photosPref; draw();
+    } else if (a === 'copy') copyText(shareLink(sh));
+    else if (a === 'wa') window.open(`https://wa.me/${waPhone(d.phone || '')}?text=${encodeURIComponent(shareMsg(d))}`, '_blank', 'noopener');
+    else if (a === 'share') navigator.share({ text: shareMsg(d) }).catch(() => { });
+    else if (a === 'retry') scheduleSync(0);
+    else if (a === 'rotate') {
+      if (!(await ask('تغيّر الرابط؟', { sub: 'الرابط القديم يوقف، ولازم ترسل له الجديد', ok: 'غيّره' }))) return;
+      try { const r = await T.rotateKeys(sh.id, sh.edit, 'view'); sh.view = r.view; saveQuiet(); draw(); toast('تغيّر الرابط، أرسل له الجديد'); } catch (x) { toast(errText(x)); }
+    } else if (a === 'stop') {
+      if (!(await ask('توقف الرابط؟', { sub: `${d.name} ما عاد يقدر يفتحه، وتقدر تسوي رابط جديد بعدين`, ok: 'وقّفه', danger: true }))) return;
+      try { await T.remove(sh.id, sh.edit); } catch (x) { if (x.code !== 'not_found' && x.code !== 'bad_key') { toast(errText(x)); return; } }
+      d.share = null; delete shareSt[d.id]; saveQuiet(); draw(); render(); toast('وقف الرابط');
+    }
+  });
+  draw();
+  if (d.share && !d.share.dead) scheduleSync(0);
+}
+
+/* ================= صفحة الكشف للي وصله الرابط ================= */
+let viewBypass = false, viewTimer = 0;
+/* نحوّل المستند لدين عادي ونقلب الاتجاه: اللي عليك عنده يصير له عندك */
+function remoteDebt(body) {
+  const m = (body && body.meta) || {}; const entries = [], imgs = {}; let upd = +m.u || 0;
+  for (const [id, it] of Object.entries((body && body.items) || {})) {
+    if (!it || it.del) continue; upd = Math.max(upd, +it.u || 0);
+    if (id[0] === 'e') { const e = { id: id.slice(1), k: it.k === 'pay' ? 'pay' : 'loan', a: +it.a, at: str(it.at, 20), n: str(it.n, 200), m: str(it.m, 30), u: +it.u || 0 }; if (Number.isSafeInteger(e.a) && e.a > 0 && validDT(e.at)) entries.push(e); }
+    else if (id[0] === 'r' && typeof it.img === 'string' && /^data:image\/(jpeg|png|webp);base64,[\w+/=]+$/.test(it.img)) imgs[id.slice(1)] = it.img;
+  }
+  const pl = m.plan && +m.plan.a > 0 && validISO(m.plan.start) && FREQ[m.plan.f] ? { a: +m.plan.a, f: m.plan.f, start: m.plan.start, pre: Array.isArray(m.plan.pre) ? m.plan.pre.map(String) : [] } : null;
+  const cu = Array.isArray(m.cur) && m.cur.length === 4 && [0, 1, 2, 3].includes(+m.cur[3]) ? [str(m.cur[0], 5), str(m.cur[1], 30), str(m.cur[2], 6), +m.cur[3]] : null;
+  return { d: { id: 'v', name: str(m.who, 40).trim() || 'صاحب الحساب', dir: m.dir === 'in' ? 'out' : 'in', due: validISO(m.due) ? m.due : '', plan: pl, entries }, cur: cu, imgs, upd };
+}
+function viewErr(c) { return c === 'not_found' || c === 'bad_key' ? 'الرابط انتهى أو وقّفه صاحبه' : c === 'net' ? 'ما قدرت أوصل للسيرفر، تأكد من النت' : errText(c); }
+function viewerHTML() {
+  const vw = V.vw, x = vw.data;
+  if (!x || ((vw.err === 'not_found' || vw.err === 'bad_key'))) {
+    CUR_OV = null;
+    return `<header class="top"><button class="ibtn" data-act="vback" aria-label="رجوع">${ic('back')}</button><div class="ttl">كشف حساب</div><button class="ibtn" data-act="vrefresh" aria-label="تحديث">${ic('refresh')}</button></header>
+      <div class="empty"><div class="big">${vw.loading ? '⏳' : '🔗'}</div><b>${vw.loading ? 'لحظة، أجيب الحساب…' : viewErr(vw.err)}</b>${vw.loading ? '' : `<p>${vw.err === 'net' ? 'جرّب مرة ثانية بعد شوي' : 'اطلب منه يرسل لك رابط جديد'}</p>`}${(D.views || []).some(v => v.id === vw.id) && !vw.loading ? '<button class="btn" data-act="rmview">شيله من قائمتي</button>' : ''}</div>`;
+  }
+  CUR_OV = x.cur;
+  return detailHTML(x.d, calc(x.d), { ro: true, imgs: x.imgs, upd: x.upd, err: vw.err });
+}
+function openView(j, push = true) {
+  const s = (D.views || []).find(x => x.id === j.id);
+  V.vw = { id: j.id, key: j.key, rev: 0, err: '', loading: true, data: s && s.cache ? remoteDebt(s.cache) : null };
+  if (push) { history.pushState({ vw: j.id }, ''); navDepth++; }
+  render(); window.scrollTo(0, 0); fetchView();
+  clearInterval(viewTimer); viewTimer = setInterval(() => { if (V.vw && !document.hidden) fetchView(); }, 15000);
+}
+function closeView() { V.vw = null; CUR_OV = null; clearInterval(viewTimer); if (viewBypass) { viewBypass = false; showLock(); } }
+async function fetchView() {
+  const vw = V.vw; if (!vw || vw.busy) return; vw.busy = true; let changed = false;
+  try {
+    const r = await apiReq('GET', `/api/docs/${encodeURIComponent(vw.id)}?k=${encodeURIComponent(vw.key)}&rev=${vw.rev}`);
+    if (!r.same) {
+      if (r.kind && r.kind !== 'dyooni') throw apiErr('not_found');
+      vw.rev = r.rev; vw.data = remoteDebt(r.body); changed = true; rememberView(vw, r.body || {});
+    }
+    if (vw.err) { vw.err = ''; changed = true; }
+  } catch (e) { if (vw.err !== e.code) { vw.err = e.code; changed = true; } }
+  vw.busy = false; if (vw.loading) { vw.loading = false; changed = true; }
+  if (changed && V.vw === vw) { const y = window.scrollY; render(); window.scrollTo(0, y); }
+}
+/* نحفظ الكشف بقائمتك (بدون الصور) عشان ترجع له من التطبيق */
+function rememberView(vw, body) {
+  if (D.debts.some(d => d.share && d.share.id === vw.id)) return;
+  const cache = { meta: body.meta || null, items: {} }; for (const [id, it] of Object.entries(body.items || {})) if (id[0] !== 'r') cache.items[id] = it;
+  D.views = (D.views || []).filter(x => x.id !== vw.id); D.views.unshift({ id: vw.id, key: vw.key, ts: Date.now(), cache }); D.views = D.views.slice(0, 20); saveQuiet();
+}
 
 /* ================= القفل ================= */
 async function hashPin(pin, salt) {
@@ -1269,7 +1630,9 @@ document.addEventListener('keydown', e => { if (document.body.classList.contains
 $('#lock-forgot').onclick = async () => {
   if (!(await ask('نسيت الرقم السري؟', { sub: 'ما فيه طريقة ترجعه. تقدر تمسح كل البيانات وتبدأ من جديد، وبعدها ترجّع نسخة احتياطية لو عندك.', ok: 'امسح وابدأ من جديد', danger: true }))) return;
   if (!(await ask('متأكد؟ كل الديون والدفعات بتنمسح', { ok: 'إيه امسح', danger: true }))) return;
+  const shs = D.debts.filter(d => d.share).map(d => d.share);
   D = blank(); save(); applyTheme(); document.body.classList.remove('locked', 'hide'); render();
+  IDB.clear().catch(() => { }); imgCache.clear(); shs.forEach(dropShare);
 };
 function setupPin(after) {
   let first = null;
@@ -1307,6 +1670,12 @@ const ACT = {
   edit: () => openDebtForm(V.debt),
   call: () => { const d = getDebt(V.debt); if (d && d.phone) location.href = 'tel:' + d.phone.replace(/[^\d+]/g, ''); },
   toggleDone: () => { V.showDone = !V.showDone; render(); },
+  share: () => openShare(V.debt),
+  openview: b => { const s = (D.views || []).find(x => x.id === b.dataset.id); if (s) openView(s, true); },
+  vback: () => { if (history.state && history.state.vw && navDepth > 0) history.back(); else { history.replaceState({}, '', appBase()); closeView(); V.debt = null; render(); window.scrollTo(0, 0); } },
+  vrefresh: () => { if (V.vw) { V.vw.rev = 0; fetchView(); toast('يحدّث…'); } },
+  vimg: b => { const x = V.vw && V.vw.data; const src = x && x.imgs[b.dataset.id]; if (src) viewImage(src); },
+  rmview: async () => { if (!V.vw) return; if (!(await ask('تشيل هالكشف من قائمتك؟', { sub: 'لو فتحت الرابط مرة ثانية يرجع', ok: 'شيله' }))) return; D.views = (D.views || []).filter(x => x.id !== V.vw.id); saveQuiet(); ACT.vback(); },
   backup: () => exportBackup(),
   snooze: () => { D.s.snooze = Date.now() + 14 * 864e5; save(); render(); }
 };
@@ -1318,9 +1687,14 @@ document.addEventListener('click', e => {
 /* ================= البداية ================= */
 applyTheme();
 if (D.s.hide) document.body.classList.add('hide');
-history.replaceState({}, '');
-render();
-showLock();
+/* إذا انفتح التطبيق من رابط كشف، نعرض الكشف على طول بدون قفل (القفل يحمي ديونك أنت، والكشف مو منها) */
+const J0 = T && T.parseJoin(location.hash);
+if (J0) { viewBypass = !!D.s.pin; document.body.classList.remove('locked'); history.replaceState({ vw: J0.id }, ''); openView(J0, false); }
+else { history.replaceState({}, ''); render(); showLock(); }
+window.addEventListener('hashchange', () => { const j = T && T.parseJoin(location.hash); if (j && !(V.vw && V.vw.id === j.id) && !document.body.classList.contains('locked')) openView(j, true); });
+window.addEventListener('online', () => { if (D.debts.some(d => d.share)) scheduleSync(0); if (V.vw) fetchView(); });
+document.addEventListener('visibilitychange', () => { if (document.hidden) return; if (V.vw) fetchView(); if (D.debts.some(d => d.share && !d.share.dead)) scheduleSync(300); });
+setTimeout(() => { if (D.debts.some(d => d.share) || (D.s.trash || []).length) syncAll(); gcImages(); }, 2500);
 /* يحدّث "اليوم" و"بكرة" لو بقي التطبيق مفتوح لين اليوم الثاني */
 let lastDay = today();
 setInterval(() => { if (today() !== lastDay) { lastDay = today(); if (!sheets.length) render(); } }, 60000);
