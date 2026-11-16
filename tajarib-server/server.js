@@ -38,6 +38,10 @@ async function migrate() {
     create table if not exists branch_keys(id text primary key, doc_id text not null references docs(id) on delete cascade, hash text not null unique, key text not null, root text not null, label text not null default '', created_at bigint not null);
     create index if not exists branch_keys_doc on branch_keys(doc_id);
     alter table branch_keys add column if not exists can_edit boolean not null default false;
+    alter table docs add column if not exists seen_at bigint not null default 0;
+    alter table doc_subs add column if not exists label text not null default '';
+    create table if not exists reminders(endpoint text not null, tag text not null, day text not null, title text not null, body text not null default '', url text not null default '', keys jsonb not null, sent boolean not null default false, created_at bigint not null, primary key(endpoint, tag));
+    create index if not exists reminders_day on reminders(day) where not sent;
     create table if not exists doc_snaps(doc_id text not null references docs(id) on delete cascade, tag text not null, rev int not null, people int not null default 0, body jsonb not null, created_at bigint not null, primary key(doc_id, tag));
   `);
 }
@@ -104,6 +108,8 @@ route('GET', '/api/docs/:id', async (req, b, p, url) => {
   const doc = await loadDoc(p.id); let role = roleOf(doc, url.searchParams.get('k')), br = null;
   if (!role) { br = await branchOf(doc, url.searchParams.get('k')); if (br) role = br.can_edit ? 'edit' : 'view'; } if (!role) fail(403, 'bad_key');
   if (now() - +doc.last_read > 864e5) q('update docs set last_read=$1 where id=$2', [now(), doc.id]).catch(() => {});
+  /* ديوني: نسجّل آخر مرة انفتح فيها رابط الكشف، عشان صاحب الدين يعرف إنه شافه */
+  if (role === 'view' && doc.kind === 'dyooni' && now() - +(doc.seen_at || 0) > 60e3) q('update docs set seen_at=$1 where id=$2', [now(), doc.id]).catch(() => {});
   /* رابط العرض بشجرتنا: رقم نسخة خاص يتغيّر كمان يوم تنفتح رسالة، عشان توصله بنصها */
   const vb = role === 'view' && doc.kind === 'shajara', rev = vb ? doc.rev * 1000 + openedCaps(doc.body) % 1000 : doc.rev;
   const bx = br && br.can_edit ? { branch: true } : {};
@@ -121,7 +127,7 @@ route('PATCH', '/api/docs/:id', async (req, b, p) => {
     const r = await c.query('select * from docs where id=$1 for update', [str(p.id, 40)]);
     const doc = r.rows[0]; if (!doc) fail(404, 'not_found');
     let br = null; if (roleOf(doc, b.k) !== 'edit') { br = await branchOf(doc, b.k, c); if (!br || !br.can_edit) fail(403, 'bad_key'); }
-    const body = cleanBody(doc.body); let changed = 0, rejected = 0, dels = 0; const born = [];
+    const body = cleanBody(doc.body); let changed = 0, rejected = 0, dels = 0; const born = [], paid = [];
     const allow = br ? branchAllow(body, br.root, items) : null;
     /* نسخة يومية (شجرتنا): أول تعديل باليوم يحفظ الشجرة مثل ما كانت قبله */
     if (doc.kind === 'shajara' && Object.keys(items).length) await snapIfNeeded(c, doc, 'd:' + todayISO());
@@ -136,7 +142,10 @@ route('PATCH', '/api/docs/:id', async (req, b, p) => {
       if (allow && !allow.has(id)) { rejected++; continue; }
       const cur = body.items[id];
       if (!cur && doc.kind === 'shajara' && it.t === 'p' && !it.del && it.f && !it.unk) born.push(it);
-      if (!cur || +it.u >= +(cur.u || 0)) { body.items[id] = it; changed++; }
+      if (!cur || +it.u >= +(cur.u || 0)) {
+        if (doc.kind === 'dyooni' && id[0] === 'e' && !it.del && it.k === 'pay' && (!cur || cur.del)) paid.push(it);
+        body.items[id] = it; changed++;
+      }
     }
     if (!br && meta && Number.isFinite(+meta.u) && (!body.meta || +meta.u >= +(body.meta.u || 0))) { body.meta = meta; changed++; }
     const cut = now() - 60 * 864e5;
@@ -147,6 +156,7 @@ route('PATCH', '/api/docs/:id', async (req, b, p) => {
     if (changed) { rev = doc.rev + 1; await c.query('update docs set body=$1, rev=$2, updated_at=$3 where id=$4', [json, rev, now(), doc.id]); }
     await c.query('commit');
     if (born.length) birthNews(doc.id, body, born);
+    if (paid.length) payNews(doc.id, body.meta, paid);
     if (bigDel) notifyDoc(doc.id, { title: '⚠️ انحذف ناس كثير من الشجرة', body: `انحذف ${bigDel} شخص من «${str((body.meta && body.meta.name) || 'شجرتنا', 60)}» خلال دقائق. إذا كان بالغلط، رجّعها من «المزيد» ← «النسخ اليومية بالسيرفر».`, url: SITE + 'shajara/', tag: 'del-' + doc.id }, 'edit').catch(() => {});
     return { rev, applied: changed, ...(rejected ? { rejected } : {}) };
   } catch (e) { await c.query('rollback').catch(() => {}); throw e; }
@@ -245,10 +255,12 @@ async function vapid() {
 }
 /* who: news (الإضافات والحجوزات) أو occ (المناسبات) أو edit (أصحاب رابط التعديل بس) */
 async function notifyDoc(docId, payload, who = 'news') {
-  await vapid(); const cond = who === 'occ' ? 'occ' : who === 'wq' ? 'wq' : who === 'edit' ? "news and role='edit'" : 'news';
-  const subs = (await q(`select endpoint, keys from doc_subs where doc_id=$1 and ${cond}`, [docId])).rows; let n = 0;
+  await vapid(); const cond = who === 'occ' ? 'occ' : who === 'wq' ? 'wq' : who === 'edit' ? "news and role='edit'" : who === 'view' ? "news and role='view'" : 'news';
+  const subs = (await q(`select endpoint, keys, label from doc_subs where doc_id=$1 and ${cond}`, [docId])).rows; let n = 0;
   for (const s of subs) {
-    try { await webpush.sendNotification({ endpoint: s.endpoint, keys: s.keys }, JSON.stringify(payload), { TTL: 6 * 3600 }); n++; }
+    /* {label}: الاسم اللي سمّاه فيه صاحب الجهاز (ديوني)، والتطبيقات الثانية ما تستخدمه */
+    const pl = typeof payload.body === 'string' && payload.body.includes('{label}') ? { ...payload, body: payload.body.replace(/\{label\}/g, s.label || payload.fallback || '') } : payload;
+    try { await webpush.sendNotification({ endpoint: s.endpoint, keys: s.keys }, JSON.stringify(pl), { TTL: 6 * 3600 }); n++; }
     catch (e) { if (e.statusCode === 404 || e.statusCode === 410) await q('delete from doc_subs where endpoint=$1', [s.endpoint]); else console.error('push', e.statusCode || e.message); }
   }
   return n;
@@ -297,18 +309,101 @@ route('POST', '/api/docs/:id/suggest/:sid', async (req, b, p) => {
   return { ok: true };
 });
 /* التنبيهات: صاحب رابط التعديل، أو أي أحد معه رابط شجرتنا (عشان تنبيه المواليد للعائلة) */
-const canSub = (doc, k) => { const r = roleOf(doc, k); return r === 'edit' || (r === 'view' && doc.kind === 'shajara'); };
+const canSub = (doc, k) => { const r = roleOf(doc, k); return r === 'edit' || (r === 'view' && (doc.kind === 'shajara' || doc.kind === 'dyooni')); };
 route('POST', '/api/docs/:id/push', async (req, b, p) => {
   const doc = await loadDoc(p.id); if (!canSub(doc, b.k)) { if (await branchOf(doc, b.k)) fail(403, 'branch_push'); fail(403, 'bad_key'); }
   const s = b.sub || {}; if (!/^https:\/\//.test(s.endpoint || '') || !s.keys || !s.keys.p256dh || !s.keys.auth) fail(400, 'bad_sub');
   const o = isObj(b.opts) ? b.opts : null, news = o && typeof o.news === 'boolean' ? o.news : true, occ = !!(o && o.occ === true && doc.kind === 'shajara'), wq = !!(o && o.wq === true && doc.kind === 'shajara');
   if (o && !news && !occ && !wq) { await q('delete from doc_subs where endpoint=$1 and doc_id=$2', [str(s.endpoint, 1000), doc.id]); return { ok: true, off: true }; }
-  await q(`insert into doc_subs(endpoint,doc_id,keys,created_at,news,occ,role,wq) values($1,$2,$3,$4,$5,$6,$7,$8) on conflict(endpoint,doc_id) do update set keys=excluded.keys, role=excluded.role${o ? ', news=excluded.news, occ=excluded.occ, wq=excluded.wq' : ''}`,
-    [str(s.endpoint, 1000), doc.id, JSON.stringify({ p256dh: str(s.keys.p256dh, 200), auth: str(s.keys.auth, 100) }), now(), news, occ, roleOf(doc, b.k), wq]);
+  const label = o && typeof o.label === 'string' ? str(o.label, 40).trim() : '';
+  await q(`insert into doc_subs(endpoint,doc_id,keys,created_at,news,occ,role,wq,label) values($1,$2,$3,$4,$5,$6,$7,$8,$9) on conflict(endpoint,doc_id) do update set keys=excluded.keys, role=excluded.role${o ? ', news=excluded.news, occ=excluded.occ, wq=excluded.wq, label=excluded.label' : ''}`,
+    [str(s.endpoint, 1000), doc.id, JSON.stringify({ p256dh: str(s.keys.p256dh, 200), auth: str(s.keys.auth, 100) }), now(), news, occ, roleOf(doc, b.k), wq, label]);
   return { ok: true };
 });
 route('DELETE', '/api/docs/:id/push', async (req, b, p) => { const doc = await loadDoc(p.id); if (!canSub(doc, b.k)) fail(403, 'bad_key'); await q('delete from doc_subs where endpoint=$1 and doc_id=$2', [str(b.endpoint, 1000), doc.id]); return { ok: true }; });
 route('POST', '/api/docs/:id/push/test', async (req, b, p) => { const doc = await loadDoc(p.id); if (roleOf(doc, b.k) !== 'edit') fail(403, 'bad_key'); limit(req, 'ptest', 10, 600e3); return { sent: await notifyDoc(doc.id, { title: '🔔 التنبيهات شغّالة', body: 'بيوصلك تنبيه أول ما يجيك حجز جديد.', url: SITE + 'mawid/', tag: 'test' }) }; });
+
+/* ---------- ديوني ---------- */
+const addDaysISO = (iso, n) => { const d = new Date(iso + 'T12:00:00Z'); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };
+function fmtMoney(a, cur) {
+  const dec = Array.isArray(cur) && [0, 1, 2, 3].includes(+cur[3]) ? +cur[3] : 2, sym = Array.isArray(cur) ? str(cur[2], 6) : 'ر.س';
+  const v = Math.abs(int(a) || 0), m = 10 ** dec, i = Math.floor(v / m), f = v % m;
+  return i.toLocaleString('en-US') + (f ? '.' + String(f).padStart(dec, '0') : '') + ' ' + sym;
+}
+/* دفعة جديدة بكشف ديوني: تنبيه للي معه رابط العرض ومفعّل التنبيهات */
+function payNews(docId, meta, paid) {
+  const m = isObj(meta) ? meta : {}, who = str(m.who, 40).trim() || 'صاحب الحساب', amt = fmtMoney(paid.reduce((t, x) => t + (int(x.a) || 0), 0), m.cur);
+  const many = paid.length > 1 ? ` (${paid.length === 2 ? 'دفعتين' : paid.length + ' دفعات'})` : '';
+  notifyDoc(docId, m.dir === 'in' ? { title: '🧾 دفعة انسجّلت', body: `${who} سجّل إنه استلم منك ${amt}${many}`, url: SITE + 'dyooni/#v=' + docId, tag: 'pay-' + docId }
+    : { title: '💸 وصلتك دفعة', body: `${who} سدد لك ${amt}${many}`, url: SITE + 'dyooni/#v=' + docId, tag: 'pay-' + docId }, 'view').catch(() => {});
+}
+/* صاحب الدين يأكد من رابط العرض إنه استلم الدفعة، أو يقول ما وصلته. s فاضي يلغي اللي اختاره */
+route('POST', '/api/docs/:id/ack', async (req, b, p) => {
+  limit(req, 'ack', 60, 3600e3);
+  const st = str(b.s, 4), eid = str(b.e, 60); if (!['ok', 'no', ''].includes(st)) fail(400, 'bad_status'); if (!eid) fail(400, 'bad_body');
+  const c = await pool.connect(); let doc, ent, rev;
+  try {
+    await c.query('begin');
+    doc = (await c.query('select * from docs where id=$1 for update', [str(p.id, 40)])).rows[0]; if (!doc) fail(404, 'not_found');
+    if (doc.kind !== 'dyooni') fail(400, 'bad_kind'); if (!roleOf(doc, b.k)) fail(403, 'bad_key');
+    const body = cleanBody(doc.body); ent = body.items['e' + eid]; if (!ent || ent.del || ent.k !== 'pay') fail(404, 'not_found');
+    body.items['a' + eid] = st ? { s: st, a: int(ent.a), n: str(b.n, 200).trim(), u: now() } : { del: 1, u: now() };
+    rev = doc.rev + 1; await c.query('update docs set body=$1, rev=$2, updated_at=$3 where id=$4', [JSON.stringify(body), rev, now(), doc.id]);
+    await c.query('commit');
+  } catch (e) { await c.query('rollback').catch(() => {}); throw e; } finally { c.release(); }
+  if (st) {
+    const m = isObj(doc.body.meta) ? doc.body.meta : {}, amt = fmtMoney(ent.a, m.cur), n = str(b.n, 100).trim();
+    notifyDoc(doc.id, st === 'ok' ? { title: '✅ تأكيد استلام', body: `{label} أكد إنه استلم ${amt}`, fallback: 'صاحب الدين', url: SITE + 'dyooni/#d=' + doc.id, tag: 'ack-' + doc.id + '-' + eid }
+      : { title: '⚠️ دفعة ما وصلت', body: `{label} يقول إن دفعة ${amt} ما وصلته${n ? ': ' + n : ''}`, fallback: 'صاحب الدين', url: SITE + 'dyooni/#d=' + doc.id, tag: 'ack-' + doc.id + '-' + eid }, 'edit').catch(() => {});
+  }
+  return { ok: true, rev };
+});
+/* لصاحب رابط التعديل: آخر مرة انفتح فيها الكشف، والدفعات اللي أكدها أو قال ما وصلته */
+route('GET', '/api/docs/:id/status', async (req, b, p, url) => {
+  limit(req, 'read', 3000, 600e3);
+  const doc = await loadDoc(p.id); if (roleOf(doc, url.searchParams.get('k')) !== 'edit') fail(403, 'bad_key'); if (doc.kind !== 'dyooni') fail(400, 'bad_kind');
+  if (now() - +doc.last_read > 864e5) q('update docs set last_read=$1 where id=$2', [now(), doc.id]).catch(() => {});
+  const acks = {}; for (const [id, it] of Object.entries((doc.body && doc.body.items) || {})) if (id[0] === 'a' && isObj(it) && !it.del) acks[id.slice(1)] = { s: str(it.s, 4), a: int(it.a), n: str(it.n, 200), u: int(it.u) };
+  return { seen: +doc.seen_at || 0, acks };
+});
+/* تذكير الأقساط: الجهاز يرسل قائمة التذكيرات الجاية (تنحسب عنده من الخطط)، والسيرفر يرسلها الساعة 9 الصبح بتوقيت الرياض.
+   كل إرسال يستبدل اللي ما انرسل للحين لنفس الجهاز */
+const subOf = s => (isObj(s) && /^https:\/\//.test(s.endpoint || '') && isObj(s.keys) && s.keys.p256dh && s.keys.auth) ? { ep: str(s.endpoint, 1000), keys: JSON.stringify({ p256dh: str(s.keys.p256dh, 200), auth: str(s.keys.auth, 100) }) } : null;
+route('POST', '/api/remind', async (req, b) => {
+  limit(req, 'remind', 120, 3600e3);
+  const sub = subOf(b.sub); if (!sub) fail(400, 'bad_sub');
+  const list = Array.isArray(b.items) ? b.items.slice(0, 300) : [], t0 = todayISO(), max = addDaysISO(t0, 400);
+  const c = await pool.connect(); let n = 0;
+  try {
+    await c.query('begin');
+    await c.query('delete from reminders where endpoint=$1 and not sent', [sub.ep]);
+    for (const it of list) {
+      if (!isObj(it)) continue; const day = str(it.day, 10), tag = str(it.tag, 60);
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(day) || day < t0 || day > max || !tag) continue;
+      const h = /^#[\w=.-]{0,60}$/.test(it.h || '') ? it.h : '';
+      const r = await c.query('insert into reminders(endpoint,tag,day,title,body,url,keys,sent,created_at) values($1,$2,$3,$4,$5,$6,$7,false,$8) on conflict(endpoint,tag) do nothing', [sub.ep, tag, day, str(it.title, 80) || 'ديوني', str(it.body, 300), SITE + 'dyooni/' + h, sub.keys, now()]);
+      n += r.rowCount;
+    }
+    await c.query('commit');
+  } catch (e) { await c.query('rollback').catch(() => {}); throw e; } finally { c.release(); }
+  return { ok: true, n };
+});
+route('DELETE', '/api/remind', async (req, b) => { const sub = subOf(b.sub); if (!sub) fail(400, 'bad_sub'); await q('delete from reminders where endpoint=$1', [sub.ep]); return { ok: true }; });
+async function remindTick(force) {
+  try {
+    const hr = parseInt(new Intl.DateTimeFormat('en-u-nu-latn', { timeZone: 'Asia/Riyadh', hour: 'numeric', hourCycle: 'h23' }).format(new Date()), 10);
+    if (!force && hr < 9) return 0;
+    const t = todayISO(), rows = (await q('select endpoint, tag, title, body, url, keys from reminders where not sent and day <= $1 and day >= $2 order by day limit 2000', [t, addDaysISO(t, -2)])).rows;
+    if (!rows.length) return 0; await vapid(); let n = 0;
+    for (const r of rows) {
+      /* نعلّمه انرسل قبل الإرسال، عشان ما يوصل مرتين لو اشتغلت دورتين مع بعض */
+      const u = await q('update reminders set sent=true where endpoint=$1 and tag=$2 and not sent', [r.endpoint, r.tag]); if (!u.rowCount) continue;
+      try { await webpush.sendNotification({ endpoint: r.endpoint, keys: r.keys }, JSON.stringify({ title: r.title, body: r.body, url: r.url, tag: r.tag }), { TTL: 12 * 3600 }); n++; }
+      catch (e) { if (e.statusCode === 404 || e.statusCode === 410) await q('delete from reminders where endpoint=$1', [r.endpoint]); else console.error('remind', e.statusCode || e.message); }
+    }
+    return n;
+  } catch (e) { console.error('remind', e.message); return 0; }
+}
 
 /* شجرتنا لأصحاب رابط العرض: التواريخ المخفية ما توصلهم أبد (ولا علامة إنها مخفية)، والرسائل المقفلة توصل بدون نصها */
 const DATE_KEYS = ['by', 'bmo', 'bda', 'dy', 'dmo', 'dda', 'hd'];
@@ -574,7 +669,7 @@ const server = http.createServer(async (req, res) => {
 });
 
 async function cleanupTick() {
-  try { await q('delete from docs where last_read < $1', [now() - 400 * 864e5]); await q('delete from bookings where starts < $1', [now() - 400 * 864e5]); } catch (e) { console.error('cleanup', e.message); }
+  try { await q('delete from docs where last_read < $1', [now() - 400 * 864e5]); await q('delete from reminders where day < $1', [addDaysISO(todayISO(), -30)]); await q('delete from bookings where starts < $1', [now() - 400 * 864e5]); } catch (e) { console.error('cleanup', e.message); }
 }
 process.on('unhandledRejection', e => console.error('unhandled', e));
 async function start() {
@@ -583,6 +678,7 @@ async function start() {
   setTimeout(cleanupTick, 60e3).unref(); setInterval(cleanupTick, 12 * 3600e3).unref();
   setTimeout(occasionTick, 90e3).unref(); setInterval(occasionTick, 10 * 60e3).unref();
   setTimeout(weeklyTick, 120e3).unref(); setInterval(weeklyTick, 10 * 60e3).unref();
+  setTimeout(remindTick, 100e3).unref(); setInterval(remindTick, 10 * 60e3).unref();
 }
 if (require.main === module) start().catch(e => { console.error(e); process.exit(1); });
-module.exports = { start, server, pool, checkHours, occasionsToday, occasionText, occasionTick, branchBody, branchAllow, weeklyQuestion, weeklyTick };
+module.exports = { start, server, pool, checkHours, occasionsToday, occasionText, occasionTick, branchBody, branchAllow, weeklyQuestion, weeklyTick, remindTick, migrate };
