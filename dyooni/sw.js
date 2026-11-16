@@ -1,5 +1,5 @@
-/* ديوني: يخزّن واجهة التطبيق عشان يشتغل بدون نت */
-const C = 'dyooni-v2';
+/* ديوني: يخزّن واجهة التطبيق عشان يشتغل بدون نت، ويعرض تنبيهات الأقساط */
+const C = 'dyooni-v3';
 const SHELL = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png', '../shared/sync.js'];
 self.addEventListener('install', e => { e.waitUntil(caches.open(C).then(c => c.addAll(SHELL)).then(() => self.skipWaiting())); });
 self.addEventListener('activate', e => {
@@ -22,4 +22,16 @@ self.addEventListener('fetch', e => {
     if (hit) { net.catch(() => {}); return hit; }
     return net;
   })));
+});
+/* تنبيهات: القسط اليوم، ويوم الراتب، وتأكيد الاستلام، ودفعة جديدة بكشف وصلك */
+self.addEventListener('push', e => {
+  let d = {}; try { d = e.data ? e.data.json() : {}; } catch (x) { d = { title: 'ديوني', body: e.data ? e.data.text() : '' }; }
+  e.waitUntil(self.registration.showNotification(d.title || 'ديوني', { body: d.body || '', icon: 'icon-192.png', badge: 'icon-192.png', dir: 'rtl', lang: 'ar', tag: d.tag || 'dyooni', data: { url: d.url || self.registration.scope } }));
+});
+self.addEventListener('notificationclick', e => {
+  e.notification.close(); const url = (e.notification.data && e.notification.data.url) || self.registration.scope;
+  e.waitUntil(self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(list => {
+    for (const c of list) if (c.url.startsWith(self.registration.scope) && 'focus' in c) { const h = url.split('#')[1]; if (h) c.postMessage({ go: h }); return c.focus(); }
+    return self.clients.openWindow(url);
+  }));
 });
