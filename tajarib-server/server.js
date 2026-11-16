@@ -1,7 +1,7 @@
 'use strict';
 /*
   سيرفر تجارب المشترك
-  مستندات مشتركة (القطّة، شجرتنا، مقاضي، منيو، موعد) بمفتاحين:
+  مستندات مشتركة (القطّة، شجرتنا، مقاضي، منيو، موعد، ديوني) بمفتاحين:
   - مفتاح التعديل: لأصحاب المستند ومن يشاركونه معه
   - مفتاح العرض: للقراءة بس (مثل منيو الزبائن وصفحة الحجز)
   وحجوزات «موعد» مع منع التعارض، وتنبيهات للمالك.
@@ -19,7 +19,7 @@ if (!process.env.DATABASE_URL) { console.error('DATABASE_URL مو موجود. أ
 const pool = new Pool({ connectionString: process.env.DATABASE_URL, ssl: process.env.PGSSL === '1' ? { rejectUnauthorized: false } : undefined, max: 10 });
 const q = (t, p) => pool.query(t, p);
 const now = () => Date.now();
-const KINDS = ['qatta', 'shajara', 'maqadi', 'menu', 'mawid'];
+const KINDS = ['qatta', 'shajara', 'maqadi', 'menu', 'mawid', 'dyooni'];
 const MAX_BODY = 3 * 1024 * 1024;
 
 async function migrate() {
