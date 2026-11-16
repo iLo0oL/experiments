@@ -212,6 +212,7 @@ body.hide .amt{filter:blur(8px)}
 .fld .chips{margin-top:8px}
 .hint{font-size:13px;color:var(--muted);margin-top:6px;min-height:20px}
 .hint.bad{color:var(--neg)}
+.hint.dh{margin:6px 2px 0;font-size:13px;line-height:1.5}
 .big-in{font-size:24px!important;font-weight:800;text-align:center;letter-spacing:.5px;min-height:58px}
 .two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .pl-r{display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--card2);border-radius:14px;padding:12px 14px;margin-bottom:14px;font-weight:700}
@@ -384,11 +385,16 @@ const ic = (n, cls = '') => `<svg class="i ${cls}" viewBox="0 0 24 24" aria-hidd
 /* ================= التخزين ================= */
 const KEY = 'dyooni.v1';
 const CURS = [['SAR', 'ريال سعودي', 'ر.س', 2], ['AED', 'درهم إماراتي', 'د.إ', 2], ['KWD', 'دينار كويتي', 'د.ك', 3], ['QAR', 'ريال قطري', 'ر.ق', 2], ['BHD', 'دينار بحريني', 'د.ب', 3], ['OMR', 'ريال عماني', 'ر.ع', 3], ['EGP', 'جنيه مصري', 'ج.م', 2], ['JOD', 'دينار أردني', 'د.أ', 3], ['USD', 'دولار أمريكي', '$', 2]];
-const blank = () => ({ v: 1, debts: [], s: { cur: 'SAR', cal: 'g', theme: 'dark', hide: false, salary: 27, pin: null, backup: 0, snooze: 0 } });
+const blank = () => ({ v: 1, debts: [], s: { cur: 'SAR', cal: 'b', calV: 2, theme: 'dark', hide: false, salary: 27, pin: null, backup: 0, snooze: 0 } });
 function load() {
   try {
     const x = JSON.parse(localStorage.getItem(KEY));
-    if (x && Array.isArray(x.debts)) { x.s = Object.assign(blank().s, x.s || {}); x.debts.forEach(fixDebt); return x; }
+    if (x && Array.isArray(x.debts)) {
+      const cv = x.s && x.s.calV; x.s = Object.assign(blank().s, x.s || {});
+      /* التاريخ صار يطلع هجري وميلادي مع بعض، إلا للي اختار هجري بس */
+      if (cv !== 2) { if (x.s.cal !== 'h') x.s.cal = 'b'; x.s.calV = 2; }
+      x.debts.forEach(fixDebt); return x;
+    }
   } catch (e) { console.error(e); }
   return blank();
 }
@@ -483,17 +489,26 @@ function nextSalary() {
 }
 const defStart = f => f === 'm' ? nextSalary() : addDays(today(), f === 'w' ? 7 : 14);
 const FREQ = { m: 'كل شهر', '2w': 'كل أسبوعين', w: 'كل أسبوع' };
+/* التقويم: g ميلادي، h هجري (أم القرى)، b الاثنين: الميلادي وبعده الهجري بين قوسين */
+const LOC_G = 'ar-u-nu-latn-ca-gregory', LOC_H = 'ar-SA-u-nu-latn-ca-islamic-umalqura';
 const fmtCache = {};
-function dtf(key, opts) {
-  const loc = D.s.cal === 'h' ? 'ar-SA-u-nu-latn-ca-islamic-umalqura' : 'ar-u-nu-latn-ca-gregory';
+function dtfL(loc, key, opts) {
   const k = loc + key;
-  if (!fmtCache[k]) { try { fmtCache[k] = new Intl.DateTimeFormat(loc, opts); } catch (e) { fmtCache[k] = new Intl.DateTimeFormat('ar-u-nu-latn-ca-gregory', opts); } }
+  if (!fmtCache[k]) { try { fmtCache[k] = new Intl.DateTimeFormat(loc, opts); } catch (e) { fmtCache[k] = new Intl.DateTimeFormat(LOC_G, opts); } }
   return fmtCache[k];
 }
+const dtf = (key, opts) => dtfL(D.s.cal === 'h' ? LOC_H : LOC_G, key, opts);
+const hYear = d => +((dtfL(LOC_H, 'hy', { year: 'numeric' }).formatToParts(d).find(p => p.type === 'year') || {}).value || 0);
+const fOne = (loc, d, y, wd) => dtfL(loc, (y ? 'y' : '') + (wd ? 'w' : ''), Object.assign({ day: 'numeric', month: 'long' }, y ? { year: 'numeric' } : {}, wd ? { weekday: 'long' } : {})).format(d);
+const fHijri = (iso, y) => validISO(iso) ? fOne(LOC_H, toDate(iso), y, false) : '';
 function fDate(iso, { y = 'auto', wd = false } = {}) {
   if (!validISO(iso && iso.slice(0, 10))) return '';
-  const d = toDate(iso); const showY = y === true || (y === 'auto' && d.getFullYear() !== new Date().getFullYear());
-  return dtf((showY ? 'y' : '') + (wd ? 'w' : ''), Object.assign({ day: 'numeric', month: 'long' }, showY ? { year: 'numeric' } : {}, wd ? { weekday: 'long' } : {})).format(d);
+  const d = toDate(iso), now = new Date();
+  const gY = y === true || (y === 'auto' && d.getFullYear() !== now.getFullYear());
+  const hY = y === true || (y === 'auto' && hYear(d) !== hYear(now));
+  if (D.s.cal === 'h') return fOne(LOC_H, d, hY, wd);
+  if (D.s.cal === 'g') return fOne(LOC_G, d, gY, wd);
+  return `${fOne(LOC_G, d, gY, wd)} (${fOne(LOC_H, d, hY, false)})`;
 }
 function fTime(hm) { const [h, m] = (hm || '00:00').split(':').map(Number); return dtf('t', { hour: 'numeric', minute: '2-digit' }).format(new Date(2000, 0, 1, h, m)); }
 function dayLabel(iso) {
@@ -673,6 +688,7 @@ function openSheet(html, { onClose } = {}) {
   const w = document.createElement('div'); w.className = 'sheet-wrap';
   w.innerHTML = `<div class="sheet" role="dialog" aria-modal="true">${html}</div>`;
   $('#sheets').appendChild(w); requestAnimationFrame(() => w.classList.add('in'));
+  dateHints(w);
   sheets.push({ el: w, onClose });
   history.pushState(Object.assign({}, history.state || {}, { sheet: sheets.length }), '');
   w.addEventListener('click', e => { if (e.target === w || e.target.closest('[data-close]')) closeSheet(); });
@@ -694,6 +710,15 @@ window.addEventListener('popstate', e => {
   route(e.state);
 });
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && sheets.length && !$('.dlg-wrap')) closeSheet(); });
+/* تحت كل خانة تاريخ: اليوم والتاريخ بالكتابة (هجري وميلادي حسب الإعداد)، لأن منتقي التاريخ بالجوال ميلادي بس */
+function dateHints(root) {
+  $$('input[type=date],input[type=datetime-local]', root).forEach(inp => {
+    const h = document.createElement('div'); h.className = 'hint dh'; inp.after(h);
+    const upd = () => { const v = inp.value.slice(0, 10); h.textContent = validISO(v) ? `${fDate(v, { y: true, wd: true })} · ${relDays(v)}` : ''; };
+    inp.addEventListener('input', upd); inp.addEventListener('change', upd); upd();
+  });
+}
+function setDate(inp, v) { inp.value = v; inp.dispatchEvent(new Event('input')); }
 const sheetHead = (t, sub) => `<div class="sh-head"><h3>${t}${sub ? `<small>${sub}</small>` : ''}</h3><button class="ibtn" data-close aria-label="سكّر">${ic('x')}</button></div>`;
 /* أزرار الاختيار (chips) */
 function bindChips(box, onPick) { box.addEventListener('click', e => { const b = e.target.closest('[data-v]'); if (!b) return; onPick(b.dataset.v, b); }); }
@@ -758,7 +783,7 @@ function homeHTML() {
   if (nexts.length) { const x = nexts[0]; h += `<div class="alert info">${ic('cal')}<span class="grow">القسط الجاي ${relDays(x.pi.next.date)}: <b class="pos">${money(x.pi.next.a)}</b> ${t.of === 'لـ' ? 'لـ' : 'من '}${esc(x.d.name)}</span></div>`; }
   if (active.length && active.every(x => x.pi)) {
     const end = active.map(x => x.pi.end).sort().pop();
-    h += `<div class="alert good">${ic('target')}<span class="grow">${V.dir === 'out' ? 'تخلص من كل ديونك' : 'يخلصون كلهم'} على خططك: ${fDate(end, { y: true })} (بعد ${spanText(daysBetween(today(), end))})</span></div>`;
+    h += `<div class="alert good">${ic('target')}<span class="grow">${V.dir === 'out' ? 'تخلص من كل ديونك' : 'يخلصون كلهم'} على خططك: ${fDate(end, { y: true })} · بعد ${spanText(daysBetween(today(), end))}</span></div>`;
   }
   h += `<div class="sum-acts">${V.dir === 'out' && active.length > 1 ? `<button class="btn" data-act="allplan">${ic('users', 's')}خطة لكل ديوني</button>` : ''}<button class="btn" data-act="calc">${ic('calc', 's')}حاسبة السداد</button></div></div>`;
   if (mine.length > 6) h += `<div class="search">${ic('search')}<input id="q" type="search" placeholder="دوّر باسم" value="${esc(V.q)}" autocomplete="off" aria-label="دوّر باسم"></div>`;
@@ -816,7 +841,7 @@ function detailHTML(d, c, o = {}) {
   let h = ro ? `<header class="top"><button class="ibtn" data-act="vback" aria-label="رجوع">${ic('back')}</button><div class="ttl">كشف حساب</div>${eye}<button class="ibtn" data-act="vrefresh" aria-label="تحديث">${ic('refresh')}</button></header>`
     : `<header class="top"><button class="ibtn" data-act="back" aria-label="رجوع">${ic('back')}</button><div class="ttl">${esc(d.name)}</div>${eye}<button class="ibtn" data-act="more" aria-label="خيارات">${ic('more')}</button></header>`;
   const chips = [];
-  if (d.due && c.rem > 0) { const n = daysBetween(today(), d.due); chips.push(`<span class="chip ${n < 0 ? 'bad' : n <= 14 ? 'warn' : ''}">${ic('clock')}الموعد ${fDate(d.due)} (${relDays(d.due)})</span>`); }
+  if (d.due && c.rem > 0) { const n = daysBetween(today(), d.due); chips.push(`<span class="chip ${n < 0 ? 'bad' : n <= 14 ? 'warn' : ''}">${ic('clock')}الموعد ${fDate(d.due)} · ${relDays(d.due)}</span>`); }
   chips.push(`<span class="chip">${pPays(c.pays.length)}</span>`);
   if (c.lastPay) chips.push(`<span class="chip">آخر دفعة ${relDays(c.lastPay.at.slice(0, 10))}</span>`);
   if (c.rem < 0) chips.push(`<span class="chip warn">${t.paid} زيادة ${money(-c.rem)}</span>`);
@@ -861,11 +886,11 @@ function planCard(d, c, pi, ro) {
   if (pi.next) {
     const nd = toDate(pi.next.date);
     h += `<div class="plan-next"><span class="cal"><b>${dtf('dd', { day: 'numeric' }).format(nd)}</b><small>${dtf('mm', { month: 'short' }).format(nd)}</small></span>
-      <span class="grow"><small>القسط الجاي${pi.next.a < p.a ? ' (الباقي منه)' : ''}</small><b>${dtf('wd', { weekday: 'long' }).format(nd)}، ${relDays(pi.next.date)}</b></span>${money(pi.next.a)}</div>`;
+      <span class="grow"><small>القسط الجاي${pi.next.a < p.a ? ' (الباقي منه)' : ''}${D.s.cal === 'b' ? ' · ' + fHijri(pi.next.date) : ''}</small><b>${dtf('wd', { weekday: 'long' }).format(nd)}، ${relDays(pi.next.date)}</b></span>${money(pi.next.a)}</div>`;
   }
   const dots = pi.n <= 60 ? `<div class="dots" aria-hidden="true">${pi.sch.map(s => `<i class="${s.cum <= pi.Pd ? 'on' : s.date < today() ? 'late' : ''}"></i>`).join('')}</div>` : '';
-  h += dots + `<div class="plan-f"><span>${pi.instPaid} من ${pInst(pi.n)}</span><span>${t.will} ${fDate(pi.end, { y: true })} (${relDays(pi.end)})</span></div>`;
-  if (d.due && pi.end > d.due) h += `<div class="alert warn" style="margin-top:10px">${ic('clock')}<span class="grow">الخطة تخلص بعد الموعد المتفق عليه (${fDate(d.due, { y: true })})</span></div>`;
+  h += dots + `<div class="plan-f"><span>${pi.instPaid} من ${pInst(pi.n)}</span><span>${t.will} ${fDate(pi.end, { y: true })} · ${relDays(pi.end)}</span></div>`;
+  if (d.due && pi.end > d.due) h += `<div class="alert warn" style="margin-top:10px">${ic('clock')}<span class="grow">الخطة تخلص بعد الموعد المتفق عليه: ${fDate(d.due, { y: true })}</span></div>`;
   if (!ro) h += `<div class="plan-b">${pi.next && !pi.late ? `<button class="btn sm pri" data-act="payamt" data-a="${pi.next.a}">${ic('check', 's')}${d.dir === 'out' ? 'سددت القسط' : 'استلمت القسط'}</button>` : ''}<button class="btn sm" data-act="ics">${ic('cal', 's')}أضف للتقويم</button></div>`;
   return h + `</div>`;
 }
@@ -969,9 +994,7 @@ function openEntry(debtId, kind, entryId, preset) {
   if ($('#e-q', el)) bindChips($('#e-q', el), v => { amtIn.value = plainN(+v); hint(); });
   bindChips($('#e-dq', el), v => {
     const time = (atIn.value.slice(11, 16)) || nowLocal().slice(11);
-    if (v === 'now') atIn.value = nowLocal();
-    else if (v === 'y') atIn.value = addDays(today(), -1) + 'T' + time;
-    else atIn.value = v + 'T' + time;
+    setDate(atIn, v === 'now' ? nowLocal() : v === 'y' ? addDays(today(), -1) + 'T' + time : v + 'T' + time);
   });
   if ($('#e-m', el)) bindChips($('#e-m', el), (v, b) => { method = method === v ? '' : v; markOn($('#e-m', el), method); });
   if (!e && !preset) setTimeout(() => amtIn.focus(), 260);
@@ -1043,7 +1066,7 @@ function openPlanner(id) {
       ${d ? `<div class="pl-r"><span>${t.rem}</span>${money(st.R)}</div>` : amountField('p-R', 'المبلغ', '', 'مثلاً 10000')}
       <div class="seg" id="p-mode" style="margin-bottom:14px"><button data-v="fixed">مبلغ ثابت كل مرة</button><button data-v="period">أخلص في مدة محددة</button></div>
       <div class="fld"><span>كل كم؟</span><div class="chips" id="p-f">${Object.keys(FREQ).map(k => `<button class="qc" data-v="${k}">${FREQ[k]}</button>`).join('')}</div></div>
-      <label class="fld"><span>أول قسط <small id="p-sh"></small></span><input type="date" id="p-start" value="${st.start}"></label>
+      <label class="fld"><span>أول قسط</span><input type="date" id="p-start" value="${st.start}"></label>
       <div id="p-fixed">${amountField('p-amt', t.planQ, st.amt ? plainN(st.amt) : '', 'مثلاً 500')}<div class="chips" id="p-aq" style="margin:-6px 0 14px"></div></div>
       <div id="p-period">
         <label class="fld"><span>كم قسط؟</span><input id="p-n" inputmode="numeric" placeholder="مثلاً 12" autocomplete="off"></label>
@@ -1075,7 +1098,6 @@ function openPlanner(id) {
   const draw = () => {
     markOn($e('#p-mode'), st.mode); markOn($e('#p-f'), st.f); markOn($e('#p-rd'), st.round);
     $e('#p-fixed').hidden = st.mode !== 'fixed'; $e('#p-period').hidden = st.mode !== 'period';
-    $e('#p-sh').textContent = validISO(st.start) ? `(${relDays(st.start)})` : '';
     $e('#p-aq').innerHTML = st.R > 0 ? amountSuggestions(st.R).map(v => `<button class="qc ${v === st.amt ? 'on' : ''}" data-v="${v}">${money(v)}</button>`).join('') : '';
     $e('#p-nq').innerHTML = nChips[st.f].map(([v, l]) => `<button class="qc ${!st.end && v === st.n ? 'on' : ''}" data-v="${v}">${l}</button>`).join('');
     const r = compute(); const box = $e('#p-res');
@@ -1090,8 +1112,8 @@ function openPlanner(id) {
     if (r.last !== r.a) h += `<div class="res-row"><span>مبلغ آخر قسط</span><b>${money(r.last)}</b></div>`;
     if (d && d.due && r.end > d.due && st.mode === 'fixed') {
       const n = countUntil(st.start, st.f, d.due);
-      if (n >= 1) { const need = Math.ceil(st.R / n / 10 ** DEC()) * 10 ** DEC(); h += `<div class="alert warn">${ic('clock')}<span class="grow">بكذا تتعدى الموعد المتفق عليه (${fDate(d.due, { y: true })}). عشان تلحق ${t.verb} <b>${money(need)}</b> ${FREQ[st.f]}</span><button class="btn sm" data-use="${need}">استخدمه</button></div>`; }
-      else h += `<div class="alert warn">${ic('clock')}<span class="grow">الموعد المتفق عليه (${fDate(d.due, { y: true })}) قبل أول قسط</span></div>`;
+      if (n >= 1) { const need = Math.ceil(st.R / n / 10 ** DEC()) * 10 ** DEC(); h += `<div class="alert warn">${ic('clock')}<span class="grow">بكذا تتعدى الموعد المتفق عليه: ${fDate(d.due, { y: true })}. عشان تلحق ${t.verb} <b>${money(need)}</b> ${FREQ[st.f]}</span><button class="btn sm" data-use="${need}">استخدمه</button></div>`; }
+      else h += `<div class="alert warn">${ic('clock')}<span class="grow">الموعد المتفق عليه ${fDate(d.due, { y: true })} قبل أول قسط</span></div>`;
     }
     h += `</div>`;
     const list = scheduleOf(st.R, r.a, st.f, st.start);
@@ -1099,13 +1121,13 @@ function openPlanner(id) {
     box.innerHTML = h;
   };
   bindChips($e('#p-mode'), v => { st.mode = v; draw(); });
-  bindChips($e('#p-f'), v => { st.f = v; if (!st.touched) { st.start = defStart(v); $e('#p-start').value = st.start; } draw(); });
+  bindChips($e('#p-f'), v => { st.f = v; if (!st.touched) { st.start = defStart(v); setDate($e('#p-start'), st.start); } draw(); });
   bindChips($e('#p-aq'), v => { st.amt = +v; $e('#p-amt').value = plainN(+v); draw(); });
-  bindChips($e('#p-nq'), v => { st.n = +v; st.end = ''; $e('#p-end').value = ''; $e('#p-n').value = v; draw(); });
+  bindChips($e('#p-nq'), v => { st.n = +v; st.end = ''; setDate($e('#p-end'), ''); $e('#p-n').value = v; draw(); });
   bindChips($e('#p-rd'), v => { st.round = +v; draw(); });
   $e('#p-start').addEventListener('change', () => { st.start = $e('#p-start').value; st.touched = true; draw(); });
   $e('#p-amt').addEventListener('input', () => { st.amt = parseAmount($e('#p-amt').value) || 0; draw(); });
-  $e('#p-n').addEventListener('input', () => { st.n = parseInt10($e('#p-n').value) || 0; st.end = ''; $e('#p-end').value = ''; draw(); });
+  $e('#p-n').addEventListener('input', () => { st.n = parseInt10($e('#p-n').value) || 0; st.end = ''; setDate($e('#p-end'), ''); draw(); });
   $e('#p-end').addEventListener('change', () => { st.end = $e('#p-end').value; if (st.end) $e('#p-n').value = ''; draw(); });
   if ($e('#p-R')) $e('#p-R').addEventListener('input', () => { st.R = parseAmount($e('#p-R').value) || 0; draw(); });
   $e('#p-res').addEventListener('click', ev => {
@@ -1185,7 +1207,7 @@ function openAllPlan() {
     box.innerHTML = h;
   };
   $e('#a-B').addEventListener('input', () => { st.B = parseAmount($e('#a-B').value) || 0; draw(); });
-  bindChips($e('#a-f'), v => { st.f = v; if (!st.touched) { st.start = defStart(v); $e('#a-start').value = st.start; } draw(); });
+  bindChips($e('#a-f'), v => { st.f = v; if (!st.touched) { st.start = defStart(v); setDate($e('#a-start'), st.start); } draw(); });
   $e('#a-start').addEventListener('change', () => { if (validISO($e('#a-start').value)) { st.start = $e('#a-start').value; st.touched = true; draw(); } });
   bindChips($e('#a-how'), v => { st.how = v; draw(); });
   $e('#a-apply').onclick = async () => {
@@ -1313,7 +1335,7 @@ function openSettings() {
     $('#set-b', el).innerHTML = `
       <div class="set-g">
         <div class="set-r"><span class="grow"><b>العملة</b></span><select id="st-cur">${CURS.map(c => `<option value="${c[0]}" ${c[0] === D.s.cur ? 'selected' : ''}>${c[1]} (${c[2]})</option>`).join('')}</select></div>
-        <div class="set-r"><span class="grow"><b>التاريخ</b><small>طريقة عرض التواريخ</small></span><div class="seg" id="st-cal"><button data-v="g">ميلادي</button><button data-v="h">هجري</button></div></div>
+        <div class="set-r"><span class="grow"><b>التاريخ</b><small>طريقة عرض التواريخ</small></span><div class="seg" id="st-cal"><button data-v="b">الاثنين</button><button data-v="g">ميلادي</button><button data-v="h">هجري</button></div></div>
         <div class="set-r"><span class="grow"><b>يوم الراتب</b><small>أول قسط بالخطة الشهرية يكون فيه</small></span><select id="st-sal">${Array.from({ length: 31 }, (_, i) => `<option ${i + 1 === D.s.salary ? 'selected' : ''}>${i + 1}</option>`).join('')}</select></div>
         <button class="set-r" style="width:100%" id="st-theme"><span class="grow"><b>الوضع الفاتح</b></span><span class="sw ${D.s.theme === 'light' ? 'on' : ''}"></span></button>
         <button class="set-r" style="width:100%" id="st-hide"><span class="grow"><b>أخف المبالغ</b><small>عشان لو أحد شاف جوالك</small></span><span class="sw ${D.s.hide ? 'on' : ''}"></span></button>
