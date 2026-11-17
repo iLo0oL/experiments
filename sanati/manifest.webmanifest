@@ -1,0 +1,18 @@
+{
+  "name": "سنتي: وين تروح الـ365 يوم؟",
+  "short_name": "سنتي",
+  "description": "احسب كم من سنتك نوم وشغل وأكل وجوال، وكم باقي من السنة ومن عمرك",
+  "lang": "ar",
+  "dir": "rtl",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0f1220",
+  "theme_color": "#0f1220",
+  "categories": ["lifestyle", "productivity"],
+  "icons": [
+    {"src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable"},
+    {"src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable"}
+  ]
+}

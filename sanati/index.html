@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0f1220">
+<meta name="description" content="سنتي: وين تروح الـ365 يوم؟ نوم وشغل وأكل وجوال… وكم باقي من السنة ومن عمرك">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="سنتي">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>سنتي: وين تروح الـ365 يوم؟</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0f1220;--panel:#181c30;--panel2:#22273f;--line:#2c3252;--text:#eef0ff;--muted:#a3a9cb;--faint:#737a9f;
+  --primary:#4f8cff;--primary-soft:rgba(79,140,255,.16);--good:#2ecc9a;--good-soft:rgba(46,204,154,.14);
+  --bad:#ff6178;--bad-soft:rgba(255,97,120,.14);--warn:#ffb648;--warn-soft:rgba(255,182,72,.14);
+  --shadow:0 10px 30px rgba(0,0,0,.35);--r:18px;
+  --font:'Tajawal',system-ui,-apple-system,'Segoe UI',Tahoma,'Noto Sans Arabic',sans-serif;
+}
+body.light{
+  --bg:#f4f6fb;--panel:#fff;--panel2:#eef1f8;--line:#dde1ee;--text:#151a33;--muted:#575e84;--faint:#878dad;
+  --primary:#2f6fe8;--primary-soft:rgba(47,111,232,.1);--good:#0d946c;--good-soft:rgba(13,148,108,.1);
+  --bad:#d93250;--bad-soft:rgba(217,50,80,.09);--warn:#b56d00;--warn-soft:rgba(181,109,0,.1);--shadow:0 8px 24px rgba(30,35,80,.1);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{overflow-x:hidden}
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100dvh;line-height:1.55;font-size:16px;padding-bottom:calc(80px + env(safe-area-inset-bottom))}
+button,input,select{font-family:inherit;font-size:inherit;color:inherit}
+button{cursor:pointer;border:none;background:none}
+:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
+.wrap{max-width:680px;margin:0 auto;padding:0 16px}
+.top{position:sticky;top:0;z-index:20;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+.top .wrap{display:flex;align-items:center;gap:10px;min-height:60px;padding-top:max(6px,env(safe-area-inset-top))}
+.brand{flex:1;display:flex;align-items:center;gap:10px;font-weight:800;font-size:21px;min-width:0}
+.logo{width:36px;height:36px;border-radius:11px;background:conic-gradient(#4f8cff 0 33%,#ff8a3d 0 54%,#a46bff 0 66%,#2ecc9a 0 75%,#3a405f 0);flex:none;box-shadow:0 4px 14px rgba(79,140,255,.35)}
+.brand small{display:block;font-size:12px;font-weight:500;color:var(--muted);margin-top:-4px}
+.ibtn{width:42px;height:42px;border-radius:13px;display:grid;place-items:center;background:var(--panel);border:1px solid var(--line);flex:none;font-size:18px}
+.ibtn:active,.btn:active{transform:scale(.97)}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:16px;margin-bottom:12px}
+.sec{display:flex;align-items:center;gap:8px;margin:24px 0 10px}
+.sec h2{font-size:17px;font-weight:800;flex:1}
+.muted{color:var(--muted)}.faint{color:var(--faint)}.sm{font-size:13px}.xs{font-size:12px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:11px 16px;border-radius:13px;font-weight:700;background:var(--panel2);border:1px solid var(--line)}
+.btn.pri{background:var(--primary);border-color:var(--primary);color:#fff}
+.btn.sm{padding:7px 11px;font-size:14px;border-radius:11px}
+.btn.danger{color:var(--bad)}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.kpi{background:var(--panel2);border-radius:14px;padding:12px;text-align:center}
+.kpi b{display:block;font-size:22px;font-weight:800;line-height:1.2;font-variant-numeric:tabular-nums}
+.kpi span{font-size:12px;color:var(--muted)}
+.big{font-size:40px;font-weight:800;line-height:1.1;font-variant-numeric:tabular-nums}
+.num{font-variant-numeric:tabular-nums}
+.stack{display:flex;height:22px;border-radius:8px;overflow:hidden;background:var(--panel2);margin:12px 0 8px}
+.stack div{height:100%;min-width:2px}
+.legend{display:flex;flex-wrap:wrap;gap:6px 12px;font-size:12px;color:var(--muted)}
+.dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-left:5px;vertical-align:middle}
+.prog{height:10px;border-radius:6px;background:var(--panel2);overflow:hidden;margin:8px 0 4px}
+.prog i{display:block;height:100%;background:var(--primary);border-radius:6px}
+/* activity */
+.act{padding:14px}
+.act .hd{display:flex;align-items:center;gap:10px}
+.act .em{width:44px;height:44px;border-radius:13px;display:grid;place-items:center;font-size:22px;flex:none}
+.act .nm{flex:1;min-width:0}
+.act .nm b{display:block;font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.act .res{text-align:left}
+.act .res b{font-size:20px;font-weight:800;display:block;line-height:1.1}
+.act .ctl{display:flex;align-items:center;gap:10px;margin-top:12px}
+.act .ctl label{font-size:13px;color:var(--muted);white-space:nowrap;min-width:84px}
+input[type=range]{flex:1;accent-color:var(--c,var(--primary));height:28px}
+.days{display:flex;gap:4px;margin-top:8px}
+.days button{flex:1;padding:6px 0;border-radius:9px;background:var(--panel2);font-size:13px;font-weight:700;color:var(--muted)}
+.days button.on{background:var(--c,var(--primary));color:#fff}
+.warnbox{background:var(--warn-soft);color:var(--warn);border-radius:14px;padding:12px;font-size:14px;margin-bottom:12px}
+.badbox{background:var(--bad-soft);color:var(--bad);border-radius:14px;padding:12px;font-size:14px;margin-bottom:12px}
+.goodbox{background:var(--good-soft);color:var(--good);border-radius:14px;padding:12px;font-size:14px;margin-bottom:12px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{padding:7px 11px;border-radius:999px;background:var(--panel2);border:1px solid var(--line);font-size:14px}
+.chip.on{background:var(--primary-soft);border-color:var(--primary);color:var(--primary)}
+/* ring */
+.ringw{display:flex;align-items:center;gap:16px}
+.ring{--p:0;width:110px;height:110px;border-radius:50%;background:conic-gradient(var(--rc,var(--primary)) calc(var(--p)*1%),var(--panel2) 0);display:grid;place-items:center;flex:none}
+.ring::before{content:"";grid-area:1/1;width:84px;height:84px;border-radius:50%;background:var(--panel)}
+.ring b{grid-area:1/1;z-index:1;font-size:20px;font-weight:800}
+.cd{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--line)}
+.cd:last-child{border-bottom:0}
+.cd .em{font-size:24px;width:40px;text-align:center}
+.cd .t{flex:1;min-width:0}
+.cd .v{text-align:left;font-weight:800;font-size:18px;font-variant-numeric:tabular-nums}
+.cd .v small{display:block;font-size:12px;font-weight:500;color:var(--muted)}
+.fact{background:var(--panel2);border-radius:14px;padding:12px;border-right:4px solid var(--primary)}
+.fact .ft{font-size:13px;color:var(--muted)}
+.fact .fv{font-size:20px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1.3}
+.fact .fb{font-size:12px;color:var(--faint)}
+.tip{display:flex;gap:12px;align-items:flex-start}
+.tip .em{font-size:26px;line-height:1}
+.tip b{display:block;margin-bottom:2px}
+.field{display:block;margin-bottom:12px}
+.field span{display:block;font-size:13px;color:var(--muted);margin-bottom:4px}
+.inp{width:100%;padding:12px;border-radius:12px;border:1px solid var(--line);background:var(--panel2)}
+canvas{display:block;width:100%}
+/* nav */
+.tabs{position:fixed;bottom:0;left:0;right:0;z-index:30;background:color-mix(in srgb,var(--panel) 92%,transparent);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom)}
+.tabs .wrap{display:flex;padding:0 6px}
+.tabs button{flex:1;padding:8px 0 9px;display:flex;flex-direction:column;align-items:center;gap:1px;font-size:12px;font-weight:700;color:var(--faint)}
+.tabs button span{font-size:21px;filter:grayscale(1);opacity:.65}
+.tabs button.on{color:var(--primary)}
+.tabs button.on span{filter:none;opacity:1}
+/* modal */
+.ov{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:50;display:flex;align-items:flex-end;justify-content:center}
+.sheet{background:var(--panel);width:100%;max-width:560px;border-radius:22px 22px 0 0;padding:20px 18px calc(20px + env(safe-area-inset-bottom));max-height:90dvh;overflow:auto;animation:up .2s ease}
+@keyframes up{from{transform:translateY(40px);opacity:0}}
+.sheet h3{font-size:19px;margin-bottom:14px}
+.emojis{display:grid;grid-template-columns:repeat(8,1fr);gap:4px;margin-bottom:12px}
+.emojis button{font-size:22px;padding:6px 0;border-radius:10px}
+.emojis button.on{background:var(--primary-soft);outline:2px solid var(--primary)}
+.colors{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.colors button{width:30px;height:30px;border-radius:50%}
+.colors button.on{outline:3px solid var(--text);outline-offset:2px}
+.toast{position:fixed;bottom:calc(92px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);background:#000c;color:#fff;padding:10px 16px;border-radius:12px;z-index:60;font-size:14px}
+#report{display:none}
+@media print{
+  @page{size:A4;margin:12mm}
+  body{background:#fff;color:#111;padding:0;font-size:11pt}
+  .top,.tabs,#app,.toast,.ov{display:none!important}
+  #report{display:block}
+  #report h1{font-size:20pt;margin-bottom:2px}#report h2{font-size:13pt;margin:16px 0 6px;border-bottom:2px solid #ddd;padding-bottom:3px}
+  #report table{width:100%;border-collapse:collapse;font-size:10pt}
+  #report th{background:#1c2a5a;color:#fff;padding:5px;font-weight:700}
+  #report td{border-bottom:1px solid #e5e5e5;padding:4px 6px;text-align:center}
+  #report td:first-child{text-align:right}
+  #report .stack{print-color-adjust:exact;-webkit-print-color-adjust:exact}
+  #report th,#report .dot{print-color-adjust:exact;-webkit-print-color-adjust:exact}
+  #report .g{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px}
+  #report .g div{border:1px solid #ddd;border-radius:8px;padding:6px 8px;font-size:9.5pt}
+  #report .g b{display:block;font-size:12pt}
+}
+</style>
+</head>
+<body>
+<script>try{if(localStorage.getItem('sanati.theme')==='light')document.body.classList.add('light')}catch(e){}</script>
+<header class="top"><div class="wrap">
+  <div class="brand"><span class="logo"></span><span>سنتي<small>وين تروح الـ365 يوم؟</small></span></div>
+  <button class="ibtn" data-act="pdf" title="تقرير PDF" aria-label="تقرير PDF">🖨️</button>
+  <button class="ibtn" data-act="share" title="شارك" aria-label="شارك">📤</button>
+  <button class="ibtn" data-act="theme" title="غيّر المظهر" aria-label="غيّر المظهر" id="themeBtn">☀️</button>
+</div></header>
+<main id="app" class="wrap"></main>
+<nav class="tabs" aria-label="التنقل"><div class="wrap">
+  <button data-tab="year"><span>📊</span>سنتي</button>
+  <button data-tab="left"><span>⏳</span>كم باقي</button>
+  <button data-tab="age"><span>🎂</span>عمري</button>
+  <button data-tab="facts"><span>🔢</span>أرقام</button>
+  <button data-tab="tips"><span>💡</span>اقتراحات</button>
+</div></nav>
+<div id="report"></div>
+
+<script>
+'use strict';
+const KEY='sanati.v1',THEME='sanati.theme',DAY=864e5,YH=8760;
+const COLORS=['#4f8cff','#ff8a3d','#a46bff','#2ecc9a','#14b8c4','#f5b400','#e64980','#8a93b0','#22a6f2','#74c043','#ff6178','#b07a4f'];
+const EMOJIS=['😴','💼','📱','🍽️','🕌','🚗','🧹','🚽','🚿','🏃','📚','☕','🎮','📺','👨‍👩‍👧','🛍️','📖','📿','🍳','💬','🎧','⏳','🏋️','🧘','✈️','💇','🐪','⚽','🎨','💻','🛌','🧒'];
+const DEFAULT_ACTS=[
+ {k:'sleep',n:'النوم',e:'😴',m:480,d:7},
+ {k:'work',n:'الشغل',e:'💼',m:480,d:5,job:1},
+ {k:'screen',n:'الجوال والشاشات',e:'📱',m:180,d:7},
+ {k:'eat',n:'الأكل',e:'🍽️',m:90,d:7},
+ {k:'pray',n:'الصلاة والوضوء',e:'🕌',m:50,d:7},
+ {k:'commute',n:'الطريق والمشاوير',e:'🚗',m:60,d:5,job:1},
+ {k:'chores',n:'أشغال البيت والمقاضي',e:'🧹',m:60,d:7},
+ {k:'toilet',n:'الحمام',e:'🚽',m:30,d:7},
+ {k:'shower',n:'الاستحمام والتجهز',e:'🚿',m:30,d:7},
+ {k:'sport',n:'الرياضة والمشي',e:'🏃',m:30,d:7},
+];
+const QUICK=[['القراءة','📚',20,7],['القهوة والشاهي','☕',45,7],['الألعاب','🎮',60,7],['المسلسلات والأفلام','📺',60,7],['زيارة الأهل','👨‍👩‍👧',120,1],['الدراسة','📖',120,5],['قراءة القرآن','📿',15,7],['الطبخ','🍳',45,7],['السوشال ميديا','💬',90,7],['الانتظار والطوابير','⏳',20,7],['الجيم','🏋️',60,3],['الحلاق والعناية','💇',60,1],['الكشتة والبر','🐪',240,1],['الكورة','⚽',90,2]];
+const DEF_RATES={hr:70,br:15,blink:15,water:2,steps:6000,words:16000};
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const nf=(x,d=0)=>Number(x).toLocaleString('en-US',{maximumFractionDigits:d,minimumFractionDigits:0});
+const pad=n=>String(n).padStart(2,'0');
+let uid=Date.now();
+function freshActs(){return DEFAULT_ACTS.map((a,i)=>({...a,id:'a'+(i+1),c:COLORS[i%COLORS.length]}))}
+function defaults(){return{acts:freshActs(),vac:36,birth:'',life:75,salary:27,rates:{...DEF_RATES},tab:'year'}}
+function load(){try{const s=JSON.parse(localStorage.getItem(KEY));if(s&&Array.isArray(s.acts))return{...defaults(),...s,rates:{...DEF_RATES,...(s.rates||{})}}}catch(e){}return defaults()}
+let db=load();
+// shared link: #s=<base64 json>
+try{if(location.hash.startsWith('#s=')){const s=JSON.parse(decodeURIComponent(escape(atob(location.hash.slice(3)))));if(Array.isArray(s.acts)){db.acts=s.acts.slice(0,40).map((a,i)=>({id:'a'+(++uid),n:String(a.n||'نشاط').slice(0,40),e:String(a.e||'⏳').slice(0,8),m:clamp(+a.m||0,0,1440),d:clamp(+a.d||0,0,7),job:a.job?1:0,c:COLORS[i%COLORS.length]}));if(s.vac!=null)db.vac=clamp(+s.vac,0,120);setTimeout(()=>toast('انفتحت سنة صاحبك، تقدر تعدّلها'),300)}history.replaceState(null,'',location.pathname)}}catch(e){}
+function clamp(v,a,b){return Math.min(b,Math.max(a,v))}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(db))}catch(e){}}
+
+/* ---------- calculations ---------- */
+function activeDays(a){return Math.max(0,a.d/7*365-(a.job?Math.min(db.vac,a.d/7*365):0))}
+function hrsYear(a){return a.m/60*activeDays(a)}
+function totals(){
+  const list=db.acts.map(a=>({...a,h:hrsYear(a)}));
+  const used=list.reduce((s,a)=>s+a.h,0);
+  return{list,used,free:YH-used};
+}
+function byKey(k){return db.acts.find(a=>a.k===k)}
+const dur=h=>{ // hours -> friendly
+  if(h>=24*30.44*12)return nf(h/24/365,1)+' سنة';
+  if(h>=24*45)return nf(h/24/30.44,1)+' شهر';
+  if(h>=24)return nf(h/24,1)+' يوم';
+  if(h>=1)return nf(h,1)+' ساعة';
+  return nf(h*60)+' دقيقة';
+};
+const mins=m=>m>=60?(Math.floor(m/60)+' س'+(m%60?' و'+m%60+' د':'')):m+' د';
+function age(){
+  if(!db.birth)return null;const b=new Date(db.birth+'T00:00');if(isNaN(b)||b>new Date())return null;
+  const n=new Date();let y=n.getFullYear()-b.getFullYear(),m=n.getMonth()-b.getMonth(),d=n.getDate()-b.getDate();
+  if(d<0){m--;d+=new Date(n.getFullYear(),n.getMonth(),0).getDate()}if(m<0){y--;m+=12}
+  const ms=n-b;return{b,y,m,d,ms,years:ms/DAY/365.2425};
+}
+/* hijri */
+const HF=new Intl.DateTimeFormat('en-u-ca-islamic-umalqura',{year:'numeric',month:'numeric',day:'numeric'});
+const HN=new Intl.DateTimeFormat('ar-SA-u-ca-islamic-umalqura-nu-latn',{month:'long'});
+function hp(d){const o={};for(const p of HF.formatToParts(d))if(p.type!=='literal')o[p.type]=parseInt(p.value);return{y:o.year,m:o.month,d:o.day}}
+function noon(d){const x=new Date(d);x.setHours(12,0,0,0);return x}
+function findHijri(m,d,from,dir=1,max=400){let x=noon(from);for(let i=0;i<max;i++){const h=hp(x);if(h.m===m&&h.d===d){x.setHours(0,0,0,0);return x}x.setDate(x.getDate()+dir)}return null}
+function hijriYearBounds(){const now=new Date();const s=findHijri(1,1,now,-1);const t=new Date(now);t.setDate(t.getDate()+1);const e=findHijri(1,1,t,1);return{s,e,y:hp(now).y}}
+function nextGreg(mo,day){const n=new Date();let d=new Date(n.getFullYear(),mo-1,day);if(d<new Date(n.getFullYear(),n.getMonth(),n.getDate()))d=new Date(n.getFullYear()+1,mo-1,day);return d}
+function nextSalary(){const n=new Date();const sd=db.salary||27;let d=new Date(n.getFullYear(),n.getMonth(),sd);if(d<new Date(n.getFullYear(),n.getMonth(),n.getDate()))d=new Date(n.getFullYear(),n.getMonth()+1,sd);return d}
+function cdText(t){let ms=t-Date.now();if(ms<=0)return'اليوم 🎉';const d=Math.floor(ms/DAY);ms-=d*DAY;const h=Math.floor(ms/36e5);ms-=h*36e5;const mi=Math.floor(ms/6e4);const s=Math.floor((ms-mi*6e4)/1e3);return(d?d+' يوم · ':'')+pad(h)+':'+pad(mi)+':'+pad(s)}
+
+/* ---------- render ---------- */
+function render(){
+  document.querySelectorAll('.tabs button').forEach(b=>b.classList.toggle('on',b.dataset.tab===db.tab));
+  $('#themeBtn').textContent=document.body.classList.contains('light')?'🌙':'☀️';
+  const v={year:vYear,left:vLeft,age:vAge,facts:vFacts,tips:vTips}[db.tab]||vYear;
+  $('#app').innerHTML=v();
+  if(db.tab==='age')drawWeeks();
+  tick();
+}
+function stackBar(t){
+  return '<div class="stack">'+t.list.filter(a=>a.h>0).map(a=>'<div style="width:'+(a.h/YH*100)+'%;background:'+a.c+'" title="'+esc(a.n)+'"></div>').join('')+(t.free>0?'<div style="flex:1;background:var(--panel2)"></div>':'')+'</div>';
+}
+function vYear(){
+  const t=totals();const freeDay=t.free/365;
+  let h='<div class="card" style="margin-top:8px"><div class="muted sm">السنة = 365 يوم = 8,760 ساعة = 525,600 دقيقة</div>'+stackBar(t)+
+  '<div class="legend">'+t.list.filter(a=>a.h>0).map(a=>'<span><i class="dot" style="background:'+a.c+'"></i>'+esc(a.n)+' '+nf(a.h/YH*100)+'%</span>').join('')+'<span><i class="dot" style="background:var(--panel2);border:1px solid var(--line)"></i>وقت حر '+nf(Math.max(0,t.free)/YH*100)+'%</span></div>';
+  h+='<div class="grid3" style="margin-top:14px">'+['sleep','work','eat'].map(k=>{const a=t.list.find(x=>x.k===k);return a?'<div class="kpi"><b>'+nf(a.h/24)+'</b><span>يوم '+esc(a.n)+'</span></div>':''}).join('')+'</div></div>';
+  if(t.free<0)h+='<div class="badbox">⚠️ مجموع أنشطتك أكثر من 24 ساعة باليوم بـ '+mins(Math.round(-t.free*60/365))+'. نقّص شي عشان تركب الحسبة.</div>';
+  else h+='<div class="card row" style="justify-content:space-between"><div><div class="muted sm">الوقت الحر اللي يبقى لك</div><div style="font-size:26px;font-weight:800">'+nf(t.free/24)+' يوم بالسنة</div><div class="faint sm">≈ '+mins(Math.round(freeDay*60))+' كل يوم للعائلة والأصحاب والراحة</div></div><div style="font-size:40px">🌴</div></div>';
+  h+='<div class="sec"><h2>أنشطتك</h2><button class="btn sm pri" data-act="add">+ أضف نشاط</button></div>';
+  for(const a of t.list){
+    h+='<div class="card act" style="--c:'+a.c+'"><div class="hd"><span class="em" style="background:'+a.c+'26">'+esc(a.e)+'</span><div class="nm"><b>'+esc(a.n)+'</b><span class="muted xs">'+mins(a.m)+' × '+(a.d===7?'كل يوم':a.d+' أيام بالأسبوع')+(a.job?' · ناقص الإجازات':'')+'</span></div><div class="res"><b data-r="'+a.id+'">'+nf(a.h/24,1)+'</b><span class="muted xs">يوم بالسنة</span></div><button class="ibtn" style="width:36px;height:36px;font-size:15px" data-act="edit" data-id="'+a.id+'" aria-label="عدّل">✏️</button></div>'+
+    '<div class="ctl"><label data-ml="'+a.id+'">'+mins(a.m)+' باليوم</label><input type="range" min="0" max="960" step="5" value="'+a.m+'" data-range="'+a.id+'" aria-label="الدقائق باليوم"></div>'+
+    '<div class="days">'+[1,2,3,4,5,6,7].map(n=>'<button class="'+(a.d===n?'on':'')+'" data-day="'+n+'" data-id="'+a.id+'">'+(n===7?'كل يوم':n)+'</button>').join('')+'</div></div>';
+  }
+  h+='<div class="card"><b>إضافة سريعة</b><div class="muted sm" style="margin-bottom:8px">اضغط على أي شي تسويه وينضاف لحسبتك</div><div class="chips">'+QUICK.filter(q=>!db.acts.some(a=>a.n===q[0])).map((q,i)=>'<button class="chip" data-quick="'+QUICK.indexOf(q)+'">'+q[1]+' '+q[0]+'</button>').join('')+'</div></div>';
+  h+='<div class="card"><label class="field"><span>أيام الإجازة السنوية والأعياد (تنخصم من الشغل والطريق)</span><input class="inp num" type="number" min="0" max="120" value="'+db.vac+'" data-set="vac"></label><div class="row"><button class="btn sm danger" data-act="reset">↺ رجّع الافتراضي</button><button class="btn sm" data-act="pdf">🖨️ تقرير PDF</button></div></div>';
+  return h;
+}
+function yearRing(label,s,e,color,sub){
+  const now=Date.now(),p=clamp((now-s)/(e-s)*100,0,100),left=e-now;
+  return '<div class="card"><div class="ringw"><div class="ring" style="--p:'+p.toFixed(2)+';--rc:'+color+'"><b data-pct="'+s.getTime()+'_'+e.getTime()+'">'+p.toFixed(1)+'%</b></div><div style="flex:1;min-width:0"><b style="font-size:18px">'+label+'</b><div class="muted sm">'+sub+'</div>'+
+  '<div class="grid2" style="margin-top:8px"><div class="kpi"><b>'+nf(Math.floor((now-s)/DAY))+'</b><span>يوم راح</span></div><div class="kpi"><b>'+nf(Math.ceil(left/DAY))+'</b><span>يوم باقي</span></div></div></div></div>'+
+  '<div style="margin-top:12px;text-align:center"><span class="muted sm">باقي على نهايتها</span><div class="big" data-cd="'+e.getTime()+'" style="font-size:28px">'+cdText(e)+'</div></div></div>';
+}
+function vLeft(){
+  const n=new Date(),y=n.getFullYear(),s=new Date(y,0,1),e=new Date(y+1,0,1);
+  let h='<div class="sec"><h2>السنة الميلادية '+y+'</h2></div>'+yearRing('سنة '+y,s,e,'var(--primary)','من 1 يناير إلى 31 ديسمبر');
+  const left=(e-n)/DAY;let fr=0;for(let d=new Date(n);d<e;d.setDate(d.getDate()+1))if(d.getDay()===5)fr++;
+  h+='<div class="grid3"><div class="kpi"><b>'+nf(left/7,1)+'</b><span>أسبوع باقي</span></div><div class="kpi"><b>'+fr+'</b><span>جمعة باقية</span></div><div class="kpi"><b>'+nf((e-n)/36e5)+'</b><span>ساعة باقية</span></div></div>';
+  const hb=hijriYearBounds();
+  if(hb.s&&hb.e)h+='<div class="sec"><h2>السنة الهجرية '+hb.y+' هـ</h2></div>'+yearRing('سنة '+hb.y+' هـ',hb.s,hb.e,'#2ecc9a','حسب تقويم أم القرى');
+  // month & day
+  const ms=new Date(y,n.getMonth(),1),me=new Date(y,n.getMonth()+1,1),ds=new Date(y,n.getMonth(),n.getDate()),de=new Date(ds.getTime()+DAY);
+  const mp=(n-ms)/(me-ms)*100,dp=(n-ds)/DAY*100;
+  h+='<div class="card"><div class="row" style="justify-content:space-between"><b>هالشهر</b><span class="muted sm num">'+mp.toFixed(1)+'% · باقي '+Math.ceil((me-n)/DAY)+' يوم</span></div><div class="prog"><i style="width:'+mp+'%;background:#ff8a3d"></i></div>'+
+  '<div class="row" style="justify-content:space-between;margin-top:10px"><b>اليوم</b><span class="muted sm num" data-daypct>'+dp.toFixed(1)+'%</span></div><div class="prog"><i data-daybar style="width:'+dp+'%;background:#a46bff"></i></div></div>';
+  // what's left of my year
+  const t=totals(),frac=(e-n)/(e-s);
+  h+='<div class="sec"><h2>وش باقي لك من '+y+'؟</h2></div><div class="card"><div class="muted sm" style="margin-bottom:8px">لو كملت على نفس يومك، باقي الـ '+Math.ceil(left)+' يوم بتروح كذا:</div>'+
+    t.list.filter(a=>a.h>0).sort((a,b)=>b.h-a.h).map(a=>'<div class="row" style="justify-content:space-between;padding:5px 0"><span>'+esc(a.e)+' '+esc(a.n)+'</span><b class="num">'+dur(a.h*frac)+'</b></div>').join('')+
+    (t.free>0?'<div class="row" style="justify-content:space-between;padding:5px 0;color:var(--good)"><span>🌴 وقت حر</span><b class="num">'+dur(t.free*frac)+'</b></div>':'')+'</div>';
+  // countdowns
+  const evs=[];
+  const ram=findHijri(9,1,n),fitr=findHijri(10,1,n),adha=findHijri(12,10,n),araf=findHijri(12,9,n),hny=findHijri(1,1,n);
+  if(ram)evs.push(['🌙','رمضان','1 رمضان',ram]);
+  if(fitr)evs.push(['🎉','عيد الفطر','1 شوال',fitr]);
+  if(araf)evs.push(['🤲','يوم عرفة','9 ذو الحجة',araf]);
+  if(adha)evs.push(['🐑','عيد الأضحى','10 ذو الحجة',adha]);
+  if(hny)evs.push(['🕋','السنة الهجرية الجديدة','1 محرم',hny]);
+  evs.push(['🇸🇦','يوم التأسيس','22 فبراير',nextGreg(2,22)]);
+  evs.push(['💚','اليوم الوطني','23 سبتمبر',nextGreg(9,23)]);
+  evs.push(['🎆','السنة الميلادية الجديدة','1 يناير',new Date(y+1,0,1)]);
+  evs.push(['💰','الراتب','يوم '+db.salary+' من كل شهر (يتقدم لو صادف إجازة)',nextSalary()]);
+  evs.push(['🕌','الجمعة','',(()=>{const d=new Date(y,n.getMonth(),n.getDate());while(d.getDay()!==5)d.setDate(d.getDate()+1);return d})()]);
+  const a=age();if(a){let bd=new Date(y,a.b.getMonth(),a.b.getDate());if(bd<new Date(y,n.getMonth(),n.getDate()))bd=new Date(y+1,a.b.getMonth(),a.b.getDate());evs.push(['🎂','عيد ميلادك','',bd])}
+  evs.sort((p,q)=>p[3]-q[3]);
+  h+='<div class="sec"><h2>كم باقي على…</h2></div><div class="card" style="padding:4px 16px">'+evs.map(v=>'<div class="cd"><span class="em">'+v[0]+'</span><div class="t"><b>'+v[1]+'</b><div class="faint xs">'+(v[2]?v[2]+' · ':'')+v[3].toLocaleDateString('ar-SA-u-ca-gregory-nu-latn',{weekday:'long',day:'numeric',month:'long'})+'</div></div><div class="v"><span data-cdd="'+v[3].getTime()+'">'+Math.max(0,Math.ceil((v[3]-n)/DAY))+'</span><small>يوم</small></div></div>').join('')+'</div>';
+  h+='<div class="card"><label class="field" style="margin:0"><span>يوم الراتب بالشهر</span><input class="inp num" type="number" min="1" max="31" value="'+db.salary+'" data-set="salary"></label></div>';
+  return h;
+}
+function vAge(){
+  const a=age();
+  let h='<div class="card" style="margin-top:8px"><div class="grid2"><label class="field" style="margin:0"><span>تاريخ ميلادك</span><input class="inp" type="date" value="'+esc(db.birth)+'" max="'+new Date().toISOString().slice(0,10)+'" data-set="birth"></label><label class="field" style="margin:0"><span>متوسط العمر المتوقع (سنة)</span><input class="inp num" type="number" min="30" max="120" value="'+db.life+'" data-set="life"></label></div><div class="faint xs" style="margin-top:8px">تاريخك ينحفظ بجهازك بس.</div></div>';
+  if(!a)return h+'<div class="card" style="text-align:center;padding:30px"><div style="font-size:46px">🎂</div><b>حط تاريخ ميلادك</b><div class="muted sm">وأحسب لك عمرك بالأيام والساعات، وكم نمت وكم أكلت، وكم باقي.</div></div>';
+  const ha=(()=>{const b=hp(a.b),n=hp(new Date());let y=n.y-b.y;if(n.m<b.m||(n.m===b.m&&n.d<b.d))y--;return y})();
+  const days=Math.floor(a.ms/DAY);
+  h+='<div class="card" style="text-align:center"><div class="muted sm">عمرك</div><div class="big">'+a.y+' <span style="font-size:20px">سنة</span></div><div class="muted">و '+a.m+' شهر و '+a.d+' يوم · بالهجري '+ha+' سنة</div><div class="faint sm" style="margin-top:4px">انولدت يوم '+a.b.toLocaleDateString('ar-SA-u-ca-gregory-nu-latn',{weekday:'long'})+' · '+a.b.toLocaleDateString('ar-SA-u-ca-islamic-umalqura-nu-latn',{day:'numeric',month:'long',year:'numeric'})+'</div>'+
+  '<div class="grid2" style="margin-top:14px"><div class="kpi"><b>'+nf(days)+'</b><span>يوم عشتها</span></div><div class="kpi"><b>'+nf(a.ms/DAY/7)+'</b><span>أسبوع</span></div><div class="kpi"><b>'+nf(a.ms/36e5)+'</b><span>ساعة</span></div><div class="kpi"><b data-sec="'+a.b.getTime()+'">'+nf(a.ms/1e3)+'</b><span>ثانية (تعدّ الحين)</span></div></div></div>';
+  const lifeP=clamp(a.years/db.life*100,0,100),rem=Math.max(0,db.life-a.years);
+  h+='<div class="sec"><h2>عمرك بالأسابيع</h2></div><div class="card"><div class="row" style="justify-content:space-between"><span class="muted sm">كل نقطة أسبوع · كل سطر سنة</span><b class="num">'+lifeP.toFixed(1)+'%</b></div><div class="prog"><i style="width:'+lifeP+'%"></i></div><canvas id="weeks"></canvas><div class="faint xs" style="margin-top:6px">على متوسط '+db.life+' سنة، باقي تقريباً '+nf(rem,1)+' سنة = '+nf(rem*52.18)+' أسبوع. الأعمار بيد الله، والرقم للتأمل بس.</div></div>';
+  const t=totals();
+  h+='<div class="sec"><h2>وين راح عمرك؟</h2></div><div class="card"><div class="muted sm" style="margin-bottom:8px">تقدير لو كان يومك من زمان مثل الحين (النوم من يوم انولدت، والباقي من عمر 18):</div>';
+  for(const x of t.list.filter(q=>q.h>0).sort((p,q)=>q.h-p.h)){const yrs=x.k==='sleep'?a.years:Math.max(0,a.years-18);h+='<div class="row" style="justify-content:space-between;padding:5px 0"><span>'+esc(x.e)+' '+esc(x.n)+'</span><b class="num">'+dur(x.h*yrs)+'</b></div>'}
+  h+='</div><div class="sec"><h2>وش باقي من عمرك؟</h2></div><div class="card"><div class="muted sm" style="margin-bottom:8px">لو كملت بنفس الطريقة لين عمر '+db.life+' (والشغل لين التقاعد 60):</div>';
+  for(const x of t.list.filter(q=>q.h>0).sort((p,q)=>q.h-p.h)){const yrs=x.job?Math.max(0,60-a.years):rem;h+='<div class="row" style="justify-content:space-between;padding:5px 0"><span>'+esc(x.e)+' '+esc(x.n)+'</span><b class="num">'+dur(x.h*yrs)+'</b></div>'}
+  if(t.free>0)h+='<div class="row" style="justify-content:space-between;padding:5px 0;color:var(--good)"><span>🌴 وقت حر</span><b class="num">'+dur(t.free*rem)+'</b></div>';
+  return h+'</div>';
+}
+function drawWeeks(){
+  const cv=$('#weeks'),a=age();if(!cv||!a)return;
+  const rows=Math.ceil(db.life),cols=52,W=cv.clientWidth||600,gap=W/cols,r=Math.max(1.2,gap*.32),H=rows*gap;
+  const dpr=devicePixelRatio||1;cv.width=W*dpr;cv.height=H*dpr;cv.style.height=H+'px';const c=cv.getContext('2d');c.scale(dpr,dpr);
+  const cs=getComputedStyle(document.body),lived=Math.floor(a.ms/DAY/7),pri=cs.getPropertyValue('--primary').trim(),faint=cs.getPropertyValue('--line').trim();
+  for(let i=0;i<rows*cols;i++){const x=W-(i%cols)*gap-gap/2,y=Math.floor(i/cols)*gap+gap/2;c.beginPath();c.arc(x,y,i===lived?r*1.5:r,0,7);c.fillStyle=i<lived?pri:i===lived?'#ff8a3d':faint;c.fill()}
+}
+function factsList(years,label){
+  const R=db.rates,t=totals(),sl=byKey('sleep'),awakeMin=(YH-(sl?hrsYear(sl):2920))*60*years,M=525600*years;
+  const eat=byKey('eat'),pray=byKey('pray');
+  return[
+   ['❤️','نبضات القلب',nf(R.hr*M),'على '+R.hr+' نبضة بالدقيقة'],
+   ['🫁','الأنفاس',nf(R.br*M),'على '+R.br+' نفس بالدقيقة'],
+   ['👁️','رمشات العين',nf(R.blink*awakeMin),R.blink+' رمشة بالدقيقة وأنت صاحي'],
+   ['💧','الموية اللي تشربها',nf(R.water*365*years)+' لتر','≈ '+nf(R.water*365*years/0.6)+' علبة موية صغيرة'],
+   ['🚶','الخطوات',nf(R.steps*365*years),'≈ '+nf(R.steps*365*years*0.75/1000)+' كم مشي'],
+   ['🗣️','الكلمات اللي تقولها',nf(R.words*365*years),'≈ '+nf(R.words*365*years/80000)+' كتاب'],
+   ['🍽️','الوجبات',nf(3*365*years),'3 وجبات باليوم'+(eat?' · '+dur(hrsYear(eat)*years)+' أكل':'')],
+   ['🕌','الصلوات',nf(5*365*years),'5 فروض باليوم'+(pray?' · '+dur(hrsYear(pray)*years):'')],
+   ['😴','الأحلام',nf(4.5*365*years),'4 إلى 5 أحلام بالليلة، تنسى أغلبها'],
+   ['💇','طول الشعر',nf(15*years)+' سم','ينمو تقريباً 1.25 سم بالشهر'],
+   ['💅','طول الأظافر',nf(4.2*years,1)+' سم','ظفر اليد ينمو 3.5 ملم بالشهر'],
+   ['🌍','مسافتك مع الأرض حول الشمس',nf(940e6*years)+' كم','الأرض تقطع 940 مليون كم كل سنة'],
+  ];
+}
+function vFacts(){
+  const a=age();let h='<div class="sec"><h2>في سنة وحدة</h2></div><div class="grid2">'+factsList(1).map(f=>'<div class="fact"><div class="ft">'+f[0]+' '+f[1]+'</div><div class="fv">'+f[2]+'</div><div class="fb">'+f[3]+'</div></div>').join('')+'</div>';
+  if(a)h+='<div class="sec"><h2>من يوم انولدت ('+a.y+' سنة)</h2></div><div class="grid2">'+factsList(a.years).map(f=>'<div class="fact" style="border-right-color:#2ecc9a"><div class="ft">'+f[0]+' '+f[1]+'</div><div class="fv">'+f[2]+'</div><div class="fb">'+f[3]+'</div></div>').join('')+'</div>';
+  else h+='<div class="card muted sm" style="margin-top:12px">حط تاريخ ميلادك في تبويب «عمري» وتطلع لك نفس الأرقام لعمرك كله.</div>';
+  const R=db.rates;
+  h+='<div class="sec"><h2>عدّل المعدلات</h2></div><div class="card"><div class="grid2">'+
+  [['hr','نبض القلب بالدقيقة'],['br','الأنفاس بالدقيقة'],['blink','الرمشات بالدقيقة'],['water','لترات الموية باليوم'],['steps','الخطوات باليوم'],['words','الكلمات باليوم']].map(([k,l])=>'<label class="field" style="margin:0"><span>'+l+'</span><input class="inp num" type="number" min="0" step="any" value="'+R[k]+'" data-rate="'+k+'"></label>').join('')+'</div><div class="faint xs" style="margin-top:8px">الأرقام تقديرية على متوسطات شخص بالغ.</div></div>';
+  return h;
+}
+function tipsList(){
+  const t=totals(),tips=[],g=k=>byKey(k),avg=a=>a?hrsYear(a)*60/365:0,a=age(),rem=a?Math.max(0,db.life-a.years):40;
+  const sl=g('sleep');
+  if(sl){const hh=sl.m/60;if(hh<7)tips.push(['😴','نومك قليل','الكبار يحتاجون 7 إلى 9 ساعات نوم. نومك '+nf(hh,1)+' ساعة. لو زدت '+mins(Math.round(420-sl.m))+' بس، تفرق في تركيزك ومزاجك وصحتك.','bad']);else if(hh>9)tips.push(['😴','نومك كثير شوي','الطبيعي 7 إلى 9 ساعات. لو نقصت لـ 8 ساعات تكسب '+nf((sl.m-480)/60*365/24)+' يوم صاحي كل سنة.','warn']);else tips.push(['😴','نومك ممتاز','نومك بين 7 و 9 ساعات، وهذا المطلوب. حافظ عليه.','good'])}
+  const sc=g('screen')||db.acts.find(x=>/جوال|شاش|سوشال/.test(x.n));
+  if(sc&&sc.m>=60){const gain=60*365/60/24;tips.push(['📱','الجوال ياكل سنتك','تقضي '+nf(hrsYear(sc)/24)+' يوم بالسنة على الشاشات. لو نقصتها ساعة باليوم تكسب '+nf(gain,1)+' يوم كل سنة، و'+nf(gain*rem/365,1)+' سنة من عمرك الباقي. جرّب «وقت الشاشة» بالجوال وحط حد للتطبيقات.','warn'])}
+  const sp=g('sport')||db.acts.find(x=>/رياض|جيم|مشي/.test(x.n));const spW=sp?sp.m*sp.d:0;
+  if(spW<150)tips.push(['🏃','حرّك جسمك أكثر','منظمة الصحة العالمية تنصح بـ 150 دقيقة نشاط معتدل بالأسبوع على الأقل. حالياً عندك '+spW+' دقيقة. مشي 22 دقيقة باليوم يكفي.','bad']);else tips.push(['🏃','رياضتك كافية','عندك '+spW+' دقيقة بالأسبوع، فوق الحد المنصوح (150). كفو.','good']);
+  const cm=g('commute');if(cm&&hrsYear(cm)>0){const h=hrsYear(cm);tips.push(['🎧','استغل الطريق','تقضي '+nf(h)+' ساعة بالسنة بالطريق. تقدر تسمع فيها تقريباً '+nf(h/7)+' كتاب صوتي، أو بودكاست، أو تختم القرآن سماعاً أكثر من '+nf(h/25)+' مرة.','info'])}
+  const rd=db.acts.find(x=>/قراء/.test(x.n)&&!/قرآن/.test(x.n));
+  if(rd)tips.push(['📚','قراءتك','تقرا '+nf(hrsYear(rd))+' ساعة بالسنة ≈ '+nf(hrsYear(rd)/7)+' كتاب (الكتاب المتوسط 7 ساعات تقريباً).','good']);else tips.push(['📚','20 دقيقة قراءة','لو قريت 20 دقيقة باليوم، يعني '+nf(20*365/60)+' ساعة بالسنة ≈ '+nf(20*365/60/7)+' كتاب. أضفها من «إضافة سريعة».','info']);
+  if(t.free<0)tips.push(['⚠️','يومك أكثر من 24 ساعة','الأرقام اللي حطيتها أكثر من اليوم. راجع الأنشطة الطويلة، أو احسب الأشياء اللي تسويها مع بعض (مثل الجوال بالطريق) مرة وحدة بس.','bad']);
+  else if(t.free/365<2)tips.push(['🌴','وقتك الحر قليل','يبقى لك '+mins(Math.round(t.free*60/365))+' باليوم بس. حاول توفر وقت للعائلة والراحة، الإرهاق يأثر على كل شي.','warn']);
+  else tips.push(['🌴','عندك وقت حر','يبقى لك '+mins(Math.round(t.free*60/365))+' كل يوم = '+nf(t.free/24)+' يوم بالسنة. لو استثمرت ساعة منها في تعلم مهارة، تصير عندك '+nf(365/24,1)+' يوم تعلم كل سنة.','good']);
+  const wt=g('work');if(wt&&wt.m>540)tips.push(['💼','دوامك طويل','تشتغل أكثر من 9 ساعات باليوم. خذ فواصل قصيرة كل ساعة، وحاول تفصل الشغل عن البيت.','warn']);
+  const tl=g('toilet');if(tl&&tl.m>20)tips.push(['🚽','الجوال برا الحمام','أغلب الوقت بالحمام يروح على الجوال. لو نزلت لـ 15 دقيقة باليوم تكسب '+nf((tl.m-15)*365/60/24,1)+' يوم بالسنة، وأحسن لصحتك.','info']);
+  return tips;
+}
+function simState(){if(!db.sim||!db.acts.some(a=>a.id===db.sim.id))db.sim={id:(byKey('screen')||db.acts[0]||{}).id,delta:-30};return db.sim}
+function vTips(){
+  const col={good:'var(--good)',warn:'var(--warn)',bad:'var(--bad)',info:'var(--primary)'};
+  let h='<div class="sec"><h2>اقتراحات على حسب يومك</h2></div>'+tipsList().map(t=>'<div class="card tip" style="border-right:4px solid '+col[t[3]]+'"><span class="em">'+t[0]+'</span><div><b>'+t[1]+'</b><div class="muted sm">'+t[2]+'</div></div></div>').join('');
+  // simulator
+  const s=simState();const sel=db.acts.find(a=>a.id===s.id)||db.acts[0];
+  if(sel){const a=age(),rem=a?Math.max(0,db.life-a.years):40,dY=s.delta*activeDays(sel)/60/24;
+  h+='<div class="sec"><h2>🧪 ماذا لو…؟</h2></div><div class="card"><label class="field"><span>النشاط</span><select class="inp" data-sim="id">'+db.acts.map(a=>'<option value="'+a.id+'"'+(a.id===sel.id?' selected':'')+'>'+esc(a.e+' '+a.n)+'</option>').join('')+'</select></label>'+
+  '<div class="ctl row"><span class="muted sm" style="min-width:110px">'+(s.delta>0?'زدت ':'نقصت ')+mins(Math.abs(s.delta))+' باليوم</span><input type="range" min="-180" max="180" step="5" value="'+s.delta+'" data-sim="delta" style="flex:1"></div>'+
+  '<div class="grid2" style="margin-top:10px"><div class="kpi"><b style="color:'+(dY<=0?'var(--good)':'var(--warn)')+'">'+(dY<=0?'+':'−')+nf(Math.abs(dY),1)+'</b><span>يوم '+(dY<=0?'تكسبه':'يروح')+' بالسنة</span></div><div class="kpi"><b>'+nf(Math.abs(dY)*rem/365,1)+'</b><span>سنة على '+nf(rem)+' سنة جاية</span></div></div>'+
+  '<div class="row" style="margin-top:12px"><button class="btn sm pri" data-act="applysim">طبّق على سنتي</button></div></div>'}
+  h+='<div class="sec"><h2>أفكار تستفيد منها</h2></div><div class="card"><div class="muted sm" style="line-height:1.9">'+
+  '• <b>قاعدة 1%:</b> 1% من يومك = 14 دقيقة. لو خصصتها لشي واحد، تصير 87 ساعة بالسنة.<br>'+
+  '• <b>عادة صغيرة:</b> 10 دقايق باليوم لتعلم لغة = 61 ساعة بالسنة، تكفي لأساسيات المحادثة.<br>'+
+  '• <b>النوم بوقت ثابت:</b> نفس وقت النوم والصحيان حتى بالويكند يحسن جودة النوم.<br>'+
+  '• <b>جمّع المشاوير:</b> مشوار واحد لكل المقاضي بدل ثلاث يوفر ساعات بالشهر.<br>'+
+  '• <b>جرّب أسبوع:</b> سجّل يومك الحقيقي أسبوع، وعدّل الأرقام هنا عشان تطلع الحسبة دقيقة.</div></div>';
+  return h;
+}
+
+/* ---------- report (PDF) ---------- */
+function buildReport(){
+  const t=totals(),a=age(),y=new Date().getFullYear();
+  let h='<h1>سنتي بالأرقام: وين تروح الـ365 يوم؟</h1><div style="color:#666">السنة = 365 يوم = 8,760 ساعة · '+new Date().toLocaleDateString('ar-SA-u-ca-gregory-nu-latn',{dateStyle:'long'})+'</div>';
+  h+=stackBar(t).replace('background:var(--panel2)','background:#eee');
+  h+='<h2>توزيع السنة</h2><table><tr><th>النشاط</th><th>باليوم</th><th>أيام/أسبوع</th><th>ساعات بالسنة</th><th>أيام</th><th>النسبة</th></tr>'+t.list.map(x=>'<tr><td><i class="dot" style="background:'+x.c+'"></i>'+esc(x.e+' '+x.n)+'</td><td>'+mins(x.m)+'</td><td>'+x.d+'</td><td>'+nf(x.h)+'</td><td><b>'+nf(x.h/24,1)+'</b></td><td>'+nf(x.h/YH*100,1)+'%</td></tr>').join('')+
+  '<tr><td>🌴 وقت حر</td><td>'+mins(Math.max(0,Math.round(t.free*60/365)))+'</td><td></td><td>'+nf(t.free)+'</td><td><b>'+nf(t.free/24,1)+'</b></td><td>'+nf(t.free/YH*100,1)+'%</td></tr></table>';
+  if(a)h+='<h2>عمري</h2><div class="g"><div><b>'+a.y+' سنة و'+a.m+' شهر</b>العمر</div><div><b>'+nf(a.ms/DAY)+'</b>يوم عشتها</div><div><b>'+nf(Math.max(0,db.life-a.years),1)+' سنة</b>باقي على متوسط '+db.life+'</div></div>';
+  h+='<h2>أشياء ثانية تنحسب في سنة</h2><div class="g">'+factsList(1).map(f=>'<div>'+f[0]+' '+f[1]+'<b>'+f[2]+'</b><span style="color:#777;font-size:8.5pt">'+f[3]+'</span></div>').join('')+'</div>';
+  h+='<h2>اقتراحات</h2>'+tipsList().map(t=>'<div style="margin-bottom:5px">'+t[0]+' <b>'+t[1]+':</b> '+t[2]+'</div>').join('');
+  h+='<div style="color:#888;font-size:8.5pt;margin-top:14px">الأرقام تقديرية. سُوّي بتطبيق سنتي: ilo0ol.github.io/experiments/sanati</div>';
+  $('#report').innerHTML=h;
+}
+
+/* ---------- modal ---------- */
+function openEdit(id){
+  const isNew=!id;const a=isNew?{id:'a'+(++uid),n:'',e:'⏳',m:30,d:7,c:COLORS[db.acts.length%COLORS.length],job:0}:{...db.acts.find(x=>x.id===id)};
+  const ov=document.createElement('div');ov.className='ov';
+  const draw=()=>{ov.innerHTML='<div class="sheet" role="dialog" aria-modal="true"><h3>'+(isNew?'نشاط جديد':'عدّل النشاط')+'</h3>'+
+   '<label class="field"><span>الاسم</span><input class="inp" id="fn" maxlength="40" value="'+esc(a.n)+'" placeholder="مثلاً: القراءة"></label>'+
+   '<div class="field"><span class="muted sm">الأيقونة</span></div><div class="emojis">'+EMOJIS.map(e=>'<button data-e="'+e+'" class="'+(a.e===e?'on':'')+'">'+e+'</button>').join('')+'</div>'+
+   '<div class="colors">'+COLORS.map(c=>'<button data-c="'+c+'" class="'+(a.c===c?'on':'')+'" style="background:'+c+'" aria-label="لون"></button>').join('')+'</div>'+
+   '<div class="grid2"><label class="field"><span>دقائق باليوم</span><input class="inp num" id="fm" type="number" min="0" max="1440" value="'+a.m+'"></label><label class="field"><span>أيام بالأسبوع</span><input class="inp num" id="fd" type="number" min="0" max="7" value="'+a.d+'"></label></div>'+
+   '<label class="row" style="margin-bottom:16px"><input type="checkbox" id="fj" '+(a.job?'checked':'')+'> <span class="sm">ينخصم منه أيام الإجازة (مثل الدوام)</span></label>'+
+   '<div class="row"><button class="btn pri" id="fs" style="flex:1">'+(isNew?'أضف':'احفظ')+'</button>'+(isNew?'':'<button class="btn danger" id="fx">🗑️ احذف</button>')+'<button class="btn" id="fc">إلغاء</button></div></div>';
+   ov.querySelector('#fn').focus();};
+  const keep=()=>{a.n=ov.querySelector('#fn').value;a.m=+ov.querySelector('#fm').value||0;a.d=+ov.querySelector('#fd').value||0;a.job=ov.querySelector('#fj').checked?1:0};
+  draw();document.body.appendChild(ov);
+  ov.addEventListener('click',ev=>{const b=ev.target.closest('button');if(ev.target===ov||b?.id==='fc')return ov.remove();if(!b)return;
+    if(b.dataset.e){keep();a.e=b.dataset.e;draw()}else if(b.dataset.c){keep();a.c=b.dataset.c;draw()}
+    else if(b.id==='fs'){keep();a.n=a.n.trim()||'نشاط';a.m=clamp(Math.round(a.m),0,1440);a.d=clamp(Math.round(a.d),0,7);
+      if(isNew)db.acts.push(a);else db.acts[db.acts.findIndex(x=>x.id===a.id)]=a;save();ov.remove();render();toast(isNew?'انضاف ✓':'انحفظ ✓')}
+    else if(b.id==='fx'){const i=db.acts.findIndex(x=>x.id===a.id),old=db.acts[i];db.acts.splice(i,1);save();ov.remove();render();toast('انحذف «'+old.n+'»',{undo:()=>{db.acts.splice(i,0,old);save();render()}})}});
+}
+let tt;function toast(m,o={}){document.querySelector('.toast')?.remove();const d=document.createElement('div');d.className='toast';d.innerHTML=esc(m)+(o.undo?' <button style="color:#7fb0ff;font-weight:800;margin-right:8px">تراجع</button>':'');if(o.undo)d.querySelector('button').onclick=()=>{o.undo();d.remove()};document.body.appendChild(d);clearTimeout(tt);tt=setTimeout(()=>d.remove(),o.undo?5000:2200)}
+
+/* ---------- events ---------- */
+document.addEventListener('click',e=>{
+  const b=e.target.closest('button');if(!b||b.closest('.ov'))return;
+  if(b.dataset.tab){db.tab=b.dataset.tab;save();render();scrollTo(0,0);return}
+  if(b.dataset.day){const a=db.acts.find(x=>x.id===b.dataset.id);a.d=+b.dataset.day;save();render();return}
+  if(b.dataset.quick){const q=QUICK[+b.dataset.quick];db.acts.push({id:'a'+(++uid),n:q[0],e:q[1],m:q[2],d:q[3],c:COLORS[db.acts.length%COLORS.length]});save();render();toast('انضاف '+q[0]+' ✓');return}
+  const act=b.dataset.act;
+  if(act==='add')openEdit();
+  else if(act==='edit')openEdit(b.dataset.id);
+  else if(act==='theme'){document.body.classList.toggle('light');try{localStorage.setItem(THEME,document.body.classList.contains('light')?'light':'dark')}catch(e){}render()}
+  else if(act==='reset'){const old=db.acts,ov=db.vac;db.acts=freshActs();db.vac=36;save();render();toast('رجعت الأرقام الافتراضية',{undo:()=>{db.acts=old;db.vac=ov;save();render()}})}
+  else if(act==='pdf'){buildReport();setTimeout(()=>print(),50)}
+  else if(act==='share')share();
+  else if(act==='applysim'){const s=simState(),a=db.acts.find(x=>x.id===s.id);if(a){a.m=clamp(a.m+s.delta,0,1440);s.delta=0;save();render();toast('تعدّل '+a.n+' ✓')}}
+});
+document.addEventListener('input',e=>{
+  const el=e.target;
+  if(el.dataset.range){const a=db.acts.find(x=>x.id===el.dataset.range);a.m=+el.value;save();
+    // light update while dragging
+    document.querySelector('[data-ml="'+a.id+'"]').textContent=mins(a.m)+' باليوم';document.querySelector('[data-r="'+a.id+'"]').textContent=nf(hrsYear(a)/24,1);
+    clearTimeout(el._t);el._t=setTimeout(()=>{const y=scrollY;render();scrollTo(0,y)},350);}
+  else if(el.dataset.sim){db.sim=simState();db.sim[el.dataset.sim]=el.dataset.sim==='delta'?+el.value:el.value;save();
+    if(el.dataset.sim==='delta'){clearTimeout(el._t);el._t=setTimeout(()=>{const y=scrollY;render();scrollTo(0,y);const r=document.querySelector('[data-sim="delta"]');r&&r.focus()},120)}else render()}
+});
+document.addEventListener('change',e=>{
+  const el=e.target;
+  if(el.dataset.set){const k=el.dataset.set;db[k]=k==='birth'?el.value:clamp(+el.value||0,...({vac:[0,120],life:[30,120],salary:[1,31]}[k]));save();render()}
+  else if(el.dataset.rate){db.rates[el.dataset.rate]=Math.max(0,+el.value||0);save();render()}
+});
+async function share(){
+  const t=totals(),txt='سنتي بالأرقام 📊\n'+t.list.filter(a=>a.h>0).sort((a,b)=>b.h-a.h).map(a=>a.e+' '+a.n+': '+nf(a.h/24)+' يوم').join('\n')+'\n🌴 وقت حر: '+nf(Math.max(0,t.free)/24)+' يوم';
+  const url=location.origin+location.pathname+'#s='+btoa(unescape(encodeURIComponent(JSON.stringify({acts:db.acts.map(({n,e,m,d,job})=>({n,e,m,d,job})),vac:db.vac}))));
+  try{if(navigator.share){await navigator.share({title:'سنتي',text:txt+'\n\nاحسب سنتك:',url});return}}catch(e){if(e.name==='AbortError')return}
+  try{await navigator.clipboard.writeText(txt+'\n\n'+url);toast('نسخت الملخص والرابط ✓')}catch(e){toast('ما قدرت أنسخ')}
+}
+function tick(){
+  const now=Date.now();
+  document.querySelectorAll('[data-cd]').forEach(el=>el.textContent=cdText(+el.dataset.cd));
+  document.querySelectorAll('[data-pct]').forEach(el=>{const[s,e]=el.dataset.pct.split('_').map(Number);el.textContent=clamp((now-s)/(e-s)*100,0,100).toFixed(1)+'%'});
+  document.querySelectorAll('[data-sec]').forEach(el=>el.textContent=nf((now-el.dataset.sec)/1e3));
+  const dp=document.querySelector('[data-daypct]');if(dp){const d=new Date();const p=(d-new Date(d.getFullYear(),d.getMonth(),d.getDate()))/DAY*100;dp.textContent=p.toFixed(1)+'%';document.querySelector('[data-daybar]').style.width=p+'%'}
+}
+setInterval(tick,1000);
+addEventListener('resize',()=>{if(db.tab==='age')drawWeeks()});
+render();
+if('serviceWorker' in navigator&&location.protocol==='https:')addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
+</script>
+</body>
+</html>
