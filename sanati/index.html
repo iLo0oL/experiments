@@ -110,7 +110,7 @@ canvas{display:block;width:100%}
 /* nav */
 .tabs{position:fixed;bottom:0;left:0;right:0;z-index:30;background:color-mix(in srgb,var(--panel) 92%,transparent);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom)}
 .tabs .wrap{display:flex;padding:0 6px}
-.tabs button{flex:1;padding:8px 0 9px;display:flex;flex-direction:column;align-items:center;gap:1px;font-size:12px;font-weight:700;color:var(--faint)}
+.tabs button{flex:1;padding:8px 0 9px;min-width:0;white-space:nowrap;display:flex;flex-direction:column;align-items:center;gap:1px;font-size:12px;font-weight:700;color:var(--faint)}
 .tabs button span{font-size:21px;filter:grayscale(1);opacity:.65}
 .tabs button.on{color:var(--primary)}
 .tabs button.on span{filter:none;opacity:1}
@@ -126,6 +126,21 @@ canvas{display:block;width:100%}
 .colors button{width:30px;height:30px;border-radius:50%}
 .colors button.on{outline:3px solid var(--text);outline-offset:2px}
 .toast{position:fixed;bottom:calc(92px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);background:#000c;color:#fff;padding:10px 16px;border-radius:12px;z-index:60;font-size:14px}
+.wk{display:flex;gap:4px;margin:10px 0 6px}
+.wk div{flex:1;text-align:center;font-size:11px;color:var(--faint)}
+.wk i{display:block;height:26px;border-radius:8px;margin-top:3px;background:var(--panel2);display:grid;place-items:center;font-style:normal;font-size:13px;color:#fff}
+.wk i.ok{background:var(--good)}.wk i.no{background:var(--bad)}.wk i.fut{background:transparent;border:1px dashed var(--line)}.wk i.today{outline:2px solid var(--primary);outline-offset:1px}
+.lg{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--line)}
+.lg:last-child{border-bottom:0}
+.lg .t{flex:1;min-width:0}.lg .t b{display:block;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lg input{width:84px;text-align:center;padding:9px 6px}
+.dnav{display:flex;align-items:center;gap:8px}
+.dnav b{flex:1;text-align:center}
+.cmp{padding:8px 0;border-bottom:1px solid var(--line)}
+.cmp:last-child{border-bottom:0}
+.cmp .bars{display:grid;gap:3px;margin-top:5px}
+.cmp .bars div{height:8px;border-radius:5px;min-width:2px}
+.pill{display:inline-block;font-size:12px;font-weight:700;padding:2px 8px;border-radius:999px}
 #report{display:none}
 @media print{
   @page{size:A4;margin:12mm}
@@ -156,6 +171,7 @@ canvas{display:block;width:100%}
 <main id="app" class="wrap"></main>
 <nav class="tabs" aria-label="التنقل"><div class="wrap">
   <button data-tab="year"><span>📊</span>سنتي</button>
+  <button data-tab="goals"><span>🎯</span>أهدافي</button>
   <button data-tab="left"><span>⏳</span>كم باقي</button>
   <button data-tab="age"><span>🎂</span>عمري</button>
   <button data-tab="facts"><span>🔢</span>أرقام</button>
@@ -188,17 +204,25 @@ const nf=(x,d=0)=>Number(x).toLocaleString('en-US',{maximumFractionDigits:d,mini
 const pad=n=>String(n).padStart(2,'0');
 let uid=Date.now();
 function freshActs(){return DEFAULT_ACTS.map((a,i)=>({...a,id:'a'+(i+1),c:COLORS[i%COLORS.length]}))}
-function defaults(){return{acts:freshActs(),vac:36,birth:'',life:75,salary:27,rates:{...DEF_RATES},tab:'year'}}
-function load(){try{const s=JSON.parse(localStorage.getItem(KEY));if(s&&Array.isArray(s.acts))return{...defaults(),...s,rates:{...DEF_RATES,...(s.rates||{})}}}catch(e){}return defaults()}
+function defaults(){return{acts:freshActs(),vac:36,birth:'',life:75,salary:27,rates:{...DEF_RATES},tab:'year',goals:[],log:{},friends:[],name:''}}
+function load(){try{const s=JSON.parse(localStorage.getItem(KEY));if(s&&Array.isArray(s.acts))return{...defaults(),...s,goals:Array.isArray(s.goals)?s.goals:[],log:s.log&&typeof s.log==='object'?s.log:{},friends:Array.isArray(s.friends)?s.friends:[],rates:{...DEF_RATES,...(s.rates||{})}}}catch(e){}return defaults()}
 let db=load();
 // shared link: #s=<base64 json>
-try{if(location.hash.startsWith('#s=')){const s=JSON.parse(decodeURIComponent(escape(atob(location.hash.slice(3)))));if(Array.isArray(s.acts)){db.acts=s.acts.slice(0,40).map((a,i)=>({id:'a'+(++uid),n:String(a.n||'نشاط').slice(0,40),e:String(a.e||'⏳').slice(0,8),m:clamp(+a.m||0,0,1440),d:clamp(+a.d||0,0,7),job:a.job?1:0,c:COLORS[i%COLORS.length]}));if(s.vac!=null)db.vac=clamp(+s.vac,0,120);setTimeout(()=>toast('انفتحت سنة صاحبك، تقدر تعدّلها'),300)}history.replaceState(null,'',location.pathname)}}catch(e){}
+function readShare(){try{if(location.hash.startsWith('#s=')){const s=JSON.parse(decodeURIComponent(escape(atob(location.hash.slice(3)))));if(Array.isArray(s.acts)){
+  const acts=s.acts.slice(0,40).map((a,i)=>({id:'f'+i,k:typeof a.k==='string'?a.k.slice(0,20):undefined,n:String(a.n||'نشاط').slice(0,40),e:String(a.e||'⏳').slice(0,8),m:clamp(+a.m||0,0,1440),d:clamp(+a.d||0,0,7),job:a.job?1:0,c:COLORS[i%COLORS.length]}));
+  const nm=String(s.nm||'صاحبك').trim().slice(0,30)||'صاحبك',sig=JSON.stringify(acts);
+  let f=db.friends.find(x=>x.nm===nm);
+  if(f){f.acts=acts;f.vac=clamp(+s.vac||0,0,120);f.at=Date.now()}else{f={id:'p'+Date.now(),nm,acts,vac:s.vac!=null?clamp(+s.vac,0,120):36,at:Date.now()};db.friends.unshift(f);db.friends=db.friends.slice(0,8)}
+  db.cmp=f.id;db.tab='year';setTimeout(()=>{save();toast('وصلتك سنة '+nm+' 🆚 شوف المقارنة فوق')},300)}
+  history.replaceState(null,'',location.pathname)}}catch(e){}}
+readShare();
+addEventListener('hashchange',()=>{if(location.hash.startsWith('#s=')){readShare();save();render();scrollTo(0,0)}});
 function clamp(v,a,b){return Math.min(b,Math.max(a,v))}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(db))}catch(e){}}
 
 /* ---------- calculations ---------- */
-function activeDays(a){return Math.max(0,a.d/7*365-(a.job?Math.min(db.vac,a.d/7*365):0))}
-function hrsYear(a){return a.m/60*activeDays(a)}
+function activeDays(a,vac=db.vac){return Math.max(0,a.d/7*365-(a.job?Math.min(vac,a.d/7*365):0))}
+function hrsYear(a,vac){return a.m/60*activeDays(a,vac)}
 function totals(){
   const list=db.acts.map(a=>({...a,h:hrsYear(a)}));
   const used=list.reduce((s,a)=>s+a.h,0);
@@ -234,7 +258,7 @@ function cdText(t){let ms=t-Date.now();if(ms<=0)return'اليوم 🎉';const d=
 function render(){
   document.querySelectorAll('.tabs button').forEach(b=>b.classList.toggle('on',b.dataset.tab===db.tab));
   $('#themeBtn').textContent=document.body.classList.contains('light')?'🌙':'☀️';
-  const v={year:vYear,left:vLeft,age:vAge,facts:vFacts,tips:vTips}[db.tab]||vYear;
+  const v={year:vYear,goals:vGoals,left:vLeft,age:vAge,facts:vFacts,tips:vTips}[db.tab]||vYear;
   $('#app').innerHTML=v();
   if(db.tab==='age')drawWeeks();
   tick();
@@ -244,7 +268,7 @@ function stackBar(t){
 }
 function vYear(){
   const t=totals();const freeDay=t.free/365;
-  let h='<div class="card" style="margin-top:8px"><div class="muted sm">السنة = 365 يوم = 8,760 ساعة = 525,600 دقيقة</div>'+stackBar(t)+
+  let h=vCompare()+'<div class="card" style="margin-top:8px"><div class="muted sm">السنة = 365 يوم = 8,760 ساعة = 525,600 دقيقة</div>'+stackBar(t)+
   '<div class="legend">'+t.list.filter(a=>a.h>0).map(a=>'<span><i class="dot" style="background:'+a.c+'"></i>'+esc(a.n)+' '+nf(a.h/YH*100)+'%</span>').join('')+'<span><i class="dot" style="background:var(--panel2);border:1px solid var(--line)"></i>وقت حر '+nf(Math.max(0,t.free)/YH*100)+'%</span></div>';
   h+='<div class="grid3" style="margin-top:14px">'+['sleep','work','eat'].map(k=>{const a=t.list.find(x=>x.k===k);return a?'<div class="kpi"><b>'+nf(a.h/24)+'</b><span>يوم '+esc(a.n)+'</span></div>':''}).join('')+'</div></div>';
   if(t.free<0)h+='<div class="badbox">⚠️ مجموع أنشطتك أكثر من 24 ساعة باليوم بـ '+mins(Math.round(-t.free*60/365))+'. نقّص شي عشان تركب الحسبة.</div>';
@@ -256,7 +280,7 @@ function vYear(){
     '<div class="days">'+[1,2,3,4,5,6,7].map(n=>'<button class="'+(a.d===n?'on':'')+'" data-day="'+n+'" data-id="'+a.id+'">'+(n===7?'كل يوم':n)+'</button>').join('')+'</div></div>';
   }
   h+='<div class="card"><b>إضافة سريعة</b><div class="muted sm" style="margin-bottom:8px">اضغط على أي شي تسويه وينضاف لحسبتك</div><div class="chips">'+QUICK.filter(q=>!db.acts.some(a=>a.n===q[0])).map((q,i)=>'<button class="chip" data-quick="'+QUICK.indexOf(q)+'">'+q[1]+' '+q[0]+'</button>').join('')+'</div></div>';
-  h+='<div class="card"><label class="field"><span>أيام الإجازة السنوية والأعياد (تنخصم من الشغل والطريق)</span><input class="inp num" type="number" min="0" max="120" value="'+db.vac+'" data-set="vac"></label><div class="row"><button class="btn sm danger" data-act="reset">↺ رجّع الافتراضي</button><button class="btn sm" data-act="pdf">🖨️ تقرير PDF</button></div></div>';
+  h+='<div class="card"><label class="field"><span>أيام الإجازة السنوية والأعياد (تنخصم من الشغل والطريق)</span><input class="inp num" type="number" min="0" max="120" value="'+db.vac+'" data-set="vac"></label><label class="field"><span>اسمك (يظهر لصاحبك لما ترسل له سنتك)</span><input class="inp" maxlength="30" value="'+esc(db.name||'')+'" data-set="name" placeholder="مثلاً: أبو فهد"></label><div class="row"><button class="btn sm pri" data-act="share">🆚 قارن مع صاحبك</button><button class="btn sm danger" data-act="reset">↺ رجّع الافتراضي</button><button class="btn sm" data-act="pdf">🖨️ تقرير PDF</button></div></div>';
   return h;
 }
 function yearRing(label,s,e,color,sub){
@@ -371,6 +395,100 @@ function tipsList(){
   const tl=g('toilet');if(tl&&tl.m>20)tips.push(['🚽','الجوال برا الحمام','أغلب الوقت بالحمام يروح على الجوال. لو نزلت لـ 15 دقيقة باليوم تكسب '+nf((tl.m-15)*365/60/24,1)+' يوم بالسنة، وأحسن لصحتك.','info']);
   return tips;
 }
+
+/* ---------- goals & log ---------- */
+const dk=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+const fromDk=x=>new Date(x+'T00:00');
+const WD=['أحد','اثنين','ثلاثاء','أربعاء','خميس','جمعة','سبت'];
+let logDay=dk(new Date());
+function weekStart(d=new Date()){const x=new Date(d.getFullYear(),d.getMonth(),d.getDate());x.setDate(x.getDate()-x.getDay());return x}
+function logVal(day,id){const l=db.log[day];return l&&l[id]!=null?l[id]:null}
+function goalMet(g,day){const v=logVal(day,g.act);if(v==null)return null;return g.type==='max'?v<=g.m:v>=g.m}
+function goalStreak(g){const d=new Date();if(goalMet(g,dk(d))==null)d.setDate(d.getDate()-1);let n=0;for(let i=0;i<730;i++){if(goalMet(g,dk(d))!==true)break;n++;d.setDate(d.getDate()-1)}return n}
+function goalLabel(g){return(g.type==='max'?'على الأكثر ':'على الأقل ')+mins(g.m)+' باليوم'}
+function goalPresets(){
+  const out=[],has=id=>db.goals.some(g=>g.act===id),find=(k,re)=>byKey(k)||db.acts.find(a=>re.test(a.n));
+  const sc=find('screen',/جوال|شاش|سوشال/);if(sc&&!has(sc.id)&&sc.m>=60)out.push([sc,'max',sc.m-60,'📱 أنقص الجوال ساعة']);
+  const sl=find('sleep',/نوم/);if(sl&&!has(sl.id))out.push([sl,'min',420,'😴 نوم 7 ساعات على الأقل']);
+  const sp=find('sport',/رياض|مشي|جيم/);if(sp&&!has(sp.id))out.push([sp,'min',30,'🏃 رياضة 30 دقيقة']);
+  const rd=db.acts.find(a=>/قراء/.test(a.n)&&!/قرآن/.test(a.n));if(rd&&!has(rd.id))out.push([rd,'min',20,'📚 قراءة 20 دقيقة']);
+  const tl=find('toilet',/حمام/);if(tl&&!has(tl.id)&&tl.m>15)out.push([tl,'max',15,'🚽 الحمام 15 دقيقة بس']);
+  return out;
+}
+function last7(){const out=[];const d=new Date();for(let i=0;i<7;i++){const k=dk(d);if(db.log[k]&&Object.keys(db.log[k]).length)out.push(k);d.setDate(d.getDate()-1)}return out}
+function actualAvg(days){const r={};for(const a of db.acts){const v=days.map(k=>logVal(k,a.id)).filter(x=>x!=null);if(v.length)r[a.id]=v.reduce((p,q)=>p+q,0)/v.length}return r}
+function vGoals(){
+  const today=dk(new Date()),ws=weekStart();
+  let h='<div class="sec"><h2>🎯 أهداف الأسبوع</h2><button class="btn sm pri" data-act="addgoal">+ هدف</button></div>';
+  const gs=db.goals.filter(g=>db.acts.some(a=>a.id===g.act));
+  if(!gs.length)h+='<div class="card muted sm">حط لك هدف صغير، وسجّل يومك كل ليلة تحت عشان تتابعه وتشوف سلسلتك 🔥</div>';
+  for(const g of gs){
+    const a=db.acts.find(x=>x.id===g.act);let ok=0,lg=0,sum=0;
+    let dots='';for(let i=0;i<7;i++){const d=new Date(ws);d.setDate(d.getDate()+i);const k=dk(d),fut=k>today,m=fut?null:goalMet(g,k);if(m!=null){lg++;sum+=logVal(k,g.act);if(m)ok++}
+      dots+='<div>'+WD[i]+'<i class="'+(fut?'fut':m===true?'ok':m===false?'no':'')+(k===today?' today':'')+'">'+(m===true?'✓':m===false?'✗':'')+'</i></div>'}
+    const st=goalStreak(g),avg=lg?sum/lg:null;
+    h+='<div class="card" style="border-right:4px solid '+a.c+'"><div class="row"><span style="font-size:24px">'+esc(a.e)+'</span><div style="flex:1;min-width:0"><b>'+esc(a.n)+'</b><div class="muted xs">'+goalLabel(g)+'</div></div>'+(st?'<span class="pill" style="background:var(--warn-soft);color:var(--warn)">🔥 '+st+' يوم</span>':'')+'<button class="ibtn" style="width:34px;height:34px;font-size:14px" data-act="delgoal" data-id="'+g.id+'" aria-label="احذف الهدف">🗑️</button></div>'+
+      '<div class="wk">'+dots+'</div><div class="sm '+(lg?'':'faint')+'">'+(lg?'حققته '+ok+' من '+lg+' أيام سجّلتها · متوسطك '+mins(Math.round(avg))+(ok===lg&&lg>=5?' 🏆 أسبوع كامل!':''):'ما سجّلت شي هالأسبوع')+'</div>'+
+      (g.type==='max'&&a.m>g.m?'<div class="faint xs" style="margin-top:4px">لو التزمت فيه: تكسب '+nf((a.m-g.m)*activeDays(a)/60/24,1)+' يوم بالسنة</div>':'')+(g.type==='min'&&a.m<g.m?'<div class="faint xs" style="margin-top:4px">لو التزمت فيه: '+nf((g.m-a.m)*activeDays(a)/60/24,1)+' يوم زيادة بالسنة لـ'+esc(a.n)+'</div>':'')+'</div>';
+  }
+  const pr=goalPresets();
+  if(pr.length)h+='<div class="chips" style="margin-bottom:12px">'+pr.map((p,i)=>'<button class="chip" data-preset="'+i+'">'+p[3]+'</button>').join('')+'</div>';
+  // log
+  const d=fromDk(logDay),isToday=logDay===today,l=db.log[logDay]||{};
+  const tot=Object.values(l).reduce((p,q)=>p+q,0);
+  h+='<div class="sec"><h2>📝 سجّل يومك</h2></div><div class="card"><div class="dnav"><button class="ibtn" data-act="day" data-d="-1" aria-label="اليوم اللي قبل">›</button><b>'+(isToday?'اليوم · ':'')+d.toLocaleDateString('ar-SA-u-ca-gregory-nu-latn',{weekday:'long',day:'numeric',month:'long'})+'</b><button class="ibtn" data-act="day" data-d="1" aria-label="اليوم اللي بعد" '+(isToday?'disabled style="opacity:.35"':'')+'>‹</button></div>'+
+    '<div class="muted xs" style="margin:8px 0">اكتب كم دقيقة فعلاً قضيت. الرقم الباهت هو خطتك.</div>';
+  for(const a of db.acts){const v=l[a.id];h+='<div class="lg"><span style="font-size:20px">'+esc(a.e)+'</span><div class="t"><b>'+esc(a.n)+'</b><span class="faint xs" data-lh="'+a.id+'">'+(v!=null?mins(v)+(v!==a.m?' · الخطة '+mins(a.m):' ✓ مثل الخطة'):'الخطة '+mins(a.m))+'</span></div><input class="inp num" type="number" inputmode="numeric" min="0" max="1440" step="5" placeholder="'+a.m+'" value="'+(v!=null?v:'')+'" data-log="'+a.id+'" aria-label="دقائق '+esc(a.n)+'"></div>'}
+  h+='<div class="row" style="margin-top:10px;justify-content:space-between"><span class="sm '+(tot>1440?'':'muted')+'" style="'+(tot>1440?'color:var(--bad)':'')+'">سجّلت '+mins(tot)+' من 24 ساعة'+(tot>1440?' ⚠️':'')+'</span><div class="row"><button class="btn sm" data-act="fillplan">املأ الباقي من الخطة</button>'+(Object.keys(l).length?'<button class="btn sm danger" data-act="clearday">امسح</button>':'')+'</div></div></div>';
+  // plan vs actual
+  const days=last7(),av=actualAvg(days);
+  h+='<div class="sec"><h2>📈 الخطة والواقع</h2><span class="muted xs">آخر 7 أيام</span></div>';
+  if(!days.length)return h+'<div class="card muted sm">سجّل يوم واحد على الأقل وتطلع لك هنا مقارنة بين خطتك ويومك الحقيقي.</div>';
+  h+='<div class="card"><div class="muted xs" style="margin-bottom:6px">سجّلت '+days.length+' من 7 أيام · <i class="dot" style="background:var(--line)"></i>الخطة <i class="dot" style="background:var(--primary)"></i>الواقع</div>';
+  const mx=Math.max(1,...db.acts.map(a=>Math.max(a.m,av[a.id]||0)));
+  for(const a of db.acts){if(av[a.id]==null)continue;const v=av[a.id],df=Math.round(v-a.m);
+    h+='<div class="cmp"><div class="row" style="justify-content:space-between"><span>'+esc(a.e+' '+a.n)+'</span><span class="sm num"><b>'+mins(Math.round(v))+'</b> '+(Math.abs(df)>=5?'<span class="pill" style="background:'+(df>0?'var(--warn-soft);color:var(--warn)':'var(--primary-soft);color:var(--primary)')+'">'+(df>0?'+':'−')+mins(Math.abs(df))+'</span>':'<span class="pill" style="background:var(--good-soft);color:var(--good)">✓</span>')+'</span></div><div class="bars"><div style="width:'+(a.m/mx*100)+'%;background:var(--line)"></div><div style="width:'+(v/mx*100)+'%;background:'+a.c+'"></div></div>'+(Math.abs(df)>=5?'<div class="faint xs">لو كملت كذا: '+nf(v*activeDays(a)/60/24,1)+' يوم بالسنة بدل '+nf(hrsYear(a)/24,1)+'</div>':'')+'</div>'}
+  h+='<button class="btn sm pri" style="margin-top:10px" data-act="applyactual">خلّ خطتي مثل واقعي</button></div>';
+  return h;
+}
+function openGoal(){
+  document.querySelector('.toast')?.remove();
+  const ov=document.createElement('div');ov.className='ov';const def=goalPresets()[0];
+  ov.innerHTML='<div class="sheet" role="dialog" aria-modal="true"><h3>هدف جديد</h3><label class="field"><span>النشاط</span><select class="inp" id="ga">'+db.acts.map(a=>'<option value="'+a.id+'"'+(def&&def[0].id===a.id?' selected':'')+'>'+esc(a.e+' '+a.n)+'</option>').join('')+'</select></label>'+
+  '<div class="grid2"><label class="field"><span>النوع</span><select class="inp" id="gt"><option value="max">على الأكثر (أنقص)</option><option value="min"'+(def&&def[1]==='min'?' selected':'')+'>على الأقل (أزيد)</option></select></label><label class="field"><span>دقائق باليوم</span><input class="inp num" id="gm" type="number" min="0" max="1440" value="'+(def?def[2]:30)+'"></label></div>'+
+  '<div class="row"><button class="btn pri" id="gs" style="flex:1">أضف الهدف</button><button class="btn" id="gc">إلغاء</button></div></div>';
+  document.body.appendChild(ov);
+  ov.addEventListener('click',e=>{const b=e.target.closest('button');if(e.target===ov||b?.id==='gc')return ov.remove();if(b?.id==='gs'){addGoal(ov.querySelector('#ga').value,ov.querySelector('#gt').value,+ov.querySelector('#gm').value||0);ov.remove()}});
+}
+function addGoal(act,type,m){db.goals=db.goals.filter(g=>g.act!==act);db.goals.push({id:'g'+(++uid),act,type,m:clamp(Math.round(m),0,1440),at:Date.now()});save();render();toast('انضاف الهدف 🎯 سجّل يومك عشان تتابعه')}
+function askName(){
+  document.querySelector('.toast')?.remove();
+  const ov=document.createElement('div');ov.className='ov';
+  ov.innerHTML='<div class="sheet" role="dialog" aria-modal="true"><h3>وش اسمك؟</h3><div class="muted sm" style="margin-bottom:10px">يظهر لصاحبك لما يفتح الرابط ويقارن سنته بسنتك.</div><input class="inp" id="nm" maxlength="30" placeholder="مثلاً: أبو فهد"><div class="row" style="margin-top:14px"><button class="btn pri" id="ok" style="flex:1">شارك</button><button class="btn" id="no">إلغاء</button></div></div>';
+  document.body.appendChild(ov);ov.querySelector('#nm').focus();
+  ov.addEventListener('click',e=>{const b=e.target.closest('button');if(e.target===ov||b?.id==='no')return ov.remove();if(b?.id==='ok'){const v=ov.querySelector('#nm').value.trim().slice(0,30);if(!v)return ov.querySelector('#nm').focus();db.name=v;save();ov.remove();share()}});
+}
+/* ---------- compare with friend ---------- */
+function vCompare(){
+  if(!db.friends.length)return'';
+  const f=db.friends.find(x=>x.id===db.cmp)||db.friends[0];
+  const mine=totals(),fl=f.acts.map(a=>({...a,h:hrsYear(a,f.vac)})),ffree=YH-fl.reduce((p,a)=>p+a.h,0);
+  const key=a=>a.k||a.n.trim(),rows=[],seen=new Set();
+  for(const a of mine.list){const o=fl.find(b=>key(b)===key(a)||b.n.trim()===a.n.trim());if(o)seen.add(o);rows.push([a.e,a.n,a.h,o?o.h:null,a.c])}
+  for(const b of fl)if(!seen.has(b))rows.push([b.e,b.n,null,b.h,b.c]);
+  rows.push(['🌴','وقت حر',Math.max(0,mine.free),Math.max(0,ffree),'#2ecc9a']);
+  const mx=Math.max(1,...rows.map(r=>Math.max(r[2]||0,r[3]||0))),nm=esc(f.nm);
+  const diffs=rows.filter(r=>r[2]!=null&&r[3]!=null).map(r=>[r,(r[2]-r[3])/24]).filter(x=>Math.abs(x[1])>=3).sort((p,q)=>Math.abs(q[1])-Math.abs(p[1])).slice(0,3);
+  let h='<div class="sec"><h2>🆚 سنتك وسنة '+nm+'</h2></div>';
+  if(db.friends.length>1)h+='<div class="chips" style="margin-bottom:10px">'+db.friends.map(x=>'<button class="chip'+(x.id===f.id?' on':'')+'" data-cmp="'+x.id+'">'+esc(x.nm)+'</button>').join('')+'</div>';
+  h+='<div class="card">';
+  if(diffs.length)h+='<div style="margin-bottom:8px">'+diffs.map(([r,d])=>'<div class="sm">'+r[0]+' '+(d>0?'تقضي على <b>'+esc(r[1])+'</b> أكثر من '+nm+' بـ <b>'+nf(d)+' يوم</b>':''+nm+' يقضي على <b>'+esc(r[1])+'</b> أكثر منك بـ <b>'+nf(-d)+' يوم</b>')+' بالسنة</div>').join('')+'</div>';
+  else h+='<div class="goodbox">سنتكم متشابهة مرة 🤝</div>';
+  h+='<div class="muted xs"><i class="dot" style="background:var(--primary)"></i>أنت <i class="dot" style="background:#ff8a3d"></i>'+nm+' · «—» يعني النشاط ما هو عنده</div>';
+  for(const r of rows){if(!r[2]&&!r[3])continue;h+='<div class="cmp"><div class="row" style="justify-content:space-between"><span class="sm">'+esc(r[0]+' '+r[1])+'</span><span class="sm num"><b>'+(r[2]==null?'—':nf(r[2]/24))+'</b> · '+(r[3]==null?'—':nf(r[3]/24))+' يوم</span></div><div class="bars"><div style="width:'+((r[2]||0)/mx*100)+'%;background:var(--primary)"></div><div style="width:'+((r[3]||0)/mx*100)+'%;background:#ff8a3d"></div></div></div>'}
+  h+='<div class="row" style="margin-top:10px"><button class="btn sm" data-act="takefriend" data-id="'+f.id+'">خذ أرقام '+nm+'</button><button class="btn sm danger" data-act="delfriend" data-id="'+f.id+'">احذف المقارنة</button></div></div>';
+  return h;
+}
 function simState(){if(!db.sim||!db.acts.some(a=>a.id===db.sim.id))db.sim={id:(byKey('screen')||db.acts[0]||{}).id,delta:-30};return db.sim}
 function vTips(){
   const col={good:'var(--good)',warn:'var(--warn)',bad:'var(--bad)',info:'var(--primary)'};
@@ -400,6 +518,8 @@ function buildReport(){
   '<tr><td>🌴 وقت حر</td><td>'+mins(Math.max(0,Math.round(t.free*60/365)))+'</td><td></td><td>'+nf(t.free)+'</td><td><b>'+nf(t.free/24,1)+'</b></td><td>'+nf(t.free/YH*100,1)+'%</td></tr></table>';
   if(a)h+='<h2>عمري</h2><div class="g"><div><b>'+a.y+' سنة و'+a.m+' شهر</b>العمر</div><div><b>'+nf(a.ms/DAY)+'</b>يوم عشتها</div><div><b>'+nf(Math.max(0,db.life-a.years),1)+' سنة</b>باقي على متوسط '+db.life+'</div></div>';
   h+='<h2>أشياء ثانية تنحسب في سنة</h2><div class="g">'+factsList(1).map(f=>'<div>'+f[0]+' '+f[1]+'<b>'+f[2]+'</b><span style="color:#777;font-size:8.5pt">'+f[3]+'</span></div>').join('')+'</div>';
+  const gs=db.goals.filter(g=>db.acts.some(a=>a.id===g.act));
+  if(gs.length)h+='<h2>أهدافي</h2>'+gs.map(g=>{const a=db.acts.find(x=>x.id===g.act);return'<div style="margin-bottom:4px">'+esc(a.e+' '+a.n)+': '+goalLabel(g)+(goalStreak(g)?' · 🔥 '+goalStreak(g)+' يوم':'')+'</div>'}).join('');
   h+='<h2>اقتراحات</h2>'+tipsList().map(t=>'<div style="margin-bottom:5px">'+t[0]+' <b>'+t[1]+':</b> '+t[2]+'</div>').join('');
   h+='<div style="color:#888;font-size:8.5pt;margin-top:14px">الأرقام تقديرية. سُوّي بتطبيق سنتي: ilo0ol.github.io/experiments/sanati</div>';
   $('#report').innerHTML=h;
@@ -432,6 +552,8 @@ document.addEventListener('click',e=>{
   const b=e.target.closest('button');if(!b||b.closest('.ov'))return;
   if(b.dataset.tab){db.tab=b.dataset.tab;save();render();scrollTo(0,0);return}
   if(b.dataset.day){const a=db.acts.find(x=>x.id===b.dataset.id);a.d=+b.dataset.day;save();render();return}
+  if(b.dataset.preset){const p=goalPresets()[+b.dataset.preset];if(p)addGoal(p[0].id,p[1],p[2]);return}
+  if(b.dataset.cmp){db.cmp=b.dataset.cmp;save();render();return}
   if(b.dataset.quick){const q=QUICK[+b.dataset.quick];db.acts.push({id:'a'+(++uid),n:q[0],e:q[1],m:q[2],d:q[3],c:COLORS[db.acts.length%COLORS.length]});save();render();toast('انضاف '+q[0]+' ✓');return}
   const act=b.dataset.act;
   if(act==='add')openEdit();
@@ -440,6 +562,14 @@ document.addEventListener('click',e=>{
   else if(act==='reset'){const old=db.acts,ov=db.vac;db.acts=freshActs();db.vac=36;save();render();toast('رجعت الأرقام الافتراضية',{undo:()=>{db.acts=old;db.vac=ov;save();render()}})}
   else if(act==='pdf'){buildReport();setTimeout(()=>print(),50)}
   else if(act==='share')share();
+  else if(act==='addgoal')openGoal();
+  else if(act==='delgoal'){const i=db.goals.findIndex(g=>g.id===b.dataset.id),old=db.goals[i];db.goals.splice(i,1);save();render();toast('انحذف الهدف',{undo:()=>{db.goals.splice(i,0,old);save();render()}})}
+  else if(act==='day'){const d=fromDk(logDay);d.setDate(d.getDate()+(+b.dataset.d));const k=dk(d);if(k<=dk(new Date())){logDay=k;render()}}
+  else if(act==='fillplan'){const l=db.log[logDay]=db.log[logDay]||{};for(const a of db.acts)if(l[a.id]==null)l[a.id]=a.m;save();keepScroll()}
+  else if(act==='clearday'){const old=db.log[logDay],k=logDay;delete db.log[k];save();keepScroll();toast('انمسح اليوم',{undo:()=>{db.log[k]=old;save();render()}})}
+  else if(act==='applyactual'){const av=actualAvg(last7()),old=JSON.parse(JSON.stringify(db.acts));for(const a of db.acts)if(av[a.id]!=null)a.m=clamp(Math.round(av[a.id]/5)*5,0,1440);save();keepScroll();toast('صارت خطتك مثل واقعك ✓',{undo:()=>{db.acts=old;save();render()}})}
+  else if(act==='delfriend'){const i=db.friends.findIndex(x=>x.id===b.dataset.id),old=db.friends[i];db.friends.splice(i,1);save();render();toast('انحذفت المقارنة',{undo:()=>{db.friends.splice(i,0,old);save();render()}})}
+  else if(act==='takefriend'){const f=db.friends.find(x=>x.id===b.dataset.id),old=db.acts,ov=db.vac;db.acts=f.acts.map((a,i)=>({...a,id:'a'+(++uid),c:COLORS[i%COLORS.length]}));db.vac=f.vac;db.goals=db.goals.filter(g=>db.acts.some(a=>a.id===g.act));save();render();toast('أخذت أرقام '+f.nm,{undo:()=>{db.acts=old;db.vac=ov;save();render()}})}
   else if(act==='applysim'){const s=simState(),a=db.acts.find(x=>x.id===s.id);if(a){a.m=clamp(a.m+s.delta,0,1440);s.delta=0;save();render();toast('تعدّل '+a.n+' ✓')}}
 });
 document.addEventListener('input',e=>{
@@ -451,15 +581,18 @@ document.addEventListener('input',e=>{
   else if(el.dataset.sim){db.sim=simState();db.sim[el.dataset.sim]=el.dataset.sim==='delta'?+el.value:el.value;save();
     if(el.dataset.sim==='delta'){clearTimeout(el._t);el._t=setTimeout(()=>{const y=scrollY;render();scrollTo(0,y);const r=document.querySelector('[data-sim="delta"]');r&&r.focus()},120)}else render()}
 });
+function keepScroll(){const y=scrollY;render();scrollTo(0,y)}
 document.addEventListener('change',e=>{
   const el=e.target;
-  if(el.dataset.set){const k=el.dataset.set;db[k]=k==='birth'?el.value:clamp(+el.value||0,...({vac:[0,120],life:[30,120],salary:[1,31]}[k]));save();render()}
+  if(el.dataset.log){const id=el.dataset.log,l=db.log[logDay]=db.log[logDay]||{};if(el.value==='')delete l[id];else l[id]=clamp(Math.round(+el.value||0),0,1440);if(!Object.keys(l).length)delete db.log[logDay];save();keepScroll();return}
+  if(el.dataset.set){const k=el.dataset.set;db[k]=k==='birth'?el.value:k==='name'?el.value.trim().slice(0,30):clamp(+el.value||0,...({vac:[0,120],life:[30,120],salary:[1,31]}[k]));save();render()}
   else if(el.dataset.rate){db.rates[el.dataset.rate]=Math.max(0,+el.value||0);save();render()}
 });
 async function share(){
+  if(!db.name){askName();return}
   const t=totals(),txt='سنتي بالأرقام 📊\n'+t.list.filter(a=>a.h>0).sort((a,b)=>b.h-a.h).map(a=>a.e+' '+a.n+': '+nf(a.h/24)+' يوم').join('\n')+'\n🌴 وقت حر: '+nf(Math.max(0,t.free)/24)+' يوم';
-  const url=location.origin+location.pathname+'#s='+btoa(unescape(encodeURIComponent(JSON.stringify({acts:db.acts.map(({n,e,m,d,job})=>({n,e,m,d,job})),vac:db.vac}))));
-  try{if(navigator.share){await navigator.share({title:'سنتي',text:txt+'\n\nاحسب سنتك:',url});return}}catch(e){if(e.name==='AbortError')return}
+  const url=location.origin+location.pathname+'#s='+btoa(unescape(encodeURIComponent(JSON.stringify({nm:db.name||'',acts:db.acts.map(({k,n,e,m,d,job})=>({k,n,e,m,d,job})),vac:db.vac}))));
+  try{if(navigator.share){await navigator.share({title:'سنتي',text:txt+'\n\nافتح الرابط وقارن سنتك بسنتي:',url});return}}catch(e){if(e.name==='AbortError')return}
   try{await navigator.clipboard.writeText(txt+'\n\n'+url);toast('نسخت الملخص والرابط ✓')}catch(e){toast('ما قدرت أنسخ')}
 }
 function tick(){
