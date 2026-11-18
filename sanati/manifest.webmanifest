@@ -10,9 +10,57 @@
   "orientation": "portrait",
   "background_color": "#0f1220",
   "theme_color": "#0f1220",
-  "categories": ["lifestyle", "productivity"],
+  "categories": [
+    "lifestyle",
+    "productivity"
+  ],
   "icons": [
-    {"src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable"},
-    {"src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable"}
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "ابدأ المؤقت",
+      "short_name": "⏱️ مؤقت",
+      "url": "./#q=timer",
+      "icons": [
+        {
+          "src": "icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "سجّل يومك",
+      "short_name": "📝 سجّل",
+      "url": "./#t=goals",
+      "icons": [
+        {
+          "src": "icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "كم باقي على الصلاة",
+      "short_name": "🕌 كم باقي",
+      "url": "./#t=left",
+      "icons": [
+        {
+          "src": "icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    }
   ]
 }

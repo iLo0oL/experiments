@@ -19,7 +19,7 @@ if (!process.env.DATABASE_URL) { console.error('DATABASE_URL مو موجود. أ
 const pool = new Pool({ connectionString: process.env.DATABASE_URL, ssl: process.env.PGSSL === '1' ? { rejectUnauthorized: false } : undefined, max: 10 });
 const q = (t, p) => pool.query(t, p);
 const now = () => Date.now();
-const KINDS = ['qatta', 'shajara', 'maqadi', 'menu', 'mawid', 'dyooni'];
+const KINDS = ['qatta', 'shajara', 'maqadi', 'menu', 'mawid', 'dyooni', 'sanati'];
 const MAX_BODY = 3 * 1024 * 1024;
 
 async function migrate() {
