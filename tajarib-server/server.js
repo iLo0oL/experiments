@@ -42,6 +42,8 @@ async function migrate() {
     alter table doc_subs add column if not exists label text not null default '';
     create table if not exists reminders(endpoint text not null, tag text not null, day text not null, title text not null, body text not null default '', url text not null default '', keys jsonb not null, sent boolean not null default false, created_at bigint not null, primary key(endpoint, tag));
     create index if not exists reminders_day on reminders(day) where not sent;
+    alter table reminders add column if not exists hr int not null default 9;
+    alter table reminders add column if not exists late boolean not null default true;
     create table if not exists doc_snaps(doc_id text not null references docs(id) on delete cascade, tag text not null, rev int not null, people int not null default 0, body jsonb not null, created_at bigint not null, primary key(doc_id, tag));
   `);
 }
@@ -366,12 +368,15 @@ route('GET', '/api/docs/:id/status', async (req, b, p, url) => {
   const acks = {}; for (const [id, it] of Object.entries((doc.body && doc.body.items) || {})) if (id[0] === 'a' && isObj(it) && !it.del) acks[id.slice(1)] = { s: str(it.s, 4), a: int(it.a), n: str(it.n, 200), u: int(it.u) };
   return { seen: +doc.seen_at || 0, acks };
 });
-/* تذكير الأقساط: الجهاز يرسل قائمة التذكيرات الجاية (تنحسب عنده من الخطط)، والسيرفر يرسلها الساعة 9 الصبح بتوقيت الرياض.
+/* التذكيرات: الجهاز يرسل قائمة التذكيرات الجاية (تنحسب عنده)، والسيرفر يرسلها بساعتها بتوقيت الرياض (الافتراضي 9 الصبح).
+   ديوني: تذكير الأقساط، ولو فات يومه ينرسل بعده لين يومين. سنتي: «سجّل يومك» بالساعة اللي يختارها، وما ينرسل لو فات يومه.
    كل إرسال يستبدل اللي ما انرسل للحين لنفس الجهاز */
+const REMIND_APPS = { dyooni: { title: 'ديوني', late: true }, sanati: { title: 'سنتي', late: false } };
 const subOf = s => (isObj(s) && /^https:\/\//.test(s.endpoint || '') && isObj(s.keys) && s.keys.p256dh && s.keys.auth) ? { ep: str(s.endpoint, 1000), keys: JSON.stringify({ p256dh: str(s.keys.p256dh, 200), auth: str(s.keys.auth, 100) }) } : null;
 route('POST', '/api/remind', async (req, b) => {
   limit(req, 'remind', 120, 3600e3);
   const sub = subOf(b.sub); if (!sub) fail(400, 'bad_sub');
+  const app = REMIND_APPS[b.app] ? b.app : 'dyooni', A = REMIND_APPS[app];
   const list = Array.isArray(b.items) ? b.items.slice(0, 300) : [], t0 = todayISO(), max = addDaysISO(t0, 400);
   const c = await pool.connect(); let n = 0;
   try {
@@ -381,7 +386,8 @@ route('POST', '/api/remind', async (req, b) => {
       if (!isObj(it)) continue; const day = str(it.day, 10), tag = str(it.tag, 60);
       if (!/^\d{4}-\d{2}-\d{2}$/.test(day) || day < t0 || day > max || !tag) continue;
       const h = /^#[\w=.-]{0,60}$/.test(it.h || '') ? it.h : '';
-      const r = await c.query('insert into reminders(endpoint,tag,day,title,body,url,keys,sent,created_at) values($1,$2,$3,$4,$5,$6,$7,false,$8) on conflict(endpoint,tag) do nothing', [sub.ep, tag, day, str(it.title, 80) || 'ديوني', str(it.body, 300), SITE + 'dyooni/' + h, sub.keys, now()]);
+      const hr = Number.isInteger(it.hr) && it.hr >= 0 && it.hr <= 23 ? it.hr : 9;
+      const r = await c.query('insert into reminders(endpoint,tag,day,title,body,url,keys,sent,created_at,hr,late) values($1,$2,$3,$4,$5,$6,$7,false,$8,$9,$10) on conflict(endpoint,tag) do nothing', [sub.ep, tag, day, str(it.title, 80) || A.title, str(it.body, 300), SITE + app + '/' + h, sub.keys, now(), hr, A.late]);
       n += r.rowCount;
     }
     await c.query('commit');
@@ -392,8 +398,9 @@ route('DELETE', '/api/remind', async (req, b) => { const sub = subOf(b.sub); if 
 async function remindTick(force) {
   try {
     const hr = parseInt(new Intl.DateTimeFormat('en-u-nu-latn', { timeZone: 'Asia/Riyadh', hour: 'numeric', hourCycle: 'h23' }).format(new Date()), 10);
-    if (!force && hr < 9) return 0;
-    const t = todayISO(), rows = (await q('select endpoint, tag, title, body, url, keys from reminders where not sent and day <= $1 and day >= $2 order by day limit 2000', [t, addDaysISO(t, -2)])).rows;
+    const t = todayISO(), h = force ? 23 : hr;
+    /* اليوم: اللي جت ساعته. الأيام اللي فاتت (لين يومين): بس اللي ينفع يتأخر، وبعد 9 الصبح */
+    const rows = (await q('select endpoint, tag, title, body, url, keys from reminders where not sent and ((day = $1 and hr <= $3) or (late and $3 >= 9 and day < $1 and day >= $2)) order by day limit 2000', [t, addDaysISO(t, -2), h])).rows;
     if (!rows.length) return 0; await vapid(); let n = 0;
     for (const r of rows) {
       /* نعلّمه انرسل قبل الإرسال، عشان ما يوصل مرتين لو اشتغلت دورتين مع بعض */
