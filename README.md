@@ -20,7 +20,7 @@
 | 🤝 ديوني 🔗 | https://ilo0ol.github.io/experiments/dyooni/ |
 | 🛒 مقاضي 🔗 | https://ilo0ol.github.io/experiments/maqadi/ |
 | 🌳 شجرتنا 🔗 | https://ilo0ol.github.io/experiments/shajara/ |
-| 📊 سنتي | https://ilo0ol.github.io/experiments/sanati/ |
+| 📊 سنتي 🔗 | https://ilo0ol.github.io/experiments/sanati/ |
 | 🧠 ذاكر | https://ilo0ol.github.io/experiments/thaker/ |
 | 📄 ملفّاتي | https://ilo0ol.github.io/experiments/malafati/ |
 | 📝 سيرتي | https://ilo0ol.github.io/experiments/seerati/ |

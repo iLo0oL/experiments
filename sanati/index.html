@@ -160,6 +160,22 @@ canvas{display:block;width:100%}
 .rank{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px}
 .rank span{font-size:13px;background:var(--panel2);border-radius:999px;padding:3px 9px}
 .rank span.me{background:var(--primary-soft);color:var(--primary);font-weight:700}
+.jump{display:flex;gap:6px;overflow-x:auto;padding:8px 0 2px;scrollbar-width:none}
+.jump::-webkit-scrollbar{display:none}
+.jump button{flex:none;padding:6px 11px;border-radius:999px;background:var(--panel);border:1px solid var(--line);font-size:13px;font-weight:700;color:var(--muted)}
+.ptimes{display:grid;grid-template-columns:repeat(6,1fr);gap:4px;margin-top:10px;text-align:center}
+.ptimes div{background:var(--panel2);border-radius:10px;padding:6px 2px;font-size:11px;color:var(--muted)}
+.ptimes b{display:block;font-size:14px;color:var(--text);font-variant-numeric:tabular-nums}
+.ptimes div.nx{background:var(--primary-soft);outline:1.5px solid var(--primary)}
+.ptimes div.nx b{color:var(--primary)}
+.lb{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--line)}
+.lb:last-child{border-bottom:0}
+.lb .m{width:28px;text-align:center;font-size:18px}
+.lb .t{flex:1;min-width:0}
+.lb.me .t b{color:var(--primary)}
+.ygbar{position:relative;height:12px;border-radius:7px;background:var(--panel2);overflow:visible;margin:10px 0 4px}
+.ygbar i{position:absolute;inset:0 0 0 auto;border-radius:7px}
+.ygbar u{position:absolute;top:-4px;bottom:-4px;width:2px;background:var(--text);opacity:.6}
 #report{display:none}
 @media print{
   @page{size:A4;margin:12mm}
@@ -198,7 +214,7 @@ canvas{display:block;width:100%}
   <button data-tab="tips"><span>💡</span>اقتراحات</button>
 </div></nav>
 <div id="report"></div>
-
+<script src="../shared/sync.js"></script>
 <script>
 'use strict';
 const KEY='sanati.v1',THEME='sanati.theme',DAY=864e5,YH=8760;
@@ -224,11 +240,14 @@ const nf=(x,d=0)=>Number(x).toLocaleString('en-US',{maximumFractionDigits:d,mini
 const pad=n=>String(n).padStart(2,'0');
 let uid=Date.now();
 function freshActs(){return DEFAULT_ACTS.map((a,i)=>({...a,id:'a'+(i+1),c:COLORS[i%COLORS.length]}))}
-function defaults(){return{acts:freshActs(),vac:36,birth:'',life:75,salary:27,rates:{...DEF_RATES},tab:'year',goals:[],log:{},friends:[],name:'',view:'n',rmOn:false,timer:null,badges:{},ever:{},rem:{on:false,hr:21},mAct:''}}
-function load(){try{const s=JSON.parse(localStorage.getItem(KEY));if(s&&Array.isArray(s.acts))return{...defaults(),...s,goals:Array.isArray(s.goals)?s.goals:[],log:s.log&&typeof s.log==='object'?s.log:{},friends:Array.isArray(s.friends)?s.friends:[],badges:s.badges&&typeof s.badges==='object'?s.badges:{},ever:s.ever&&typeof s.ever==='object'?s.ever:{},rem:{on:false,hr:21,...(s.rem||{})},rates:{...DEF_RATES,...(s.rates||{})}}}catch(e){}return defaults()}
+function defaults(){return{acts:freshActs(),vac:36,birth:'',life:75,salary:27,rates:{...DEF_RATES},tab:'year',goals:[],log:{},friends:[],name:'',view:'n',rmOn:false,timer:null,badges:{},ever:{},rem:{on:false,hr:21},mAct:'',ch:[],yg:[],city:'riyadh',geo:null}}
+function load(){try{const s=JSON.parse(localStorage.getItem(KEY));if(s&&Array.isArray(s.acts))return{...defaults(),...s,goals:Array.isArray(s.goals)?s.goals:[],log:s.log&&typeof s.log==='object'?s.log:{},friends:Array.isArray(s.friends)?s.friends:[],badges:s.badges&&typeof s.badges==='object'?s.badges:{},ever:s.ever&&typeof s.ever==='object'?s.ever:{},rem:{on:false,hr:21,...(s.rem||{})},ch:Array.isArray(s.ch)?s.ch:[],yg:Array.isArray(s.yg)?s.yg:[],rates:{...DEF_RATES,...(s.rates||{})}}}catch(e){}return defaults()}
 let db=load();
 // shared link: #s=<base64 json>
-function readShare(){try{if(location.hash.startsWith('#t=')){const t=location.hash.slice(3);if(['year','goals','left','age','facts','tips'].includes(t))db.tab=t;history.replaceState(null,'',location.pathname);return}if(location.hash.startsWith('#s=')){const s=JSON.parse(decodeURIComponent(escape(atob(location.hash.slice(3)))));if(Array.isArray(s.acts)){
+function readShare(){try{
+  if(location.hash.startsWith('#c=')){const [id,key]=location.hash.slice(3).split('.');history.replaceState(null,'',location.pathname);if(id&&key)setTimeout(()=>chJoin(id,key),50);return}
+  if(location.hash==='#q=timer'){history.replaceState(null,'',location.pathname);db.tab='goals';setTimeout(()=>{if(!db.timer){const id=lastTimerAct();if(id){db.timer={act:id,start:Date.now()};save();render();toast('⏱️ بدأ المؤقت')}}},50);return}
+if(location.hash.startsWith('#t=')){const t=location.hash.slice(3);if(['year','goals','left','age','facts','tips'].includes(t))db.tab=t;history.replaceState(null,'',location.pathname);return}if(location.hash.startsWith('#s=')){const s=JSON.parse(decodeURIComponent(escape(atob(location.hash.slice(3)))));if(Array.isArray(s.acts)){
   const acts=s.acts.slice(0,40).map((a,i)=>({id:'f'+i,k:typeof a.k==='string'?a.k.slice(0,20):undefined,n:String(a.n||'نشاط').slice(0,40),e:String(a.e||'⏳').slice(0,8),m:clamp(+a.m||0,0,1440),d:clamp(+a.d||0,0,7),job:a.job?1:0,rm:a.rm!=null?clamp(+a.rm||0,0,1440):undefined,ro:a.ro?1:0,c:COLORS[i%COLORS.length]}));
   const nm=String(s.nm||'صاحبك').trim().slice(0,30)||'صاحبك',sig=JSON.stringify(acts);
   let f=db.friends.find(x=>x.nm===nm);
@@ -236,7 +255,7 @@ function readShare(){try{if(location.hash.startsWith('#t=')){const t=location.ha
   db.cmp=f.id;db.tab='year';setTimeout(()=>{save();toast('وصلتك سنة '+nm+' 🆚 شوف المقارنة فوق')},300)}
   history.replaceState(null,'',location.pathname)}}catch(e){}}
 readShare();
-addEventListener('hashchange',()=>{if(/^#[st]=/.test(location.hash)){readShare();save();render();scrollTo(0,0)}});
+addEventListener('hashchange',()=>{if(/^#[stcq]=/.test(location.hash)){readShare();save();render();scrollTo(0,0)}});
 function clamp(v,a,b){return Math.min(b,Math.max(a,v))}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(db))}catch(e){}}
 
@@ -325,7 +344,7 @@ function yearRing(label,s,e,color,sub){
 }
 function vLeft(){
   const n=new Date(),y=n.getFullYear(),s=new Date(y,0,1),e=new Date(y+1,0,1);
-  let h='<div class="sec"><h2>السنة الميلادية '+y+'</h2></div>'+yearRing('سنة '+y,s,e,'var(--primary)','من 1 يناير إلى 31 ديسمبر');
+  let h=vPrayer()+'<div class="sec"><h2>السنة الميلادية '+y+'</h2></div>'+yearRing('سنة '+y,s,e,'var(--primary)','من 1 يناير إلى 31 ديسمبر');
   const left=(e-n)/DAY;let fr=0;for(let d=new Date(n);d<e;d.setDate(d.getDate()+1))if(d.getDay()===5)fr++;
   h+='<div class="grid3"><div class="kpi"><b>'+nf(left/7,1)+'</b><span>أسبوع باقي</span></div><div class="kpi"><b>'+fr+'</b><span>جمعة باقية</span></div><div class="kpi"><b>'+nf((e-n)/36e5)+'</b><span>ساعة باقية</span></div></div>';
   const hb=hijriYearBounds();
@@ -354,6 +373,7 @@ function vLeft(){
   evs.push(['💰','الراتب','يوم '+db.salary+' من كل شهر (يتقدم لو صادف إجازة)',nextSalary()]);
   evs.push(['🕌','الجمعة','',(()=>{const d=new Date(y,n.getMonth(),n.getDate());while(d.getDay()!==5)d.setDate(d.getDate()+1);return d})()]);
   const a=age();if(a){let bd=new Date(y,a.b.getMonth(),a.b.getDate());if(bd<new Date(y,n.getMonth(),n.getDate()))bd=new Date(y+1,a.b.getMonth(),a.b.getDate());evs.push(['🎂','عيد ميلادك','',bd])}
+  {const nx=nextPrayer();if(nx)evs.push(['🕌','صلاة '+nx.l,hm(nx.t),nx.t])}
   evs.sort((p,q)=>p[3]-q[3]);
   h+='<div class="sec"><h2>كم باقي على…</h2></div><div class="card" style="padding:4px 16px">'+evs.map(v=>'<div class="cd"><span class="em">'+v[0]+'</span><div class="t"><b>'+v[1]+'</b><div class="faint xs">'+(v[2]?v[2]+' · ':'')+v[3].toLocaleDateString('ar-SA-u-ca-gregory-nu-latn',{weekday:'long',day:'numeric',month:'long'})+'</div></div><div class="v"><span data-cdd="'+v[3].getTime()+'">'+Math.max(0,Math.ceil((v[3]-n)/DAY))+'</span><small>يوم</small></div></div>').join('')+'</div>';
   h+='<div class="card"><label class="field" style="margin:0"><span>يوم الراتب بالشهر</span><input class="inp num" type="number" min="1" max="31" value="'+db.salary+'" data-set="salary"></label></div>';
@@ -451,10 +471,12 @@ function goalPresets(){
 }
 function last7(){const out=[];const d=new Date();for(let i=0;i<7;i++){const k=dk(d);if(db.log[k]&&Object.keys(db.log[k]).length)out.push(k);d.setDate(d.getDate()-1)}return out}
 function actualAvg(days){const r={};for(const a of db.acts){const v=days.map(k=>logVal(k,a.id)).filter(x=>x!=null);if(v.length)r[a.id]=v.reduce((p,q)=>p+q,0)/v.length}return r}
-function vGoals(){return vGoalsMain()+vMonthly()+vBadges()+vRemind()}
+function vGoals(){
+  const J=[['g-timer','⏱️ المؤقت'],['g-goals','🎯 الأهداف'],['g-ch','🤝 التحديات'],['g-yg','🏁 هدف السنة'],['g-log','📝 سجّل'],['g-week','🧠 أسبوعك'],['g-month','📅 كل شهر'],['g-badges','🏅 أوسمة'],['g-rem','🔔 تذكير']];
+  return '<div class="jump">'+J.map(j=>'<button data-jump="'+j[0]+'">'+j[1]+'</button>').join('')+'</div>'+vGoalsMain()+vWeek()+vMonthly()+vWeekdays()+vBadges()+vRemind()}
 function vGoalsMain(){
   const today=dk(new Date()),ws=weekStart();
-  let h=vTimer()+(isRam()?'<div class="goodbox" style="margin-top:8px">🌙 رمضان كريم! خطتك هالشهر هي خطة رمضان</div>':'')+'<div class="sec"><h2>🎯 أهداف الأسبوع</h2><button class="btn sm pri" data-act="addgoal">+ هدف</button></div>';
+  let h='<div id="g-timer"></div>'+vTimer()+(isRam()?'<div class="goodbox" style="margin-top:8px">🌙 رمضان كريم! خطتك هالشهر هي خطة رمضان</div>':'')+'<div class="sec" id="g-goals"><h2>🎯 أهداف الأسبوع</h2><button class="btn sm pri" data-act="addgoal">+ هدف</button></div>';
   const gs=db.goals.filter(g=>db.acts.some(a=>a.id===g.act));
   if(!gs.length)h+='<div class="card muted sm">حط لك هدف صغير، وسجّل يومك كل ليلة تحت عشان تتابعه وتشوف سلسلتك 🔥</div>';
   for(const g of gs){
@@ -468,10 +490,11 @@ function vGoalsMain(){
   }
   const pr=goalPresets();
   if(pr.length)h+='<div class="chips" style="margin-bottom:12px">'+pr.map((p,i)=>'<button class="chip" data-preset="'+i+'">'+p[3]+'</button>').join('')+'</div>';
+  h+=vChallenges()+vYearGoals();
   // log
   const d=fromDk(logDay),isToday=logDay===today,l=db.log[logDay]||{};
   const tot=Object.values(l).reduce((p,q)=>p+q,0);
-  h+='<div class="sec"><h2>📝 سجّل يومك</h2></div><div class="card"><div class="dnav"><button class="ibtn" data-act="day" data-d="-1" aria-label="اليوم اللي قبل">›</button><b>'+(isToday?'اليوم · ':'')+d.toLocaleDateString('ar-SA-u-ca-gregory-nu-latn',{weekday:'long',day:'numeric',month:'long'})+'</b><button class="ibtn" data-act="day" data-d="1" aria-label="اليوم اللي بعد" '+(isToday?'disabled style="opacity:.35"':'')+'>‹</button></div>'+
+  h+='<div class="sec" id="g-log"><h2>📝 سجّل يومك</h2></div><div class="card"><div class="dnav"><button class="ibtn" data-act="day" data-d="-1" aria-label="اليوم اللي قبل">›</button><b>'+(isToday?'اليوم · ':'')+d.toLocaleDateString('ar-SA-u-ca-gregory-nu-latn',{weekday:'long',day:'numeric',month:'long'})+'</b><button class="ibtn" data-act="day" data-d="1" aria-label="اليوم اللي بعد" '+(isToday?'disabled style="opacity:.35"':'')+'>‹</button></div>'+
     '<div class="muted xs" style="margin:8px 0">اكتب كم دقيقة فعلاً قضيت. الرقم الباهت هو خطتك.</div>';
   for(const a of db.acts){const v=l[a.id];h+='<div class="lg"><span style="font-size:20px">'+esc(a.e)+'</span><div class="t"><b>'+esc(a.n)+'</b><span class="faint xs" data-lh="'+a.id+'">'+(v!=null?mins(v)+(v!==curM(a)?' · الخطة '+mins(curM(a)):' ✓ مثل الخطة'):'الخطة '+mins(curM(a)))+'</span></div><input class="inp num" type="number" inputmode="numeric" min="0" max="1440" step="5" placeholder="'+curM(a)+'" value="'+(v!=null?v:'')+'" data-log="'+a.id+'" aria-label="دقائق '+esc(a.n)+'"></div>'}
   h+='<div class="row" style="margin-top:10px;justify-content:space-between"><span class="sm '+(tot>1440?'':'muted')+'" style="'+(tot>1440?'color:var(--bad)':'')+'">سجّلت '+mins(tot)+' من 24 ساعة'+(tot>1440?' ⚠️':'')+'</span><div class="row"><button class="btn sm" data-act="fillplan">املأ الباقي من الخطة</button>'+(Object.keys(l).length?'<button class="btn sm danger" data-act="clearday">امسح</button>':'')+'</div></div></div>';
@@ -496,12 +519,12 @@ function openGoal(){
   ov.addEventListener('click',e=>{const b=e.target.closest('button');if(e.target===ov||b?.id==='gc')return ov.remove();if(b?.id==='gs'){addGoal(ov.querySelector('#ga').value,ov.querySelector('#gt').value,+ov.querySelector('#gm').value||0);ov.remove()}});
 }
 function addGoal(act,type,m){db.goals=db.goals.filter(g=>g.act!==act);db.goals.push({id:'g'+(++uid),act,type,m:clamp(Math.round(m),0,1440),at:Date.now()});save();render();toast('انضاف الهدف 🎯 سجّل يومك عشان تتابعه')}
-function askName(){
+function askName(cb=share){
   document.querySelector('.toast')?.remove();
   const ov=document.createElement('div');ov.className='ov';
   ov.innerHTML='<div class="sheet" role="dialog" aria-modal="true"><h3>وش اسمك؟</h3><div class="muted sm" style="margin-bottom:10px">يظهر لصاحبك لما يفتح الرابط ويقارن سنته بسنتك.</div><input class="inp" id="nm" maxlength="30" placeholder="مثلاً: أبو فهد"><div class="row" style="margin-top:14px"><button class="btn pri" id="ok" style="flex:1">شارك</button><button class="btn" id="no">إلغاء</button></div></div>';
   document.body.appendChild(ov);ov.querySelector('#nm').focus();
-  ov.addEventListener('click',e=>{const b=e.target.closest('button');if(e.target===ov||b?.id==='no')return ov.remove();if(b?.id==='ok'){const v=ov.querySelector('#nm').value.trim().slice(0,30);if(!v)return ov.querySelector('#nm').focus();db.name=v;save();ov.remove();share()}});
+  ov.addEventListener('click',e=>{const b=e.target.closest('button');if(e.target===ov||b?.id==='no')return ov.remove();if(b?.id==='ok'){const v=ov.querySelector('#nm').value.trim().slice(0,30);if(!v)return ov.querySelector('#nm').focus();db.name=v;save();ov.remove();cb()}});
 }
 
 /* ---------- timer ---------- */
@@ -516,15 +539,18 @@ function vTimer(){
   if(db.timer){const a=db.acts.find(x=>x.id===db.timer.act);
     if(a)return h+'<div class="row"><span style="font-size:30px">'+esc(a.e)+'</span><div style="flex:1"><div class="muted sm">⏱️ شغّال: '+esc(a.n)+'</div><div class="big" data-el style="font-size:34px">'+hms(elapsed())+'</div></div></div><div class="row" style="margin-top:10px"><button class="btn pri" style="flex:1" data-act="tstop">✓ خلصت، سجّلها</button><button class="btn" data-act="tcancel">إلغاء</button></div></div>';
     db.timer=null;}
-  const last=db.ever.tAct&&db.acts.some(a=>a.id===db.ever.tAct)?db.ever.tAct:(db.acts.find(a=>/قراء/.test(a.n))||byKey('sport')||db.acts[0]||{}).id;
-  return h+'<b>⏱️ المؤقت</b><div class="muted sm" style="margin-bottom:8px">شغّله لما تبدأ نشاط، ولما تخلص ينسجّل وقته في يومك لحاله.</div><div class="row"><select class="inp" id="tact" style="flex:1">'+db.acts.map(a=>'<option value="'+a.id+'"'+(a.id===last?' selected':'')+'>'+esc(a.e+' '+a.n)+'</option>').join('')+'</select><button class="btn pri" data-act="tstart">▶ ابدأ</button></div></div>';
+  const last=lastTimerAct(),rec=(db.ever.tRecent||[]).filter(id=>db.acts.some(a=>a.id===id)).slice(0,4);
+  const quick=rec.length?'<div class="chips" style="margin-top:10px">'+rec.map(id=>{const a=db.acts.find(x=>x.id===id);return'<button class="chip" data-tquick="'+id+'">▶ '+esc(a.e+' '+a.n)+'</button>'}).join('')+'</div>':'';
+  return h+quick.replace('<div class="chips" style="margin-top:10px">','<div class="chips" style="margin-bottom:10px">')+'<b>⏱️ المؤقت</b><div class="muted sm" style="margin-bottom:8px">شغّله لما تبدأ نشاط، ولما تخلص ينسجّل وقته في يومك لحاله.</div><div class="row"><select class="inp" id="tact" style="flex:1">'+db.acts.map(a=>'<option value="'+a.id+'"'+(a.id===last?' selected':'')+'>'+esc(a.e+' '+a.n)+'</option>').join('')+'</select><button class="btn pri" data-act="tstart">▶ ابدأ</button></div></div>';
 }
+function lastTimerAct(){return db.ever.tAct&&db.acts.some(a=>a.id===db.ever.tAct)?db.ever.tAct:(db.acts.find(a=>/قراء/.test(a.n))||byKey('sport')||db.acts[0]||{}).id}
+function timerStart(id){db.timer={act:id,start:Date.now()};db.ever.tAct=id;db.ever.tRecent=[id,...(db.ever.tRecent||[]).filter(x=>x!==id)].slice(0,4);save();render();toast('⏱️ بدأ المؤقت، تقدر تقفل التطبيق وترجع')}
 function timerStop(){
   const t=db.timer;if(!t)return;const a=db.acts.find(x=>x.id===t.act),mn=Math.round(elapsed()/6e4);db.timer=null;
   if(!a){save();render();return}
   if(mn<1){save();render();toast('أقل من دقيقة، ما سجّلته');return}
   const k=dk(new Date()),l=db.log[k]=db.log[k]||{};l[a.id]=clamp((l[a.id]||0)+mn,0,1440);
-  db.ever.tN=(db.ever.tN||0)+1;db.ever.tMin=(db.ever.tMin||0)+mn;save();render();syncSoon();
+  db.ever.tN=(db.ever.tN||0)+1;db.ever.tMin=(db.ever.tMin||0)+mn;save();render();syncSoon();chPushAll();
   toast('انضاف '+mins(mn)+' لـ'+a.n+' اليوم ✓');
 }
 
@@ -536,7 +562,7 @@ function monthly(){ // {ym:{days, acts:{id:avg}}}
 }
 const ymLabel=ym=>MN[+ym.slice(5)-1]+(ym.slice(0,4)!==String(new Date().getFullYear())?' '+ym.slice(2,4):'');
 function vMonthly(){
-  const ms=monthly();let h='<div class="sec"><h2>📅 كل شهر</h2></div>';
+  const ms=monthly();let h='<div class="sec" id="g-month"><h2>📅 كل شهر</h2></div>';
   if(!ms.length)return h+'<div class="card muted sm">لما تسجّل أيامك، يطلع لك هنا كيف يتغيّر يومك من شهر لشهر.</div>';
   const used=db.acts.filter(a=>ms.some(m=>m.acts[a.id]!=null));if(!used.length)return'';
   const sel=used.find(a=>a.id===db.mAct)||used.find(a=>a.k==='screen')||used[0];
@@ -576,6 +602,10 @@ function badgeList(){
    ['backup','💾','حريص','سويت نسخة احتياطية',!!db.ever.backup],
    ['birth','🎂','عرفت عمرك','حطيت تاريخ ميلادك',!!db.birth],
    ['remind','🔔','ملتزم','شغّلت تذكير التسجيل',!!db.rem.on],
+   ['ch','🤝','المتحدّي','دخلت تحدي مع صاحبك',!!db.ever.ch],
+   ['champ','👑','البطل','فزت بتحدي',db.ch.some(c=>{const d=CH.get(c.id),m=d&&d.meta();if(!m||chStatus(m).st!=='done')return false;const r=chBoard(d,m);return r.length>=2&&r[1].avg!=null&&r[0].id===c.pid})],
+   ['yg','🏁','هدف السنة','حققت هدف سنة',db.yg.some(g=>db.acts.some(a=>a.id===g.act)&&ygDone(g)>=g.t)],
+   ['img','🖼️','مشهور','شاركت صورة سنتك',!!db.ever.img],
   ];
 }
 let badgeInit=false;
@@ -586,7 +616,7 @@ function checkBadges(){
 }
 function vBadges(){
   const L=badgeList(),n=L.filter(b=>db.badges[b[0]]).length;
-  return '<div class="sec"><h2>🏅 أوسمتي</h2><span class="muted sm num">'+n+' من '+L.length+'</span></div><div class="badges">'+L.map(b=>'<div class="bdg'+(db.badges[b[0]]?'':' off')+'"><div class="e">'+b[1]+'</div><b>'+b[2]+'</b><span>'+b[3]+'</span></div>').join('')+'</div>';
+  return '<div class="sec" id="g-badges"><h2>🏅 أوسمتي</h2><span class="muted sm num">'+n+' من '+L.length+'</span></div><div class="badges">'+L.map(b=>'<div class="bdg'+(db.badges[b[0]]?'':' off')+'"><div class="e">'+b[1]+'</div><b>'+b[2]+'</b><span>'+b[3]+'</span></div>').join('')+'</div>';
 }
 
 /* ---------- nightly reminder (push via tajarib-server) ---------- */
@@ -608,11 +638,12 @@ function remindItems(){
   const out=[],hr=db.rem.hr,now=new Date(),cur=parseInt(new Intl.DateTimeFormat('en-u-nu-latn',{timeZone:'Asia/Riyadh',hour:'numeric',hourCycle:'h23'}).format(now),10);
   const BODY=['كيف كان يومك؟ دقيقة وتسجّله 📝','لا تكسر السلسلة 🔥 سجّل يومك','يومك انتهى تقريباً، كم قضيت على الجوال؟ 📱','سجّل يومك وشوف وين راح وقتك ⏳'];
   const d=new Date();for(let i=0;i<45;i++){const k=dk(d);if(!(i===0&&(db.log[k]||hr<=cur)))out.push({tag:'log-'+k,day:k,hr,title:'📝 سنتي: سجّل يومك',body:BODY[i%BODY.length],h:'#t=goals'});d.setDate(d.getDate()+1)}
+  {const t=new Date();for(let i=0;i<45;i++){if(t.getDay()===4){const k=dk(t);if(!(i===0&&hr<=cur))out.push({tag:'week-'+k,day:k,hr:Math.max(17,hr-1),title:'🧠 ملخص أسبوعك جاهز',body:'شوف وش سويت هالأسبوع، وأحسن وأسوأ شي',h:'#t=goals'})}t.setDate(t.getDate()+1)}}
   const ram=findHijri(9,1,now);if(ram){const r3=new Date(ram);r3.setDate(r3.getDate()-3);if(r3>now)out.push({tag:'ram-'+dk(ram),day:dk(r3),hr:Math.min(hr,20),title:'🌙 رمضان بعد 3 أيام',body:'جهّز خطة رمضان في سنتي: التراويح والسحور والدوام',h:'#t=year'})}
   return out;
 }
 let remHash='',remT=0;
-function syncSoon(){if(!db.rem.on)return;clearTimeout(remT);remT=setTimeout(()=>syncRemind().catch(()=>{}),2500)}
+function syncSoon(){clearTimeout(chT);chT=setTimeout(chPushAll,1500);if(!db.rem.on)return;clearTimeout(remT);remT=setTimeout(()=>syncRemind().catch(()=>{}),2500)}
 async function syncRemind(sb){
   if(!db.rem.on)return;sb=sb||await pushSub(false).catch(()=>null);if(!sb)return;
   const items=remindItems(),h=sb.endpoint+JSON.stringify(items);if(h===remHash)return;
@@ -623,7 +654,7 @@ async function remindOff(){db.rem.on=false;save();render();remHash='';try{const 
 const hourLabel=h=>(h%12||12)+(h<12?' الصبح':h<17?' الظهر':h<19?' العصر':' بالليل');
 function vRemind(){
   const R=db.rem;
-  return '<div class="sec"><h2>🔔 تذكير التسجيل</h2></div><div class="card"><div class="muted sm" style="margin-bottom:10px">يجيك تنبيه على الجوال كل يوم يذكّرك تسجّل يومك. لو سجّلت قبله ما يجيك.</div>'+
+  return '<div class="sec" id="g-rem"><h2>🔔 تذكير التسجيل</h2></div><div class="card"><div class="muted sm" style="margin-bottom:10px">يجيك تنبيه على الجوال كل يوم يذكّرك تسجّل يومك. لو سجّلت قبله ما يجيك.</div>'+
   '<div class="row"><select class="inp" data-remhr style="flex:1">'+[17,18,19,20,21,22,23].map(h=>'<option value="'+h+'"'+(h===R.hr?' selected':'')+'>الساعة '+hourLabel(h)+'</option>').join('')+'</select>'+
   (R.on?'<button class="btn danger" data-act="remoff">إيقاف</button>':'<button class="btn pri" data-act="remon">شغّل التذكير</button>')+'</div>'+
   (R.on?'<div class="goodbox" style="margin:10px 0 0">✓ شغّال، الساعة '+hourLabel(R.hr)+' بتوقيت السعودية</div>':'')+
@@ -642,6 +673,185 @@ function restore(){
   inp.onchange=async()=>{const f=inp.files[0];if(!f)return;try{const j=JSON.parse(await f.text()),d=j&&j.db;if(!d||!Array.isArray(d.acts))throw 0;
     const old=JSON.stringify(db);localStorage.setItem(KEY,JSON.stringify(d));const tab=db.tab;db=load();db.tab=tab;save();render();toast('رجعت بياناتك ✓',{undo:()=>{localStorage.setItem(KEY,old);db=load();render()}})}catch(e){toast('الملف هذا مو نسخة من سنتي')}};
   inp.click();
+}
+
+/* ---------- weekly summary ---------- */
+function weekData(off){ // off=0 this week (Sun..today), 1 = last week
+  const s=weekStart();s.setDate(s.getDate()-7*off);const days=[],today=dk(new Date());
+  for(let i=0;i<7;i++){const d=new Date(s);d.setDate(d.getDate()+i);const k=dk(d);if(k>today)break;if(db.log[k])days.push(k)}
+  return{s,days,av:actualAvg(days)};
+}
+function vWeek(){
+  const w=weekData(0),p=weekData(1);let h='<div class="sec" id="g-week"><h2>🧠 ملخص أسبوعك</h2><span class="muted xs">من الأحد</span></div>';
+  if(!w.days.length)return h+'<div class="card muted sm">سجّل أيامك هالأسبوع ويطلع لك هنا وش أحسن وأسوأ شي سويته، ومقارنة بالأسبوع اللي قبل. ويجيك تنبيه كل خميس لو التذكير شغّال.</div>';
+  const R=isRam(),diffs=db.acts.filter(a=>w.av[a.id]!=null).map(a=>({a,d:w.av[a.id]-planM(a,R)}));
+  const good=[],bad=[];
+  for(const x of diffs){const lessGood=x.a.k==='screen'||/جوال|شاش|سوشال|ألعاب|مسلسل/.test(x.a.n),moreGood=['sleep','sport'].includes(x.a.k)||/رياض|قراء|قرآن|مشي|جيم|دراس/.test(x.a.n);
+    if(Math.abs(x.d)<10)continue;if((lessGood&&x.d<0)||(moreGood&&x.d>0))good.push(x);else if((lessGood&&x.d>0)||(moreGood&&x.d<0))bad.push(x)}
+  good.sort((a,b)=>Math.abs(b.d)-Math.abs(a.d));bad.sort((a,b)=>Math.abs(b.d)-Math.abs(a.d));
+  let gm=0,gt=0;for(const g of db.goals)for(const k of w.days){const m=goalMet(g,k);if(m!=null){gt++;if(m)gm++}}
+  h+='<div class="card"><div class="grid3"><div class="kpi"><b>'+w.days.length+'</b><span>أيام سجّلتها</span></div><div class="kpi"><b>'+(gt?Math.round(gm/gt*100)+'%':'—')+'</b><span>التزام بالأهداف</span></div><div class="kpi"><b>'+(db.goals.length?Math.max(0,...db.goals.map(goalStreak)):0)+'🔥</b><span>أطول سلسلة</span></div></div>';
+  if(good[0])h+='<div class="goodbox" style="margin:12px 0 0">👏 <b>أحسن شي:</b> '+esc(good[0].a.e+' '+good[0].a.n)+' '+(good[0].d<0?'أقل':'أكثر')+' من خطتك بـ '+mins(Math.round(Math.abs(good[0].d)))+' باليوم</div>';
+  if(bad[0])h+='<div class="warnbox" style="margin:8px 0 0">⚠️ <b>انتبه:</b> '+esc(bad[0].a.e+' '+bad[0].a.n)+' '+(bad[0].d<0?'أقل':'أكثر')+' من خطتك بـ '+mins(Math.round(Math.abs(bad[0].d)))+' باليوم</div>';
+  if(!good[0]&&!bad[0])h+='<div class="goodbox" style="margin:12px 0 0">✓ يومك قريب من خطتك هالأسبوع</div>';
+  const cmp=db.acts.filter(a=>w.av[a.id]!=null&&p.av[a.id]!=null).map(a=>({a,d:w.av[a.id]-p.av[a.id]})).filter(x=>Math.abs(x.d)>=10).sort((a,b)=>Math.abs(b.d)-Math.abs(a.d)).slice(0,3);
+  if(cmp.length)h+='<div class="sm" style="margin-top:10px"><b>عن الأسبوع اللي قبل:</b>'+cmp.map(x=>'<div>'+esc(x.a.e+' '+x.a.n)+' '+(x.d<0?'⬇️ نقص ':'⬆️ زاد ')+mins(Math.round(Math.abs(x.d)))+' باليوم</div>').join('')+'</div>';
+  return h+'</div>';
+}
+/* ---------- weekday pattern ---------- */
+function vWeekdays(){
+  const ks=Object.keys(db.log);if(ks.length<7)return'';
+  const used=db.acts.filter(a=>ks.some(k=>logVal(k,a.id)!=null));if(!used.length)return'';
+  const sel=used.find(a=>a.id===db.mAct)||used.find(a=>a.k==='screen')||used[0];
+  const sum=Array(7).fill(0),cnt=Array(7).fill(0);for(const k of ks){const v=logVal(k,sel.id);if(v==null)continue;const w=fromDk(k).getDay();sum[w]+=v;cnt[w]++}
+  const av=sum.map((x,i)=>cnt[i]?x/cnt[i]:null),vals=av.filter(v=>v!=null);if(vals.length<2)return'';
+  const mx=Math.max(...vals),mn=Math.min(...vals),hi=av.indexOf(mx),lo=av.indexOf(mn);
+  return '<div class="card"><b>📊 '+esc(sel.e+' '+sel.n)+' حسب أيام الأسبوع</b><div class="muted xs">غيّر النشاط من فوق</div><div class="mbars" style="height:120px">'+av.map((v,i)=>'<div><b>'+(v!=null?mins(Math.round(v)):'—')+'</b><i style="height:'+(v!=null?v/mx*100:0)+'%;background:'+(i===hi?'#ff6178':i===lo?'#2ecc9a':sel.c)+'"></i><span>'+WD[i]+'</span></div>').join('')+'</div>'+
+  '<div class="sm" style="margin-top:8px">أكثر يوم: <b>'+WD[hi]+'</b> ('+mins(Math.round(mx))+') · أقل يوم: <b>'+WD[lo]+'</b> ('+mins(Math.round(mn))+')</div></div>';
+}
+
+/* ---------- year goals ---------- */
+const YU={h:['ساعة',1],book:['كتاب',7],khatma:['ختمة',12],day:['يوم',24]};
+function ygDone(g){const y=String(g.y||new Date().getFullYear());let m=0;for(const [k,l] of Object.entries(db.log))if(k.startsWith(y)&&l[g.act]!=null)m+=l[g.act];return m/60/YU[g.u][1]}
+function vYearGoals(){
+  const y=new Date().getFullYear(),n=new Date(),s=new Date(y,0,1),e=new Date(y+1,0,1),frac=(n-s)/(e-s),left=Math.max(1,Math.ceil((e-n)/DAY));
+  let h='<div class="sec" id="g-yg"><h2>🏁 أهداف السنة</h2><button class="btn sm" data-act="addyg">+ هدف سنة</button></div>';
+  const gs=db.yg.filter(g=>db.acts.some(a=>a.id===g.act)&&(g.y||y)===y);
+  if(!gs.length)return h+'<div class="card muted sm">مثل «أقرا 20 كتاب» أو «150 ساعة رياضة». ينحسب من الأيام اللي تسجّلها والمؤقت.</div>';
+  for(const g of gs){const a=db.acts.find(x=>x.id===g.act),u=YU[g.u],done=ygDone(g),p=clamp(done/g.t*100,0,100),exp=g.t*frac,need=Math.max(0,(g.t-done)*u[1]*60/left),ok=done>=exp;
+    h+='<div class="card"><div class="row"><span style="font-size:24px">'+esc(a.e)+'</span><div style="flex:1;min-width:0"><b>'+nf(g.t)+' '+u[0]+' '+esc(a.n)+'</b><div class="muted xs">'+(g.u==='book'?'الكتاب ≈ 7 ساعات':g.u==='khatma'?'الختمة ≈ 12 ساعة':'')+'</div></div><button class="ibtn" style="width:34px;height:34px;font-size:14px" data-act="delyg" data-id="'+g.id+'" aria-label="احذف">🗑️</button></div>'+
+    '<div class="ygbar"><i style="width:'+p+'%;background:'+(done>=g.t?'var(--good)':a.c)+'"></i><u style="right:'+(frac*100)+'%"></u></div>'+
+    '<div class="row" style="justify-content:space-between"><span class="sm num"><b>'+nf(done,1)+'</b> من '+nf(g.t)+' '+u[0]+' ('+Math.round(p)+'%)</span><span class="pill" style="background:'+(done>=g.t?'var(--good-soft);color:var(--good)':ok?'var(--good-soft);color:var(--good)':'var(--warn-soft);color:var(--warn)')+'">'+(done>=g.t?'🎉 حققته':ok?'ماشي صح':'متأخر '+nf(exp-done,1)+' '+u[0])+'</span></div>'+
+    (done<g.t?'<div class="faint xs" style="margin-top:4px">تحتاج '+mins(Math.ceil(need))+' باليوم لين آخر السنة · الخط هو وين المفروض تكون الحين</div>':'')+'</div>'}
+  return h;
+}
+function openYG(){
+  document.querySelector('.toast')?.remove();const ov=document.createElement('div');ov.className='ov';
+  const def=db.acts.find(a=>/قراء/.test(a.n)&&!/قرآن/.test(a.n))||byKey('sport')||db.acts[0];
+  ov.innerHTML='<div class="sheet" role="dialog" aria-modal="true"><h3>🏁 هدف السنة</h3><label class="field"><span>النشاط</span><select class="inp" id="ya">'+db.acts.map(a=>'<option value="'+a.id+'"'+(a===def?' selected':'')+'>'+esc(a.e+' '+a.n)+'</option>').join('')+'</select></label>'+
+  '<div class="grid2"><label class="field"><span>الهدف</span><input class="inp num" id="yt" type="number" min="1" value="20"></label><label class="field"><span>الوحدة</span><select class="inp" id="yu"><option value="book">كتاب (7 ساعات)</option><option value="h">ساعة</option><option value="khatma">ختمة (12 ساعة)</option><option value="day">يوم كامل</option></select></label></div>'+
+  '<div class="faint xs" style="margin-bottom:12px">ينحسب من '+new Date().getFullYear()+' كاملة، من الأيام اللي سجّلتها.</div><div class="row"><button class="btn pri" id="ys" style="flex:1">أضف</button><button class="btn" id="yc">إلغاء</button></div></div>';
+  document.body.appendChild(ov);
+  ov.addEventListener('click',e=>{const b=e.target.closest('button');if(e.target===ov||b?.id==='yc')return ov.remove();if(b?.id==='ys'){const t=+ov.querySelector('#yt').value;if(!(t>0))return;db.yg.push({id:'y'+(++uid),act:ov.querySelector('#ya').value,u:ov.querySelector('#yu').value,t,y:new Date().getFullYear()});save();ov.remove();keepScroll();toast('🏁 انضاف هدف السنة')}});
+}
+
+/* ---------- friend challenges (shared doc on tajarib-server) ---------- */
+const CH=new Map(),chSig=new Map();let chT=0;
+function chOk(){return !!window.Tajarib}
+function chStart(c){if(CH.has(c.id)||!chOk())return;const d=Tajarib.open({id:c.id,key:c.key,onChange:()=>{chAutoMap(c);if(db.tab==='goals')keepScroll();chPush(c)},onStatus:()=>{}}).start();CH.set(c.id,d)}
+function chAutoMap(c){if(c.act&&db.acts.some(a=>a.id===c.act))return;const m=CH.get(c.id)?.meta();if(!m)return;const a=(m.ak&&byKey(m.ak))||db.acts.find(x=>x.n.trim()===String(m.an||'').trim());if(a){c.act=a.id;save()}}
+function chDays(m){const out=[];for(let i=0;i<m.n;i++){const x=fromDk(m.s);x.setDate(x.getDate()+i);out.push(dk(x))}return out}
+function chPush(c){
+  const d=CH.get(c.id),m=d&&d.meta();if(!m||!c.act)return;const a=db.acts.find(x=>x.id===c.act);if(!a)return;
+  const days={};for(const k of chDays(m)){const v=logVal(k,a.id);if(v!=null)days[k]=v}
+  const nm=db.name||'أنا',sig=JSON.stringify(days)+'|'+nm;if(chSig.get(c.id)===sig&&d.item(c.pid))return;chSig.set(c.id,sig);
+  try{d.set(c.pid,{nm,d:days})}catch(e){}
+}
+function chPushAll(){for(const c of db.ch)chPush(c)}
+function chBoard(d,m){
+  const rows=d.items().filter(it=>it.nm).map(it=>{const v=Object.values(it.d||{}).filter(x=>typeof x==='number');return{id:it.id,nm:String(it.nm).slice(0,30),n:v.length,avg:v.length?v.reduce((p,q)=>p+q,0)/v.length:null}});
+  rows.sort((a,b)=>(a.avg==null)-(b.avg==null)||(m.ty==='max'?a.avg-b.avg:b.avg-a.avg));return rows;
+}
+function chStatus(m){const today=dk(new Date()),days=chDays(m),end=days[days.length-1];if(today<m.s)return{st:'soon',left:Math.ceil((fromDk(m.s)-new Date())/DAY)};if(today>end)return{st:'done',left:0};return{st:'on',left:Math.round((fromDk(end)-fromDk(today))/DAY)+1}}
+function vChallenges(){
+  let h='<div class="sec" id="g-ch"><h2>🤝 تحديات مع أصحابك</h2><button class="btn sm" data-act="newch">+ تحدي</button></div>';
+  if(!chOk())return h+'<div class="card muted sm">التحديات تحتاج نت.</div>';
+  if(!db.ch.length)return h+'<div class="card muted sm">تحدّى صاحبك: «مين أقل جوال هالأسبوع» أو «مين أكثر رياضة». ترسل له الرابط، وكل واحد يسجّل يومه، والترتيب يتحدّث عندكم الاثنين.</div>';
+  const MED=['🥇','🥈','🥉'];
+  for(const c of db.ch){const d=CH.get(c.id),m=d&&d.meta();
+    if(!m){h+='<div class="card muted sm">⏳ أجيب التحدي… <button class="btn sm danger" data-act="leavech" data-id="'+c.id+'">احذف</button></div>';continue}
+    const st=chStatus(m),rows=chBoard(d,m),mine=db.acts.find(a=>a.id===c.act);
+    h+='<div class="card"><div class="row"><span style="font-size:24px">'+esc(m.ae||'🤝')+'</span><div style="flex:1;min-width:0"><b>'+esc(m.t||'تحدي')+'</b><div class="muted xs">'+(m.ty==='max'?'الأقل يفوز':'الأكثر يفوز')+' · متوسط '+esc(m.an||'')+' باليوم · '+(st.st==='done'?'انتهى 🏁':st.st==='soon'?'يبدأ بعد '+st.left+' يوم':'باقي '+st.left+' يوم')+'</div></div></div>';
+    if(!mine)h+='<div class="warnbox" style="margin:10px 0 0">وش النشاط اللي يقابله عندك؟ <select class="inp" data-chact="'+c.id+'" style="margin-top:6px"><option value="">اختر…</option>'+db.acts.map(a=>'<option value="'+a.id+'">'+esc(a.e+' '+a.n)+'</option>').join('')+'</select></div>';
+    h+='<div style="margin-top:8px">'+rows.map((r,i)=>'<div class="lb'+(r.id===c.pid?' me':'')+'"><span class="m">'+(r.avg==null?'·':MED[i]||(i+1))+'</span><div class="t"><b>'+esc(r.nm)+(r.id===c.pid?' (أنت)':'')+'</b><div class="faint xs">'+r.n+' أيام مسجّلة</div></div><b class="num">'+(r.avg==null?'—':mins(Math.round(r.avg)))+'</b></div>').join('')+'</div>';
+    if(st.st==='done'&&rows[0]&&rows[0].avg!=null)h+='<div class="goodbox" style="margin:10px 0 0">🏆 الفايز: <b>'+esc(rows[0].nm)+'</b>'+(rows[0].id===c.pid?' — كفو عليك!':'')+'</div>';
+    if(rows.length<2)h+='<div class="faint xs" style="margin-top:6px">أرسل الرابط لصاحبك عشان يدخل التحدي</div>';
+    h+='<div class="row" style="margin-top:10px"><button class="btn sm pri" data-act="sharech" data-id="'+c.id+'">📤 أرسل الرابط</button><button class="btn sm danger" data-act="leavech" data-id="'+c.id+'">اطلع</button></div></div>';
+  }
+  return h;
+}
+function chLink(c){return location.origin+location.pathname+'#c='+c.id+'.'+c.key}
+async function chShare(c){const m=CH.get(c.id)?.meta()||{},url=chLink(c),txt='🤝 تحديتك في سنتي: '+(m.t||'')+'\nادخل وسجّل يومك:';
+  try{if(navigator.share){await navigator.share({title:'تحدي سنتي',text:txt,url});return}}catch(e){if(e.name==='AbortError')return}
+  try{await navigator.clipboard.writeText(txt+'\n'+url);toast('نسخت رابط التحدي ✓')}catch(e){toast(url)}}
+function openCh(){
+  if(!db.name)return askName(openCh);
+  document.querySelector('.toast')?.remove();const ov=document.createElement('div');ov.className='ov';const def=byKey('screen')||db.acts[0];
+  ov.innerHTML='<div class="sheet" role="dialog" aria-modal="true"><h3>🤝 تحدي جديد</h3><label class="field"><span>على أي نشاط؟</span><select class="inp" id="ca">'+db.acts.map(a=>'<option value="'+a.id+'"'+(a===def?' selected':'')+'>'+esc(a.e+' '+a.n)+'</option>').join('')+'</select></label>'+
+  '<div class="grid2"><label class="field"><span>مين يفوز؟</span><select class="inp" id="ct"><option value="max">الأقل (مثل الجوال)</option><option value="min">الأكثر (مثل الرياضة)</option></select></label><label class="field"><span>المدة</span><select class="inp" id="cn"><option value="7">أسبوع</option><option value="14">أسبوعين</option><option value="30">شهر</option></select></label></div>'+
+  '<div class="row"><button class="btn pri" id="cs" style="flex:1">ابدأ التحدي</button><button class="btn" id="cc">إلغاء</button></div></div>';
+  document.body.appendChild(ov);
+  const syncType=()=>{const a=db.acts.find(x=>x.id===ov.querySelector('#ca').value);ov.querySelector('#ct').value=a&&(['sleep','sport'].includes(a.k)||/رياض|قراء|قرآن|مشي|جيم|دراس/.test(a.n))?'min':'max'};syncType();ov.querySelector('#ca').onchange=syncType;
+  ov.addEventListener('click',async e=>{const b=e.target.closest('button');if(e.target===ov||b?.id==='cc')return ov.remove();if(b?.id!=='cs')return;
+    const a=db.acts.find(x=>x.id===ov.querySelector('#ca').value),ty=ov.querySelector('#ct').value,n=+ov.querySelector('#cn').value;b.disabled=true;b.textContent='لحظة…';
+    const t=(ty==='max'?'مين أقل ':'مين أكثر ')+a.n+(n===7?' هالأسبوع':n===14?' بأسبوعين':' هالشهر'),pid=Tajarib.newId('p');
+    try{const r=await Tajarib.create('sanati',{meta:{t,ak:a.k||'',an:a.n,ae:a.e,ty,s:dk(new Date()),n,by:db.name,u:Date.now()},items:{[pid]:{nm:db.name,d:{},u:Date.now()}}});
+      const c={id:r.id,key:r.edit,pid,act:a.id};db.ch.unshift(c);db.ever.ch=1;save();chStart(c);ov.remove();keepScroll();chShare(c)}
+    catch(err){b.disabled=false;b.textContent='ابدأ التحدي';toast(err&&err.code==='bad_kind'?'السيرفر يحتاج تحديث عشان التحديات':Tajarib.errorText(err))}});
+}
+function chJoin(id,key){
+  if(!/^[\w-]{4,40}$/.test(id)||!/^[\w-]{8,40}$/.test(key))return;
+  db.tab='goals';let c=db.ch.find(x=>x.id===id);
+  if(c){save();render();setTimeout(()=>document.getElementById('g-ch')?.scrollIntoView({behavior:'smooth'}),100);return}
+  if(!db.name)return askName(()=>chJoin(id,key));
+  c={id,key,pid:Tajarib.newId('p'),act:null};db.ch.unshift(c);db.ever.ch=1;save();chStart(c);render();toast('🤝 دخلت التحدي! سجّل يومك عشان تنافس');
+  setTimeout(()=>document.getElementById('g-ch')?.scrollIntoView({behavior:'smooth'}),100);
+}
+
+/* ---------- prayer times (Umm al-Qura) ---------- */
+const CITIES={riyadh:['الرياض',24.7136,46.6753],jeddah:['جدة',21.4858,39.1925],makkah:['مكة',21.4225,39.8262],madinah:['المدينة',24.4672,39.6111],dammam:['الدمام',26.4207,50.0888],khobar:['الخبر',26.2172,50.1971],hofuf:['الأحساء',25.3647,49.5856],jubail:['الجبيل',27.0174,49.6225],taif:['الطائف',21.2703,40.4158],abha:['أبها',18.2164,42.5053],khamis:['خميس مشيط',18.3,42.7333],tabuk:['تبوك',28.3835,36.5662],buraidah:['بريدة',26.326,43.975],hail:['حائل',27.5114,41.7208],jazan:['جازان',16.8892,42.5511],najran:['نجران',17.4917,44.1322],yanbu:['ينبع',24.0895,38.0618],baha:['الباحة',20.0129,41.4677],arar:['عرعر',30.9753,41.0381],sakaka:['سكاكا',29.9697,40.2064]};
+const PN=[['fajr','الفجر'],['sunrise','الشروق'],['dhuhr','الظهر'],['asr','العصر'],['maghrib','المغرب'],['isha','العشاء']];
+const rad=d=>d*Math.PI/180,deg=r=>r*180/Math.PI,dsin=d=>Math.sin(rad(d)),dcos=d=>Math.cos(rad(d)),dtan=d=>Math.tan(rad(d));
+const fixA=(a,b)=>{a=a-b*Math.floor(a/b);return a<0?a+b:a};
+function prayerTimes(date,lat,lng,tz){
+  const y=date.getFullYear(),m=date.getMonth()+1,d=date.getDate();let Y=y,M=m;if(M<=2){Y--;M+=12}
+  const A=Math.floor(Y/100),B=2-A+Math.floor(A/4),jd0=Math.floor(365.25*(Y+4716))+Math.floor(30.6001*(M+1))+d+B-1524.5-lng/(15*24);
+  const sun=t=>{const D=jd0+t-2451545,g=fixA(357.529+0.98560028*D,360),q=fixA(280.459+0.98564736*D,360),L=fixA(q+1.915*dsin(g)+0.020*dsin(2*g),360),e=23.439-0.00000036*D;
+    const RA=fixA(deg(Math.atan2(dcos(e)*dsin(L),dcos(L)))/15,24);return{decl:deg(Math.asin(dsin(e)*dsin(L))),eqt:q/15-RA}};
+  const noon=t=>{const s=sun(t);return fixA(12-s.eqt,24)};
+  const angleT=(ang,t,ccw)=>{const s=sun(t),n=noon(t),T=deg(Math.acos((-dsin(ang)-dsin(s.decl)*dsin(lat))/(dcos(s.decl)*dcos(lat))))/15;return n+(ccw?-T:T)};
+  const asrT=t=>{const s=sun(t),ang=-deg(Math.atan(1/(1+dtan(Math.abs(lat-s.decl)))));return angleT(ang,t)};
+  let T={fajr:5,sunrise:6,dhuhr:12,asr:13,maghrib:18};
+  for(let i=0;i<2;i++){const f=x=>x/24;T={fajr:angleT(18.5,f(T.fajr),1),sunrise:angleT(0.833,f(T.sunrise),1),dhuhr:noon(f(T.dhuhr)),asr:asrT(f(T.asr)),maghrib:angleT(0.833,f(T.maghrib))}}
+  const adj=tz-lng/15,out={};for(const k in T)out[k]=T[k]+adj;out.isha=out.maghrib+(isRam(date)?2:1.5);
+  const base=new Date(y,m-1,d);for(const k in out){const ms=Math.round(out[k]*60)*6e4;out[k]=new Date(base.getTime()+ms)}return out;
+}
+function placeNow(){if(db.city==='geo'&&db.geo)return['موقعك',db.geo.lat,db.geo.lng,-new Date().getTimezoneOffset()/60];const c=CITIES[db.city]||CITIES.riyadh;return[c[0],c[1],c[2],3]}
+function nextPrayer(){const[,la,ln,tz]=placeNow(),n=new Date();for(let i=0;i<2;i++){const d=new Date(n);d.setDate(d.getDate()+i);const pt=prayerTimes(d,la,ln,tz);for(const[k,l] of PN){if(k==='sunrise')continue;if(pt[k]>n)return{k,l,t:pt[k]}}}return null}
+const hm=d=>d.toLocaleTimeString('ar-SA-u-nu-latn',{hour:'numeric',minute:'2-digit'});
+function vPrayer(){
+  const[nm,la,ln,tz]=placeNow(),pt=prayerTimes(new Date(),la,ln,tz),nx=nextPrayer();
+  return '<div class="sec"><h2>🕌 الصلاة الجاية</h2></div><div class="card">'+(nx?'<div class="row" style="justify-content:space-between"><div><div class="muted sm">باقي على صلاة '+nx.l+' ('+hm(nx.t)+')</div><div class="big" data-cd="'+nx.t.getTime()+'" style="font-size:30px">'+cdText(nx.t)+'</div></div><div style="font-size:40px">🕌</div></div>':'')+
+  '<div class="ptimes">'+PN.map(([k,l])=>'<div class="'+(nx&&nx.k===k&&nx.t.getDate()===new Date().getDate()?'nx':'')+'">'+l+'<b>'+hm(pt[k]).replace(/\s?[صم]$/,'')+'</b></div>').join('')+'</div>'+
+  '<div class="row" style="margin-top:10px"><select class="inp" data-city style="flex:1">'+Object.entries(CITIES).map(([k,c])=>'<option value="'+k+'"'+(db.city===k?' selected':'')+'>'+c[0]+'</option>').join('')+(db.geo?'<option value="geo"'+(db.city==='geo'?' selected':'')+'>📍 موقعي</option>':'')+'</select><button class="btn sm" data-act="geo">📍 موقعي</button></div>'+
+  '<div class="faint xs" style="margin-top:6px">حسب تقويم أم القرى (الفجر 18.5°، والعشاء بعد المغرب بساعة ونص، وساعتين في رمضان). ممكن يختلف دقيقة أو دقيقتين عن مسجدك.</div></div>';
+}
+
+/* ---------- share image ---------- */
+async function shareImage(){
+  try{await document.fonts?.ready}catch(e){}
+  const W=1080,H=1920,c=document.createElement('canvas');c.width=W;c.height=H;const x=c.getContext('2d'),F=getComputedStyle(document.body).fontFamily;
+  const g=x.createLinearGradient(0,0,W,H);g.addColorStop(0,'#141a3a');g.addColorStop(1,'#0b0e1c');x.fillStyle=g;x.fillRect(0,0,W,H);
+  x.direction='rtl';x.textAlign='right';const R=W-90;
+  x.fillStyle='#fff';x.font='800 92px '+F;x.fillText('سنتي بالأرقام',R,230);
+  x.fillStyle='#a3a9cb';x.font='500 44px '+F;x.fillText((db.name?db.name+' · ':'')+'وين تروح الـ365 يوم؟',R,305);
+  const t=totals(),L=t.list.filter(a=>a.h>0).sort((a,b)=>b.h-a.h);let bx=90;const bw=W-180;
+  x.save();x.beginPath();x.roundRect?x.roundRect(90,370,bw,64,20):x.rect(90,370,bw,64);x.clip();x.fillStyle='#2a3050';x.fillRect(90,370,bw,64);
+  let cx=W-90;for(const a of L){const w=a.h/YH*bw;x.fillStyle=a.c;x.fillRect(cx-w,370,w,64);cx-=w}x.restore();
+  let yy=540;for(const a of L.slice(0,8)){x.fillStyle=a.c;x.beginPath();x.arc(R-16,yy-18,16,0,7);x.fill();x.fillStyle='#eef0ff';x.font='700 50px '+F;x.textAlign='right';x.fillText(a.e+' '+a.n,R-50,yy);
+    x.textAlign='left';x.font='800 58px '+F;x.fillText(nf(a.h/24)+' يوم',90,yy);x.textAlign='right';yy+=112}
+  if(t.free>0){x.fillStyle='#2ecc9a';x.font='700 50px '+F;x.fillText('🌴 وقت حر',R-50,yy);x.textAlign='left';x.font='800 58px '+F;x.fillText(nf(t.free/24)+' يوم',90,yy);x.textAlign='right';yy+=112}
+  const bd=badgeList().filter(b=>db.badges[b[0]]);if(bd.length){x.fillStyle='#ffb648';x.font='600 46px '+F;x.fillText('🏅 '+bd.length+' وسام  '+bd.slice(0,6).map(b=>b[1]).join(' '),R,Math.min(yy+30,1720))}
+  x.fillStyle='#a3a9cb';x.font='600 40px '+F;x.textAlign='center';x.fillText('احسب سنتك 👇',W/2,1790);x.direction='ltr';x.fillStyle='#737a9f';x.font='500 36px '+F;x.fillText('ilo0ol.github.io/experiments/sanati',W/2,1850);
+  const blob=await new Promise(r=>c.toBlob(r,'image/png'));const file=new File([blob],'sanati.png',{type:'image/png'});
+  db.ever.img=1;save();
+  try{if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file],title:'سنتي'});return}}catch(e){if(e.name==='AbortError')return}
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='sanati.png';document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1000);toast('نزّلت الصورة 🖼️');
+}
+function openShare(){
+  document.querySelector('.toast')?.remove();const ov=document.createElement('div');ov.className='ov';
+  ov.innerHTML='<div class="sheet" role="dialog" aria-modal="true"><h3>شارك سنتك</h3><div style="display:grid;gap:8px"><button class="btn" data-s="img" style="justify-content:flex-start">🖼️ صورة للستوري أو السناب</button><button class="btn" data-s="link" style="justify-content:flex-start">🆚 رابط يقارن فيه صاحبك سنته بسنتك</button><button class="btn" data-s="ch" style="justify-content:flex-start">🤝 تحدي مع صاحبك</button><button class="btn" data-s="x">إلغاء</button></div></div>';
+  document.body.appendChild(ov);ov.addEventListener('click',e=>{const b=e.target.closest('button');if(e.target===ov||b?.dataset.s==='x')return ov.remove();if(!b)return;ov.remove();const v=b.dataset.s;if(v==='img')shareImage();else if(v==='link')share();else if(v==='ch'){db.tab='goals';save();render();openCh()}});
 }
 /* ---------- compare with friend ---------- */
 function groupRank(){
@@ -711,6 +921,7 @@ function buildReport(){
   const ms=monthly();if(ms.length){const used=db.acts.filter(a=>ms.some(m=>m.acts[a.id]!=null));
     h+='<h2>كل شهر (متوسط باليوم)</h2><table><tr><th>النشاط</th><th>الخطة</th>'+ms.map(m=>'<th>'+ymLabel(m.ym)+'</th>').join('')+'</tr>'+used.map(a=>'<tr><td>'+esc(a.e+' '+a.n)+'</td><td>'+mins(curM(a))+'</td>'+ms.map(m=>'<td>'+(m.acts[a.id]!=null?mins(Math.round(m.acts[a.id])):'—')+'</td>').join('')+'</tr>').join('')+'<tr><td>أيام مسجّلة</td><td></td>'+ms.map(m=>'<td>'+m.days+'</td>').join('')+'</tr></table>'}
   const bd=badgeList().filter(b=>db.badges[b[0]]);if(bd.length)h+='<h2>أوسمتي ('+bd.length+')</h2><div>'+bd.map(b=>b[1]+' '+b[2]).join(' · ')+'</div>';
+  const ygs=db.yg.filter(g=>db.acts.some(a=>a.id===g.act));if(ygs.length)h+='<h2>أهداف السنة</h2>'+ygs.map(g=>{const a=db.acts.find(x=>x.id===g.act);return'<div>'+esc(a.e+' '+a.n)+': '+nf(ygDone(g),1)+' من '+nf(g.t)+' '+YU[g.u][0]+'</div>'}).join('');
   h+='<h2>اقتراحات</h2>'+tipsList().map(t=>'<div style="margin-bottom:5px">'+t[0]+' <b>'+t[1]+':</b> '+t[2]+'</div>').join('');
   h+='<div style="color:#888;font-size:8.5pt;margin-top:14px">الأرقام تقديرية. سُوّي بتطبيق سنتي: ilo0ol.github.io/experiments/sanati</div>';
   $('#report').innerHTML=h;
@@ -745,6 +956,8 @@ document.addEventListener('click',e=>{
   const b=e.target.closest('button');if(!b||b.closest('.ov'))return;
   if(b.dataset.tab){db.tab=b.dataset.tab;save();render();scrollTo(0,0);return}
   if(b.dataset.day){const a=db.acts.find(x=>x.id===b.dataset.id);a.d=+b.dataset.day;save();render();return}
+  if(b.dataset.jump){document.getElementById(b.dataset.jump)?.scrollIntoView({behavior:'smooth',block:'start'});return}
+  if(b.dataset.tquick){timerStart(b.dataset.tquick);return}
   if(b.dataset.preset){const p=goalPresets()[+b.dataset.preset];if(p)addGoal(p[0].id,p[1],p[2]);return}
   if(b.dataset.view){db.view=b.dataset.view;if(db.view==='r'&&!db.ever.rmSeed)seedRamadan();save();render();return}
   if(b.dataset.mact){db.mAct=b.dataset.mact;save();keepScroll();return}
@@ -756,9 +969,15 @@ document.addEventListener('click',e=>{
   else if(act==='theme'){document.body.classList.toggle('light');try{localStorage.setItem(THEME,document.body.classList.contains('light')?'light':'dark')}catch(e){}render()}
   else if(act==='reset'){const old=db.acts,ov=db.vac;db.acts=freshActs();db.vac=36;save();render();toast('رجعت الأرقام الافتراضية',{undo:()=>{db.acts=old;db.vac=ov;save();render()}})}
   else if(act==='pdf'){buildReport();setTimeout(()=>print(),50)}
-  else if(act==='share')share();
+  else if(act==='share')openShare();
+  else if(act==='newch')openCh();
+  else if(act==='sharech'){const c=db.ch.find(x=>x.id===b.dataset.id);if(c)chShare(c)}
+  else if(act==='leavech'){const i=db.ch.findIndex(x=>x.id===b.dataset.id),c=db.ch[i],d=CH.get(c.id);try{d&&d.canEdit()&&d.item(c.pid)&&d.del(c.pid)}catch(e){}setTimeout(()=>{d&&d.stop();CH.delete(c.id);try{Tajarib.forget(c.id)}catch(e){}},4000);db.ch.splice(i,1);save();keepScroll();toast('طلعت من التحدي')}
+  else if(act==='addyg')openYG();
+  else if(act==='delyg'){const i=db.yg.findIndex(g=>g.id===b.dataset.id),old=db.yg[i];db.yg.splice(i,1);save();keepScroll();toast('انحذف هدف السنة',{undo:()=>{db.yg.splice(i,0,old);save();render()}})}
+  else if(act==='geo'){if(!navigator.geolocation)return toast('جهازك ما يدعم تحديد الموقع');toast('أحدد موقعك…');navigator.geolocation.getCurrentPosition(p=>{db.geo={lat:+p.coords.latitude.toFixed(3),lng:+p.coords.longitude.toFixed(3)};db.city='geo';save();keepScroll();toast('📍 صارت المواقيت على موقعك')},()=>toast('ما قدرت أحدد موقعك، اختر مدينتك'),{timeout:15000,maximumAge:864e5})}
   else if(act==='addgoal')openGoal();
-  else if(act==='tstart'){const id=$('#tact').value;db.timer={act:id,start:Date.now()};db.ever.tAct=id;save();render();toast('⏱️ بدأ المؤقت، تقدر تقفل التطبيق وترجع')}
+  else if(act==='tstart')timerStart($('#tact').value);
   else if(act==='tstop')timerStop();
   else if(act==='tcancel'){db.timer=null;save();render()}
   else if(act==='remon')remindOn();
@@ -792,6 +1011,8 @@ function seedRamadan(){
 function keepScroll(){const y=scrollY;render();scrollTo(0,y)}
 document.addEventListener('change',e=>{
   const el=e.target;
+  if(el.matches('[data-city]')){db.city=el.value;save();keepScroll();return}
+  if(el.dataset.chact){const c=db.ch.find(x=>x.id===el.dataset.chact);if(c&&el.value){c.act=el.value;save();chSig.delete(c.id);chPush(c);keepScroll()}return}
   if(el.matches('[data-rmon]')){db.rmOn=el.checked;save();keepScroll();return}
   if(el.matches('[data-remhr]')){db.rem.hr=+el.value;save();remHash='';syncSoon();if(db.rem.on)toast('صار التذكير الساعة '+hourLabel(db.rem.hr));return}
   if(el.dataset.log){const id=el.dataset.log,l=db.log[logDay]=db.log[logDay]||{};if(el.value==='')delete l[id];else l[id]=clamp(Math.round(+el.value||0),0,1440);if(!Object.keys(l).length)delete db.log[logDay];save();keepScroll();syncSoon();return}
@@ -819,6 +1040,7 @@ render();
 if('serviceWorker' in navigator&&location.protocol==='https:'){addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
   navigator.serviceWorker.addEventListener('message',e=>{const g=e.data&&e.data.go;if(g&&g.startsWith('t=')){db.tab=g.slice(2);save();render();scrollTo(0,0)}})}
 setTimeout(()=>syncRemind().catch(()=>{}),3000);
+for(const c of db.ch)chStart(c);setTimeout(chPushAll,2000);
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'){keepScroll();syncSoon()}});
 </script>
 </body>
